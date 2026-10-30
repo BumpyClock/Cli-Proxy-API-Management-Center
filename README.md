@@ -89,7 +89,7 @@ Check the CLI Proxy API server documentation/config comments for the full authen
 
 ## What you can manage (mapped to the UI pages)
 
-- **Dashboard**: connection status, server version/build date, quick counts, model availability snapshot.
+- **Dashboard**: live operations view that refreshes every 15 seconds while visible. An evidence-based status headline, an attention list linking straight to failing credentials and providers, provider and credential health with cooldown reasons and retry times, traffic in your local timezone, and per-model volume, latency, and recent failures when usage statistics are on. Every section shows how old its data is.
 - **Config Panel**: visual editor for common `config.yaml` fields, basic settings, proxy `api-keys`, and source editing with YAML highlighting/search plus a save diff preview.
 - **AI Providers**:
   - Gemini/Codex/Claude/Vertex key entries (base URL, headers, proxy, model aliases, excluded models, prefix).

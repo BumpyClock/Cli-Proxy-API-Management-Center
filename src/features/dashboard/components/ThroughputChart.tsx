@@ -2,38 +2,32 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { formatPercent } from '@/utils/format';
-import { TRAFFIC_BUCKET_MINUTES, type TrafficWindow } from '../types';
+import { resolveTimeZoneLabel } from '@/utils/time/timezone';
+import type { TrafficWindow } from '../types';
+import { formatClock, formatClockRange } from '../logic/time';
 import { axisMax } from '../utils';
 import styles from './ThroughputChart.module.scss';
 
-/** 纵轴刻度条数（含 0），即 TICK_COUNT - 1 个间隔 */
+/** Y-axis tick count including zero, i.e. TICK_COUNT - 1 intervals. */
 const TICK_COUNT = 5;
-
-/**
- * 桶时间标签。后端返回的是服务器本地时间字符串（"15:04-15:14"），
- * 优先使用它，而不是用浏览器时钟反推，避免时区不一致。
- */
-function bucketRangeLabel(time: string | undefined, index: number, count: number): string {
-  if (time) return time;
-  const minutesAgo = (count - index) * TRAFFIC_BUCKET_MINUTES;
-  return `-${minutesAgo}m`;
-}
-
-function bucketStartLabel(time: string | undefined, index: number, count: number): string {
-  if (!time) return bucketRangeLabel(time, index, count);
-  const [start] = time.split('-');
-  return start?.trim() || time;
-}
 
 interface ThroughputChartProps {
   traffic: TrafficWindow;
 }
 
 export function ThroughputChart({ traffic }: ThroughputChartProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const { buckets, totalSuccess, totalFailure, total, peakIndex, peakTotal } = traffic;
+  const {
+    buckets,
+    success: totalSuccess,
+    failed: totalFailure,
+    total,
+    peakIndex,
+    peakTotal,
+  } = traffic;
   const scaleMax = useMemo(() => axisMax(peakTotal, TICK_COUNT - 1), [peakTotal]);
 
   const ticks = useMemo(
@@ -50,9 +44,17 @@ export function ThroughputChart({ traffic }: ThroughputChartProps) {
     const positions = [0, Math.floor((buckets.length - 1) / 2), buckets.length - 1];
     return Array.from(new Set(positions)).map((index) => ({
       index,
-      label: bucketStartLabel(buckets[index]?.time, index, buckets.length),
+      label: formatClock(buckets[index].startMs, locale),
     }));
-  }, [buckets]);
+  }, [buckets, locale]);
+
+  const timeZoneLabel = useMemo(
+    () =>
+      resolveTimeZoneLabel(
+        buckets.length > 0 ? new Date(buckets[buckets.length - 1].startMs) : undefined
+      ),
+    [buckets]
+  );
 
   const summary = t('dashboard.traffic_chart_summary', {
     total,
@@ -86,6 +88,9 @@ export function ThroughputChart({ traffic }: ThroughputChartProps) {
           <span className={`${styles.legendSwatch} ${styles.swatchFailure}`} aria-hidden="true" />
           {t('stats.failure')}
           <b className={styles.legendValue}>{totalFailure.toLocaleString()}</b>
+        </span>
+        <span className={styles.legendZone}>
+          {t('dashboard.traffic_time_zone', { zone: timeZoneLabel })}
         </span>
       </figcaption>
 
@@ -130,8 +135,14 @@ export function ThroughputChart({ traffic }: ThroughputChartProps) {
 
               return (
                 <div
-                  key={bucket.time ?? index}
-                  className={`${styles.column} ${activeIndex === index ? styles.columnActive : ''}`}
+                  key={bucket.startMs}
+                  className={[
+                    styles.column,
+                    activeIndex === index ? styles.columnActive : '',
+                    bucket.partial ? styles.columnPartial : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => setActiveIndex((current) => (current === index ? null : index))}
                 >
@@ -188,7 +199,8 @@ export function ThroughputChart({ traffic }: ThroughputChartProps) {
               role="status"
             >
               <span className={styles.tooltipTime}>
-                {bucketRangeLabel(activeBucket.time, activeIndex!, buckets.length)}
+                {formatClockRange(activeBucket.startMs, activeBucket.endMs, locale)}
+                {activeBucket.partial ? ` · ${t('dashboard.traffic_partial')}` : ''}
               </span>
               <span className={styles.tooltipRow}>
                 <span
@@ -239,11 +251,14 @@ export function ThroughputChart({ traffic }: ThroughputChartProps) {
             </tr>
           </thead>
           <tbody>
-            {buckets.map((bucket, index) => {
+            {buckets.map((bucket) => {
               const bucketTotal = bucket.success + bucket.failed;
               return (
-                <tr key={bucket.time ?? index}>
-                  <th scope="row">{bucketRangeLabel(bucket.time, index, buckets.length)}</th>
+                <tr key={bucket.startMs}>
+                  <th scope="row">
+                    {formatClockRange(bucket.startMs, bucket.endMs, locale)}
+                    {bucket.partial ? ` · ${t('dashboard.traffic_partial')}` : ''}
+                  </th>
                   <td>{bucket.success.toLocaleString()}</td>
                   <td>{bucket.failed.toLocaleString()}</td>
                   <td>

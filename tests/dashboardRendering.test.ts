@@ -1,0 +1,193 @@
+import { describe, expect, test } from 'bun:test';
+import { createElement, type ReactElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
+import i18n from '../src/i18n/index';
+import { normalizeAuthFilesResponse } from '../src/services/api/authFiles';
+import type { AuthFilesResponse } from '../src/types/authFile';
+import { AttentionPanel } from '../src/features/dashboard/components/AttentionPanel';
+import { CredentialList } from '../src/features/dashboard/components/CredentialList';
+import { ProviderHealthList } from '../src/features/dashboard/components/ProviderHealthList';
+import { UsagePanel } from '../src/features/dashboard/components/UsagePanel';
+import { buildAttention } from '../src/features/dashboard/logic/attention';
+import { buildFleetModel } from '../src/features/dashboard/logic/fleet';
+
+const NOW = Date.parse('2026-10-30T06:00:00.000Z');
+const LOCALES = ['en', 'zh-CN', 'zh-TW', 'ru'];
+
+const buckets = (filled: Record<number, [number, number]> = {}) =>
+  Array.from({ length: 20 }, (_, index) => {
+    const [success, failed] = filled[index] ?? [0, 0];
+    return { success, failed };
+  });
+
+const model = () => {
+  const payload = {
+    observed_at: new Date(NOW).toISOString(),
+    files: [
+      {
+        name: 'meta-ops.json',
+        type: 'meta',
+        email: 'ops@example.com',
+        status: 'error',
+        status_message: '{"error":{"message":"The requested model was not found."}}',
+        unavailable: true,
+        auth_index: '2',
+        next_retry_after: new Date(NOW + 3_600_000).toISOString(),
+        recent_requests: buckets({ 12: [1, 5] }),
+        cooldowns: [
+          {
+            scope: 'model',
+            model_key: 'muse-large',
+            reason: 'model_not_supported',
+            retry_at: new Date(NOW + 3_600_000).toISOString(),
+            remaining_seconds: 3600,
+            http_status: 404,
+          },
+        ],
+      },
+      {
+        name: 'codex-dev.json',
+        type: 'codex',
+        email: 'dev@example.com',
+        status: 'active',
+        auth_index: '1',
+        recent_requests: buckets({ 18: [40, 1] }),
+        cooldowns: [],
+      },
+    ],
+  } as unknown as AuthFilesResponse;
+  const normalized = normalizeAuthFilesResponse(payload, NOW);
+  return buildFleetModel({
+    authFiles: normalized.files,
+    observedAtMs: NOW,
+    authFilesReceivedAt: NOW,
+    keyUsage: {
+      claude: { 'base|key': { success: 0, failed: 4, recent_requests: buckets({ 13: [0, 4] }) } },
+    },
+    keyUsageReceivedAt: NOW,
+  });
+};
+
+const render = (element: ReactElement) =>
+  renderToStaticMarkup(createElement(MemoryRouter, null, element));
+
+const expectTranslated = (markup: string) => {
+  expect(markup).not.toMatch(/dashboard\.[a-z_]+/);
+  expect(markup).not.toContain('{{');
+};
+
+describe('dashboard components render translated, actionable markup', () => {
+  test('attention panel names the failing credential and links to it', async () => {
+    await i18n.changeLanguage('en');
+    const fleet = model();
+    const items = buildAttention(fleet.providers, [
+      { id: 'usage', freshness: 'failed', error: 'Network Error', receivedAt: NOW - 120_000 },
+    ]);
+    const markup = render(
+      createElement(AttentionPanel, {
+        items,
+        checkedCredentials: 2,
+        checkedProviders: 3,
+        primaryFreshness: 'live',
+        primaryReceivedAt: NOW,
+        windowLabel: '3h 20m',
+        now: NOW,
+        onRetry: async () => undefined,
+      })
+    );
+    expect(markup).toContain('Muse (Meta)');
+    expect(markup).toContain('The requested model was not found.');
+    expect(markup).toContain(
+      '/auth-files?provider=meta&amp;status=problem&amp;search=meta-ops.json'
+    );
+    expect(markup).toContain('Open provider settings');
+    expect(markup).toContain('Network Error');
+    expectTranslated(markup);
+  });
+
+  for (const lng of LOCALES) {
+    test(`every section renders without raw keys in ${lng}`, async () => {
+      await i18n.changeLanguage(lng);
+      const fleet = model();
+      const items = buildAttention(fleet.providers, [
+        { id: 'credentials', freshness: 'stale', error: null, receivedAt: NOW - 600_000 },
+      ]);
+      const credentialsByIndex = new Map(
+        fleet.credentials!.rows.map((row) => [row.authIndex ?? '', row])
+      );
+      const usage = {
+        enabled: true,
+        usage: {
+          total_requests: 2,
+          apis: {
+            client: {
+              models: {
+                'gpt-5.5': {
+                  details: [
+                    { timestamp: new Date(NOW - 60_000).toISOString(), latency_ms: 900 },
+                    {
+                      timestamp: new Date(NOW - 30_000).toISOString(),
+                      latency_ms: 2500,
+                      failed: true,
+                      auth_index: '1',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      };
+      const markup = [
+        render(
+          createElement(AttentionPanel, {
+            items,
+            checkedCredentials: 2,
+            checkedProviders: 3,
+            primaryFreshness: 'stale',
+            primaryReceivedAt: NOW - 600_000,
+            windowLabel: '3h 20m',
+            now: NOW,
+            onRetry: async () => undefined,
+          })
+        ),
+        render(createElement(ProviderHealthList, { providers: fleet.providers })),
+        render(createElement(CredentialList, { credentials: fleet.credentials, now: NOW })),
+        render(
+          createElement(UsagePanel, {
+            usage,
+            windowStartMs: NOW - 200 * 60_000,
+            windowLabel: '3h 20m',
+            credentialsByIndex,
+          })
+        ),
+        render(
+          createElement(UsagePanel, {
+            usage: { enabled: false, usage: null },
+            windowStartMs: NOW,
+            windowLabel: '3h 20m',
+            credentialsByIndex,
+          })
+        ),
+      ].join('\n');
+      expectTranslated(markup);
+      expect(markup).toContain('ops@example.com');
+      expect(markup).toContain('gpt-5.5');
+    });
+  }
+
+  test('every dashboard key exists in all four locales', () => {
+    const reference = i18n.getResource('en', 'translation', 'dashboard') as Record<string, string>;
+    const baseKeys = new Set(Object.keys(reference).map((key) => key.replace(/_(one|other)$/, '')));
+    for (const lng of LOCALES) {
+      const local = i18n.getResource(lng, 'translation', 'dashboard') as Record<string, string>;
+      for (const key of baseKeys) {
+        const present = [key, `${key}_one`, `${key}_other`, `${key}_few`, `${key}_many`].some(
+          (candidate) => typeof local[candidate] === 'string'
+        );
+        if (!present) throw new Error(`${lng} is missing dashboard.${key}`);
+      }
+    }
+  });
+});

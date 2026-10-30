@@ -39,6 +39,13 @@
   flex: none;
 }
 
+.legendZone {
+  margin-left: auto;
+  font-family: $font-mono;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .swatchSuccess {
   background: var(--viz-success);
 }
@@ -72,7 +79,7 @@
   right: 0;
   transform: translateY(-50%);
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -151,6 +158,23 @@
   filter: brightness(1.06);
 }
 
+/* The newest bucket is still filling: hatched so it never reads as a finished drop. */
+.columnPartial .segmentSuccess {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--viz-success) 0 3px,
+    color-mix(in srgb, var(--viz-success) 45%, transparent) 3px 6px
+  );
+}
+
+.columnPartial .segmentFailure {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--viz-failure) 0 3px,
+    color-mix(in srgb, var(--viz-failure) 45%, transparent) 3px 6px
+  );
+}
+
 .segment {
   display: block;
   width: 100%;
@@ -210,7 +234,7 @@
   display: grid;
   place-items: center;
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   pointer-events: none;
 }
 
@@ -273,7 +297,7 @@
   margin-top: 2px;
   padding-top: 4px;
   border-top: 1px solid var(--border-color);
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -293,7 +317,7 @@
   position: absolute;
   transform: translateX(-50%);
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -319,7 +343,7 @@
   }
 
   thead th {
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     font-weight: 600;
     white-space: nowrap;
   }

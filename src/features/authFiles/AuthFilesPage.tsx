@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInterval } from '@/hooks/useInterval';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useRevealOnScroll } from '@/hooks/motion';
@@ -32,6 +32,7 @@ import { ProviderTabs } from '@/features/authFiles/components/ProviderTabs';
 import { VaultHeader } from '@/features/authFiles/components/VaultHeader';
 import { VaultPulse } from '@/features/authFiles/components/VaultPulse';
 import { invalidateAuthFileDerivedCaches } from '@/features/authFiles/cacheInvalidation';
+import { AUTH_FILES_DEEP_LINK_KEYS, parseAuthFilesDeepLink } from '@/features/authFiles/deepLink';
 import {
   buildWildcardSearch,
   matchesAuthFileSearch,
@@ -83,6 +84,11 @@ export function AuthFilesPage() {
   const pageTransitionLayer = usePageTransitionLayer();
   const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.status === 'current' : true;
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Read once: a dashboard link such as `?provider=meta&status=problem` overrides the
+  // persisted filters on arrival only.
+  const deepLinkRef = useRef(parseAuthFilesDeepLink(searchParams));
+  const deepLinkCleanedRef = useRef(false);
 
   const [filter, setFilter] = useState<'all' | string>('all');
   const [statusFilterMode, setStatusFilterMode] = useState<AuthFilesStatusFilterMode>('all');
@@ -248,8 +254,25 @@ export function AuthFilesPage() {
       }
     }
 
+    const deepLink = deepLinkRef.current;
+    if (deepLink) {
+      setFilter(deepLink.provider ?? 'all');
+      setStatusFilterMode(deepLink.status ?? 'all');
+      setSearch(deepLink.search ?? '');
+      setPage(1);
+    }
+
     setUiStateHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!deepLinkRef.current || deepLinkCleanedRef.current) return;
+    deepLinkCleanedRef.current = true;
+    if (!AUTH_FILES_DEEP_LINK_KEYS.some((key) => searchParams.has(key))) return;
+    const next = new URLSearchParams(searchParams);
+    AUTH_FILES_DEEP_LINK_KEYS.forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!uiStateHydrated) return;

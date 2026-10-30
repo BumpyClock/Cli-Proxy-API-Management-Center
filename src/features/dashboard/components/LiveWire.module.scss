@@ -23,8 +23,9 @@
   stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
+  /* Dashes exist only while drawing. A resting dasharray of 1 breaks into gaps under
+     non-scaling-stroke once the path is redrawn with fresh data. */
+  stroke-dasharray: none;
   animation: wireDraw 1.3s cubic-bezier(0.25, 0.6, 0.35, 1) 0.55s backwards;
 }
 
@@ -55,9 +56,11 @@
 
 @keyframes wireDraw {
   from {
+    stroke-dasharray: 1;
     stroke-dashoffset: 1;
   }
   to {
+    stroke-dasharray: 1;
     stroke-dashoffset: 0;
   }
 }

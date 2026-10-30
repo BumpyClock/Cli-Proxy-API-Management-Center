@@ -8,7 +8,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(44px, 6.5vh, 76px);
+  gap: clamp(28px, 4.5vh, 52px);
 }
 
 /* ---------- 环境层（ambient）---------- */
@@ -73,13 +73,13 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
   gap: clamp($spacing-lg, 4vw, 56px);
   align-items: center;
-  padding-top: clamp($spacing-md, 3vh, 40px);
-  /* 底部留出脉搏线的呼吸空间 */
-  padding-bottom: clamp(64px, 11vh, 120px);
+  padding-top: clamp($spacing-sm, 2vh, 28px);
+  /* Room for the pulse line under the hero, kept short so the attention list stays above the fold. */
+  padding-bottom: clamp(44px, 7vh, 76px);
 
   @media (max-width: 900px) {
     grid-template-columns: minmax(0, 1fr);
-    padding-bottom: clamp(48px, 8vh, 72px);
+    padding-bottom: clamp(36px, 6vh, 56px);
   }
 }
 
@@ -89,7 +89,7 @@
   left: 0;
   right: 0;
   bottom: -10px;
-  height: clamp(88px, 15vh, 160px);
+  height: clamp(64px, 10vh, 112px);
   z-index: 0;
   pointer-events: none;
 }
@@ -104,10 +104,10 @@
   min-width: 0;
 }
 
-/* 判词标题：文案来自实时状态，短，所以敢放大 */
+/* Verdict headline: computed from live evidence. Sized so a two-line verdict still fits beside the panel. */
 .heroTitle {
   margin: 0;
-  font-size: clamp(44px, 6.2vw, 80px);
+  font-size: clamp(34px, 4.6vw, 58px);
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.035em;
@@ -133,6 +133,10 @@
 
 .heroMeta {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
   font-family: $font-mono;
   font-size: 13px;
   letter-spacing: 0.02em;
@@ -140,100 +144,73 @@
   font-variant-numeric: tabular-nums;
 }
 
-.heroActions {
-  display: flex;
+.heroMetaText {
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: $spacing-sm;
-  margin-top: $spacing-xs;
+  align-items: center;
+  row-gap: 4px;
 }
 
-.primaryAction,
-.ghostAction {
+.heroMetaPart + .heroMetaPart::before {
+  content: '·';
+  margin: 0 8px;
+  color: var(--text-tertiary);
+}
+
+/* Refresh sits beside the age it resets: control next to what it affects. */
+.refreshButton {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 11px 20px;
+  padding: 4px 10px;
+  min-height: 28px;
   border-radius: $radius-full;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
+  border: 1px solid var(--border-primary);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
   transition:
-    transform var(--dur-press) var(--ease-out-strong),
-    background-color $transition-fast,
-    border-color $transition-fast,
-    box-shadow var(--dur-hover) var(--ease-out-strong),
-    color $transition-fast;
+    background-color var(--dur-hover) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong),
+    transform var(--dur-press) var(--ease-out-strong);
 
-  /* 按下即回应：不等 click，指针落下就缩 */
-  &:active {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background: var(--bg-tertiary);
+      border-color: var(--border-hover);
+    }
+  }
+
+  &:active:not(:disabled) {
     transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: progress;
+    color: var(--text-secondary);
   }
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
 
-    &:active {
+    &:active:not(:disabled) {
       transform: none;
     }
   }
 }
 
-/* 墨色药丸：浅色主题下是深墨，深色主题自动反相为浅纸 */
-.primaryAction {
-  background: var(--text-primary);
-  color: var(--bg-secondary);
-  border: 1px solid transparent;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      transform: translateY(-1px);
-      background: color-mix(in srgb, var(--text-primary) 86%, var(--bg-secondary));
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--text-primary) 22%, transparent);
-    }
-  }
-
-  /* 悬停态下按压：抬升让位于回缩 */
-  &:active {
-    transform: translateY(0) scale(0.97);
-  }
+.spinning {
+  animation: dashboardSpin 0.9s linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
-    @media (hover: hover) and (pointer: fine) {
-      &:hover {
-        transform: none;
-      }
-    }
-  }
-}
-
-/* 次要动作降为安静的文字链接：不抬升，箭头代它点头 */
-.ghostAction {
-  padding-left: $spacing-xs;
-  padding-right: $spacing-xs;
-  border: none;
-  color: var(--text-secondary);
-  background: transparent;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      color: var(--text-primary);
-      background: transparent;
-
-      .linkArrow {
-        transform: translateX(3px);
-      }
-    }
-  }
-}
-
-/* 文字链接末尾的箭头：hover 时前移 3px，暗示去向 */
-.linkArrow {
-  display: inline-block;
-  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-    transform: none !important;
+    animation: none;
   }
 }
 
@@ -272,35 +249,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.liveBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: $radius-full;
-  border: 1px solid color-mix(in srgb, var(--viz-success) 35%, transparent);
-  background: color-mix(in srgb, var(--viz-success) 8%, transparent);
-  font-family: $font-mono;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--success-badge-text);
-}
-
-.liveDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--viz-success);
-  animation: livePing 2s ease-out infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
+  color: var(--text-secondary);
 }
 
 /* 遥测数字统一等宽：这是 CLI 代理，mono 是它的母语 */
@@ -444,7 +393,7 @@
 .statHint {
   font-size: 12px;
   line-height: 1.45;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 /* ---------- 通用区块 ---------- */
@@ -473,7 +422,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 
   &::before {
     content: '▍';
@@ -527,136 +476,65 @@
 
 .panelLink {
   align-self: flex-start;
-  margin-top: auto;
   font-size: 13px;
   font-weight: 600;
   color: var(--primary-active);
   text-decoration: none;
+  border-radius: 4px;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       text-decoration: underline;
-
-      .linkArrow {
-        transform: translateX(3px);
-      }
     }
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
 }
 
-.emptyNote {
-  margin: 0;
-  padding: $spacing-lg 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--text-tertiary);
-}
-
-/* ---------- 供应商列表 ---------- */
-
-.fleetList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.panelLinks {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: auto;
 }
 
-.fleetRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1.3fr) minmax(80px, 1fr) auto minmax(96px, 0.7fr);
-  align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-md 0;
-  border-bottom: 1px solid var(--border-color);
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  @media (max-width: 760px) {
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: $spacing-sm;
-  }
-}
-
-/* 列表按流量排序，位次是真实信息 */
-.fleetRank {
+/* Age of a panel's own source, when it refreshes on a different cadence than the page. */
+.panelStamp {
   font-family: $font-mono;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text-quaternary);
-  font-variant-numeric: tabular-nums;
-
-  @media (max-width: 760px) {
-    display: none;
-  }
-}
-
-.fleetIdentity {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.fleetName {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  @include text-ellipsis;
-}
-
-.fleetMeta {
-  font-size: 12px;
-  color: var(--text-tertiary);
-}
-
-.fleetSpark {
-  height: 28px;
-
-  @media (max-width: 760px) {
-    grid-column: 1 / -1;
-    order: 3;
-  }
-}
-
-.fleetNumbers {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
-}
-
-.fleetTotal {
-  font-family: $font-mono;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.fleetTotalLabel {
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-.fleetRate {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.fleetRateValue {
-  font-family: $font-mono;
-  font-size: 12.5px;
-  font-weight: 600;
   color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
 }
 
-.fleetMeter {
-  height: 5px;
+/* Section header with a contextual action on the right. */
+.sectionHeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $spacing-sm $spacing-lg;
+}
+
+.sectionLink {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-active);
+  text-decoration: none;
+  border-radius: 4px;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
 }
 
 /* ---------- 双栏细节区 ---------- */
@@ -673,103 +551,8 @@
   }
 }
 
-/* 分段条：相邻色块之间用 2px 表面色间隙分隔 */
-.healthBar {
-  display: flex;
-  gap: 2px;
-  height: 10px;
-  margin-top: $spacing-xs;
-}
-
-.healthSegment {
-  display: block;
-  border-radius: 3px;
-  min-width: 4px;
-}
-
-.healthActive {
-  background: var(--viz-success);
-}
-
-.healthUnavailable {
-  background: var(--amber-color);
-}
-
-.healthDisabled {
-  background: var(--text-quaternary);
-}
-
-.healthLegend {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-md;
-  font-size: 12px;
-  color: var(--text-secondary);
-
-  li {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  b {
-    font-family: $font-mono;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-.healthKey {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  flex: none;
-}
-
-.typeBreakdown {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-  padding-top: $spacing-md;
-  border-top: 1px solid var(--border-color);
-}
-
-.typeBreakdownLabel {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.typeList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.typeChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
-  font-size: 12px;
-  color: var(--text-secondary);
-
-  b {
-    font-family: $font-mono;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
+.detailGridSingle {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* ---------- 运行参数表 ---------- */
@@ -852,114 +635,8 @@
   background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
 
   b {
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
   }
-}
-
-/* ---------- CTA ---------- */
-
-.ctaGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: $spacing-md;
-
-  @media (max-width: 900px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @include mobile {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.ctaCard {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: $spacing-lg;
-  border-radius: 14px;
-  border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-primary) 76%, transparent);
-  text-decoration: none;
-  overflow: hidden;
-  transition:
-    transform var(--dur-press) var(--ease-out-strong),
-    border-color $transition-fast,
-    box-shadow var(--dur-hover) var(--ease-out-strong);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      transform: translateY(-2px);
-      border-color: var(--border-hover);
-      box-shadow: 0 14px 30px rgb(0 0 0 / 0.12);
-
-      .ctaArrow {
-        transform: translateX(3px);
-        opacity: 1;
-      }
-    }
-  }
-
-  /* 整卡可点：按下回缩，面积大所以比按钮更含蓄 */
-  &:active {
-    transform: translateY(0) scale(0.98);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-
-    &:active {
-      transform: none;
-    }
-
-    @media (hover: hover) and (pointer: fine) {
-      &:hover {
-        transform: none;
-
-        .ctaArrow {
-          transform: none;
-        }
-      }
-    }
-  }
-}
-
-.ctaIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  margin-bottom: $spacing-xs;
-  border-radius: $radius-md;
-  border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-  color: var(--text-primary);
-}
-
-.ctaTitle {
-  font-size: 15px;
-  font-weight: 650;
-  color: var(--text-primary);
-}
-
-.ctaDescription {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-secondary);
-}
-
-.ctaArrow {
-  position: absolute;
-  top: $spacing-lg;
-  right: $spacing-lg;
-  font-size: 15px;
-  color: var(--text-tertiary);
-  opacity: 0.55;
-  transition:
-    transform var(--dur-hover) var(--ease-out-strong),
-    opacity var(--dur-hover) var(--ease-out-strong);
 }
 
 @keyframes periodBreath {
@@ -972,14 +649,8 @@
   }
 }
 
-@keyframes livePing {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--viz-success) 40%, transparent);
-  }
-  70% {
-    box-shadow: 0 0 0 6px transparent;
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
+@keyframes dashboardSpin {
+  to {
+    transform: rotate(360deg);
   }
 }

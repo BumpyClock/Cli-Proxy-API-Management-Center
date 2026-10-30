@@ -1,0 +1,144 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { buildAuthFilesHref } from '@/features/authFiles/deepLink';
+import type { CredentialHealth, CredentialRow, CredentialState } from '../types';
+import { providerLabel } from '../utils';
+import { credentialRecoveryLines } from './formatters';
+import { StatusChip, type ChipTone } from './StatusPills';
+import styles from './CredentialList.module.scss';
+
+const DEFAULT_LIMIT = 8;
+
+const STATE_TONE: Record<CredentialState, ChipTone> = {
+  unavailable: 'critical',
+  error: 'critical',
+  warning: 'warning',
+  cooling: 'neutral',
+  serving: 'good',
+  disabled: 'idle',
+};
+
+interface CredentialListProps {
+  credentials: CredentialHealth | null;
+  now: number;
+  limit?: number;
+}
+
+function CredentialDetail({ row, now }: { row: CredentialRow; now: number }) {
+  const { t, i18n } = useTranslation();
+  const lines = credentialRecoveryLines(t, row, now, i18n.language);
+  if (!row.reason && lines.length === 0) return null;
+  return (
+    <span className={styles.detail}>
+      {row.reason && <span className={styles.reason}>{row.reason}</span>}
+      {lines.map((line) => (
+        <span key={line} className={styles.detailMeta}>
+          {line}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Every credential with its state, reason, recovery time, and window traffic. */
+export function CredentialList({ credentials, now, limit = DEFAULT_LIMIT }: CredentialListProps) {
+  const { t } = useTranslation();
+
+  if (!credentials) {
+    return <p className={styles.empty}>{t('dashboard.health_loading')}</p>;
+  }
+  if (credentials.total === 0) {
+    return (
+      <div className={styles.emptyBlock}>
+        <p className={styles.empty}>{t('dashboard.health_empty')}</p>
+        <Link className={styles.footerLink} to="/oauth">
+          {t('dashboard.health_add')} <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+    );
+  }
+
+  const rows = credentials.rows.slice(0, limit);
+  const segments = [
+    { key: 'serving', value: credentials.serving, className: styles.segmentServing },
+    { key: 'problems', value: credentials.problems, className: styles.segmentProblem },
+    { key: 'disabled', value: credentials.disabled, className: styles.segmentDisabled },
+  ];
+
+  return (
+    <div className={styles.wrapper}>
+      <div className={styles.summary}>
+        <div className={styles.bar} aria-hidden="true">
+          {segments
+            .filter((segment) => segment.value > 0)
+            .map((segment) => (
+              <span
+                key={segment.key}
+                className={`${styles.segment} ${segment.className}`}
+                style={{ flexGrow: segment.value }}
+              />
+            ))}
+        </div>
+        <ul className={styles.legend}>
+          <li>
+            <i className={`${styles.legendKey} ${styles.segmentServing}`} aria-hidden="true" />
+            {t('dashboard.health_serving')}
+            <b>{credentials.serving.toLocaleString()}</b>
+          </li>
+          <li>
+            <i className={`${styles.legendKey} ${styles.segmentProblem}`} aria-hidden="true" />
+            {t('dashboard.health_problems')}
+            <b>{credentials.problems.toLocaleString()}</b>
+          </li>
+          <li>
+            <i className={`${styles.legendKey} ${styles.segmentDisabled}`} aria-hidden="true" />
+            {t('dashboard.health_disabled')}
+            <b>{credentials.disabled.toLocaleString()}</b>
+          </li>
+        </ul>
+      </div>
+
+      <ul className={styles.list}>
+        {rows.map((row) => (
+          <li key={`${row.name}:${row.identity.primary}`} className={styles.row}>
+            <div className={styles.identity}>
+              <span className={styles.provider}>
+                {providerLabel(row.providerId, t('dashboard.provider_unknown'))}
+              </span>
+              <Link
+                className={[styles.name, row.identity.kind === 'fileName' ? styles.mono : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                to={buildAuthFilesHref({ provider: row.providerId, search: row.name })}
+                title={row.identity.fullName}
+              >
+                {row.identity.primary || row.name}
+              </Link>
+            </div>
+            <div className={styles.state}>
+              <StatusChip tone={STATE_TONE[row.state]}>
+                {t(`dashboard.credential_state_${row.state}`)}
+              </StatusChip>
+              <CredentialDetail row={row} now={now} />
+            </div>
+            <span className={styles.window}>
+              {row.window.total === 0
+                ? t('dashboard.credential_window_idle')
+                : t('dashboard.credential_window', {
+                    success: row.window.success.toLocaleString(),
+                    failed: row.window.failed.toLocaleString(),
+                  })}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <Link className={styles.footerLink} to={buildAuthFilesHref({ status: 'all' })}>
+        {credentials.total > rows.length
+          ? t('dashboard.health_view_all', { count: credentials.total })
+          : t('dashboard.health_link')}{' '}
+        <span aria-hidden="true">→</span>
+      </Link>
+    </div>
+  );
+}

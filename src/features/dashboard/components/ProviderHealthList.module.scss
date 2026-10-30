@@ -1,0 +1,150 @@
+@use '../../../styles/mixins' as *;
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) minmax(72px, auto) minmax(96px, 0.7fr);
+  align-items: center;
+  gap: $spacing-md;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-color);
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  @media (max-width: 760px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: $spacing-sm;
+  }
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nameLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 4px;
+  @include text-ellipsis;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.spark {
+  height: 28px;
+
+  @media (max-width: 760px) {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+
+.numbers {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.total {
+  font-family: $font-mono;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.totalLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.failedLabel {
+  color: var(--failure-badge-text);
+  font-weight: 600;
+}
+
+.rate {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  @media (max-width: 760px) {
+    grid-column: 1 / -1;
+    order: 4;
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.rateValue {
+  font-family: $font-mono;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+
+  @media (max-width: 760px) {
+    min-width: 48px;
+  }
+}
+
+.meter {
+  height: 5px;
+
+  @media (max-width: 760px) {
+    flex: 1;
+  }
+}
+
+.empty {
+  margin: 0;
+  padding: $spacing-lg 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
