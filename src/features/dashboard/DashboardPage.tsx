@@ -25,6 +25,7 @@ import {
 import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic/freshness';
 import { redactUrlCredentials } from './logic/redact';
 import { formatClock } from './logic/time';
+import { summarizeUsage } from './logic/usage';
 import type { CredentialRow } from './types';
 import { AttentionPanel } from './components/AttentionPanel';
 import { CredentialList } from './components/CredentialList';
@@ -153,12 +154,28 @@ export function DashboardPage() {
     () => (connected ? buildAttention(providers, sourceHealth) : []),
     [connected, providers, sourceHealth]
   );
+  /* ---------- Usage (separate source, same window) ---------- */
+
+  const usageWindowStart = traffic.startMs ?? now - DEFAULT_WINDOW_MINUTES * 60_000;
+  const usageSummary = useMemo(
+    () => (usage?.enabled ? summarizeUsage(usage.usage, usageWindowStart) : null),
+    [usage, usageWindowStart]
+  );
+  // Credential traffic covers credentials listed now; usage statistics also keep requests
+  // from credentials that were removed. Flag a material disagreement instead of letting
+  // one of them read as the whole truth.
+  const usageRequests = usageSummary && freshness.usage === 'live' ? usageSummary.requests : null;
+  const usageDiffers =
+    usageRequests !== null &&
+    Math.abs(usageRequests - traffic.total) >
+      Math.max(5, 0.1 * Math.max(usageRequests, traffic.total));
+
   const verdict = deriveVerdict({
     connectionStatus,
     attention,
     primaryFreshness,
     hasData,
-    trafficTotal: traffic.total,
+    trafficTotal: Math.max(traffic.total, usageRequests ?? 0),
   });
   const verdictTitle = useVerdictTitle(verdict);
   /* The status full stop breathes only while steady traffic is flowing and fresh. */
@@ -304,6 +321,11 @@ export function DashboardPage() {
             {t('dashboard.vitals_window', { window: windowLabel })}
           </span>
           {trafficDetail}
+          {usageDiffers && (
+            <span className={`${styles.vitalLine} ${styles.partialNote}`}>
+              {t('dashboard.vitals_usage_differs', { count: usageRequests ?? 0 })}
+            </span>
+          )}
         </>
       ),
     },
@@ -545,7 +567,7 @@ export function DashboardPage() {
           </header>
           <UsagePanel
             usage={usage}
-            windowStartMs={traffic.startMs ?? now - windowMinutes * 60_000}
+            summary={usageSummary}
             windowLabel={windowLabel}
             credentialsByIndex={credentialsByIndex}
           />

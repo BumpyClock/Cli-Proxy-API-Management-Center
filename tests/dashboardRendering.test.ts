@@ -11,6 +11,7 @@ import { ProviderHealthList } from '../src/features/dashboard/components/Provide
 import { UsagePanel } from '../src/features/dashboard/components/UsagePanel';
 import { buildAttention } from '../src/features/dashboard/logic/attention';
 import { buildFleetModel } from '../src/features/dashboard/logic/fleet';
+import { summarizeUsage } from '../src/features/dashboard/logic/usage';
 import { providerSettingsHref } from '../src/features/dashboard/logic/links';
 import { SourceStamp } from '../src/features/dashboard/components/SourceStamp';
 
@@ -162,7 +163,7 @@ describe('dashboard components render translated, actionable markup', () => {
         render(
           createElement(UsagePanel, {
             usage,
-            windowStartMs: NOW - 200 * 60_000,
+            summary: summarizeUsage(usage.usage, NOW - 200 * 60_000),
             windowLabel: '3h 20m',
             credentialsByIndex,
           })
@@ -170,7 +171,7 @@ describe('dashboard components render translated, actionable markup', () => {
         render(
           createElement(UsagePanel, {
             usage: { enabled: false, usage: null },
-            windowStartMs: NOW,
+            summary: null,
             windowLabel: '3h 20m',
             credentialsByIndex,
           })

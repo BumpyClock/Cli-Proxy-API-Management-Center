@@ -1,34 +1,24 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { CredentialRow } from '../types';
 import type { UsageSourceData } from '../hooks/useDashboardOverview';
 import { formatClock } from '../logic/time';
-import { summarizeUsage } from '../logic/usage';
+import type { UsageSummary } from '../logic/usage';
 import { providerLabel } from '../utils';
 import { formatLatency } from './formatters';
 import styles from './UsagePanel.module.scss';
 
 interface UsagePanelProps {
   usage: UsageSourceData | null;
-  /** Server-clock start of the traffic window. */
-  windowStartMs: number;
+  /** Window summary of `usage`, computed once by the page; null when usage is off. */
+  summary: UsageSummary | null;
   windowLabel: string;
   credentialsByIndex: Map<string, CredentialRow>;
 }
 
 /** Per-model volume and latency plus the newest failed requests. */
-export function UsagePanel({
-  usage,
-  windowStartMs,
-  windowLabel,
-  credentialsByIndex,
-}: UsagePanelProps) {
+export function UsagePanel({ usage, summary, windowLabel, credentialsByIndex }: UsagePanelProps) {
   const { t, i18n } = useTranslation();
-  const summary = useMemo(
-    () => (usage?.enabled ? summarizeUsage(usage.usage, windowStartMs) : null),
-    [usage, windowStartMs]
-  );
 
   if (!usage) {
     return <p className={styles.note}>{t('dashboard.usage_loading')}</p>;

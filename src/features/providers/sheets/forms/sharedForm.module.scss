@@ -119,11 +119,6 @@
   }
 
   .footerBtn {
-    @media (pointer: coarse) {
-      height: 44px;
-      padding: 0 18px;
-    }
-
     font-size: 14px;
     font-weight: 600;
     line-height: 1;
@@ -1150,6 +1145,12 @@
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-primary);
+
+  /* Touch: 44px target for the sheet's Cancel / Edit / Save. */
+  @media (pointer: coarse) {
+    height: 44px;
+    padding: 0 18px;
+  }
 
   &:disabled {
     opacity: 0.6;

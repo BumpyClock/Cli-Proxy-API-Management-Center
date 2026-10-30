@@ -141,13 +141,6 @@
 }
 
 .closeBtn {
-  @media (pointer: coarse) {
-    width: 44px;
-    height: 44px;
-    top: 8px;
-    right: 8px;
-  }
-
   position: absolute;
   top: 14px;
   right: 14px;
@@ -164,6 +157,14 @@
   transition:
     background-color $transition-fast,
     color $transition-fast;
+
+  /* Touch: 44px target. Declared after the base size so it wins. */
+  @media (pointer: coarse) {
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+  }
 
   &:hover {
     background: var(--bg-tertiary);
