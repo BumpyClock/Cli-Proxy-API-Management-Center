@@ -42,6 +42,8 @@ export type CredentialState =
 export interface CredentialCooldown {
   /** Models with an active model-scoped cooldown. */
   modelCount: number;
+  /** Their model keys, as reported by the backend. */
+  models: string[];
   /** The whole credential is cooling down. */
   credentialWide: boolean;
   /** Most common reason code, e.g. `model_not_supported`. */
@@ -107,9 +109,12 @@ export interface ProviderHealth {
 /** Credential health totals. */
 export interface CredentialHealth {
   total: number;
+  /** Includes `limited`. */
   serving: number;
   problems: number;
   disabled: number;
+  /** Serving credentials with some models cooling down. */
+  limited: number;
   rows: CredentialRow[];
 }
 

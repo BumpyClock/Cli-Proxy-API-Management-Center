@@ -24,7 +24,7 @@
   }
 
   @media (max-width: 760px) {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto 16px;
     row-gap: $spacing-sm;
   }
 }
@@ -112,7 +112,9 @@
   transition: transform var(--dur-hover) var(--ease-out-strong);
 
   @media (max-width: 760px) {
-    display: none;
+    order: 0;
+    grid-column: 3;
+    grid-row: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {

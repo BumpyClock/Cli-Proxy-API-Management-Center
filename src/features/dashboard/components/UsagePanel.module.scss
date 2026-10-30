@@ -28,6 +28,13 @@
 
 .moreLink {
   align-self: flex-start;
+
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
   margin-top: 4px;
   font-size: 13px;
   font-weight: 600;

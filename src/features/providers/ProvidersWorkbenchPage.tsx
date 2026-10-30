@@ -154,13 +154,17 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     [persistUiState]
   );
 
-  // `?brand=claude` (from a dashboard alert) opens that brand, then leaves the URL clean.
+  // `?brand=claude` (from a dashboard alert) opens that brand, brings its settings into
+  // view once they render, then leaves the URL clean.
   const [searchParams, setSearchParams] = useSearchParams();
+  const resourcePanelRef = useRef<HTMLElement>(null);
+  const [revealBrand, setRevealBrand] = useState<ProviderBrand | null>(null);
   useEffect(() => {
     const requested = searchParams.get('brand');
     if (!requested) return;
     if (!fixedBrand && (PROVIDER_BRAND_ORDER as string[]).includes(requested)) {
       setActiveBrand(requested as ProviderBrand);
+      setRevealBrand(requested as ProviderBrand);
     }
     const next = new URLSearchParams(searchParams);
     next.delete('brand');
@@ -205,6 +209,15 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     },
     [activeBrand, persistUiState]
   );
+
+  useEffect(() => {
+    if (!revealBrand || activeGroup?.id !== revealBrand) return;
+    const panel = resourcePanelRef.current;
+    if (!panel) return;
+    panel.scrollIntoView({ block: 'start', behavior: 'auto' });
+    panel.focus({ preventScroll: true });
+    setRevealBrand(null);
+  }, [activeGroup?.id, revealBrand]);
 
   const filteredResources = useMemo(() => {
     if (!activeGroup) return [];
@@ -469,6 +482,7 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
           />
         ) : (
           <ProviderResourcePanel
+            panelRef={resourcePanelRef}
             group={activeGroup}
             filter={filter}
             onFilterChange={(value) => updateActiveFilterState({ filter: value })}

@@ -788,6 +788,8 @@
   height: 100vh;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  /* Focused or anchored content scrolls clear of the floating header. */
+  scroll-padding-top: calc(var(--header-height) + 16px);
 
   @supports (height: 100dvh) {
     height: 100dvh;
@@ -1012,4 +1014,9 @@
       overflow: visible;
     }
   }
+}
+
+/* On narrow screens the document scrolls; keep focus clear of the fixed header there too. */
+html {
+  scroll-padding-top: calc(var(--header-height, 80px) + 16px);
 }

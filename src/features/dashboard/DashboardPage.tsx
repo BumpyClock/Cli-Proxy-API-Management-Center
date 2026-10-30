@@ -219,12 +219,22 @@ export function DashboardPage() {
   /* ---------- Vitals ---------- */
 
   // A partial total cannot vouch for health: keep its rate neutral until every source loads.
-  const successTone = partialShort ? 'idle' : toneForSuccessRate(traffic.successRate);
+  // A partial or out-of-date total cannot vouch for health: keep its rate neutral until
+  // every source is live again, and say why beside the number.
+  const primaryLive = primaryFreshness === 'live';
+  const successTone =
+    partialShort || !primaryLive ? 'idle' : toneForSuccessRate(traffic.successRate);
+  const primaryStamp =
+    !primaryLive && hasData ? (
+      <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />
+    ) : null;
   const exceptionTone = (tone: string): Vital['tone'] =>
     tone === 'critical' ? 'critical' : tone === 'warning' ? 'warning' : undefined;
   const trafficDetail = partialShort ? (
     <span className={styles.partialNote}>{partialShort}</span>
-  ) : null;
+  ) : (
+    primaryStamp
+  );
 
   const credentialsVital: Vital = !credentials
     ? {
@@ -248,17 +258,30 @@ export function DashboardPage() {
                 total: credentials.total - credentials.disabled,
               }),
         tone: credentials.problems > 0 ? 'warning' : undefined,
-        detail:
-          [
-            credentials.problems > 0
-              ? t('dashboard.vitals_credentials_problems', { count: credentials.problems })
-              : null,
-            credentials.disabled > 0
-              ? t('dashboard.vitals_credentials_disabled', { count: credentials.disabled })
-              : null,
-          ]
-            .filter(Boolean)
-            .join(' · ') || t('dashboard.vitals_credentials_ok'),
+        detail: (
+          <>
+            <span className={styles.vitalLine}>
+              {credentials.total === 0
+                ? t('dashboard.vitals_credentials_none')
+                : [
+                    credentials.problems > 0
+                      ? t('dashboard.vitals_credentials_problems', { count: credentials.problems })
+                      : null,
+                    credentials.limited > 0
+                      ? t('dashboard.vitals_credentials_limited', { count: credentials.limited })
+                      : null,
+                    credentials.disabled > 0
+                      ? t('dashboard.vitals_credentials_disabled', { count: credentials.disabled })
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || t('dashboard.vitals_credentials_ok')}
+            </span>
+            {freshness.credentials !== 'live' && (
+              <SourceStamp entries={stampEntries(['credentials'])} now={now} />
+            )}
+          </>
+        ),
       };
 
   const vitals: Vital[] = [
@@ -350,7 +373,6 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <div className={styles.ambient} aria-hidden="true">
-        <span className={styles.washTop} />
         <span className={styles.gridWash} />
       </div>
 
@@ -454,6 +476,7 @@ export function DashboardPage() {
               {t('dashboard.fleet_description', { window: windowLabel })}
             </p>
             {partialShort && <p className={styles.partialNote}>{partialShort}</p>}
+            <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />
           </div>
           <Link to="/ai-providers" className={styles.sectionLink}>
             {t('dashboard.cta_manage_providers')} <span aria-hidden="true">→</span>

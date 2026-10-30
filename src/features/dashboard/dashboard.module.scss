@@ -27,24 +27,6 @@
   pointer-events: none;
 }
 
-/* 环境层收敛为一道极淡的顶部绿色 wash：绿色只属于"活着的流量"。
- * radial-gradient 本身就是连续的，不需要 blur（blur 的溢出反而会被裁出硬边）。 */
-.washTop {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: min(960px, 96vw);
-  height: 480px;
-  transform: translateX(-50%);
-  background: radial-gradient(
-    ellipse 75% 70% at 50% 18%,
-    color-mix(in srgb, var(--viz-success) 10%, transparent),
-    transparent 70%
-  );
-  mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 62%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 62%, transparent);
-}
-
 .gridWash {
   position: absolute;
   inset: 0;
@@ -52,7 +34,7 @@
     linear-gradient(to right, var(--border-color) 1px, transparent 1px),
     linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
   background-size: 72px 72px;
-  opacity: 0.24;
+  opacity: 0.16;
   /* 同样从顶端 0 淡入（intersect 取两层交集），避免网格在裁切线处满强度起步 */
   mask-image:
     linear-gradient(to bottom, transparent, #000 48px),
@@ -79,7 +61,7 @@
 /* Verdict headline: computed from live evidence. Sized so a two-line verdict still fits beside the panel. */
 .heroTitle {
   margin: 0;
-  font-size: clamp(34px, 4.6vw, 58px);
+  font-size: clamp(30px, 3.8vw, 46px);
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.035em;
@@ -139,8 +121,14 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  min-height: 28px;
+  padding: 4px 12px;
+  min-height: 32px;
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+    padding: 6px 16px;
+  }
+
   border-radius: $radius-full;
   border: 1px solid var(--border-primary);
   background: transparent;
@@ -197,6 +185,10 @@
   font-size: 12px;
   line-height: 1.45;
   color: var(--amber-text);
+}
+
+.vitalLine {
+  display: block;
 }
 
 .failedNote {
@@ -282,6 +274,12 @@
 }
 
 .panelLink {
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
   align-self: flex-start;
   font-size: 13px;
   font-weight: 600;
@@ -325,6 +323,12 @@
 }
 
 .sectionLink {
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
   flex: none;
   font-size: 13px;
   font-weight: 600;

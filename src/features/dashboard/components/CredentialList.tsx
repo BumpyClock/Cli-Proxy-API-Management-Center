@@ -106,6 +106,11 @@ export function CredentialList({
             <i className={`${styles.legendKey} ${styles.segmentServing}`} aria-hidden="true" />
             {t('dashboard.health_serving')}
             <b>{credentials.serving.toLocaleString()}</b>
+            {credentials.limited > 0 && (
+              <span className={styles.legendSub}>
+                {t('dashboard.health_limited_subset', { count: credentials.limited })}
+              </span>
+            )}
           </li>
           <li>
             <i className={`${styles.legendKey} ${styles.segmentProblem}`} aria-hidden="true" />

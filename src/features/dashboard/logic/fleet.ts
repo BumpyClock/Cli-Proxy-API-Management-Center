@@ -162,8 +162,15 @@ function summarizeCredentialCooldown(file: AuthFileItem): CredentialCooldown | n
     summary.rows.find((row) => row.record.reason === reason && row.record.httpStatus)?.record
       .httpStatus ?? null;
 
+  const models = summary.rows
+    .filter(
+      (row) => row.remainingSeconds > 0 && row.record.scope === 'model' && row.record.modelKey
+    )
+    .map((row) => row.record.modelKey as string);
+
   return {
     modelCount: summary.modelCount,
+    models: Array.from(new Set(models)),
     credentialWide: summary.credentialWide,
     reason,
     httpStatus,
@@ -447,6 +454,7 @@ export function buildFleetModel(input: FleetInput): FleetModel {
           serving: sortedRows.length - disabled - problems,
           problems,
           disabled,
+          limited: sortedRows.filter((row) => row.state === 'cooling').length,
           rows: sortedRows,
         }
       : null,
