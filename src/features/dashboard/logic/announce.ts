@@ -23,7 +23,14 @@ export function sameAnnouncementState(a: AnnouncementSnapshot, b: AnnouncementSn
   return true;
 }
 
-const SEVERITY: Record<string, number> = { down: 3, failed: 2, degraded: 2, stale: 1, limited: 1 };
+const SEVERITY: Record<string, number> = {
+  down: 3,
+  unknown: 2,
+  failed: 2,
+  degraded: 2,
+  stale: 1,
+  limited: 1,
+};
 
 /**
  * True when `next` adds an issue or makes one worse. Such news is safe to speak before

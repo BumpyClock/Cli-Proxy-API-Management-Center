@@ -73,7 +73,11 @@ export interface CredentialRow {
   window: TrafficCounts;
 }
 
-export type ProviderStatus = 'down' | 'degraded' | 'limited' | 'healthy' | 'idle';
+/**
+ * `unknown`: every credential file needs attention, but API keys (an alternative route)
+ * cannot be counted yet because API-key traffic has not loaded.
+ */
+export type ProviderStatus = 'down' | 'unknown' | 'degraded' | 'limited' | 'healthy' | 'idle';
 
 /** One provider row: window traffic plus credential health. */
 export interface ProviderHealth {
@@ -91,6 +95,8 @@ export interface ProviderHealth {
   apiKeys: number;
   /** API keys that are not the same credential as one of this provider's auth files. */
   independentApiKeys: number;
+  /** False until API-key traffic has loaded: until then the API-key counts are unknown, not zero. */
+  apiKeysKnown: boolean;
   window: TrafficCounts;
   /** Requests are failing and the newest active bucket has not recovered. */
   trafficFailing: boolean;

@@ -71,6 +71,8 @@ function ProviderItem({
 
   if (provider.status === 'down') {
     summary.push(t('dashboard.attention_no_working_credential'));
+  } else if (provider.status === 'unknown') {
+    summary.push(t('dashboard.attention_no_working_credential_keys_unknown'));
   } else if (provider.credentials.problems > 0) {
     summary.push(
       t('dashboard.attention_credentials_problem', {

@@ -51,6 +51,7 @@ export function buildAttention(
     .filter(
       (provider) =>
         provider.status === 'down' ||
+        provider.status === 'unknown' ||
         provider.status === 'degraded' ||
         provider.status === 'limited'
     )

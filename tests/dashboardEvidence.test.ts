@@ -21,6 +21,21 @@ describe('evidenceAsOf', () => {
     expect(evidenceAsOf(credentialProvider, receipts(false, true))).toBe(NOW - 120_000);
   });
 
+  test('unknown key inventory: traffic that never loaded has no age to state', () => {
+    const unknownKeys = { credentials: { total: 1 }, apiKeys: 0, apiKeysKnown: false };
+    const neverLoaded: EvidenceReceipts = {
+      credentials: { receivedAt: NOW - 5_000, live: true },
+      traffic: { receivedAt: null, live: false },
+    };
+    expect(evidenceAsOf(unknownKeys, neverLoaded)).toBeNull();
+    expect(
+      evidenceAsOf(unknownKeys, {
+        ...neverLoaded,
+        credentials: { receivedAt: NOW - 120_000, live: false },
+      })
+    ).toBe(NOW - 120_000);
+  });
+
   test('evidence from both sources states the oldest receipt once either is stale', () => {
     expect(evidenceAsOf(mixedProvider, receipts(true, false))).toBe(NOW - 60_000);
     expect(evidenceAsOf(mixedProvider, receipts(false, false))).toBe(NOW - 120_000);

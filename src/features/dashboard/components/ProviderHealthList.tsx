@@ -14,6 +14,7 @@ const DASH = '—';
 /** Only exceptions carry a status word; healthy and idle rows let their numbers speak. */
 const STATUS_TONE: Partial<Record<ProviderStatus, 'critical' | 'warning'>> = {
   down: 'critical',
+  unknown: 'warning',
   degraded: 'warning',
   limited: 'warning',
 };

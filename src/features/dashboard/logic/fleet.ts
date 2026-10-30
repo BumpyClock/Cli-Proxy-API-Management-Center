@@ -211,10 +211,11 @@ export function compareCredentialRows(a: CredentialRow, b: CredentialRow): numbe
 
 const PROVIDER_STATUS_ORDER: Record<ProviderStatus, number> = {
   down: 0,
-  degraded: 1,
-  limited: 2,
-  healthy: 3,
-  idle: 4,
+  unknown: 1,
+  degraded: 2,
+  limited: 3,
+  healthy: 4,
+  idle: 5,
 };
 
 /**
@@ -234,15 +235,19 @@ export function isTrafficFailing(window: TrafficCounts, recovered: boolean): boo
 
 /**
  * Provider verdict, in priority order:
- * - down: every enabled credential needs attention and no independent API key can serve.
+ * - down: every enabled credential needs attention and no independent API key can serve
+ *   (established by loaded API-key traffic, never assumed).
+ * - unknown: every enabled credential needs attention, but API keys cannot be counted yet.
  * - degraded: some credentials need attention, or traffic is failing.
  * - limited: everything serves, but some models are cooling down on some credentials.
  * - idle: no requests in the window.
  */
 export function providerStatusOf(provider: Omit<ProviderHealth, 'status'>): ProviderStatus {
   const enabled = provider.credentials.total - provider.credentials.disabled;
-  if (enabled > 0 && provider.credentials.serving === 0 && provider.independentApiKeys === 0) {
-    return 'down';
+  if (enabled > 0 && provider.credentials.serving === 0) {
+    // An API key might still serve: claim an outage only when traffic shows there is none.
+    if (!provider.apiKeysKnown) return 'unknown';
+    if (provider.independentApiKeys === 0) return 'down';
   }
   if (provider.credentials.problems > 0 || provider.trafficFailing) return 'degraded';
   if (provider.credentials.limited > 0) return 'limited';
@@ -324,6 +329,8 @@ export function buildFleetModel(input: FleetInput): FleetModel {
         ? Math.floor(Math.max(...anchors) / TRAFFIC_BUCKET_MS) * TRAFFIC_BUCKET_MS
         : null;
 
+  // Without API-key traffic the key inventory is unknown, not zero.
+  const apiKeysKnown = input.keyUsage !== null && typeof input.keyUsage === 'object';
   const accumulators = new Map<string, ProviderAccumulator>();
   const allGroups: TimedBucket[][] = [];
   const apiKeysFromUsage = new Set<string>();
@@ -424,6 +431,7 @@ export function buildFleetModel(input: FleetInput): FleetModel {
         },
         apiKeys: accumulator.apiKeys,
         independentApiKeys: Math.max(0, accumulator.apiKeys - accumulator.mirroredApiKeys),
+        apiKeysKnown,
         window,
         trafficFailing,
         buckets,

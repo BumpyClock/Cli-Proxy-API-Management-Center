@@ -464,6 +464,54 @@ describe('attention and verdict', () => {
     expect(verdict(false, true)).toMatchObject({ kind: 'down', providerId: 'meta', stale: true });
   });
 
+  test('an unusable credential is not an outage while API keys are still unknown', () => {
+    const normalized = normalizeAuthFilesResponse(authPayload(), RECEIVED_MS);
+    const cold = buildFleetModel({
+      authFiles: normalized.files,
+      observedAtMs: OBSERVED_MS,
+      authFilesReceivedAt: RECEIVED_MS,
+      keyUsage: null,
+      keyUsageReceivedAt: null,
+    });
+    const meta = cold.providers.find((provider) => provider.id === 'meta');
+    expect(meta).toMatchObject({ status: 'unknown', apiKeysKnown: false });
+    const attention = buildAttention(cold.providers, sources({ traffic: 'failed' }));
+    expect(attention.find((item) => item.key === 'provider:meta')?.severity).toBe('warning');
+    const verdict = deriveVerdict({
+      connectionStatus: 'connected',
+      attention,
+      primaryFreshness: 'failed',
+      hasData: true,
+      trafficTotal: cold.traffic.total,
+    });
+    expect(verdict.kind).toBe('unknown');
+  });
+
+  test('loaded traffic decides: no key means down, an independent key means degraded', () => {
+    // Known credential-only provider: loaded traffic lists no Muse key.
+    const { providers } = buildLiveModel();
+    expect(providers.find((provider) => provider.id === 'meta')?.status).toBe('down');
+    // Same unusable credential, plus a Muse API key that still serves.
+    const normalized = normalizeAuthFilesResponse(authPayload(), RECEIVED_MS);
+    const withKey = buildFleetModel({
+      authFiles: normalized.files,
+      observedAtMs: OBSERVED_MS,
+      authFilesReceivedAt: RECEIVED_MS,
+      keyUsage: {
+        ...keyUsage,
+        meta: {
+          'https://api.meta.example|meta-key': {
+            success: 6,
+            failed: 0,
+            recent_requests: buckets({ 14: [6, 0] }),
+          },
+        },
+      },
+      keyUsageReceivedAt: RECEIVED_MS + 150,
+    });
+    expect(withKey.providers.find((provider) => provider.id === 'meta')?.status).toBe('degraded');
+  });
+
   test('lists a credentials gap ahead of the provider issues it undermines', () => {
     const { providers } = buildLiveModel();
     const keys = buildAttention(providers, sources({ credentials: 'failed', usage: 'failed' })).map(
