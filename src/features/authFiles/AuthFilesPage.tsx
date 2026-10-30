@@ -84,11 +84,9 @@ export function AuthFilesPage() {
   const pageTransitionLayer = usePageTransitionLayer();
   const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.status === 'current' : true;
   const navigate = useNavigate();
+  // A link such as `?provider=meta&status=problem&search=file.json` (from the dashboard)
+  // overrides the persisted filters, then its parameters are removed from the URL.
   const [searchParams, setSearchParams] = useSearchParams();
-  // Read once: a dashboard link such as `?provider=meta&status=problem` overrides the
-  // persisted filters on arrival only.
-  const deepLinkRef = useRef(parseAuthFilesDeepLink(searchParams));
-  const deepLinkCleanedRef = useRef(false);
 
   const [filter, setFilter] = useState<'all' | string>('all');
   const [statusFilterMode, setStatusFilterMode] = useState<AuthFilesStatusFilterMode>('all');
@@ -254,25 +252,23 @@ export function AuthFilesPage() {
       }
     }
 
-    const deepLink = deepLinkRef.current;
-    if (deepLink) {
-      setFilter(deepLink.provider ?? 'all');
-      setStatusFilterMode(deepLink.status ?? 'all');
-      setSearch(deepLink.search ?? '');
-      setPage(1);
-    }
-
     setUiStateHydrated(true);
   }, []);
 
+  // Runs after hydration so the link wins over persisted filters, and again for every new
+  // link that arrives while the page is open.
   useEffect(() => {
-    if (!deepLinkRef.current || deepLinkCleanedRef.current) return;
-    deepLinkCleanedRef.current = true;
-    if (!AUTH_FILES_DEEP_LINK_KEYS.some((key) => searchParams.has(key))) return;
+    if (!uiStateHydrated) return;
+    const deepLink = parseAuthFilesDeepLink(searchParams);
+    if (!deepLink) return;
+    setFilter(deepLink.provider ?? 'all');
+    setStatusFilterMode(deepLink.status ?? 'all');
+    setSearch(deepLink.search ?? '');
+    setPage(1);
     const next = new URLSearchParams(searchParams);
     AUTH_FILES_DEEP_LINK_KEYS.forEach((key) => next.delete(key));
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, uiStateHydrated]);
 
   useEffect(() => {
     if (!uiStateHydrated) return;

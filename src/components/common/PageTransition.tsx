@@ -93,6 +93,7 @@ export function PageTransition({
     layers.find((layer) => layer.status === 'current') ?? layers[layers.length - 1];
   const currentLayerKey = currentLayer?.key ?? location.key;
   const currentLayerPathname = currentLayer?.location.pathname;
+  const currentLayerSearch = currentLayer?.location.search;
 
   const resolveScrollContainer = useCallback(() => {
     if (scrollContainerRef?.current) return scrollContainerRef.current;
@@ -103,7 +104,16 @@ export function PageTransition({
   useLayoutEffect(() => {
     if (isAnimating) return;
     if (location.key === currentLayerKey) return;
-    if (currentLayerPathname === location.pathname) return;
+    if (currentLayerPathname === location.pathname) {
+      // Same page with a new query, such as a deep link: hand the current layer the new
+      // location without a transition so the page can read its search parameters.
+      if (currentLayerSearch !== location.search) {
+        setLayers((prev) =>
+          prev.map((layer) => (layer.status === 'current' ? { ...layer, location } : layer))
+        );
+      }
+      return;
+    }
     const scrollContainer = resolveScrollContainer();
     const exitScrollOffset = scrollContainer?.scrollTop ?? 0;
     exitScrollOffsetRef.current = exitScrollOffset;
@@ -215,6 +225,7 @@ export function PageTransition({
     location,
     currentLayerKey,
     currentLayerPathname,
+    currentLayerSearch,
     getRouteOrder,
     getTransitionVariant,
     resolveScrollContainer,

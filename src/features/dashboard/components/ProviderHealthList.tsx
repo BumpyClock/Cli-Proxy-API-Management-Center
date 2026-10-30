@@ -6,16 +6,15 @@ import { providerHref } from '../logic/links';
 import { providerLabel } from '../utils';
 import { Meter } from './Meter';
 import { Sparkline } from './Sparkline';
-import { StatusChip, type ChipTone } from './StatusPills';
+import { StatusText } from './StatusText';
 import styles from './ProviderHealthList.module.scss';
 
 const DASH = '—';
 
-const STATUS_TONE: Record<ProviderStatus, ChipTone> = {
+/** Only exceptions carry a status word; healthy and idle rows let their numbers speak. */
+const STATUS_TONE: Partial<Record<ProviderStatus, 'critical' | 'warning'>> = {
   down: 'critical',
   degraded: 'warning',
-  healthy: 'good',
-  idle: 'idle',
 };
 
 interface ProviderHealthListProps {
@@ -48,24 +47,32 @@ export function ProviderHealthList({ providers }: ProviderHealthListProps) {
             : null,
           provider.apiKeys > 0 ? t('dashboard.fleet_api_keys', { count: provider.apiKeys }) : null,
         ].filter(Boolean);
-        const failing = provider.status === 'down' || provider.status === 'degraded';
+        const tone = STATUS_TONE[provider.status];
+        const failing = Boolean(tone);
 
         return (
-          <li key={provider.id} className={styles.row}>
+          <li
+            key={provider.id}
+            className={[styles.row, tone ? styles[`row_${tone}`] : ''].filter(Boolean).join(' ')}
+          >
             <div className={styles.identity}>
-              <div className={styles.nameLine}>
-                <Link
-                  to={providerHref(provider)}
-                  className={styles.name}
-                  aria-label={t('dashboard.fleet_open_named', { provider: name })}
-                >
-                  {name}
-                </Link>
-                <StatusChip tone={STATUS_TONE[provider.status]}>
-                  {t(`dashboard.provider_status_${provider.status}`)}
-                </StatusChip>
-              </div>
-              {meta.length > 0 && <span className={styles.meta}>{meta.join(' · ')}</span>}
+              <Link
+                to={providerHref(provider)}
+                className={styles.name}
+                aria-label={t('dashboard.fleet_open_named', { provider: name })}
+              >
+                {name}
+              </Link>
+              <span className={styles.meta}>
+                {tone && (
+                  <StatusText tone={tone} className={styles.metaStatus}>
+                    {t(`dashboard.provider_status_${provider.status}`)}
+                  </StatusText>
+                )}
+                {provider.status === 'idle' && meta.length === 0
+                  ? t('dashboard.fleet_idle')
+                  : meta.join(' · ')}
+              </span>
             </div>
             <Sparkline
               points={provider.buckets.map((bucket) => bucket.success + bucket.failed)}

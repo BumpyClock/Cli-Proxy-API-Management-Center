@@ -12,10 +12,11 @@ import type {
 import type { SourceFreshness } from '../logic/freshness';
 import { MIN_REQUESTS_FOR_RATE } from '../logic/fleet';
 import { providerCredentialsHref } from '../logic/links';
+import { redactSecrets } from '../logic/redact';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
 import { credentialRecoveryLines, formatAge } from './formatters';
-import { StatusChip } from './StatusPills';
+import { StatusText } from './StatusText';
 import styles from './AttentionPanel.module.scss';
 
 const MAX_CREDENTIALS_PER_ITEM = 3;
@@ -100,7 +101,30 @@ function ProviderItem({
     );
   }
 
-  const hasCredentials = provider.credentials.total > 0;
+  // Offer the destination that matches the evidence: failing credentials go to Auth Files,
+  // failing API-key traffic goes to provider settings. When failing traffic cannot be
+  // attributed to one kind of credential, both are offered.
+  const actions: Array<{ key: string; to: string; label: string; ariaLabel: string }> = [];
+  const problems = provider.problemCredentials.length;
+  if (problems > 0 || (provider.trafficFailing && provider.credentials.total > 0)) {
+    actions.push({
+      key: 'credentials',
+      to: providerCredentialsHref(provider),
+      label:
+        problems === 1
+          ? t('dashboard.action_inspect_credential')
+          : t('dashboard.action_inspect_credentials'),
+      ariaLabel: t('dashboard.action_inspect_credentials_named', { provider: name }),
+    });
+  }
+  if (provider.trafficFailing && provider.apiKeys > 0) {
+    actions.push({
+      key: 'provider',
+      to: '/ai-providers',
+      label: t('dashboard.action_open_provider'),
+      ariaLabel: t('dashboard.action_open_provider_named', { provider: name }),
+    });
+  }
   const shown = provider.problemCredentials.slice(0, MAX_CREDENTIALS_PER_ITEM);
   const hidden = provider.problemCredentials.length - shown.length;
 
@@ -109,9 +133,9 @@ function ProviderItem({
       <div className={styles.itemBody}>
         <div className={styles.itemHead}>
           <span className={styles.itemTitle}>{name}</span>
-          <StatusChip tone={item.severity === 'critical' ? 'critical' : 'warning'}>
+          <StatusText tone={item.severity === 'critical' ? 'critical' : 'warning'}>
             {t(`dashboard.provider_status_${provider.status}`)}
-          </StatusChip>
+          </StatusText>
         </div>
         {summary.length > 0 && <p className={styles.itemSummary}>{summary.join(' · ')}</p>}
         {shown.length > 0 && (
@@ -128,25 +152,16 @@ function ProviderItem({
         )}
       </div>
       <div className={styles.itemActions}>
-        {hasCredentials ? (
+        {actions.map((action) => (
           <Link
+            key={action.key}
             className={styles.action}
-            to={providerCredentialsHref(provider)}
-            aria-label={t('dashboard.action_inspect_credentials_named', { provider: name })}
+            to={action.to}
+            aria-label={action.ariaLabel}
           >
-            {provider.problemCredentials.length === 1
-              ? t('dashboard.action_inspect_credential')
-              : t('dashboard.action_inspect_credentials')}
+            {action.label}
           </Link>
-        ) : (
-          <Link
-            className={styles.action}
-            to="/ai-providers"
-            aria-label={t('dashboard.action_open_provider_named', { provider: name })}
-          >
-            {t('dashboard.action_open_provider')}
-          </Link>
-        )}
+        ))}
       </div>
     </li>
   );
@@ -170,7 +185,7 @@ function SourceItem({
       ? t('dashboard.attention_source_failed', { source })
       : t('dashboard.attention_source_stale', { source });
   const details = [
-    item.error,
+    item.error ? redactSecrets(item.error) : null,
     item.receivedAt !== null
       ? t('dashboard.attention_source_showing', { age: formatAge(t, item.receivedAt, now) })
       : t('dashboard.attention_source_no_data'),
@@ -284,8 +299,6 @@ export function AttentionPanel({
     );
   }
 
-  const critical = items.filter((item) => item.severity === 'critical').length;
-
   return (
     <section className={styles.panel} aria-labelledby="dashboard-attention-title">
       <header className={styles.header}>
@@ -294,11 +307,6 @@ export function AttentionPanel({
         </span>
         <h2 id="dashboard-attention-title" className={styles.title}>
           {t('dashboard.attention_title', { count: items.length })}
-          {critical > 0 && (
-            <span className={styles.titleCritical}>
-              {t('dashboard.attention_critical_count', { count: critical })}
-            </span>
-          )}
         </h2>
         <Link className={styles.headerLink} to="/logs">
           {t('dashboard.cta_inspect_logs')} <span aria-hidden="true">→</span>

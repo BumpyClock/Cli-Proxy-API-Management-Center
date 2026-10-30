@@ -27,15 +27,15 @@ import {
   worstFreshness,
   type SourceFreshness,
 } from './logic/freshness';
+import { redactUrlCredentials } from './logic/redact';
 import { formatClock } from './logic/time';
 import type { CredentialRow } from './types';
 import { AttentionPanel } from './components/AttentionPanel';
 import { CredentialList } from './components/CredentialList';
-import { formatAge } from './components/formatters';
 import { LiveWire } from './components/LiveWire';
 import { Meter } from './components/Meter';
 import { ProviderHealthList } from './components/ProviderHealthList';
-import { FreshnessBadge } from './components/StatusPills';
+import { SourceStamp } from './components/SourceStamp';
 import { ThroughputChart } from './components/ThroughputChart';
 import { UsagePanel } from './components/UsagePanel';
 import { providerLabel, splitWindowMinutes, toneForSuccessRate, type MeterTone } from './utils';
@@ -43,8 +43,6 @@ import styles from './dashboard.module.scss';
 
 const DASH = '—';
 const DEFAULT_WINDOW_MINUTES = 200;
-/** Sources whose failure becomes an attention item. The model list only feeds one tile. */
-const ATTENTION_SOURCES = DASHBOARD_SOURCE_IDS.filter((id) => id !== 'models');
 
 /** Accent per tone: status color for meaningful tiles, neutral otherwise. */
 const TONE_ACCENTS: Record<MeterTone | VerdictTone, string> = {
@@ -121,14 +119,22 @@ export function DashboardPage() {
     [sources, now]
   );
   const primaryFreshness = worstFreshness([freshness.credentials, freshness.traffic]);
+  const primaryStatuses = useMemo(
+    () => [sources.credentials, sources.traffic],
+    [sources.credentials, sources.traffic]
+  );
   const primaryReceivedAt = oldestReceipt([sources.credentials, sources.traffic]);
   const hasData = sources.credentials.receivedAt !== null || sources.traffic.receivedAt !== null;
 
   /* ---------- Attention and verdict ---------- */
 
+  // Every source can raise an attention item when it fails or goes stale. Usage is skipped
+  // only while the server's latest successful answer says it has no usage statistics.
   const sourceHealth = useMemo<SourceHealth[]>(
     () =>
-      ATTENTION_SOURCES.filter((id) => !(id === 'usage' && usage?.enabled === null)).map((id) => ({
+      DASHBOARD_SOURCE_IDS.filter(
+        (id) => !(id === 'usage' && usage?.enabled === null && freshness.usage === 'live')
+      ).map((id) => ({
         id,
         freshness: freshness[id],
         error: sources[id].error,
@@ -174,10 +180,6 @@ export function DashboardPage() {
         : 'common.disconnected'
   );
   const versionLabel = serverVersion ? `v${serverVersion.trim().replace(/^[vV]+/, '')}` : null;
-  const updatedLabel =
-    connected && primaryReceivedAt !== null
-      ? t('dashboard.updated', { age: formatAge(t, primaryReceivedAt, now) })
-      : null;
 
   const routingStrategy = useMemo(() => {
     const raw = config?.routingStrategy?.trim() ?? '';
@@ -277,6 +279,7 @@ export function DashboardPage() {
       hint: t('dashboard.stat_models_hint'),
       meter: null,
       tone: undefined,
+      stamp: <SourceStamp sources={[sources.models]} freshness={freshness.models} now={now} />,
     },
   ];
 
@@ -297,12 +300,15 @@ export function DashboardPage() {
     },
     {
       label: t('dashboard.runtime_proxy'),
-      value: config?.proxyUrl?.trim() || t('dashboard.runtime_proxy_none'),
+      // Proxy URLs can embed credentials (user:password@host); never show the password.
+      value: config?.proxyUrl?.trim()
+        ? redactUrlCredentials(config.proxyUrl.trim())
+        : t('dashboard.runtime_proxy_none'),
       mono: Boolean(config?.proxyUrl?.trim()),
     },
   ];
 
-  const runtimeToggles = config
+  const runtimeSwitches = config
     ? [
         { label: t('dashboard.runtime_debug'), on: Boolean(config.debug) },
         { label: t('dashboard.runtime_file_logging'), on: Boolean(config.loggingToFile) },
@@ -315,11 +321,7 @@ export function DashboardPage() {
   const timeZoneLabel = resolveTimeZoneLabel(
     traffic.endMs !== null ? new Date(traffic.endMs) : undefined
   );
-  const usageSupported = usage?.enabled !== null;
-  const usageStamp =
-    sources.usage.receivedAt !== null
-      ? t('dashboard.updated', { age: formatAge(t, sources.usage.receivedAt, now) })
-      : null;
+  const usageSupported = !(usage?.enabled === null && freshness.usage === 'live');
 
   return (
     <div className={styles.page}>
@@ -342,11 +344,21 @@ export function DashboardPage() {
           </h1>
           <div className={styles.heroMeta} data-reveal>
             <span className={styles.heroMetaText}>
-              {[versionLabel, connectionLabel, updatedLabel].filter(Boolean).map((part, index) => (
+              {[versionLabel, connectionLabel].filter(Boolean).map((part, index) => (
                 <span key={index} className={styles.heroMetaPart}>
                   {part}
                 </span>
               ))}
+              {connected && (
+                <span className={styles.heroMetaPart}>
+                  <SourceStamp
+                    sources={primaryStatuses}
+                    freshness={primaryFreshness}
+                    now={now}
+                    className={styles.heroStamp}
+                  />
+                </span>
+              )}
             </span>
             {connected && (
               <button
@@ -371,7 +383,6 @@ export function DashboardPage() {
         <div className={styles.heroPanel} data-reveal="scale">
           <div className={styles.heroPanelTop}>
             <span className={styles.heroPanelLabel}>{t('dashboard.hero_requests_label')}</span>
-            {connected && <FreshnessBadge freshness={primaryFreshness} />}
           </div>
           <strong className={styles.heroFigure}>
             {connected && hasData ? formatHeadline(animatedTotal) : DASH}
@@ -440,7 +451,11 @@ export function DashboardPage() {
             data-reveal
             style={
               {
-                '--tile-accent': tile.tone ? TONE_ACCENTS[tile.tone] : 'var(--border-hover)',
+                // Only exceptions colour the tile accent; healthy tiles stay neutral.
+                '--tile-accent':
+                  tile.tone === 'warning' || tile.tone === 'critical'
+                    ? TONE_ACCENTS[tile.tone]
+                    : 'var(--border-hover)',
               } as React.CSSProperties
             }
           >
@@ -455,6 +470,7 @@ export function DashboardPage() {
               />
             )}
             <span className={styles.statHint}>{tile.hint}</span>
+            {'stamp' in tile && tile.stamp}
           </article>
         ))}
       </section>
@@ -472,6 +488,7 @@ export function DashboardPage() {
                 })
               : t('dashboard.traffic_description_empty')}
           </p>
+          <SourceStamp sources={primaryStatuses} freshness={primaryFreshness} now={now} />
         </header>
         <div className={styles.panel}>
           <ThroughputChart traffic={traffic} />
@@ -503,6 +520,11 @@ export function DashboardPage() {
           <div className={styles.sectionHead}>
             <span className={styles.eyebrow}>{t('dashboard.health_eyebrow')}</span>
             <h2 className={styles.sectionTitle}>{t('dashboard.health_title')}</h2>
+            <SourceStamp
+              sources={[sources.credentials]}
+              freshness={freshness.credentials}
+              now={now}
+            />
           </div>
           <Link to="/oauth" className={styles.sectionLink}>
             {t('dashboard.health_add')} <span aria-hidden="true">→</span>
@@ -523,9 +545,7 @@ export function DashboardPage() {
             <header className={styles.panelHead}>
               <span className={styles.eyebrow}>{t('dashboard.usage_eyebrow')}</span>
               <h2 className={styles.panelTitle}>{t('dashboard.usage_title')}</h2>
-              {usage?.enabled && usageStamp && (
-                <span className={styles.panelStamp}>{usageStamp}</span>
-              )}
+              <SourceStamp sources={[sources.usage]} freshness={freshness.usage} now={now} />
             </header>
             <UsagePanel
               usage={usage}
@@ -540,6 +560,7 @@ export function DashboardPage() {
           <header className={styles.panelHead}>
             <span className={styles.eyebrow}>{t('dashboard.runtime_eyebrow')}</span>
             <h2 className={styles.panelTitle}>{t('dashboard.runtime_title')}</h2>
+            <SourceStamp sources={[sources.config]} freshness={freshness.config} now={now} />
           </header>
           <dl className={styles.specList}>
             {runtimeRows.map((row) => (
@@ -551,18 +572,17 @@ export function DashboardPage() {
               </div>
             ))}
           </dl>
-          {runtimeToggles.length > 0 && (
-            <ul className={styles.toggleList}>
-              {runtimeToggles.map((toggle) => (
-                <li
-                  key={toggle.label}
-                  className={`${styles.togglePill} ${toggle.on ? styles.toggleOn : styles.toggleOff}`}
-                >
-                  {toggle.label}
-                  <b>{toggle.on ? t('common.yes') : t('common.no')}</b>
-                </li>
+          {runtimeSwitches.length > 0 && (
+            <dl className={`${styles.specList} ${styles.switchList}`}>
+              {runtimeSwitches.map((item) => (
+                <div key={item.label} className={styles.specRow}>
+                  <dt className={styles.specLabel}>{item.label}</dt>
+                  <dd className={`${styles.specValue} ${item.on ? '' : styles.specOff}`}>
+                    {item.on ? t('dashboard.runtime_on') : t('dashboard.runtime_off')}
+                  </dd>
+                </div>
               ))}
-            </ul>
+            </dl>
           )}
           <div className={styles.panelLinks}>
             <Link to="/config" className={styles.panelLink}>

@@ -1,4 +1,5 @@
 import { HEALTHY_AUTH_FILE_STATUS_MESSAGES } from '@/features/authFiles/constants';
+import { redactSecrets } from './redact';
 
 const MAX_REASON_LENGTH = 180;
 
@@ -41,7 +42,7 @@ function tryParseJson(text: string): unknown {
  * Readable reason for a credential's `status_message`.
  *
  * Providers often store their raw JSON error body there. Operators need the sentence
- * inside it, not the envelope. Healthy markers ("ok", "ready") produce null.
+ * inside it, not the envelope. Healthy markers ("ok", "ready") produce null. Secrets are masked.
  */
 export function readableStatusReason(raw: unknown): string | null {
   const text = readText(raw);
@@ -59,7 +60,8 @@ export function readableStatusReason(raw: unknown): string | null {
   const sentence = extracted || text;
   const combined =
     prefix && extracted && !extracted.includes(prefix) ? `${prefix}: ${extracted}` : sentence;
-  const collapsed = combined.replace(/\s+/g, ' ').trim();
+  // Provider bodies can echo keys or tokens; mask them before they reach the screen.
+  const collapsed = redactSecrets(combined).replace(/\s+/g, ' ').trim();
 
   return collapsed.length > MAX_REASON_LENGTH
     ? `${collapsed.slice(0, MAX_REASON_LENGTH - 1).trimEnd()}…`

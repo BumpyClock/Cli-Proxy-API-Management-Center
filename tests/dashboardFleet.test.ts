@@ -138,7 +138,7 @@ describe('readableStatusReason', () => {
   });
 
   test('truncates runaway messages', () => {
-    const reason = readableStatusReason('x'.repeat(400));
+    const reason = readableStatusReason('upstream failed '.repeat(30));
     expect(reason?.length).toBe(180);
     expect(reason?.endsWith('…')).toBe(true);
   });
@@ -231,6 +231,108 @@ describe('buildFleetModel', () => {
       keyUsageReceivedAt: RECEIVED_MS,
     });
     expect(model.providers[0]).toMatchObject({ id: 'claude', recovered: true, status: 'healthy' });
+  });
+
+  test('treats a small sample where every request failed as degraded', () => {
+    const model = buildFleetModel({
+      authFiles: [],
+      observedAtMs: OBSERVED_MS,
+      authFilesReceivedAt: RECEIVED_MS,
+      keyUsage: {
+        claude: { 'base|key': { success: 0, failed: 2, recent_requests: buckets({ 18: [0, 2] }) } },
+      },
+      keyUsageReceivedAt: RECEIVED_MS,
+    });
+    expect(model.providers[0]).toMatchObject({
+      id: 'claude',
+      trafficFailing: true,
+      status: 'degraded',
+    });
+  });
+
+  test('keeps the health of a file credential that mirrors a usage API key, counting traffic once', () => {
+    const normalized = normalizeAuthFilesResponse(
+      {
+        observed_at: OBSERVED_AT,
+        files: [
+          {
+            name: 'plugin-key.json',
+            type: 'claude',
+            account_type: 'api_key',
+            account: 'sk-ant-mirrored',
+            status: 'error',
+            unavailable: true,
+            recent_requests: buckets({ 18: [0, 3] }),
+          },
+        ],
+      } as unknown as AuthFilesResponse,
+      RECEIVED_MS
+    );
+    const model = buildFleetModel({
+      authFiles: normalized.files,
+      observedAtMs: OBSERVED_MS,
+      authFilesReceivedAt: RECEIVED_MS,
+      keyUsage: {
+        claude: {
+          'base|sk-ant-mirrored': {
+            success: 0,
+            failed: 3,
+            recent_requests: buckets({ 18: [0, 3] }),
+          },
+        },
+      },
+      keyUsageReceivedAt: RECEIVED_MS,
+    });
+    const claude = model.providers[0];
+    expect(claude.credentials).toMatchObject({ total: 1, problems: 1 });
+    expect(claude.independentApiKeys).toBe(0);
+    expect(claude.status).toBe('down');
+    expect(model.traffic.failed).toBe(3);
+    expect(JSON.stringify(model)).not.toContain('sk-ant-mirrored');
+  });
+
+  test('aligns auth and usage snapshots taken on either side of a bucket boundary', () => {
+    // observed_at is still in 05:50Z, but both snapshots were built after 06:00Z (UTC+8 labels).
+    const observedAt = Date.UTC(2026, 9, 30, 5, 59, 59, 950);
+    const labelled = (newestStartUtc: number, filled: Record<number, [number, number]>) =>
+      Array.from({ length: 20 }, (_, index) => {
+        const start = newestStartUtc - (19 - index) * 10 * MINUTE + 8 * 60 * MINUTE;
+        const date = new Date(start);
+        const hh = String(date.getUTCHours()).padStart(2, '0');
+        const mm = String(date.getUTCMinutes()).padStart(2, '0');
+        const [success, failed] = filled[index] ?? [0, 0];
+        return { time: `${hh}:${mm}-x`, success, failed };
+      });
+    const newest = Date.UTC(2026, 9, 30, 6, 0);
+    const normalized = normalizeAuthFilesResponse(
+      {
+        observed_at: new Date(observedAt).toISOString(),
+        files: [
+          {
+            name: 'codex.json',
+            type: 'codex',
+            status: 'active',
+            recent_requests: labelled(newest, { 19: [5, 0] }),
+          },
+        ],
+      } as unknown as AuthFilesResponse,
+      observedAt
+    );
+    const model = buildFleetModel({
+      authFiles: normalized.files,
+      observedAtMs: observedAt,
+      authFilesReceivedAt: observedAt,
+      keyUsage: {
+        claude: {
+          'base|key': { success: 2, failed: 0, recent_requests: labelled(newest, { 19: [2, 0] }) },
+        },
+      },
+      // A browser clock four minutes slow must not shift the usage buckets.
+      keyUsageReceivedAt: observedAt - 4 * MINUTE,
+    });
+    const last = model.traffic.buckets[model.traffic.buckets.length - 1];
+    expect(new Date(last.startMs).toISOString()).toBe('2026-10-30T06:00:00.000Z');
+    expect(last).toMatchObject({ success: 7, failed: 0, partial: true });
   });
 
   test('never exposes API keys from usage composite keys', () => {

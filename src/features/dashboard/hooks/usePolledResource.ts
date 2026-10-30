@@ -1,197 +1,87 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { getErrorMessage } from '@/utils/helpers';
-import { nextPollDelay } from '../logic/freshness';
+import { createPoller, EMPTY_POLLER_STATE, type PollerState } from '../logic/poller';
 
-export interface PolledResource<T> {
-  data: T | null;
-  /** Local receipt time of the last successful load. */
-  receivedAt: number | null;
-  /** Message from the latest failed attempt; cleared by the next success. */
-  error: string | null;
-  loading: boolean;
+export interface PolledResource<T> extends PollerState<T> {
   /** Load now. Resolves with fresh data or rejects with the failure. */
   refresh: () => Promise<T>;
 }
 
 interface PolledResourceOptions<T> {
-  load: () => Promise<T>;
+  load: (signal: AbortSignal) => Promise<T>;
   intervalMs: number;
+  /** Upper bound for one attempt. */
+  timeoutMs: number;
   enabled: boolean;
   /**
-   * Connection identity. A change discards data and ignores responses still in flight,
-   * so one session's numbers can never land in another's view.
+   * Connection identity. A change creates a fresh poller with empty state, so one
+   * session's numbers can never land in another's view.
    */
   scope: string;
 }
 
-interface ResourceState<T> {
-  scope: string;
-  data: T | null;
-  receivedAt: number | null;
-  error: string | null;
-  loading: boolean;
-}
-
-const emptyState = <T>(scope: string): ResourceState<T> => ({
-  scope,
-  data: null,
-  receivedAt: null,
-  error: null,
-  loading: false,
-});
-
 const isDocumentHidden = () =>
   typeof document !== 'undefined' && document.visibilityState === 'hidden';
 
+const noopSubscribe = () => () => {};
+const emptySnapshot = () => EMPTY_POLLER_STATE;
+
 /**
- * Poll a source while the page is visible.
- *
- * - Polls are spaced from the last success, so a manual refresh resets the schedule.
- * - Hidden tabs stop polling. Returning to the tab, regaining focus, or coming back
- *   online refreshes immediately when the data is older than one interval.
- * - Failures keep the last good data and record the error, so the view can show
- *   "stale" rather than silently presenting old numbers as current.
+ * Poll a source while the page is visible. Scheduling lives in `createPoller`; this hook
+ * binds one poller per scope to React and to page visibility, focus, and network events.
  */
 export function usePolledResource<T>({
   load,
   intervalMs,
+  timeoutMs,
   enabled,
   scope,
 }: PolledResourceOptions<T>): PolledResource<T> {
-  const [state, setState] = useState<ResourceState<T>>(() => emptyState<T>(scope));
-  const loadRef = useRef(load);
-  const scopeRef = useRef(scope);
-  const receivedAtRef = useRef<number | null>(null);
-  const inFlightRef = useRef<{ scope: string; promise: Promise<T> } | null>(null);
-  const scheduleRef = useRef<((failed: boolean) => void) | null>(null);
+  const poller = useMemo(
+    () =>
+      enabled
+        ? createPoller<T>({
+            intervalMs,
+            timeoutMs,
+            isHidden: isDocumentHidden,
+            describeError: (error) => getErrorMessage(error, 'Request failed'),
+          })
+        : null,
+    // `scope` is a dependency on purpose: a new connection gets a new poller.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [enabled, intervalMs, timeoutMs, scope]
+  );
+
+  // Declared before the start effect so the loader is in place for the first poll.
+  useEffect(() => {
+    poller?.setLoad(load);
+  }, [poller, load]);
 
   useEffect(() => {
-    loadRef.current = load;
-  }, [load]);
-
-  const run = useCallback((): Promise<T> => {
-    const runScope = scopeRef.current;
-    const inFlight = inFlightRef.current;
-    if (inFlight && inFlight.scope === runScope) return inFlight.promise;
-
-    setState((previous) => ({
-      ...(previous.scope === runScope ? previous : emptyState<T>(runScope)),
-      loading: true,
-    }));
-
-    const promise = loadRef.current().then(
-      (data) => {
-        if (scopeRef.current === runScope) {
-          const receivedAt = Date.now();
-          receivedAtRef.current = receivedAt;
-          setState({ scope: runScope, data, receivedAt, error: null, loading: false });
-        }
-        return data;
-      },
-      (error: unknown) => {
-        if (scopeRef.current === runScope) {
-          setState((previous) => ({
-            ...(previous.scope === runScope ? previous : emptyState<T>(runScope)),
-            error: getErrorMessage(error, 'Request failed'),
-            loading: false,
-          }));
-        }
-        throw error;
-      }
-    );
-    const entry = { scope: runScope, promise };
-    inFlightRef.current = entry;
-    const release = () => {
-      if (inFlightRef.current === entry) inFlightRef.current = null;
-    };
-    promise.then(release, release);
-    return promise;
-  }, []);
-
-  useEffect(() => {
-    scopeRef.current = scope;
-    receivedAtRef.current = null;
-    if (!enabled) return undefined;
-
-    let disposed = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const clear = () => {
-      if (timer !== null) {
-        clearTimeout(timer);
-        timer = null;
-      }
-    };
-
-    const schedule = (delayMs?: number) => {
-      clear();
-      if (disposed || isDocumentHidden()) return;
-      timer = setTimeout(
-        tick,
-        delayMs ?? nextPollDelay(receivedAtRef.current, intervalMs, Date.now())
-      );
-    };
-
-    function tick() {
-      timer = null;
-      if (disposed || isDocumentHidden()) return;
-      // A manual refresh may have landed since this timer was set.
-      const wait = nextPollDelay(receivedAtRef.current, intervalMs, Date.now());
-      if (wait > 0) {
-        schedule(wait);
-        return;
-      }
-      run().then(
-        () => schedule(),
-        // After a failure, wait a full interval instead of retrying immediately.
-        () => schedule(intervalMs)
-      );
-    }
-
-    const resume = () => {
-      if (isDocumentHidden()) {
-        clear();
-        return;
-      }
-      if (timer === null && !inFlightRef.current) tick();
-    };
-
-    scheduleRef.current = (failed) => schedule(failed ? intervalMs : undefined);
-    tick();
+    if (!poller) return undefined;
+    poller.start();
+    const resume = () => poller.resume();
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('focus', resume);
     window.addEventListener('online', resume);
-
     return () => {
-      disposed = true;
-      clear();
-      scheduleRef.current = null;
+      poller.stop();
       document.removeEventListener('visibilitychange', resume);
       window.removeEventListener('focus', resume);
       window.removeEventListener('online', resume);
     };
-  }, [enabled, intervalMs, run, scope]);
+  }, [poller]);
 
-  const refresh = useCallback(async () => {
-    try {
-      const data = await run();
-      scheduleRef.current?.(false);
-      return data;
-    } catch (error: unknown) {
-      // Push the next poll a full interval out so a failed retry is not repeated at once.
-      scheduleRef.current?.(true);
-      throw error;
-    }
-  }, [run]);
+  const state = useSyncExternalStore(
+    poller ? poller.subscribe : noopSubscribe,
+    poller ? poller.getSnapshot : (emptySnapshot as () => PollerState<T>),
+    emptySnapshot as () => PollerState<T>
+  ) as PollerState<T>;
 
-  const inScope = state.scope === scope;
-  const data = inScope ? state.data : null;
-  const receivedAt = inScope ? state.receivedAt : null;
-  const error = inScope ? state.error : null;
-  const loading = inScope ? state.loading : false;
-
-  return useMemo(
-    () => ({ data, receivedAt, error, loading, refresh }),
-    [data, receivedAt, error, loading, refresh]
+  const refresh = useCallback(
+    () => (poller ? poller.refresh() : Promise.reject(new Error('Not connected'))),
+    [poller]
   );
+
+  return useMemo(() => ({ ...state, refresh }), [state, refresh]);
 }

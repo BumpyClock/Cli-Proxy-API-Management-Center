@@ -4,18 +4,16 @@ import { buildAuthFilesHref } from '@/features/authFiles/deepLink';
 import type { CredentialHealth, CredentialRow, CredentialState } from '../types';
 import { providerLabel } from '../utils';
 import { credentialRecoveryLines } from './formatters';
-import { StatusChip, type ChipTone } from './StatusPills';
+import { StatusText, type StatusTone } from './StatusText';
 import styles from './CredentialList.module.scss';
 
 const DEFAULT_LIMIT = 8;
 
-const STATE_TONE: Record<CredentialState, ChipTone> = {
+/** Problems get a status word; serving and disabled read as plain text. */
+const STATE_TONE: Partial<Record<CredentialState, StatusTone>> = {
   unavailable: 'critical',
   error: 'critical',
   warning: 'warning',
-  cooling: 'neutral',
-  serving: 'good',
-  disabled: 'idle',
 };
 
 interface CredentialListProps {
@@ -100,7 +98,16 @@ export function CredentialList({ credentials, now, limit = DEFAULT_LIMIT }: Cred
 
       <ul className={styles.list}>
         {rows.map((row) => (
-          <li key={`${row.name}:${row.identity.primary}`} className={styles.row}>
+          <li
+            key={`${row.name}:${row.identity.primary}`}
+            className={[
+              styles.row,
+              STATE_TONE[row.state] ? styles[`row_${STATE_TONE[row.state]}`] : '',
+              row.state === 'disabled' ? styles.rowDisabled : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
             <div className={styles.identity}>
               <span className={styles.provider}>
                 {providerLabel(row.providerId, t('dashboard.provider_unknown'))}
@@ -116,9 +123,22 @@ export function CredentialList({ credentials, now, limit = DEFAULT_LIMIT }: Cred
               </Link>
             </div>
             <div className={styles.state}>
-              <StatusChip tone={STATE_TONE[row.state]}>
-                {t(`dashboard.credential_state_${row.state}`)}
-              </StatusChip>
+              {STATE_TONE[row.state] ? (
+                <StatusText tone={STATE_TONE[row.state] as StatusTone}>
+                  {t(`dashboard.credential_state_${row.state}`)}
+                </StatusText>
+              ) : (
+                <span
+                  className={[
+                    styles.plainState,
+                    row.state === 'disabled' ? styles.disabledState : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  {t(`dashboard.credential_state_${row.state}`)}
+                </span>
+              )}
               <CredentialDetail row={row} now={now} />
             </div>
             <span className={styles.window}>

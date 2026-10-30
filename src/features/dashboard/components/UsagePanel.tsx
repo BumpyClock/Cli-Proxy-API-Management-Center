@@ -39,7 +39,7 @@ export function UsagePanel({
       <div className={styles.off}>
         <p className={styles.offTitle}>{t('dashboard.usage_off')}</p>
         <p className={styles.note}>{t('dashboard.usage_off_detail')}</p>
-        <Link className={styles.moreLink} to="/config">
+        <Link className={styles.moreLink} to="/config?field=usageStatisticsEnabled">
           {t('dashboard.usage_off_action')} <span aria-hidden="true">→</span>
         </Link>
       </div>
@@ -78,7 +78,11 @@ export function UsagePanel({
               <th scope="row" className={styles.model} title={row.model}>
                 {row.model}
               </th>
-              <td>{row.requests.toLocaleString()}</td>
+              <td title={row.truncated ? t('dashboard.usage_truncated_hint') : undefined}>
+                {row.truncated
+                  ? `${row.requests.toLocaleString()}+`
+                  : row.requests.toLocaleString()}
+              </td>
               <td className={row.failed > 0 ? styles.failed : undefined}>
                 {row.failed.toLocaleString()}
               </td>

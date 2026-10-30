@@ -56,17 +56,3 @@ export function oldestReceipt(sources: SourceStatus[]): number | null {
   }
   return oldest;
 }
-
-/**
- * Delay before the next poll. Polls are anchored to the last success so a manual
- * refresh pushes the schedule back instead of causing a duplicate request.
- */
-export function nextPollDelay(
-  receivedAt: number | null,
-  intervalMs: number,
-  nowMs: number
-): number {
-  if (receivedAt === null) return 0;
-  const age = nowMs - receivedAt;
-  return age >= intervalMs ? 0 : intervalMs - age;
-}

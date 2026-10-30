@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { apiKeyUsageApi, authFilesApi, usageApi } from '@/services/api';
-import { useAuthStore, useConfigStore, useModelsStore } from '@/stores';
+import { apiKeyUsageApi, authFilesApi, modelsApi, usageApi } from '@/services/api';
+import { useAuthStore, useConfigStore } from '@/stores';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
 import type { Config } from '@/types';
 import type { UsageSnapshot } from '@/types/usage';
@@ -19,6 +19,15 @@ export const DASHBOARD_POLL_MS: Record<DashboardSourceId, number> = {
   config: 60_000,
   models: 300_000,
   usage: 60_000,
+};
+
+/** Upper bound per attempt, so a stalled request surfaces as a failure instead of hanging. */
+const DASHBOARD_TIMEOUT_MS: Record<DashboardSourceId, number> = {
+  credentials: 20_000,
+  traffic: 20_000,
+  config: 20_000,
+  models: 15_000,
+  usage: 75_000,
 };
 
 export const DASHBOARD_SOURCE_IDS: DashboardSourceId[] = [
@@ -64,9 +73,8 @@ export function useDashboardOverview() {
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const apiBase = useAuthStore((state) => state.apiBase);
   const managementKey = useAuthStore((state) => state.managementKey);
-  const config = useConfigStore((state) => state.config);
+  const storeConfig = useConfigStore((state) => state.config);
   const fetchConfig = useConfigStore((state) => state.fetchConfig);
-  const fetchModels = useModelsStore((state) => state.fetchModels);
   const resolveApiKeysForModels = useApiKeysForModels();
 
   const connected = connectionStatus === 'connected';
@@ -76,6 +84,7 @@ export function useDashboardOverview() {
     scope,
     enabled: connected,
     intervalMs: DASHBOARD_POLL_MS.credentials,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.credentials,
     load: () => authFilesApi.list(),
   });
 
@@ -83,6 +92,7 @@ export function useDashboardOverview() {
     scope,
     enabled: connected,
     intervalMs: DASHBOARD_POLL_MS.traffic,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.traffic,
     load: () => apiKeyUsageApi.getUsage(),
   });
 
@@ -90,16 +100,29 @@ export function useDashboardOverview() {
     scope,
     enabled: connected,
     intervalMs: DASHBOARD_POLL_MS.config,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.config,
     load: () => fetchConfig(true),
   });
 
+  // Fetched directly rather than through the shared models store, so a request that
+  // outlives its session can only reach this scoped resource, which discards it.
   const modelsResource = usePolledResource({
     scope,
     enabled: connected && Boolean(apiBase),
     intervalMs: DASHBOARD_POLL_MS.models,
-    load: async () => {
+    timeoutMs: DASHBOARD_TIMEOUT_MS.models,
+    load: async (signal) => {
       const apiKeys = await resolveApiKeysForModels();
-      return fetchModels(apiBase, apiKeys[0], true);
+      if (signal.aborted) throw new Error('Request aborted');
+      return modelsApi.fetchModels(
+        apiBase,
+        apiKeys[0],
+        {},
+        {
+          signal,
+          timeout: DASHBOARD_TIMEOUT_MS.models,
+        }
+      );
     },
   });
 
@@ -107,6 +130,7 @@ export function useDashboardOverview() {
     scope,
     enabled: connected,
     intervalMs: DASHBOARD_POLL_MS.usage,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.usage,
     load: async () => {
       const enabled = await usageApi.getStatisticsEnabled();
       if (enabled !== true) return { enabled, usage: null };
@@ -145,6 +169,10 @@ export function useDashboardOverview() {
       trafficResource.receivedAt,
     ]
   );
+
+  // The header "Refresh all" clears the shared config store before reloading. Fall back to
+  // this page's last good snapshot so a failed reload does not blank the runtime panel.
+  const config = storeConfig ?? configResource.data;
 
   const counts = useMemo<DashboardCounts>(() => {
     const providerKeyCounts = config ? getProviderKeyCounts(config) : null;

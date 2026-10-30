@@ -85,7 +85,11 @@ export interface ProviderHealth {
   };
   /** API-key credentials reported by `api-key-usage`. */
   apiKeys: number;
+  /** API keys that are not the same credential as one of this provider's auth files. */
+  independentApiKeys: number;
   window: TrafficCounts;
+  /** Requests are failing and the newest active bucket has not recovered. */
+  trafficFailing: boolean;
   buckets: TimedBucket[];
   /** Newest bucket that saw traffic, or null when idle for the whole window. */
   lastActive: TimedBucket | null;

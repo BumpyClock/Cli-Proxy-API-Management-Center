@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
   classifyFreshness,
-  nextPollDelay,
   oldestReceipt,
   staleAfterMs,
   worstFreshness,
@@ -11,6 +10,9 @@ import {
   alignBuckets,
   formatClock,
   formatInstant,
+  inferServerOffsetMinutes,
+  labelStartMinutes,
+  labelToBucketStart,
   serverInstantToLocal,
 } from '../src/features/dashboard/logic/time';
 
@@ -40,6 +42,56 @@ describe('alignBuckets', () => {
   test('returns nothing without buckets or a usable anchor', () => {
     expect(alignBuckets([], Date.now())).toEqual([]);
     expect(alignBuckets([{ success: 1, failed: 0 }], Number.NaN)).toEqual([]);
+  });
+});
+
+describe('server label alignment', () => {
+  const observedAt = Date.UTC(2026, 9, 30, 5, 58, 37);
+
+  test('parses bucket label starts', () => {
+    expect(labelStartMinutes('13:50-14:00')).toBe(830);
+    expect(labelStartMinutes('9:05-9:15')).toBe(545);
+    expect(labelStartMinutes('label-3')).toBeNull();
+    expect(labelStartMinutes(undefined)).toBeNull();
+  });
+
+  test('infers the server offset from the newest label', () => {
+    expect(inferServerOffsetMinutes(830, observedAt)).toBe(480); // UTC+8
+    expect(inferServerOffsetMinutes(22 * 60 + 50, observedAt)).toBe(1020); // UTC-7, modulo a day
+    expect(inferServerOffsetMinutes(11 * 60 + 35, observedAt)).toBe(345); // UTC+5:45
+  });
+
+  test('removes the one-bucket error when a snapshot crossed a boundary after the anchor', () => {
+    // The anchor sits in 05:50Z, but the snapshot was built in 06:00Z (label 14:00 at UTC+8).
+    expect(inferServerOffsetMinutes(14 * 60, Date.UTC(2026, 9, 30, 5, 59, 59, 900))).toBe(480);
+    // UTC+5:45 with the same race still resolves to 345.
+    expect(inferServerOffsetMinutes(11 * 60 + 45, observedAt)).toBe(345);
+  });
+
+  test('maps a label to the absolute bucket nearest the anchor, across midnight', () => {
+    expect(new Date(labelToBucketStart(830, 480, observedAt)).toISOString()).toBe(
+      '2026-10-30T05:50:00.000Z'
+    );
+    // 23:50 at UTC+8 is 15:50Z the previous UTC day; an anchor shortly after maps back to it.
+    expect(
+      new Date(labelToBucketStart(23 * 60 + 50, 480, Date.UTC(2026, 9, 29, 15, 55))).toISOString()
+    ).toBe('2026-10-29T15:50:00.000Z');
+  });
+
+  test('aligns a snapshot by its label even when the anchor is a bucket behind', () => {
+    const anchor = Date.UTC(2026, 9, 30, 5, 59, 59, 900);
+    const timed = alignBuckets(
+      [
+        { time: '13:50-14:00', success: 1, failed: 0 },
+        { time: '14:00-14:10', success: 2, failed: 0 },
+      ],
+      anchor,
+      480
+    );
+    expect(timed.map((bucket) => new Date(bucket.startMs).toISOString())).toEqual([
+      '2026-10-30T05:50:00.000Z',
+      '2026-10-30T06:00:00.000Z',
+    ]);
   });
 });
 
@@ -155,11 +207,5 @@ describe('freshness helpers', () => {
         { receivedAt: null, error: null, loading: true },
       ])
     ).toBeNull();
-  });
-
-  test('nextPollDelay anchors to the last success', () => {
-    expect(nextPollDelay(null, 15_000, 100)).toBe(0);
-    expect(nextPollDelay(100, 15_000, 5_100)).toBe(10_000);
-    expect(nextPollDelay(100, 15_000, 20_000)).toBe(0);
   });
 });

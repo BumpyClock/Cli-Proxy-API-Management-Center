@@ -9,6 +9,8 @@ export interface UsageModelSummary {
   /** Median and 95th percentile latency in ms, or null without samples. */
   p50: number | null;
   p95: number | null;
+  /** Older requests for this model were dropped by retention, so counts are a floor. */
+  truncated: boolean;
 }
 
 export interface UsageFailure {
@@ -46,15 +48,17 @@ interface ModelAccumulator {
   failed: number;
   tokens: number;
   latencies: number[];
+  truncated: boolean;
 }
 
 /**
  * Per-model volume, latency, and recent failures for requests at or after
  * `windowStartMs` (server clock).
  *
- * Request details are retained in memory up to a backend limit. When older details were
- * dropped, `coverageStartMs` marks where the retained sample begins so the panel can say
- * so instead of under-reporting silently.
+ * Request details are retained in memory up to a backend limit per API and model. When a
+ * model's retained details start after the window does, its counts are a floor:
+ * the row is marked truncated and `coverageStartMs` reports the latest such start, so the
+ * panel can say so instead of under-reporting silently.
  */
 export function summarizeUsage(
   usage: UsageSnapshot | null | undefined,
@@ -65,24 +69,31 @@ export function summarizeUsage(
   const failureLimit = limits.failures ?? 6;
   const byModel = new Map<string, ModelAccumulator>();
   const failures: UsageFailure[] = [];
-  let retainedDetails = 0;
-  let oldestRetainedMs = Number.POSITIVE_INFINITY;
+  let coverageStartMs: number | null = null;
+
+  const accumulatorFor = (model: string): ModelAccumulator => {
+    let accumulator = byModel.get(model);
+    if (!accumulator) {
+      accumulator = { requests: 0, failed: 0, tokens: 0, latencies: [], truncated: false };
+      byModel.set(model, accumulator);
+    }
+    return accumulator;
+  };
 
   Object.values(usage?.apis ?? {}).forEach((api) => {
     Object.entries(api?.models ?? {}).forEach(([model, snapshot]) => {
-      (snapshot?.details ?? []).forEach((detail) => {
+      const details = snapshot?.details ?? [];
+      let oldestRetainedMs = Number.POSITIVE_INFINITY;
+      let inWindow = 0;
+
+      details.forEach((detail) => {
         const timeMs = parseTimestampMs(detail?.timestamp);
         if (!Number.isFinite(timeMs)) return;
-        retainedDetails += 1;
         oldestRetainedMs = Math.min(oldestRetainedMs, timeMs);
         if (timeMs < windowStartMs) return;
 
-        const accumulator = byModel.get(model) ?? {
-          requests: 0,
-          failed: 0,
-          tokens: 0,
-          latencies: [],
-        };
+        inWindow += 1;
+        const accumulator = accumulatorFor(model);
         accumulator.requests += 1;
         accumulator.tokens += numberOf(detail?.tokens?.total_tokens);
         const latency = numberOf(detail?.latency_ms);
@@ -97,8 +108,16 @@ export function summarizeUsage(
             latencyMs: latency > 0 ? latency : null,
           });
         }
-        byModel.set(model, accumulator);
       });
+
+      // Retention dropped this model's older details and the oldest kept one is already
+      // inside the window, so the window is only partly covered for this model.
+      const dropped = numberOf(snapshot?.total_requests) > details.length;
+      if (dropped && inWindow > 0 && oldestRetainedMs > windowStartMs) {
+        accumulatorFor(model).truncated = true;
+        coverageStartMs =
+          coverageStartMs === null ? oldestRetainedMs : Math.max(coverageStartMs, oldestRetainedMs);
+      }
     });
   });
 
@@ -112,14 +131,12 @@ export function summarizeUsage(
         tokens: accumulator.tokens,
         p50: percentile(sorted, 0.5),
         p95: percentile(sorted, 0.95),
+        truncated: accumulator.truncated,
       };
     })
     .sort(
       (a, b) => b.requests - a.requests || b.tokens - a.tokens || a.model.localeCompare(b.model)
     );
-
-  const totalRequests = numberOf(usage?.total_requests);
-  const truncated = totalRequests > retainedDetails && Number.isFinite(oldestRetainedMs);
 
   return {
     requests: models.reduce((sum, row) => sum + row.requests, 0),
@@ -127,6 +144,6 @@ export function summarizeUsage(
     tokens: models.reduce((sum, row) => sum + row.tokens, 0),
     models: models.slice(0, modelLimit),
     failures: failures.sort((a, b) => b.timeMs - a.timeMs).slice(0, failureLimit),
-    coverageStartMs: truncated && oldestRetainedMs > windowStartMs ? oldestRetainedMs : null,
+    coverageStartMs,
   };
 }

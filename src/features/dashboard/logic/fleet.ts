@@ -26,7 +26,12 @@ import {
   type TrafficCounts,
   type TrafficWindow,
 } from '../types';
-import { alignBuckets, serverInstantToLocal } from './time';
+import {
+  alignBuckets,
+  inferServerOffsetMinutes,
+  labelStartMinutes,
+  serverInstantToLocal,
+} from './time';
 import { readableStatusReason } from './statusMessage';
 
 /** Backend window: 20 buckets of 10 minutes. */
@@ -205,22 +210,32 @@ const PROVIDER_STATUS_ORDER: Record<ProviderStatus, number> = {
 };
 
 /**
+ * Traffic is failing when every request in the window failed, however few, or when at
+ * least `MIN_REQUESTS_FOR_RATE` requests succeeded less than 80% of the time and the
+ * newest active bucket has not recovered.
+ */
+export function isTrafficFailing(window: TrafficCounts, recovered: boolean): boolean {
+  if (window.success === 0 && window.failed > 0) return true;
+  return (
+    window.total >= MIN_REQUESTS_FOR_RATE &&
+    window.successRate !== null &&
+    window.successRate < DEGRADED_SUCCESS_RATE &&
+    !recovered
+  );
+}
+
+/**
  * Provider verdict, in priority order:
- * - down: every enabled credential needs attention and no API key can serve.
- * - degraded: some credentials need attention, or traffic in the window failed at least
- *   20% of the time and the newest active bucket has not recovered.
+ * - down: every enabled credential needs attention and no independent API key can serve.
+ * - degraded: some credentials need attention, or traffic is failing.
  * - idle: no requests in the window.
  */
 export function providerStatusOf(provider: Omit<ProviderHealth, 'status'>): ProviderStatus {
   const enabled = provider.credentials.total - provider.credentials.disabled;
-  if (enabled > 0 && provider.credentials.serving === 0 && provider.apiKeys === 0) return 'down';
-  if (provider.credentials.problems > 0) return 'degraded';
-  const failing =
-    provider.window.total >= MIN_REQUESTS_FOR_RATE &&
-    provider.window.successRate !== null &&
-    provider.window.successRate < DEGRADED_SUCCESS_RATE &&
-    !provider.recovered;
-  if (failing) return 'degraded';
+  if (enabled > 0 && provider.credentials.serving === 0 && provider.independentApiKeys === 0) {
+    return 'down';
+  }
+  if (provider.credentials.problems > 0 || provider.trafficFailing) return 'degraded';
   if (provider.window.total === 0) return 'idle';
   return 'healthy';
 }
@@ -228,6 +243,8 @@ export function providerStatusOf(provider: Omit<ProviderHealth, 'status'>): Prov
 interface ProviderAccumulator {
   credentials: CredentialRow[];
   apiKeys: number;
+  /** Auth files that are the same credential as an API key already counted from usage. */
+  mirroredApiKeys: number;
   groups: TimedBucket[][];
 }
 
@@ -236,7 +253,7 @@ interface ProviderAccumulator {
  *
  * Traffic comes from two non-overlapping sources: `api-key-usage` (API keys inlined in
  * the config) and `auth-files` (file and runtime credentials). Plugin credentials could
- * appear in both, so auth files whose API key already appeared in usage are skipped.
+ * appear in both; those auth files keep their health row but their traffic is counted once.
  */
 export function buildFleetModel(input: FleetInput): FleetModel {
   const authAnchor = input.observedAtMs ?? input.authFilesReceivedAt;
@@ -249,13 +266,53 @@ export function buildFleetModel(input: FleetInput): FleetModel {
         ? input.observedAtMs + (input.keyUsageReceivedAt - input.authFilesReceivedAt)
         : input.keyUsageReceivedAt;
 
+  // Server bucket labels pin each snapshot to the right absolute bucket once the server's
+  // UTC offset is known. Prefer the auth-file clock (`observed_at`); fall back to usage.
+  const firstLabelled = (groups: Array<RecentRequestBucket[]>) =>
+    groups.find(
+      (group) => group.length > 0 && labelStartMinutes(group[group.length - 1].time) !== null
+    );
+  const authGroups = (input.authFiles ?? []).map((file) => file.recentRequests ?? []);
+  const usageGroups = Object.values(input.keyUsage ?? {}).flatMap((entries) =>
+    entries && typeof entries === 'object' && !Array.isArray(entries)
+      ? Object.values(entries).map(
+          (entry) => normalizeRecentRequestUsageEntry(entry).recentRequests
+        )
+      : []
+  );
+  const authSample = authAnchor === null ? undefined : firstLabelled(authGroups);
+  const usageSample = usageAnchor === null ? undefined : firstLabelled(usageGroups);
+  const serverOffset = authSample
+    ? inferServerOffsetMinutes(
+        labelStartMinutes(authSample[authSample.length - 1].time) as number,
+        authAnchor as number
+      )
+    : usageSample
+      ? inferServerOffsetMinutes(
+          labelStartMinutes(usageSample[usageSample.length - 1].time) as number,
+          usageAnchor as number
+        )
+      : null;
+
+  const align = (buckets: RecentRequestBucket[], anchor: number | null): TimedBucket[] =>
+    anchor === null ? [] : alignBuckets(buckets, anchor, serverOffset);
+
+  // The window ends at the newest bucket any snapshot reached.
+  const newestCandidates = [
+    ...authGroups.map((group) => align(group, authAnchor)),
+    ...usageGroups.map((group) => align(group, usageAnchor)),
+  ]
+    .filter((group) => group.length > 0)
+    .map((group) => group[group.length - 1].startMs);
   const anchors = [authAnchor, usageAnchor].filter(
     (value): value is number => value !== null && Number.isFinite(value)
   );
   const newestStart =
-    anchors.length > 0
-      ? Math.floor(Math.max(...anchors) / TRAFFIC_BUCKET_MS) * TRAFFIC_BUCKET_MS
-      : null;
+    newestCandidates.length > 0
+      ? Math.max(...newestCandidates)
+      : anchors.length > 0
+        ? Math.floor(Math.max(...anchors) / TRAFFIC_BUCKET_MS) * TRAFFIC_BUCKET_MS
+        : null;
 
   const accumulators = new Map<string, ProviderAccumulator>();
   const allGroups: TimedBucket[][] = [];
@@ -264,14 +321,11 @@ export function buildFleetModel(input: FleetInput): FleetModel {
   const accumulatorFor = (providerId: string): ProviderAccumulator => {
     let accumulator = accumulators.get(providerId);
     if (!accumulator) {
-      accumulator = { credentials: [], apiKeys: 0, groups: [] };
+      accumulator = { credentials: [], apiKeys: 0, mirroredApiKeys: 0, groups: [] };
       accumulators.set(providerId, accumulator);
     }
     return accumulator;
   };
-
-  const align = (buckets: RecentRequestBucket[], anchor: number | null): TimedBucket[] =>
-    anchor === null ? [] : alignBuckets(buckets, anchor);
 
   if (input.keyUsage && typeof input.keyUsage === 'object') {
     Object.entries(input.keyUsage).forEach(([provider, entries]) => {
@@ -297,14 +351,17 @@ export function buildFleetModel(input: FleetInput): FleetModel {
       .trim()
       .toLowerCase();
     const account = String(file.account ?? '').trim();
-    if (accountType === 'api_key' && account && apiKeysFromUsage.has(account)) return;
+    // The same credential as an API key already counted from usage: keep its health,
+    // but do not count its traffic twice.
+    const mirrorsApiKey =
+      accountType === 'api_key' && Boolean(account) && apiKeysFromUsage.has(account);
 
     const providerId = providerIdOfAuthFile(file);
     const timed = align(file.recentRequests ?? [], authAnchor);
     const cooldown = summarizeCredentialCooldown(file);
     const nextRetryRaw = parseTimestampMs(file['next_retry_after']);
     const receivedAt = input.authFilesReceivedAt ?? Date.now();
-    const windowBuckets = newestStart === null ? [] : mergeTimedBuckets([timed], newestStart);
+    const windowBuckets = mergeTimedBuckets([timed], newestStart);
 
     const row: CredentialRow = {
       name: String(file.name ?? ''),
@@ -324,7 +381,9 @@ export function buildFleetModel(input: FleetInput): FleetModel {
 
     const accumulator = accumulatorFor(providerId);
     accumulator.credentials.push(row);
-    if (timed.length > 0) {
+    if (mirrorsApiKey) {
+      accumulator.mirroredApiKeys += 1;
+    } else if (timed.length > 0) {
       accumulator.groups.push(timed);
       allGroups.push(timed);
     }
@@ -340,6 +399,7 @@ export function buildFleetModel(input: FleetInput): FleetModel {
         lastActive !== null &&
         (lastActive.success / (lastActive.success + lastActive.failed)) * 100 >=
           DEGRADED_SUCCESS_RATE;
+      const trafficFailing = isTrafficFailing(window, recovered);
       const sortedCredentials = [...accumulator.credentials].sort(compareCredentialRows);
       const disabled = sortedCredentials.filter((row) => row.state === 'disabled').length;
       const problems = sortedCredentials.filter((row) => row.problem).length;
@@ -352,7 +412,9 @@ export function buildFleetModel(input: FleetInput): FleetModel {
           disabled,
         },
         apiKeys: accumulator.apiKeys,
+        independentApiKeys: Math.max(0, accumulator.apiKeys - accumulator.mirroredApiKeys),
         window,
+        trafficFailing,
         buckets,
         lastActive,
         recovered,

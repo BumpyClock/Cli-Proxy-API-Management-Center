@@ -9,26 +9,45 @@
 }
 
 .row {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) minmax(72px, auto) minmax(96px, 0.7fr);
   align-items: center;
   gap: $spacing-md;
-  padding: 14px 0;
+  padding: 14px 0 14px 16px;
   border-bottom: 1px solid var(--border-color);
-
-  &:first-child {
-    padding-top: 0;
-  }
 
   &:last-child {
     border-bottom: none;
-    padding-bottom: 0;
   }
 
   @media (max-width: 760px) {
     grid-template-columns: minmax(0, 1fr) auto;
     row-gap: $spacing-sm;
   }
+}
+
+/* Exceptions get a severity rail; healthy rows stay unmarked. */
+.row_critical,
+.row_warning {
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--rail-color);
+  }
+}
+
+.row_critical {
+  --rail-color: var(--viz-failure);
+}
+
+.row_warning {
+  --rail-color: var(--amber-color);
 }
 
 .identity {
@@ -38,15 +57,9 @@
   min-width: 0;
 }
 
-.nameLine {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
 .name {
+  align-self: flex-start;
+  max-width: 100%;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
@@ -69,8 +82,13 @@
 
 .meta {
   font-size: 12px;
+  line-height: 1.5;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+}
+
+.metaStatus {
+  margin-right: 8px;
 }
 
 .spark {

@@ -55,8 +55,24 @@ describe('summarizeUsage', () => {
   test('ranks models by volume with latency percentiles', () => {
     const summary = summarizeUsage(snapshot, WINDOW_START);
     expect(summary.models).toEqual([
-      { model: 'gpt-5.5', requests: 3, failed: 1, tokens: 150, p50: 1200, p95: 4000 },
-      { model: 'claude-opus', requests: 2, failed: 1, tokens: 300, p50: 2000, p95: 2000 },
+      {
+        model: 'gpt-5.5',
+        requests: 3,
+        failed: 1,
+        tokens: 150,
+        p50: 1200,
+        p95: 4000,
+        truncated: false,
+      },
+      {
+        model: 'claude-opus',
+        requests: 2,
+        failed: 1,
+        tokens: 300,
+        p50: 2000,
+        p95: 2000,
+        truncated: false,
+      },
     ]);
   });
 
@@ -68,13 +84,44 @@ describe('summarizeUsage', () => {
     ]);
   });
 
-  test('marks where retained details begin when retention cut the window', () => {
-    const truncated = summarizeUsage(
-      { ...snapshot, total_requests: 500 },
-      Date.UTC(2026, 9, 30, 4, 0)
+  test('marks a model whose retained details start inside the window', () => {
+    const busy: UsageSnapshot = {
+      apis: {
+        client: {
+          models: {
+            // 1,001 requests, 1,000 retained: the oldest kept detail is inside the window.
+            busy: {
+              total_requests: 1001,
+              details: Array.from({ length: 1000 }, (_, i) => ({
+                timestamp: new Date(Date.UTC(2026, 9, 30, 5, 30) + i * 1000).toISOString(),
+              })),
+            },
+            // An idle model with an old detail must not hide the busy model's gap.
+            idle: { total_requests: 1, details: [{ timestamp: at(0) }] },
+          },
+        },
+      },
+    };
+    const summary = summarizeUsage(busy, WINDOW_START);
+    expect(summary.coverageStartMs).toBe(Date.UTC(2026, 9, 30, 5, 30));
+    expect(summary.models.find((row) => row.model === 'busy')?.truncated).toBe(true);
+  });
+
+  test('does not flag retention when the dropped details are older than the window', () => {
+    const summary = summarizeUsage(
+      {
+        apis: {
+          client: {
+            models: {
+              m: { total_requests: 10, details: [{ timestamp: at(5) }, { timestamp: at(20) }] },
+            },
+          },
+        },
+      },
+      WINDOW_START
     );
-    expect(truncated.coverageStartMs).toBe(Date.parse(at(5)));
-    expect(summarizeUsage(snapshot, WINDOW_START).coverageStartMs).toBeNull();
+    expect(summary.coverageStartMs).toBeNull();
+    expect(summary.models[0].truncated).toBe(false);
   });
 
   test('handles a missing snapshot', () => {
