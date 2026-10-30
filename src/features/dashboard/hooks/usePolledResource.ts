@@ -63,7 +63,7 @@ export function usePolledResource<T>({
   const scopeRef = useRef(scope);
   const receivedAtRef = useRef<number | null>(null);
   const inFlightRef = useRef<{ scope: string; promise: Promise<T> } | null>(null);
-  const scheduleRef = useRef<(() => void) | null>(null);
+  const scheduleRef = useRef<((failed: boolean) => void) | null>(null);
 
   useEffect(() => {
     loadRef.current = load;
@@ -123,32 +123,29 @@ export function usePolledResource<T>({
       }
     };
 
-    const schedule = () => {
+    const schedule = (delayMs?: number) => {
       clear();
       if (disposed || isDocumentHidden()) return;
-      timer = setTimeout(tick, nextPollDelay(receivedAtRef.current, intervalMs, Date.now()));
+      timer = setTimeout(
+        tick,
+        delayMs ?? nextPollDelay(receivedAtRef.current, intervalMs, Date.now())
+      );
     };
 
     function tick() {
       timer = null;
       if (disposed || isDocumentHidden()) return;
       // A manual refresh may have landed since this timer was set.
-      if (nextPollDelay(receivedAtRef.current, intervalMs, Date.now()) > 0) {
-        schedule();
+      const wait = nextPollDelay(receivedAtRef.current, intervalMs, Date.now());
+      if (wait > 0) {
+        schedule(wait);
         return;
       }
-      run()
-        .catch(() => undefined)
-        .finally(() => {
-          if (disposed) return;
-          // After a failure, wait a full interval instead of retrying immediately.
-          if (receivedAtRef.current === null || Date.now() - receivedAtRef.current >= intervalMs) {
-            clear();
-            if (!isDocumentHidden()) timer = setTimeout(tick, intervalMs);
-            return;
-          }
-          schedule();
-        });
+      run().then(
+        () => schedule(),
+        // After a failure, wait a full interval instead of retrying immediately.
+        () => schedule(intervalMs)
+      );
     }
 
     const resume = () => {
@@ -159,7 +156,7 @@ export function usePolledResource<T>({
       if (timer === null && !inFlightRef.current) tick();
     };
 
-    scheduleRef.current = schedule;
+    scheduleRef.current = (failed) => schedule(failed ? intervalMs : undefined);
     tick();
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('focus', resume);
@@ -177,9 +174,13 @@ export function usePolledResource<T>({
 
   const refresh = useCallback(async () => {
     try {
-      return await run();
-    } finally {
-      scheduleRef.current?.();
+      const data = await run();
+      scheduleRef.current?.(false);
+      return data;
+    } catch (error: unknown) {
+      // Push the next poll a full interval out so a failed retry is not repeated at once.
+      scheduleRef.current?.(true);
+      throw error;
     }
   }, [run]);
 
