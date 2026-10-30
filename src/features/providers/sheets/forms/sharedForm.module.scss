@@ -636,6 +636,11 @@
     color: var(--primary-color);
   }
 
+  @media (pointer: coarse) {
+    height: 44px;
+    padding: 0 16px;
+  }
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -903,6 +908,10 @@
 .passwordInput {
   @extend .input;
   padding-right: 36px;
+
+  @media (pointer: coarse) {
+    padding-right: 48px;
+  }
 }
 
 .passwordToggle {
@@ -918,6 +927,13 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   transition: color $transition-fast;
+
+  /* Touch: a 44px hit area at the field's right edge. */
+  @media (pointer: coarse) {
+    right: 0;
+    width: 44px;
+    height: 44px;
+  }
 
   &:hover:not(:disabled) {
     color: var(--text-primary);

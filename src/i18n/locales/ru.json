@@ -244,6 +244,7 @@
     "hero_verdict_down_stale_one": "{{provider}}: последний статус — недоступен",
     "hero_verdict_good": "Всё стабильно",
     "hero_verdict_idle": "Пока тихо",
+    "hero_verdict_idle_other_scope": "Нет трафика через текущие учётные данные",
     "hero_verdict_offline": "Ожидает подключения",
     "hero_verdict_unknown": "Состояние неизвестно",
     "list_colon": ": ",

@@ -221,6 +221,7 @@
     "hero_verdict_down_stale_one": "{{provider}} 最后报告为不可用",
     "hero_verdict_good": "运行平稳",
     "hero_verdict_idle": "静候流量",
+    "hero_verdict_idle_other_scope": "当前凭证没有流量",
     "hero_verdict_offline": "等待连接",
     "hero_verdict_unknown": "状态未知",
     "list_colon": "：",

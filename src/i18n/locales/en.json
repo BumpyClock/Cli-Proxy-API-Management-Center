@@ -227,6 +227,7 @@
     "hero_verdict_down_stale_one": "{{provider}} last reported down",
     "hero_verdict_good": "All systems steady",
     "hero_verdict_idle": "Quiet for now",
+    "hero_verdict_idle_other_scope": "No traffic through current credentials",
     "hero_verdict_offline": "Waiting to connect",
     "hero_verdict_unknown": "Status unknown",
     "list_colon": ": ",

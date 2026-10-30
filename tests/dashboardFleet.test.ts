@@ -467,6 +467,16 @@ describe('attention and verdict', () => {
     expect(verdict.kind).toBe('unknown');
   });
 
+  test('never claims health from usage activity when current credentials saw no traffic', () => {
+    const base = { attention: [], primaryFreshness: 'live' as const, hasData: true };
+    const kind = (trafficTotal: number, otherScopeActivity: boolean) =>
+      deriveVerdict({ ...base, connectionStatus: 'connected', trafficTotal, otherScopeActivity })
+        .kind;
+    expect(kind(0, true)).toBe('idle_other_scope');
+    expect(kind(0, false)).toBe('idle');
+    expect(kind(12, true)).toBe('good');
+  });
+
   test('does not claim steady health from stale data', () => {
     const verdict = deriveVerdict({
       connectionStatus: 'connected',

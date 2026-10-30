@@ -175,7 +175,8 @@ export function DashboardPage() {
     attention,
     primaryFreshness,
     hasData,
-    trafficTotal: Math.max(traffic.total, usageRequests ?? 0),
+    trafficTotal: traffic.total,
+    otherScopeActivity: usageRequests !== null && usageRequests > 0,
   });
   const verdictTitle = useVerdictTitle(verdict);
   /* The status full stop breathes only while steady traffic is flowing and fresh. */

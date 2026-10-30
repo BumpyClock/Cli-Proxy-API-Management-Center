@@ -88,7 +88,15 @@ export function buildAttention(
 }
 
 export type VerdictKind =
-  'offline' | 'connecting' | 'checking' | 'down' | 'attention' | 'unknown' | 'idle' | 'good';
+  | 'offline'
+  | 'connecting'
+  | 'checking'
+  | 'down'
+  | 'attention'
+  | 'unknown'
+  | 'idle'
+  | 'idle_other_scope'
+  | 'good';
 
 export type VerdictTone = 'good' | 'warning' | 'critical' | 'idle';
 
@@ -110,7 +118,10 @@ export interface VerdictInput {
   primaryFreshness: SourceFreshness;
   /** At least one primary source has delivered data. */
   hasData: boolean;
+  /** Requests through credentials listed now, in the window. */
   trafficTotal: number;
+  /** Usage statistics saw requests in the same window (they can include removed credentials). */
+  otherScopeActivity?: boolean;
 }
 
 /**
@@ -155,6 +166,12 @@ export function deriveVerdict(input: VerdictInput): Verdict {
     };
   }
   if (input.primaryFreshness !== 'live') return { ...base, kind: 'unknown', tone: 'warning' };
-  if (input.trafficTotal === 0) return { ...base, kind: 'idle', tone: 'idle' };
+  // Health is only claimed from current-credential traffic. Activity seen only by usage
+  // statistics gets a neutral, scoped headline instead of "steady".
+  if (input.trafficTotal === 0) {
+    return input.otherScopeActivity
+      ? { ...base, kind: 'idle_other_scope', tone: 'idle' }
+      : { ...base, kind: 'idle', tone: 'idle' };
+  }
   return { ...base, kind: 'good', tone: 'good' };
 }

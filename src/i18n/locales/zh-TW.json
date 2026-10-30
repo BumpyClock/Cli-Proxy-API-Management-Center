@@ -221,6 +221,7 @@
     "hero_verdict_down_stale_one": "{{provider}} 最後回報為無法使用",
     "hero_verdict_good": "運行平穩",
     "hero_verdict_idle": "靜候流量",
+    "hero_verdict_idle_other_scope": "目前憑證沒有流量",
     "hero_verdict_offline": "等待連接",
     "hero_verdict_unknown": "狀態未知",
     "list_colon": "：",
