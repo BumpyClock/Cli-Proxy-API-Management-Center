@@ -15,6 +15,7 @@ const DASH = '—';
 const STATUS_TONE: Partial<Record<ProviderStatus, 'critical' | 'warning'>> = {
   down: 'critical',
   degraded: 'warning',
+  limited: 'warning',
 };
 
 interface ProviderHealthListProps {
@@ -48,7 +49,7 @@ export function ProviderHealthList({ providers }: ProviderHealthListProps) {
           provider.apiKeys > 0 ? t('dashboard.fleet_api_keys', { count: provider.apiKeys }) : null,
         ].filter(Boolean);
         const tone = STATUS_TONE[provider.status];
-        const failing = Boolean(tone);
+        const failing = provider.status === 'down' || provider.status === 'degraded';
 
         return (
           <li
@@ -95,6 +96,9 @@ export function ProviderHealthList({ providers }: ProviderHealthListProps) {
                   : t('dashboard.fleet_requests')}
               </span>
             </div>
+            <span aria-hidden="true" className={styles.chevron}>
+              ›
+            </span>
             <div className={styles.rate}>
               <span className={styles.rateValue}>
                 {provider.window.successRate === null

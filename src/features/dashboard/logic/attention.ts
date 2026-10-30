@@ -34,8 +34,9 @@ export interface SourceHealth {
 /**
  * Everything the operator should act on, worst first.
  *
- * Providers that are down or degraded become one item each, carrying their failing
- * credentials and traffic as evidence. Sources that failed or went stale become items
+ * Providers that are down, degraded, or limited (models cooling down on a credential
+ * that still serves) become one item each, carrying their credentials and traffic as
+ * evidence. Sources that failed or went stale become items
  * too, because a silent data gap would otherwise read as "all good".
  */
 export function buildAttention(
@@ -43,7 +44,12 @@ export function buildAttention(
   sources: SourceHealth[]
 ): AttentionItem[] {
   const providerItems: ProviderAttention[] = providers
-    .filter((provider) => provider.status === 'down' || provider.status === 'degraded')
+    .filter(
+      (provider) =>
+        provider.status === 'down' ||
+        provider.status === 'degraded' ||
+        provider.status === 'limited'
+    )
     .map((provider) => ({
       kind: 'provider',
       key: `provider:${provider.id}`,

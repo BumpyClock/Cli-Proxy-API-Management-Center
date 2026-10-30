@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
@@ -22,6 +23,7 @@ import { APIKEY_FUN_DISPLAY_NAME } from './sponsor';
 import { isMultiProtocolSponsorBrand } from './sponsorDefinitions';
 import { isSponsorPartialMutationError } from './sponsorMutationRecovery';
 import { useProviderWorkbench } from './useProviderWorkbench';
+import { PROVIDER_BRAND_ORDER } from './descriptors';
 import {
   getProviderFilterState,
   readProvidersWorkbenchUiState,
@@ -152,6 +154,19 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     [persistUiState]
   );
 
+  // `?brand=claude` (from a dashboard alert) opens that brand, then leaves the URL clean.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const requested = searchParams.get('brand');
+    if (!requested) return;
+    if (!fixedBrand && (PROVIDER_BRAND_ORDER as string[]).includes(requested)) {
+      setActiveBrand(requested as ProviderBrand);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('brand');
+    setSearchParams(next, { replace: true });
+  }, [fixedBrand, searchParams, setActiveBrand, setSearchParams]);
+
   const allGroups = useMemo(() => workbench.snapshot?.groups ?? [], [workbench.snapshot]);
   const groups = useMemo(
     () =>
@@ -271,8 +286,7 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     [groups]
   );
   const quickStartResource = useMemo(
-    () =>
-      fixedBrand === 'apikeyFun' && activeGroup ? (activeGroup.resources[0] ?? null) : null,
+    () => (fixedBrand === 'apikeyFun' && activeGroup ? (activeGroup.resources[0] ?? null) : null),
     [activeGroup, fixedBrand]
   );
 

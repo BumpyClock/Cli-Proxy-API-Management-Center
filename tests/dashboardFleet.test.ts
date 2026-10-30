@@ -160,7 +160,13 @@ describe('buildFleetModel', () => {
     const { providers } = buildLiveModel();
     const codex = providers.find((provider) => provider.id === 'codex')!;
     expect(codex.window).toMatchObject({ success: 113, failed: 1, total: 114 });
-    expect(codex.credentials).toEqual({ total: 2, serving: 1, problems: 0, disabled: 1 });
+    expect(codex.credentials).toEqual({
+      total: 2,
+      serving: 1,
+      problems: 0,
+      disabled: 1,
+      limited: 0,
+    });
     expect(codex.status).toBe('healthy');
   });
 
@@ -231,6 +237,51 @@ describe('buildFleetModel', () => {
       keyUsageReceivedAt: RECEIVED_MS,
     });
     expect(model.providers[0]).toMatchObject({ id: 'claude', recovered: true, status: 'healthy' });
+  });
+
+  test('marks a provider limited when a serving credential has models cooling down', () => {
+    const normalized = normalizeAuthFilesResponse(
+      {
+        observed_at: OBSERVED_AT,
+        files: [
+          {
+            name: 'xai-team.json',
+            type: 'xai',
+            status: 'active',
+            recent_requests: buckets({ 18: [6, 0] }),
+            cooldowns: [
+              {
+                scope: 'model',
+                model_key: 'grok-4-heavy',
+                reason: 'quota',
+                retry_at: new Date(OBSERVED_MS + 1_500_000).toISOString(),
+                remaining_seconds: 1500,
+                http_status: 429,
+              },
+            ],
+          },
+        ],
+      } as unknown as AuthFilesResponse,
+      RECEIVED_MS
+    );
+    const model = buildFleetModel({
+      authFiles: normalized.files,
+      observedAtMs: OBSERVED_MS,
+      authFilesReceivedAt: RECEIVED_MS,
+      keyUsage: null,
+      keyUsageReceivedAt: null,
+    });
+    const xai = model.providers[0];
+    expect(xai).toMatchObject({ id: 'xai', status: 'limited' });
+    expect(xai.credentials).toMatchObject({ serving: 1, problems: 0, limited: 1 });
+    expect(xai.limitedCredentials[0].cooldown).toMatchObject({
+      modelCount: 1,
+      reason: 'quota',
+      httpStatus: 429,
+    });
+    const attention = buildAttention(model.providers, []);
+    expect(attention).toHaveLength(1);
+    expect(attention[0]).toMatchObject({ key: 'provider:xai', severity: 'warning' });
   });
 
   test('treats a small sample where every request failed as degraded', () => {

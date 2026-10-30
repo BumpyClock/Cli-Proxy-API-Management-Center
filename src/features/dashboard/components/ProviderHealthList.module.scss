@@ -11,10 +11,12 @@
 .row {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) minmax(72px, auto) minmax(96px, 0.7fr);
+  grid-template-columns:
+    minmax(0, 1.4fr) minmax(80px, 1fr) minmax(72px, auto) minmax(96px, 0.7fr)
+    16px;
   align-items: center;
   gap: $spacing-md;
-  padding: 14px 0 14px 16px;
+  padding: 14px 8px 14px 16px;
   border-bottom: 1px solid var(--border-color);
 
   &:last-child {
@@ -64,19 +66,57 @@
   font-weight: 600;
   color: var(--text-primary);
   text-decoration: none;
-  border-radius: 4px;
   @include text-ellipsis;
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
+  /* The whole row is the hit target; the link stays a single tab stop. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+    outline: none;
+  }
+}
+
+.row:has(.name:focus-visible) {
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 2px var(--text-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: color-mix(in srgb, var(--bg-tertiary) 45%, transparent);
+    border-radius: 10px;
+
+    .name {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .chevron {
+      color: var(--text-primary);
+      transform: translateX(2px);
+    }
+  }
+}
+
+.chevron {
+  order: 5;
+  font-size: 16px;
+  line-height: 1;
+  text-align: right;
+  color: var(--text-secondary);
+  transition: transform var(--dur-hover) var(--ease-out-strong);
+
+  @media (max-width: 760px) {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 

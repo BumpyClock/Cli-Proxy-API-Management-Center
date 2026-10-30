@@ -11,6 +11,8 @@ import { ProviderHealthList } from '../src/features/dashboard/components/Provide
 import { UsagePanel } from '../src/features/dashboard/components/UsagePanel';
 import { buildAttention } from '../src/features/dashboard/logic/attention';
 import { buildFleetModel } from '../src/features/dashboard/logic/fleet';
+import { providerSettingsHref } from '../src/features/dashboard/logic/links';
+import { SourceStamp } from '../src/features/dashboard/components/SourceStamp';
 
 const NOW = Date.parse('2026-10-30T06:00:00.000Z');
 const LOCALES = ['en', 'zh-CN', 'zh-TW', 'ru'];
@@ -101,7 +103,10 @@ describe('dashboard components render translated, actionable markup', () => {
     expect(markup).toContain(
       '/auth-files?provider=meta&amp;status=problem&amp;search=meta-ops.json'
     );
-    expect(markup).toContain('Open provider settings');
+    expect(markup).toContain('Open Claude settings');
+    expect(markup).toContain('/ai-providers?brand=claude');
+    expect(markup).toContain('/logs?search=claude');
+    expect(markup).toContain('API keys don&#x27;t report a failure reason');
     expect(markup).toContain('Network Error');
     expectTranslated(markup);
   });
@@ -189,5 +194,34 @@ describe('dashboard components render translated, actionable markup', () => {
         if (!present) throw new Error(`${lng} is missing dashboard.${key}`);
       }
     }
+  });
+
+  test('source stamps name what is missing instead of borrowing another age', async () => {
+    await i18n.changeLanguage('en');
+    const stamp = (entries: Parameters<typeof SourceStamp>[0]['entries'], everyMs?: number) =>
+      renderToStaticMarkup(createElement(SourceStamp, { entries, now: NOW, everyMs }));
+    const ok = { receivedAt: NOW - 20_000, error: null, loading: false };
+    const missing = { receivedAt: null, error: '503', loading: false };
+    expect(
+      stamp([
+        { id: 'credentials', status: missing, freshness: 'failed' },
+        { id: 'traffic', status: ok, freshness: 'live' },
+      ])
+    ).toContain('Couldn&#x27;t load credentials');
+    expect(
+      stamp([{ id: 'config', status: { ...ok, error: 'timeout' }, freshness: 'failed' }])
+    ).toContain('Not updating · data from 20s ago');
+    expect(stamp([{ id: 'models', status: ok, freshness: 'live' }], 60_000)).toContain(
+      'Updated 20s ago · every 60s'
+    );
+  });
+
+  test('provider settings links open the provider brand', () => {
+    expect(providerSettingsHref('claude')).toBe('/ai-providers?brand=claude');
+    expect(providerSettingsHref('openai-compatibility')).toBe(
+      '/ai-providers?brand=openaiCompatibility'
+    );
+    expect(providerSettingsHref('openrouter')).toBe('/ai-providers?brand=openaiCompatibility');
+    expect(providerSettingsHref('unknown')).toBe('/ai-providers');
   });
 });

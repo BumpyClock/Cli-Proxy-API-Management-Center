@@ -1,3 +1,4 @@
+import { formatPercent } from '@/utils/format';
 import { toneForSuccessRate, type MeterTone } from '../utils';
 import styles from './Meter.module.scss';
 
@@ -31,7 +32,8 @@ export function Meter({ value, tone, ariaLabel, className }: MeterProps) {
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuenow={value === null ? undefined : Math.round(clamped)}
+      aria-valuenow={value === null ? undefined : Number(clamped.toFixed(1))}
+      aria-valuetext={value === null ? undefined : formatPercent(clamped)}
       aria-label={ariaLabel}
     >
       <div className={styles.fill} style={{ width: `${clamped}%` }} />

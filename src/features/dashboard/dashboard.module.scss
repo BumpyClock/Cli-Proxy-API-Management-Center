@@ -69,39 +69,11 @@
 .hero {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
-  gap: clamp($spacing-lg, 4vw, 56px);
-  align-items: center;
-  padding-top: clamp($spacing-sm, 2vh, 28px);
-  /* Room for the pulse line under the hero, kept short so the attention list stays above the fold. */
-  padding-bottom: clamp(44px, 7vh, 76px);
-
-  @media (max-width: 900px) {
-    grid-template-columns: minmax(0, 1fr);
-    padding-bottom: clamp(36px, 6vh, 56px);
-  }
-}
-
-/* 签名元素：横贯 hero 底部的实时流量脉搏线 */
-.heroWire {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -10px;
-  height: clamp(64px, 10vh, 112px);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.heroCopy {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: $spacing-md;
-  min-width: 0;
+  padding-top: clamp($spacing-sm, 2vh, 28px);
 }
 
 /* Verdict headline: computed from live evidence. Sized so a two-line verdict still fits beside the panel. */
@@ -219,186 +191,16 @@
   }
 }
 
-/* Hero 数字仪表卡 —— 悬浮在脉搏线之上的玻璃面板 */
-.heroPanel {
-  --glass-blur: 14px;
-
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  padding: clamp($spacing-lg, 2.5vw, 28px);
-  border-radius: 20px;
-  border: 1px solid var(--glass-border);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--bg-primary) 90%, transparent),
-    color-mix(in srgb, var(--bg-secondary) 74%, transparent)
-  );
-  backdrop-filter: var(--glass-backdrop-filter);
-  -webkit-backdrop-filter: var(--glass-backdrop-filter);
-  box-shadow: var(--shadow-lg);
-}
-
-.heroPanelTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-sm;
-}
-
-.heroPanelLabel {
-  font-family: $font-mono;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-/* 遥测数字统一等宽：这是 CLI 代理，mono 是它的母语 */
-.heroFigure {
-  font-family: $font-mono;
-  font-size: clamp(42px, 5.6vw, 62px);
-  line-height: 1.05;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.heroPanelMeta {
-  font-family: $font-mono;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* 成功/失败构成比例条 */
-.ratioBar {
-  display: flex;
-  gap: 2px;
-  height: 6px;
-  margin-top: $spacing-sm;
-}
-
-.ratioSegment {
-  display: block;
-  min-width: 4px;
-  border-radius: 3px;
-}
-
-.heroSplit {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $spacing-md;
-  padding-top: $spacing-sm;
-  border-top: 1px solid var(--border-color);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.heroSplitItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  b {
-    font-family: $font-mono;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-.splitSwatch {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  flex: none;
-}
-
-.splitSuccess {
-  background: var(--viz-success);
-}
-
-.splitFailure {
-  background: var(--viz-failure);
-}
-
-/* ---------- KPI 行 ---------- */
-
-.statsRow {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: $spacing-md;
-
-  @media (max-width: 900px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  @media (max-width: 460px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.statTile {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: $spacing-lg;
-  border-radius: 14px;
-  border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
-  transition: border-color $transition-fast;
-
-  /* 左上角色签：语义色调由 --tile-accent 注入 */
-  &::before {
-    content: '';
-    width: 28px;
-    height: 3px;
-    margin-bottom: 2px;
-    border-radius: $radius-full;
-    background: var(--tile-accent, var(--border-hover));
-  }
-
-  /* 卡片不可点击，因此不抬升不投影——悬停只轻描边框辅助聚焦 */
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: var(--border-hover);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-}
-
-.statLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.statValue {
-  font-family: $font-mono;
-  font-size: 28px;
-  line-height: 1.1;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.statMeter {
-  margin: 4px 0 2px;
-}
-
-.statHint {
+/* Partial or failed source notes beside the numbers they qualify. */
+.partialNote {
+  margin: 0;
   font-size: 12px;
   line-height: 1.45;
-  color: var(--text-secondary);
+  color: var(--amber-text);
+}
+
+.failedNote {
+  color: var(--failure-badge-text);
 }
 
 /* ---------- 通用区块 ---------- */

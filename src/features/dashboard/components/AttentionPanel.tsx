@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IconAlertTriangle, IconCheckCircle2, IconRefreshCw } from '@/components/ui/icons';
+import { resolveTimeZoneLabel } from '@/utils/time/timezone';
 import type { CredentialRow } from '../types';
 import type {
   AttentionItem,
@@ -10,8 +11,7 @@ import type {
   SourceAttention,
 } from '../logic/attention';
 import type { SourceFreshness } from '../logic/freshness';
-import { MIN_REQUESTS_FOR_RATE } from '../logic/fleet';
-import { providerCredentialsHref } from '../logic/links';
+import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from '../logic/links';
 import { redactSecrets } from '../logic/redact';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
@@ -79,8 +79,15 @@ function ProviderItem({
         total: provider.credentials.total,
       })
     );
+  } else if (provider.status === 'limited') {
+    summary.push(
+      t('dashboard.attention_credentials_limited', {
+        count: provider.credentials.limited,
+        total: provider.credentials.total,
+      })
+    );
   }
-  if (provider.window.failed > 0 && provider.window.total >= MIN_REQUESTS_FOR_RATE) {
+  if (provider.window.failed > 0 && provider.trafficFailing) {
     summary.push(
       t('dashboard.attention_failed_requests', {
         failed: provider.window.failed.toLocaleString(),
@@ -89,29 +96,34 @@ function ProviderItem({
       })
     );
   }
-  if (provider.lastActive && !provider.lastActive.partial) {
+  if (provider.lastActive && !provider.lastActive.partial && provider.trafficFailing) {
     summary.push(
       t('dashboard.attention_last_traffic', {
-        range: formatClockRange(
+        range: `${formatClockRange(
           provider.lastActive.startMs,
           provider.lastActive.endMs,
           i18n.language
-        ),
+        )} ${resolveTimeZoneLabel(new Date(provider.lastActive.startMs))}`,
       })
     );
   }
+  // API-key traffic only carries counts; say so instead of implying there is no cause.
+  const apiKeyOnlyFailure =
+    provider.trafficFailing && provider.problemCredentials.length === 0 && provider.apiKeys > 0;
+  if (apiKeyOnlyFailure) summary.push(t('dashboard.attention_reason_unreported'));
 
   // Offer the destination that matches the evidence: failing credentials go to Auth Files,
-  // failing API-key traffic goes to provider settings. When failing traffic cannot be
-  // attributed to one kind of credential, both are offered.
+  // failing API-key traffic goes to that provider's settings and to its log lines. When
+  // failing traffic cannot be attributed to one kind of credential, both are offered.
   const actions: Array<{ key: string; to: string; label: string; ariaLabel: string }> = [];
   const problems = provider.problemCredentials.length;
-  if (problems > 0 || (provider.trafficFailing && provider.credentials.total > 0)) {
+  const evidenceRows = problems > 0 ? provider.problemCredentials : provider.limitedCredentials;
+  if (evidenceRows.length > 0 || (provider.trafficFailing && provider.credentials.total > 0)) {
     actions.push({
       key: 'credentials',
       to: providerCredentialsHref(provider),
       label:
-        problems === 1
+        evidenceRows.length === 1
           ? t('dashboard.action_inspect_credential')
           : t('dashboard.action_inspect_credentials'),
       ariaLabel: t('dashboard.action_inspect_credentials_named', { provider: name }),
@@ -120,13 +132,19 @@ function ProviderItem({
   if (provider.trafficFailing && provider.apiKeys > 0) {
     actions.push({
       key: 'provider',
-      to: '/ai-providers',
-      label: t('dashboard.action_open_provider'),
+      to: providerSettingsHref(provider.id),
+      label: t('dashboard.action_open_provider_named', { provider: name }),
       ariaLabel: t('dashboard.action_open_provider_named', { provider: name }),
     });
+    actions.push({
+      key: 'logs',
+      to: providerLogsHref(provider.id),
+      label: t('dashboard.action_search_logs'),
+      ariaLabel: t('dashboard.action_search_logs_named', { provider: name }),
+    });
   }
-  const shown = provider.problemCredentials.slice(0, MAX_CREDENTIALS_PER_ITEM);
-  const hidden = provider.problemCredentials.length - shown.length;
+  const shown = evidenceRows.slice(0, MAX_CREDENTIALS_PER_ITEM);
+  const hidden = evidenceRows.length - shown.length;
 
   return (
     <li className={[styles.item, styles[`item_${item.severity}`]].join(' ')}>
@@ -182,7 +200,9 @@ function SourceItem({
   const source = t(`dashboard.source_${item.source}`);
   const title =
     item.freshness === 'failed'
-      ? t('dashboard.attention_source_failed', { source })
+      ? item.receivedAt === null
+        ? t('dashboard.attention_source_missing', { source })
+        : t('dashboard.attention_source_failed', { source })
       : t('dashboard.attention_source_stale', { source });
   const details = [
     item.error ? redactSecrets(item.error) : null,
@@ -265,9 +285,14 @@ export function AttentionPanel({
             </h2>
             <p className={styles.allClearDetail}>{t('dashboard.attention_setup_detail')}</p>
           </div>
-          <Link className={styles.action} to="/oauth">
-            {t('dashboard.health_add')}
-          </Link>
+          <div className={styles.setupActions}>
+            <Link className={styles.action} to="/oauth">
+              {t('dashboard.action_add_oauth')}
+            </Link>
+            <Link className={styles.action} to="/ai-providers">
+              {t('dashboard.action_add_api_key')}
+            </Link>
+          </div>
         </section>
       );
     }

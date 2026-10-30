@@ -205,8 +205,9 @@ export function compareCredentialRows(a: CredentialRow, b: CredentialRow): numbe
 const PROVIDER_STATUS_ORDER: Record<ProviderStatus, number> = {
   down: 0,
   degraded: 1,
-  healthy: 2,
-  idle: 3,
+  limited: 2,
+  healthy: 3,
+  idle: 4,
 };
 
 /**
@@ -228,6 +229,7 @@ export function isTrafficFailing(window: TrafficCounts, recovered: boolean): boo
  * Provider verdict, in priority order:
  * - down: every enabled credential needs attention and no independent API key can serve.
  * - degraded: some credentials need attention, or traffic is failing.
+ * - limited: everything serves, but some models are cooling down on some credentials.
  * - idle: no requests in the window.
  */
 export function providerStatusOf(provider: Omit<ProviderHealth, 'status'>): ProviderStatus {
@@ -236,6 +238,7 @@ export function providerStatusOf(provider: Omit<ProviderHealth, 'status'>): Prov
     return 'down';
   }
   if (provider.credentials.problems > 0 || provider.trafficFailing) return 'degraded';
+  if (provider.credentials.limited > 0) return 'limited';
   if (provider.window.total === 0) return 'idle';
   return 'healthy';
 }
@@ -410,6 +413,7 @@ export function buildFleetModel(input: FleetInput): FleetModel {
           serving: sortedCredentials.length - disabled - problems,
           problems,
           disabled,
+          limited: sortedCredentials.filter((row) => row.state === 'cooling').length,
         },
         apiKeys: accumulator.apiKeys,
         independentApiKeys: Math.max(0, accumulator.apiKeys - accumulator.mirroredApiKeys),
@@ -419,6 +423,7 @@ export function buildFleetModel(input: FleetInput): FleetModel {
         lastActive,
         recovered,
         problemCredentials: sortedCredentials.filter((row) => row.problem),
+        limitedCredentials: sortedCredentials.filter((row) => row.state === 'cooling'),
       };
       return { ...base, status: providerStatusOf(base) };
     })

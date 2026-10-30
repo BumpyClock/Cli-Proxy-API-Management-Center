@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { buildAuthFilesHref } from '@/features/authFiles/deepLink';
 import type { CredentialHealth, CredentialRow, CredentialState } from '../types';
 import { providerLabel } from '../utils';
+import { redactSecrets } from '../logic/redact';
 import { credentialRecoveryLines } from './formatters';
 import { StatusText, type StatusTone } from './StatusText';
 import styles from './CredentialList.module.scss';
@@ -14,11 +15,16 @@ const STATE_TONE: Partial<Record<CredentialState, StatusTone>> = {
   unavailable: 'critical',
   error: 'critical',
   warning: 'warning',
+  cooling: 'warning',
 };
 
 interface CredentialListProps {
   credentials: CredentialHealth | null;
+  /** Load state of the credentials source, to tell loading, failed, and empty apart. */
+  loadError: string | null;
   now: number;
+  onRetry: () => void;
+  retrying: boolean;
   limit?: number;
 }
 
@@ -39,10 +45,28 @@ function CredentialDetail({ row, now }: { row: CredentialRow; now: number }) {
 }
 
 /** Every credential with its state, reason, recovery time, and window traffic. */
-export function CredentialList({ credentials, now, limit = DEFAULT_LIMIT }: CredentialListProps) {
+export function CredentialList({
+  credentials,
+  loadError,
+  now,
+  onRetry,
+  retrying,
+  limit = DEFAULT_LIMIT,
+}: CredentialListProps) {
   const { t } = useTranslation();
 
   if (!credentials) {
+    if (loadError) {
+      return (
+        <div className={styles.loadError} role="alert">
+          <p className={styles.loadErrorTitle}>{t('dashboard.credentials_load_failed')}</p>
+          <p className={styles.loadErrorDetail}>{redactSecrets(loadError)}</p>
+          <button type="button" className={styles.retry} onClick={onRetry} disabled={retrying}>
+            {retrying ? t('dashboard.refreshing') : t('dashboard.action_retry')}
+          </button>
+        </div>
+      );
+    }
     return <p className={styles.empty}>{t('dashboard.health_loading')}</p>;
   }
   if (credentials.total === 0) {
@@ -50,7 +74,7 @@ export function CredentialList({ credentials, now, limit = DEFAULT_LIMIT }: Cred
       <div className={styles.emptyBlock}>
         <p className={styles.empty}>{t('dashboard.health_empty')}</p>
         <Link className={styles.footerLink} to="/oauth">
-          {t('dashboard.health_add')} <span aria-hidden="true">→</span>
+          {t('dashboard.action_add_oauth')} <span aria-hidden="true">→</span>
         </Link>
       </div>
     );
@@ -142,6 +166,9 @@ export function CredentialList({ credentials, now, limit = DEFAULT_LIMIT }: Cred
               <CredentialDetail row={row} now={now} />
             </div>
             <span className={styles.window}>
+              <span aria-hidden="true" className={styles.chevron}>
+                ›
+              </span>
               {row.window.total === 0
                 ? t('dashboard.credential_window_idle')
                 : t('dashboard.credential_window', {

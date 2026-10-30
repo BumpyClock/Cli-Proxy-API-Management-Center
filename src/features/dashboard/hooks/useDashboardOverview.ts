@@ -16,9 +16,10 @@ import { usePolledResource, type PolledResource } from './usePolledResource';
 export const DASHBOARD_POLL_MS: Record<DashboardSourceId, number> = {
   credentials: 15_000,
   traffic: 15_000,
-  config: 60_000,
-  models: 300_000,
-  usage: 60_000,
+  config: 15_000,
+  /** The advertised model list rarely changes; its stamp states the slower cadence. */
+  models: 60_000,
+  usage: 15_000,
 };
 
 /** Upper bound per attempt, so a stalled request surfaces as a failure instead of hanging. */
@@ -64,9 +65,9 @@ const statusOf = <T>(resource: PolledResource<T>): SourceStatus => ({
 /**
  * Everything the dashboard shows, kept current by polling.
  *
- * Credentials and API-key traffic refresh every 15 seconds, usage statistics and config
- * every minute, and the model list every five minutes. Each source reports its own
- * receipt time and error so the page can say how old every number is.
+ * Credentials, API-key traffic, configuration, and usage statistics refresh every 15
+ * seconds; the model list every minute. Each source reports its own receipt time and
+ * error so the page can say how old every number is.
  */
 export function useDashboardOverview() {
   const { t } = useTranslation();

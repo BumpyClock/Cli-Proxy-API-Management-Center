@@ -51,7 +51,11 @@
 }
 
 .swatchFailure {
-  background: var(--viz-failure);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--viz-failure) 0 2px,
+    color-mix(in srgb, var(--viz-failure) 45%, var(--bg-primary)) 2px 3.5px
+  );
 }
 
 /* ---------- 绘图区 ---------- */
@@ -158,21 +162,14 @@
   filter: brightness(1.06);
 }
 
-/* The newest bucket is still filling: hatched so it never reads as a finished drop. */
-.columnPartial .segmentSuccess {
-  background: repeating-linear-gradient(
-    135deg,
-    var(--viz-success) 0 3px,
-    color-mix(in srgb, var(--viz-success) 45%, transparent) 3px 6px
-  );
+/* The newest bucket is still filling: faded, with a dashed outline marking it as partial. */
+.columnPartial .stack {
+  opacity: 0.55;
 }
 
-.columnPartial .segmentFailure {
-  background: repeating-linear-gradient(
-    135deg,
-    var(--viz-failure) 0 3px,
-    color-mix(in srgb, var(--viz-failure) 45%, transparent) 3px 6px
-  );
+.columnPartial .segment {
+  outline: 1px dashed var(--text-secondary);
+  outline-offset: 1px;
 }
 
 .segment {
@@ -187,7 +184,12 @@
 }
 
 .segmentFailure {
-  background: var(--viz-failure);
+  /* Stripes distinguish failures without relying on colour alone. */
+  background: repeating-linear-gradient(
+    135deg,
+    var(--viz-failure) 0 3px,
+    color-mix(in srgb, var(--viz-failure) 45%, var(--bg-primary)) 3px 5px
+  );
 }
 
 /* 堆叠段之间留 2px 表面色间隙 —— 用留白而不是描边来分隔 */
@@ -346,6 +348,11 @@
     color: var(--text-secondary);
     font-weight: 600;
     white-space: nowrap;
+  }
+
+  /* The time column reads left to right, header included. */
+  thead th:first-child {
+    text-align: left;
   }
 
   tbody th[scope='row'] {

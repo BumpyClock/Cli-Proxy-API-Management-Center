@@ -37,6 +37,10 @@
 .headerLink {
   margin-left: auto;
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
@@ -190,11 +194,17 @@
   }
 }
 
+.setupActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 34px;
+  min-height: 36px;
   padding: 6px 14px;
   border-radius: $radius-full;
   border: 1px solid var(--border-primary);
@@ -230,6 +240,12 @@
   &:disabled {
     cursor: progress;
     color: var(--text-secondary);
+  }
+
+  /* Touch targets grow to 44px on coarse pointers. */
+  @media (pointer: coarse) {
+    min-height: 44px;
+    padding: 8px 16px;
   }
 
   @media (prefers-reduced-motion: reduce) {

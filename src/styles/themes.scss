@@ -82,7 +82,8 @@
 
   // 可视化配色：与语义色同源；深色模式下重新取步阶（见 [data-theme='dark']）。
   // 规则：翡翠绿只表达「活的流量」。
-  --viz-success: #10b981;
+  // #059669 keeps chart marks at 3.8:1 on white; #10b981 measured 2.5:1.
+  --viz-success: #059669;
   --viz-failure: #c65746;
 
   // 动效词汇表：内置 ease 太弱，交互反馈统一用强减速曲线。

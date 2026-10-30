@@ -71,7 +71,7 @@ export interface CredentialRow {
   window: TrafficCounts;
 }
 
-export type ProviderStatus = 'down' | 'degraded' | 'healthy' | 'idle';
+export type ProviderStatus = 'down' | 'degraded' | 'limited' | 'healthy' | 'idle';
 
 /** One provider row: window traffic plus credential health. */
 export interface ProviderHealth {
@@ -82,6 +82,8 @@ export interface ProviderHealth {
     serving: number;
     problems: number;
     disabled: number;
+    /** Serving, but with some models cooling down (quota, unsupported model, ...). */
+    limited: number;
   };
   /** API-key credentials reported by `api-key-usage`. */
   apiKeys: number;
@@ -98,6 +100,8 @@ export interface ProviderHealth {
   status: ProviderStatus;
   /** Credentials that need attention, worst first. */
   problemCredentials: CredentialRow[];
+  /** Serving credentials with model-level cooldowns. */
+  limitedCredentials: CredentialRow[];
 }
 
 /** Credential health totals. */
