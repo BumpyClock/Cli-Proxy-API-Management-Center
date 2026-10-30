@@ -1,4 +1,5 @@
 import {
+  escalates,
   sameAnnouncementState,
   settleAnnouncement,
   type AnnouncementNext,
@@ -36,12 +37,18 @@ const advanced = (now: number | null, before: number | null) =>
  * Decides when the dashboard's live region speaks, and what it says.
  *
  * Credentials and traffic are polled separately but feed one headline. When the latest
- * state first differs from the announced one, the change is held until neither source is
- * in flight and both have reported after the change began (a report from before it does
- * not count), bounded by `maxHoldMs` from the change, never from an unchanged poll. The
- * announcement is the net change from the announced state to the latest one, so states
- * between the two sources' reports are never spoken. Refresh and Retry hold announcements
- * until they end; then their result leads.
+ * state first differs from the announced one, the change is held:
+ * - until both sources have reported after the change began (a report from before it
+ *   does not count); once they have, a newer poll in flight does not hold it again;
+ * - while a source is still owed a report, through any request in flight (its answer or
+ *   timeout settles the headline), otherwise for at most `maxHoldMs` after the change,
+ *   never after an unchanged poll. If that limit forces an announcement, the sources
+ *   still owed a report stay owed, so their answer is announced at once.
+ * New or worse issues skip the hold: a later report can add to them but not contradict
+ * them, so operators hear an outage as soon as the page shows it. The announcement is the
+ * net change from the announced state to the latest one, so partial recoveries between
+ * the two sources' reports are not spoken. Refresh and Retry hold
+ * announcements until they end; then their result leads.
  */
 export class LiveAnnouncer {
   private announced: AnnouncementSnapshot | null = null;
@@ -49,6 +56,8 @@ export class LiveAnnouncer {
   private lastMarks: Marks | null = null;
   /** Receipt marks just before the pending change was first seen. */
   private changeBase: Marks | null = null;
+  /** Marks still owed a report after a forced announcement; the next change starts here. */
+  private carriedBase: Marks | null = null;
   private changeStartedAt: number | null = null;
   private actionMessages: string[] = [];
   private actionsRunning = 0;
@@ -77,12 +86,15 @@ export class LiveAnnouncer {
       // An unchanged poll, or a change that reverted: nothing is pending for the state.
       this.changeBase = null;
       this.changeStartedAt = null;
+      if (this.carriedBase && this.caughtUp(this.carriedBase)) this.carriedBase = null;
       if (this.actionEnded) this.schedule();
       return;
     }
     if (this.changeStartedAt === null) {
       this.changeStartedAt = this.timers.now();
-      this.changeBase = previousMarks ?? { credentialsAt: null, trafficAt: null };
+      this.changeBase = this.carriedBase ??
+        previousMarks ?? { credentialsAt: null, trafficAt: null };
+      this.carriedBase = null;
     }
     this.schedule();
   }
@@ -109,28 +121,37 @@ export class LiveAnnouncer {
     }
   }
 
-  private ready(): boolean {
+  private caughtUp(base: Marks): boolean {
     const latest = this.latest;
-    if (!latest || latest.primary.busy) return false;
-    // A finished Refresh or Retry already waited for its sources.
-    if (this.actionEnded || this.changeStartedAt === null) return true;
-    const base = this.changeBase;
     return (
-      !base ||
-      (advanced(latest.primary.credentialsAt, base.credentialsAt) &&
-        advanced(latest.primary.trafficAt, base.trafficAt))
+      !!latest &&
+      advanced(latest.primary.credentialsAt, base.credentialsAt) &&
+      advanced(latest.primary.trafficAt, base.trafficAt)
     );
   }
 
   private flush(): void {
     this.timer = null;
-    if (this.actionsRunning > 0) return; // the action's end reschedules
-    const held = this.changeStartedAt === null ? 0 : this.timers.now() - this.changeStartedAt;
-    if (!this.ready() && held < this.options.maxHoldMs) {
-      this.timer = this.timers.set(() => this.flush(), this.options.batchMs);
-      return;
-    }
     const latest = this.latest;
+    // The action's end reschedules.
+    if (this.actionsRunning > 0) return;
+    // A finished Refresh or Retry already waited for its sources.
+    const base = this.actionEnded || this.changeStartedAt === null ? null : this.changeBase;
+    // New or worse issues are spoken at once; a recovery waits for both sources.
+    const urgent = !!latest && !!this.announced && escalates(this.announced, latest.snapshot);
+    const ready = !base || urgent || this.caughtUp(base);
+    if (!ready) {
+      const held = this.changeStartedAt === null ? 0 : this.timers.now() - this.changeStartedAt;
+      // A source is still owed a report: wait while a request is in flight (its answer or
+      // timeout settles the headline), otherwise up to the limit. Once both have reported,
+      // a newer poll in flight does not hold the announcement again.
+      if (latest?.primary.busy || held < this.options.maxHoldMs) {
+        this.timer = this.timers.set(() => this.flush(), this.options.batchMs);
+        return;
+      }
+    }
+    // Forced by the limit: the sources still owed a report stay owed for the next change.
+    this.carriedBase = ready ? null : base;
     const previous = this.announced;
     if (latest) this.announced = latest.snapshot;
     const message = settleAnnouncement(

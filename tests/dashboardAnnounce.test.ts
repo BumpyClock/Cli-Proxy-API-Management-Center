@@ -3,6 +3,7 @@ import {
   attentionAnnouncements,
   attentionState,
   composeAnnouncement,
+  escalates,
   settleAnnouncement,
   type AnnouncementText,
 } from '../src/features/dashboard/logic/announce';
@@ -143,6 +144,22 @@ describe('dashboard live announcements', () => {
         ['Loaded credentials.']
       )
     ).toBe('Loaded credentials. Muse (Meta) is down. new xai limited');
+  });
+
+  test('new and worse issues escalate; recoveries do not', () => {
+    const muse = snapshot('down|meta|1|false', [provider('meta', 'down')]);
+    const museAndClaude = snapshot('down|meta|1|false', [
+      provider('meta', 'down'),
+      provider('claude', 'degraded'),
+    ]);
+    const claudeDown = snapshot('down|meta|2|false', [
+      provider('meta', 'down'),
+      provider('claude', 'down'),
+    ]);
+    expect(escalates(muse, museAndClaude)).toBe(true);
+    expect(escalates(museAndClaude, claudeDown)).toBe(true);
+    expect(escalates(claudeDown, museAndClaude)).toBe(false);
+    expect(escalates(museAndClaude, snapshot('good||0|false', []))).toBe(false);
   });
 
   test('a retry result and the outage it reveals form one announcement', () => {

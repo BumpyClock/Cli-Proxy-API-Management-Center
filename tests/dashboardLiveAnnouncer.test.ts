@@ -134,22 +134,70 @@ describe('LiveAnnouncer', () => {
     // Credentials poll with nothing new while traffic is quiet: nothing is pending.
     announcer.update(state('incident', { credentialsAt: 2, trafficAt: 1, busy: false }));
     timers.advance(10_000);
-    // The change begins now and traffic stalls: the hold runs from here.
-    announcer.update(state('partial', { credentialsAt: 3, trafficAt: 1, busy: true }));
+    // The change begins now and traffic stays quiet: the hold runs from here.
+    announcer.update(state('partial', { credentialsAt: 3, trafficAt: 1, busy: false }));
     timers.advance(6_000);
     expect(spoken).toEqual([]);
     timers.advance(9_500);
     expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
   });
 
-  test('a stalled source delays the announcement by at most one interval', () => {
+  test('a quiet source delays the announcement by at most one interval', () => {
     const { timers, spoken, announcer } = setup();
     announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
-    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    // Traffic is not in flight and does not report again in time.
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: false }));
     timers.advance(14_000);
     expect(spoken).toEqual([]);
     timers.advance(2_000);
     expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
+  });
+
+  test('a request in flight longer than the hold is waited for, then announced once', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials land; traffic stays in flight for 17 s, longer than the 15 s limit.
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    timers.advance(17_000);
+    expect(spoken).toEqual([]);
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 3, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('once both sources reported after the change, a newer poll in flight does not hold it', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Traffic reports first (Claude recovered), then credentials (Muse recovered) while
+    // traffic's next, slow poll is already in flight.
+    announcer.update(state('partial', { credentialsAt: 1, trafficAt: 2, busy: false }));
+    announcer.update(state('steady', { credentialsAt: 3, trafficAt: 2, busy: true }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('after a forced announcement, the owed source is announced as soon as it reports', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: false }));
+    timers.advance(16_000);
+    expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
+    // Traffic finally reports: credentials already reported after the change, so no new hold.
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 3, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual([
+      '1 issue needs attention. Resolved: provider:meta.',
+      'All systems steady.',
+    ]);
+  });
+
+  test('a new outage is announced at once, without waiting for the other source', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('steady', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials show the outage; traffic's slow poll is still in flight.
+    announcer.update(state('incident', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    timers.advance(600);
+    expect(spoken).toEqual(['Muse (Meta) is down. New issue: claude.']);
   });
 
   test('a secondary incident under the same headline is announced', () => {

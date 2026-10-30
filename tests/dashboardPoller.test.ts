@@ -122,6 +122,17 @@ describe('createPoller', () => {
     expect(harness.pendingDelays()).toEqual([5_000]);
   });
 
+  test('a slow failure keeps the stated cadence from the attempt start', async () => {
+    const { harness, calls, poller } = setup();
+    poller.start();
+    await harness.advance(5_000);
+    calls[0].request.reject(new Error('503'));
+    await flush();
+    expect(harness.pendingDelays()).toEqual([10_000]);
+    await harness.advance(10_000);
+    expect(calls).toHaveLength(2);
+  });
+
   test('keeps last good data on failure and waits a full interval before retrying', async () => {
     const { harness, calls, poller } = setup();
     poller.start();
@@ -187,7 +198,8 @@ describe('createPoller', () => {
     expect(calls[0].signal.aborted).toBe(true);
     expect(poller.getSnapshot()).toMatchObject({ loading: false });
     expect(poller.getSnapshot().error).toBe(new PollTimeoutError(20_000).message);
-    expect(harness.pendingDelays()).toEqual([15_000]);
+    // The cadence slot (15 s after the start) has passed: a third of an interval follows.
+    expect(harness.pendingDelays()).toEqual([5_000]);
   });
 
   test('ignores a response that settles after stop, even across a restart', async () => {

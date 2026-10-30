@@ -108,6 +108,11 @@ export function createPoller<T>(options: PollerOptions<T>): Poller<T> {
 
     const attemptRun = runId;
     const startedAt = now();
+    // The stated cadence runs from each attempt's start, after success or failure, so a
+    // slow response does not stretch it; a very slow one still leaves a third of an
+    // interval before the next attempt.
+    const nextAfter = (settledAt: number) =>
+      Math.max(startedAt + options.intervalMs, settledAt + options.intervalMs / 3);
     const controller = new AbortController();
     let timeoutId: unknown = null;
     emit({ loading: true });
@@ -134,12 +139,7 @@ export function createPoller<T>(options: PollerOptions<T>): Poller<T> {
         settle();
         if (attemptRun === runId && running) {
           const receivedAt = now();
-          // Keep the stated cadence from the attempt's start, so a slow response does
-          // not stretch it; still leave a third of an interval after a very slow one.
-          nextAttemptAt = Math.max(
-            startedAt + options.intervalMs,
-            receivedAt + options.intervalMs / 3
-          );
+          nextAttemptAt = nextAfter(receivedAt);
           emit({ data, receivedAt, error: null, loading: false });
           schedule();
         }
@@ -148,7 +148,7 @@ export function createPoller<T>(options: PollerOptions<T>): Poller<T> {
       (error: unknown) => {
         settle();
         if (attemptRun === runId && running) {
-          nextAttemptAt = now() + options.intervalMs;
+          nextAttemptAt = nextAfter(now());
           emit({ error: describe(error), loading: false });
           schedule();
         }

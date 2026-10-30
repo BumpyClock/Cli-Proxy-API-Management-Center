@@ -23,6 +23,21 @@ export function sameAnnouncementState(a: AnnouncementSnapshot, b: AnnouncementSn
   return true;
 }
 
+const SEVERITY: Record<string, number> = { down: 3, failed: 2, degraded: 2, stale: 1, limited: 1 };
+
+/**
+ * True when `next` adds an issue or makes one worse. Such news is safe to speak before
+ * the other source reports: a later report can add to it but not contradict it, unlike a
+ * partial recovery.
+ */
+export function escalates(previous: AnnouncementSnapshot, next: AnnouncementSnapshot): boolean {
+  for (const [key, value] of next.attention) {
+    const before = previous.attention.get(key);
+    if (before === undefined || (SEVERITY[value] ?? 0) > (SEVERITY[before] ?? 0)) return true;
+  }
+  return false;
+}
+
 export interface AnnouncementSnapshot {
   verdictKey: string;
   attention: AttentionState;
