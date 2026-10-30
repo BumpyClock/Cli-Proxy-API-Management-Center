@@ -172,7 +172,25 @@ export function DashboardPage() {
     Math.abs(usageRequests - traffic.total) >
       Math.max(5, 0.1 * Math.max(usageRequests, traffic.total));
 
+  // Receipts of the sources behind provider evidence: credential files and API-key traffic.
+  const evidence = useMemo(
+    () => ({
+      credentials: {
+        receivedAt: sources.credentials.receivedAt,
+        live: freshness.credentials === 'live',
+      },
+      traffic: { receivedAt: sources.traffic.receivedAt, live: freshness.traffic === 'live' },
+    }),
+    [
+      freshness.credentials,
+      freshness.traffic,
+      sources.credentials.receivedAt,
+      sources.traffic.receivedAt,
+    ]
+  );
+
   const verdict = deriveVerdict({
+    evidence,
     connectionStatus,
     attention,
     primaryFreshness,
@@ -513,11 +531,7 @@ export function DashboardPage() {
       {connected && (
         <AttentionPanel
           items={attention}
-          evidenceAsOf={
-            primaryFreshness === 'stale' || primaryFreshness === 'failed'
-              ? (sources.credentials.receivedAt ?? sources.traffic.receivedAt)
-              : null
-          }
+          evidence={evidence}
           checkedCredentials={credentials?.total ?? 0}
           checkedProviders={providers.length}
           primaryFreshness={primaryFreshness}

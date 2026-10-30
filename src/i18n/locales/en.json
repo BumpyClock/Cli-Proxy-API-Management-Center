@@ -206,6 +206,7 @@
     "fleet_eyebrow": "Providers",
     "fleet_failed": "{{count}} failed",
     "fleet_idle": "No traffic in this window",
+    "fleet_no_requests": "No requests in this window",
     "fleet_rate_label": "{{provider}} success rate",
     "fleet_requests": "requests",
     "fleet_spark_label": "{{provider}} request volume",

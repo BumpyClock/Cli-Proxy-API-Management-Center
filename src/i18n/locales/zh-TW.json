@@ -201,6 +201,7 @@
     "fleet_eyebrow": "供應商",
     "fleet_failed": "失敗 {{count}} 次",
     "fleet_idle": "此時段內無流量",
+    "fleet_no_requests": "此時段內沒有請求",
     "fleet_rate_label": "{{provider}} 成功率",
     "fleet_requests": "次請求",
     "fleet_spark_label": "{{provider}} 請求量",

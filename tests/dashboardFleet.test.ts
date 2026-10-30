@@ -441,6 +441,29 @@ describe('attention and verdict', () => {
     expect(verdict).toMatchObject({ kind: 'down', providerId: 'meta', stale: true });
   });
 
+  test('an outage seen in fresh credentials stays current when only traffic stopped', () => {
+    const { providers, traffic } = buildLiveModel();
+    const evidence = (credentialsLive: boolean, trafficLive: boolean) => ({
+      credentials: {
+        receivedAt: RECEIVED_MS - (credentialsLive ? 0 : 120_000),
+        live: credentialsLive,
+      },
+      traffic: { receivedAt: RECEIVED_MS - (trafficLive ? 0 : 60_000), live: trafficLive },
+    });
+    const verdict = (credentialsLive: boolean, trafficLive: boolean) =>
+      deriveVerdict({
+        connectionStatus: 'connected',
+        attention: buildAttention(providers, sources(trafficLive ? {} : { traffic: 'failed' })),
+        primaryFreshness: credentialsLive && trafficLive ? 'live' : 'failed',
+        hasData: true,
+        trafficTotal: traffic.total,
+        evidence: evidence(credentialsLive, trafficLive),
+      });
+    // Muse's outage comes from its credential file: stale traffic does not age it.
+    expect(verdict(true, false)).toMatchObject({ kind: 'down', providerId: 'meta', stale: false });
+    expect(verdict(false, true)).toMatchObject({ kind: 'down', providerId: 'meta', stale: true });
+  });
+
   test('lists a credentials gap ahead of the provider issues it undermines', () => {
     const { providers } = buildLiveModel();
     const keys = buildAttention(providers, sources({ credentials: 'failed', usage: 'failed' })).map(

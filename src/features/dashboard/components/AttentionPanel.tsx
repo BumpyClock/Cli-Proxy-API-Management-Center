@@ -13,6 +13,7 @@ import type {
 import type { SourceFreshness } from '../logic/freshness';
 import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from '../logic/links';
 import { redactSecrets } from '../logic/redact';
+import { evidenceAsOf, type EvidenceReceipts } from '../logic/evidence';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
 import { formatAge } from './formatters';
@@ -24,8 +25,8 @@ const MAX_CREDENTIALS_PER_ITEM = 3;
 
 interface AttentionPanelProps {
   items: AttentionItem[];
-  /** Set when credentials or traffic stopped updating: provider evidence is last-known. */
-  evidenceAsOf: number | null;
+  /** Receipts of the sources behind provider evidence, so stale evidence states its age. */
+  evidence?: EvidenceReceipts;
   checkedCredentials: number;
   checkedProviders: number;
   primaryFreshness: SourceFreshness;
@@ -56,13 +57,12 @@ function ProviderItem({
   item,
   windowLabel,
   now,
-  evidenceAsOf,
+  evidence,
 }: {
   item: ProviderAttention;
   windowLabel: string;
   now: number;
-  /** Receipt time of the evidence when its source stopped updating, else null. */
-  evidenceAsOf: number | null;
+  evidence?: EvidenceReceipts;
 }) {
   const { t, i18n } = useTranslation();
   const { provider } = item;
@@ -147,6 +147,7 @@ function ProviderItem({
   }
   const shown = evidenceRows.slice(0, MAX_CREDENTIALS_PER_ITEM);
   const hidden = evidenceRows.length - shown.length;
+  const asOf = evidenceAsOf(provider, evidence);
 
   return (
     <li className={[styles.item, styles[`item_${item.severity}`]].join(' ')}>
@@ -156,9 +157,9 @@ function ProviderItem({
           <StatusText tone={item.severity === 'critical' ? 'critical' : 'warning'}>
             {t(`dashboard.provider_status_${provider.status}`)}
           </StatusText>
-          {evidenceAsOf !== null && (
+          {asOf !== null && (
             <span className={styles.asOf}>
-              {t('dashboard.attention_as_of', { age: formatAge(t, evidenceAsOf, now) })}
+              {t('dashboard.attention_as_of', { age: formatAge(t, asOf, now) })}
             </span>
           )}
         </div>
@@ -257,7 +258,7 @@ function SourceItem({
  */
 export function AttentionPanel({
   items,
-  evidenceAsOf,
+  evidence,
   checkedCredentials,
   checkedProviders,
   primaryFreshness,
@@ -370,7 +371,7 @@ export function AttentionPanel({
               item={item}
               windowLabel={windowLabel}
               now={now}
-              evidenceAsOf={evidenceAsOf}
+              evidence={evidence}
             />
           ) : (
             <SourceItem

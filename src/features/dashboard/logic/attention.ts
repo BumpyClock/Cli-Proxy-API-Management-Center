@@ -1,4 +1,5 @@
 import type { ProviderHealth } from '../types';
+import { evidenceAsOf, type EvidenceReceipts } from './evidence';
 import type { SourceFreshness } from './freshness';
 
 export type DashboardSourceId = 'credentials' | 'traffic' | 'config' | 'models' | 'usage';
@@ -122,6 +123,12 @@ export interface VerdictInput {
   trafficTotal: number;
   /** Usage statistics saw requests in the same window (they can include removed credentials). */
   otherScopeActivity?: boolean;
+  /**
+   * Receipts of the sources behind provider evidence. With them, an outage is only "last
+   * reported" when the down provider's own evidence stopped updating; without them, when
+   * either primary source did.
+   */
+  evidence?: EvidenceReceipts;
 }
 
 /**
@@ -147,12 +154,15 @@ export function deriveVerdict(input: VerdictInput): Verdict {
   // anything else is unknown rather than counted as current issues.
   const outOfDate = input.primaryFreshness === 'stale' || input.primaryFreshness === 'failed';
   if (down.length > 0) {
+    const evidence = input.evidence;
     return {
       kind: 'down',
       tone: 'critical',
       count: down.length,
       providerId: down.length === 1 ? down[0].provider.id : null,
-      stale: outOfDate,
+      stale: evidence
+        ? down.some((item) => evidenceAsOf(item.provider, evidence) !== null)
+        : outOfDate,
     };
   }
   if (outOfDate) return { ...base, kind: 'unknown', tone: 'warning' };

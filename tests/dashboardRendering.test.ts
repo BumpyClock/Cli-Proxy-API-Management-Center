@@ -6,6 +6,7 @@ import i18n from '../src/i18n/index';
 import { normalizeAuthFilesResponse } from '../src/services/api/authFiles';
 import type { AuthFilesResponse } from '../src/types/authFile';
 import { AttentionPanel } from '../src/features/dashboard/components/AttentionPanel';
+import { Meter } from '../src/features/dashboard/components/Meter';
 import { CredentialList } from '../src/features/dashboard/components/CredentialList';
 import { ProviderHealthList } from '../src/features/dashboard/components/ProviderHealthList';
 import { UsagePanel } from '../src/features/dashboard/components/UsagePanel';
@@ -133,6 +134,28 @@ describe('dashboard components render translated, actionable markup', () => {
     );
     expect(markup).toContain('Open Claude settings');
     expect(markup).toContain('/ai-providers?brand=claude');
+
+    // Stale API-key traffic: only the item built on it states that age.
+    const staleTraffic = render(
+      createElement(AttentionPanel, {
+        items,
+        evidence: {
+          credentials: { receivedAt: NOW - 5_000, live: true },
+          traffic: { receivedAt: NOW - 60_000, live: false },
+        },
+        checkedCredentials: 2,
+        checkedProviders: 3,
+        primaryFreshness: 'stale',
+        primaryReceivedAt: NOW - 60_000,
+        windowLabel: '3h 20m',
+        now: NOW,
+        onRetry: async () => undefined,
+      })
+    );
+    const itemFor = (name: string) =>
+      staleTraffic.split('<li').find((chunk) => chunk.includes(`>${name}<`)) ?? '';
+    expect(itemFor('Claude')).toContain('as of');
+    expect(itemFor('Muse (Meta)')).not.toContain('as of');
     expect(markup).toContain('/logs?search=claude');
     expect(markup).toContain('API keys don&#x27;t report a failure reason');
     expect(markup).toContain('Network Error');
@@ -211,6 +234,19 @@ describe('dashboard components render translated, actionable markup', () => {
       expect(markup).toContain('gpt-5.5');
     });
   }
+
+  test('a success rate is a meter; no rate is text, not indeterminate progress', () => {
+    const measured = renderToStaticMarkup(
+      createElement(Meter, { value: 96.2, ariaLabel: 'Codex success rate' })
+    );
+    expect(measured).toContain('role="meter"');
+    expect(measured).toContain('aria-valuenow="96.2"');
+    const none = renderToStaticMarkup(
+      createElement(Meter, { value: null, ariaLabel: 'Idle success rate' })
+    );
+    expect(none).not.toContain('role=');
+    expect(none).toContain('aria-hidden="true"');
+  });
 
   test('every dashboard key exists in all four locales', () => {
     const reference = i18n.getResource('en', 'translation', 'dashboard') as Record<string, string>;

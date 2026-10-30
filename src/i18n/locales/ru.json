@@ -215,6 +215,7 @@
     "fleet_eyebrow": "Провайдеры",
     "fleet_failed": "ошибок: {{count}}",
     "fleet_idle": "Нет трафика за этот период",
+    "fleet_no_requests": "Нет запросов за этот период",
     "fleet_rate_label": "Доля успешных запросов {{provider}}",
     "fleet_requests": "запросов",
     "fleet_spark_label": "Объём запросов {{provider}}",

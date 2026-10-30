@@ -97,9 +97,14 @@ export function ProviderHealthList({ providers }: ProviderHealthListProps) {
             </span>
             <div className={styles.rate}>
               <span className={styles.rateValue}>
-                {provider.window.successRate === null
-                  ? DASH
-                  : formatPercent(provider.window.successRate)}
+                {provider.window.successRate === null ? (
+                  <>
+                    <span aria-hidden="true">{DASH}</span>
+                    <span className={styles.srOnly}>{t('dashboard.fleet_no_requests')}</span>
+                  </>
+                ) : (
+                  formatPercent(provider.window.successRate)
+                )}
               </span>
               <Meter
                 value={provider.window.successRate}
