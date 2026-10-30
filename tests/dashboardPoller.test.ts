@@ -101,6 +101,27 @@ describe('createPoller', () => {
     expect(calls).toHaveLength(2);
   });
 
+  test('a slow response keeps the stated cadence from the attempt start', async () => {
+    const { harness, calls, poller } = setup();
+    poller.start();
+    await harness.advance(5_000);
+    calls[0].request.resolve(1);
+    await flush();
+    // Started at 0, answered at 5 s: the next attempt is due at 15 s, not 20 s.
+    expect(harness.pendingDelays()).toEqual([10_000]);
+    await harness.advance(10_000);
+    expect(calls).toHaveLength(2);
+  });
+
+  test('a very slow response still leaves a third of an interval before the next attempt', async () => {
+    const { harness, calls, poller } = setup();
+    poller.start();
+    await harness.advance(14_000);
+    calls[0].request.resolve(1);
+    await flush();
+    expect(harness.pendingDelays()).toEqual([5_000]);
+  });
+
   test('keeps last good data on failure and waits a full interval before retrying', async () => {
     const { harness, calls, poller } = setup();
     poller.start();

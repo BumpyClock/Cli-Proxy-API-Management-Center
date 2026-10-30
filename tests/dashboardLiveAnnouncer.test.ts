@@ -114,6 +114,34 @@ describe('LiveAnnouncer', () => {
     expect(spoken).toEqual(['All systems steady.']);
   });
 
+  test('a traffic report from before the change does not count as caught up', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Traffic polls on its own (drifted) schedule with nothing new to say.
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 2, busy: false }));
+    // Credentials then bring the change; traffic's earlier report must not satisfy the hold.
+    announcer.update(state('partial', { credentialsAt: 3, trafficAt: 2, busy: false }));
+    timers.advance(5_000);
+    expect(spoken).toEqual([]);
+    announcer.update(state('steady', { credentialsAt: 3, trafficAt: 4, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('an unchanged poll does not start the hold clock', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials poll with nothing new while traffic is quiet: nothing is pending.
+    announcer.update(state('incident', { credentialsAt: 2, trafficAt: 1, busy: false }));
+    timers.advance(10_000);
+    // The change begins now and traffic stalls: the hold runs from here.
+    announcer.update(state('partial', { credentialsAt: 3, trafficAt: 1, busy: true }));
+    timers.advance(6_000);
+    expect(spoken).toEqual([]);
+    timers.advance(9_500);
+    expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
+  });
+
   test('a stalled source delays the announcement by at most one interval', () => {
     const { timers, spoken, announcer } = setup();
     announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));

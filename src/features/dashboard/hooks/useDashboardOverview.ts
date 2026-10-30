@@ -206,14 +206,15 @@ export function useDashboardOverview() {
     [resources]
   );
 
-  // Credentials and traffic feed one headline: a Retry of either refreshes both, so they
-  // stay in step and the page never shows one fresh half next to an old one. The result
-  // is the requested source's.
+  // Credentials and traffic feed one headline: a Retry of either refreshes both and ends
+  // when both have answered, so they stay in step and the Retry's announcement covers the
+  // whole headline. The result (success or failure) is the requested source's.
   const retrySource = useCallback(
-    (id: DashboardSourceId) => {
+    async (id: DashboardSourceId) => {
       const partner = id === 'credentials' ? 'traffic' : id === 'traffic' ? 'credentials' : null;
-      if (partner) void resources[partner].refresh().catch(() => undefined);
-      return resources[id].refresh().then(() => undefined);
+      const requested = resources[id].refresh();
+      if (partner) await Promise.allSettled([requested, resources[partner].refresh()]);
+      await requested;
     },
     [resources]
   );

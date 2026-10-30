@@ -14,6 +14,15 @@ export function attentionState(items: AttentionItem[]): AttentionState {
   return new Map(items.map((item) => [item.key, stateOf(item)]));
 }
 
+/** True when two states would read the same to an operator (same headline and issues). */
+export function sameAnnouncementState(a: AnnouncementSnapshot, b: AnnouncementSnapshot): boolean {
+  if (a.verdictKey !== b.verdictKey || a.attention.size !== b.attention.size) return false;
+  for (const [key, value] of a.attention) {
+    if (b.attention.get(key) !== value) return false;
+  }
+  return true;
+}
+
 export interface AnnouncementSnapshot {
   verdictKey: string;
   attention: AttentionState;

@@ -1,4 +1,5 @@
 import {
+  sameAnnouncementState,
   settleAnnouncement,
   type AnnouncementNext,
   type AnnouncementSnapshot,
@@ -26,24 +27,33 @@ export interface AnnouncerOptions {
   maxHoldMs: number;
 }
 
+type Marks = { credentialsAt: number | null; trafficAt: number | null };
+
+const advanced = (now: number | null, before: number | null) =>
+  now !== null && (before === null || now > before);
+
 /**
  * Decides when the dashboard's live region speaks, and what it says.
  *
- * Credentials and traffic are polled separately but feed one headline, so a change
- * waits until neither is in flight and both have reported since the last announcement
- * (bounded by `maxHoldMs`). The announcement is the net change from the last announced
- * state to the latest one; intermediate states between the two sources are never spoken.
- * Refresh and Retry hold announcements until they end, then their result leads.
+ * Credentials and traffic are polled separately but feed one headline. When the latest
+ * state first differs from the announced one, the change is held until neither source is
+ * in flight and both have reported after the change began (a report from before it does
+ * not count), bounded by `maxHoldMs` from the change, never from an unchanged poll. The
+ * announcement is the net change from the announced state to the latest one, so states
+ * between the two sources' reports are never spoken. Refresh and Retry hold announcements
+ * until they end; then their result leads.
  */
 export class LiveAnnouncer {
   private announced: AnnouncementSnapshot | null = null;
-  private announcedMarks: { credentialsAt: number | null; trafficAt: number | null } | null = null;
   private latest: AnnouncerUpdate | null = null;
+  private lastMarks: Marks | null = null;
+  /** Receipt marks just before the pending change was first seen. */
+  private changeBase: Marks | null = null;
+  private changeStartedAt: number | null = null;
   private actionMessages: string[] = [];
   private actionsRunning = 0;
   private actionEnded = false;
   private timer: unknown = null;
-  private pendingSince: number | null = null;
 
   constructor(
     private readonly emit: (message: string) => void,
@@ -53,11 +63,26 @@ export class LiveAnnouncer {
 
   /** Feed every settled render. The first one is the silent baseline. */
   update(next: AnnouncerUpdate): void {
+    const previousMarks = this.lastMarks;
     this.latest = next;
+    this.lastMarks = {
+      credentialsAt: next.primary.credentialsAt,
+      trafficAt: next.primary.trafficAt,
+    };
     if (!this.announced) {
       this.announced = next.snapshot;
-      this.announcedMarks = { ...next.primary };
       return;
+    }
+    if (sameAnnouncementState(this.announced, next.snapshot)) {
+      // An unchanged poll, or a change that reverted: nothing is pending for the state.
+      this.changeBase = null;
+      this.changeStartedAt = null;
+      if (this.actionEnded) this.schedule();
+      return;
+    }
+    if (this.changeStartedAt === null) {
+      this.changeStartedAt = this.timers.now();
+      this.changeBase = previousMarks ?? { credentialsAt: null, trafficAt: null };
     }
     this.schedule();
   }
@@ -79,48 +104,43 @@ export class LiveAnnouncer {
   }
 
   private schedule(): void {
-    if (this.pendingSince === null) this.pendingSince = this.timers.now();
     if (this.timer === null) {
       this.timer = this.timers.set(() => this.flush(), this.options.batchMs);
     }
   }
 
-  private primaryCaughtUp(): boolean {
+  private ready(): boolean {
     const latest = this.latest;
     if (!latest || latest.primary.busy) return false;
-    // An action's own result is enough; otherwise both sources must have reported.
-    if (this.actionEnded) return true;
-    const marks = this.announcedMarks;
-    const advanced = (now: number | null, before: number | null) =>
-      now !== null && (before === null || now > before);
+    // A finished Refresh or Retry already waited for its sources.
+    if (this.actionEnded || this.changeStartedAt === null) return true;
+    const base = this.changeBase;
     return (
-      !marks ||
-      (advanced(latest.primary.credentialsAt, marks.credentialsAt) &&
-        advanced(latest.primary.trafficAt, marks.trafficAt))
+      !base ||
+      (advanced(latest.primary.credentialsAt, base.credentialsAt) &&
+        advanced(latest.primary.trafficAt, base.trafficAt))
     );
   }
 
   private flush(): void {
     this.timer = null;
     if (this.actionsRunning > 0) return; // the action's end reschedules
-    const waited = this.timers.now() - (this.pendingSince ?? this.timers.now());
-    if (!this.primaryCaughtUp() && waited < this.options.maxHoldMs) {
+    const held = this.changeStartedAt === null ? 0 : this.timers.now() - this.changeStartedAt;
+    if (!this.ready() && held < this.options.maxHoldMs) {
       this.timer = this.timers.set(() => this.flush(), this.options.batchMs);
       return;
     }
     const latest = this.latest;
     const previous = this.announced;
-    if (latest) {
-      this.announced = latest.snapshot;
-      this.announcedMarks = { ...latest.primary };
-    }
+    if (latest) this.announced = latest.snapshot;
     const message = settleAnnouncement(
       latest && previous ? { previous, next: latest.next, text: latest.text } : null,
       this.actionMessages
     );
     this.actionMessages = [];
     this.actionEnded = false;
-    this.pendingSince = null;
+    this.changeBase = null;
+    this.changeStartedAt = null;
     if (message) this.emit(message);
   }
 }

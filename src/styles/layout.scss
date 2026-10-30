@@ -259,13 +259,14 @@
     }
 
     &:focus-visible {
-      outline: none;
+      outline: 2px solid var(--text-primary);
+      outline-offset: -2px;
       background: color-mix(in srgb, var(--text-primary) 8%, transparent);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 22%, transparent);
     }
 
+    /* Selected: weight and the check mark, in full-contrast text. */
     &.active {
-      color: var(--primary-color);
+      color: var(--text-primary);
       font-weight: 600;
     }
   }
@@ -302,8 +303,8 @@
     }
 
     &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 22%, transparent);
+      outline: 2px solid var(--text-primary);
+      outline-offset: 2px;
     }
 
     &.active {
