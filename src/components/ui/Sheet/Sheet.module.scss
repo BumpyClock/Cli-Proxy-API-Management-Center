@@ -141,6 +141,13 @@
 }
 
 .closeBtn {
+  @media (pointer: coarse) {
+    width: 44px;
+    height: 44px;
+    top: 8px;
+    right: 8px;
+  }
+
   position: absolute;
   top: 14px;
   right: 14px;
@@ -212,4 +219,3 @@
     transform: translate3d(100%, 0, 0);
   }
 }
-

@@ -230,6 +230,8 @@
     "hero_verdict_offline": "Waiting to connect",
     "hero_verdict_unknown": "Status unknown",
     "list_colon": ": ",
+    "models_fewer": "show fewer",
+    "models_fewer_label": "Show fewer models",
     "models_more": "+{{count}} more",
     "models_more_label": "Show {{count}} more models",
     "partial_missing": "Partial: {{sources}} not loaded, so totals are incomplete",

@@ -224,6 +224,8 @@
     "hero_verdict_offline": "等待连接",
     "hero_verdict_unknown": "状态未知",
     "list_colon": "：",
+    "models_fewer": "收起",
+    "models_fewer_label": "收起模型列表",
     "models_more": "另外 {{count}} 个",
     "models_more_label": "显示另外 {{count}} 个模型",
     "partial_missing": "部分数据：{{sources}}未加载，合计不完整",

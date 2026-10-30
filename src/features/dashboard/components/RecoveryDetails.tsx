@@ -36,17 +36,23 @@ export function RecoveryDetails({ row, now, lineClassName }: RecoveryDetailsProp
             <>
               {t('dashboard.list_colon')}
               {shown.join(', ')}
-              {hidden > 0 && (
+              {models.length > MAX_MODEL_NAMES && (
                 <>
                   {' '}
                   <button
                     type="button"
                     className={styles.more}
-                    aria-expanded={false}
-                    aria-label={t('dashboard.models_more_label', { count: hidden })}
-                    onClick={() => setExpanded(true)}
+                    aria-expanded={expanded}
+                    aria-label={
+                      expanded
+                        ? t('dashboard.models_fewer_label')
+                        : t('dashboard.models_more_label', { count: hidden })
+                    }
+                    onClick={() => setExpanded((value) => !value)}
                   >
-                    {t('dashboard.models_more', { count: hidden })}
+                    {expanded
+                      ? t('dashboard.models_fewer')
+                      : t('dashboard.models_more', { count: hidden })}
                   </button>
                 </>
               )}

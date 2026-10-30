@@ -247,6 +247,8 @@
     "hero_verdict_offline": "Ожидает подключения",
     "hero_verdict_unknown": "Состояние неизвестно",
     "list_colon": ": ",
+    "models_fewer": "свернуть",
+    "models_fewer_label": "Свернуть список моделей",
     "models_more": "ещё {{count}}",
     "models_more_label": "Показать ещё {{count}} моделей",
     "partial_missing": "Частичные данные: не загружено ({{sources}}), итоги неполные",

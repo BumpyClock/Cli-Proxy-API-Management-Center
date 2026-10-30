@@ -1,4 +1,5 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { publishAuthFilesCount } from '@/features/authFiles/authFilesEvents';
 import { useTranslation } from 'react-i18next';
 import { apiKeyUsageApi, authFilesApi, modelsApi, usageApi } from '@/services/api';
 import { useAuthStore, useConfigStore } from '@/stores';
@@ -139,6 +140,16 @@ export function useDashboardOverview() {
       return { enabled, usage: response?.usage ?? null };
     },
   });
+
+  // Keep the sidebar's Auth Files badge in step with what the dashboard shows. While the
+  // credentials source is failing, the count is unknown rather than last-known.
+  const credentialFileCount = credentialsResource.data?.files.length ?? null;
+  const credentialsFailing = credentialsResource.error !== null;
+  useEffect(() => {
+    if (!connected) return;
+    if (credentialsFailing) publishAuthFilesCount(null);
+    else if (credentialFileCount !== null) publishAuthFilesCount(credentialFileCount);
+  }, [connected, credentialFileCount, credentialsFailing]);
 
   const resources = useMemo(
     () => ({

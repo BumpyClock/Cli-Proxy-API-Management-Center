@@ -40,7 +40,11 @@ import {
   useNotificationStore,
   useThemeStore,
 } from '@/stores';
-import { AUTH_FILES_CHANGED_EVENT } from '@/features/authFiles/authFilesEvents';
+import {
+  AUTH_FILES_CHANGED_EVENT,
+  AUTH_FILES_COUNT_EVENT,
+  type AuthFilesCountDetail,
+} from '@/features/authFiles/authFilesEvents';
 import {
   collectPluginResourceEntries,
   PLUGIN_RESOURCES_REFRESH_EVENT,
@@ -523,14 +527,24 @@ export function MainLayout() {
       void loadAuthFilesCount();
     }, 0);
 
+    // A page that already polls credentials publishes its count; adopt it and drop any
+    // older request still in flight.
+    const adoptAuthFilesCount = (event: Event) => {
+      const { count } = (event as CustomEvent<AuthFilesCountDetail>).detail ?? { count: null };
+      authFilesCountRequestRef.current += 1;
+      setAuthFilesCount(count);
+    };
+
     window.addEventListener(PLUGIN_RESOURCES_REFRESH_EVENT, loadPluginResources);
     window.addEventListener(AUTH_FILES_CHANGED_EVENT, loadAuthFilesCount);
+    window.addEventListener(AUTH_FILES_COUNT_EVENT, adoptAuthFilesCount);
 
     return () => {
       authFilesCountRequestRef.current += 1;
       window.clearTimeout(timer);
       window.removeEventListener(PLUGIN_RESOURCES_REFRESH_EVENT, loadPluginResources);
       window.removeEventListener(AUTH_FILES_CHANGED_EVENT, loadAuthFilesCount);
+      window.removeEventListener(AUTH_FILES_COUNT_EVENT, adoptAuthFilesCount);
     };
   }, [apiBase, loadPluginResources, loadAuthFilesCount]);
 
