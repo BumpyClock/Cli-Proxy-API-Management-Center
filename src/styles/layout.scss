@@ -229,6 +229,8 @@
 
   .language-menu-popover {
     min-width: 164px;
+    /* Anchored to the trigger's right edge; never wider than the viewport. */
+    max-width: calc(100vw - 2 * var(--shell-gutter, 12px));
     padding: $spacing-xs;
     display: flex;
     flex-direction: column;
@@ -910,11 +912,6 @@
 
     .mobile-menu-btn {
       display: inline-flex;
-    }
-
-    .language-menu-popover {
-      right: auto;
-      left: 0;
     }
 
     .theme-menu-popover {

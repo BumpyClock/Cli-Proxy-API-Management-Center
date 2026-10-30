@@ -110,35 +110,75 @@ interface SidebarNavGroup {
 const flattenNavItems = (items: SidebarNavItem[]): SidebarNavLinkItem[] =>
   items.flatMap((item) => (item.kind === 'drawer' ? item.children : [item]));
 
-/** 点击菜单外或按下 Escape 时关闭弹出菜单 */
-function useMenuDismiss(
-  open: boolean,
-  menuRef: RefObject<HTMLDivElement | null>,
-  onClose: () => void
-) {
+/**
+ * Header popover menus (language, theme): opening focuses the checked item; arrow keys,
+ * Home, and End move between items; Escape or a selection closes the menu and returns
+ * focus to its trigger; pressing outside or tabbing away closes it.
+ */
+function useMenu(open: boolean, menuRef: RefObject<HTMLDivElement | null>, onClose: () => void) {
   useEffect(() => {
-    if (!open) {
-      return;
+    if (!open) return;
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []
+    );
+    (items.find((item) => item.getAttribute('aria-checked') === 'true') ?? items[0])?.focus();
+  }, [open, menuRef]);
+
+  // Closing by Escape or selection removes the focused item: hand focus back to the trigger.
+  const wasOpenRef = useRef(open);
+  useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      const active = document.activeElement;
+      const focusLost = !active || active === document.body || menuRef.current?.contains(active);
+      if (focusLost) menuRef.current?.querySelector<HTMLElement>('[aria-haspopup]')?.focus();
     }
+    wasOpenRef.current = open;
+  }, [open, menuRef]);
+
+  useEffect(() => {
+    if (!open) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        onClose();
-      }
+      if (!menuRef.current?.contains(event.target as Node)) onClose();
     };
-
-    const handleEscape = (event: KeyboardEvent) => {
+    // Tab or Shift+Tab out of the popover (including back to its trigger) closes it.
+    const handleFocusIn = (event: FocusEvent) => {
+      const popover = menuRef.current?.querySelector('[role="menu"]');
+      if (!popover?.contains(event.target as Node)) onClose();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
         onClose();
+        return;
       }
+      const items = Array.from(
+        menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []
+      );
+      const index = items.indexOf(document.activeElement as HTMLElement);
+      if (index === -1) return;
+      const target =
+        event.key === 'ArrowDown' || event.key === 'ArrowRight'
+          ? index + 1
+          : event.key === 'ArrowUp' || event.key === 'ArrowLeft'
+            ? index - 1
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? items.length - 1
+                : null;
+      if (target === null) return;
+      event.preventDefault();
+      items[(target + items.length) % items.length]?.focus();
     };
 
     document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [open, menuRef, onClose]);
 }
@@ -458,8 +498,8 @@ export function MainLayout() {
 
   const closeLanguageMenu = useCallback(() => setLanguageMenuOpen(false), []);
   const closeThemeMenu = useCallback(() => setThemeMenuOpen(false), []);
-  useMenuDismiss(languageMenuOpen, languageMenuRef, closeLanguageMenu);
-  useMenuDismiss(themeMenuOpen, themeMenuRef, closeThemeMenu);
+  useMenu(languageMenuOpen, languageMenuRef, closeLanguageMenu);
+  useMenu(themeMenuOpen, themeMenuRef, closeThemeMenu);
 
   const toggleLanguageMenu = useCallback(() => {
     setLanguageMenuOpen((prev) => !prev);
@@ -1140,6 +1180,7 @@ export function MainLayout() {
                     onClick={() => handleLanguageSelect(lang)}
                     role="menuitemradio"
                     aria-checked={language === lang}
+                    tabIndex={-1}
                   >
                     <span>{t(LANGUAGE_LABEL_KEYS[lang])}</span>
                     {language === lang ? <span className="language-menu-check">✓</span> : null}
@@ -1180,6 +1221,7 @@ export function MainLayout() {
                     onClick={() => handleThemeSelect(tc.key)}
                     role="menuitemradio"
                     aria-checked={theme === tc.key}
+                    tabIndex={-1}
                   >
                     <div
                       className="theme-card-preview"

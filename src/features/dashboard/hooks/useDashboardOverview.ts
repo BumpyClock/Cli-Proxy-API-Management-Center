@@ -206,8 +206,15 @@ export function useDashboardOverview() {
     [resources]
   );
 
+  // Credentials and traffic feed one headline: a Retry of either refreshes both, so they
+  // stay in step and the page never shows one fresh half next to an old one. The result
+  // is the requested source's.
   const retrySource = useCallback(
-    (id: DashboardSourceId) => resources[id].refresh().then(() => undefined),
+    (id: DashboardSourceId) => {
+      const partner = id === 'credentials' ? 'traffic' : id === 'traffic' ? 'credentials' : null;
+      if (partner) void resources[partner].refresh().catch(() => undefined);
+      return resources[id].refresh().then(() => undefined);
+    },
     [resources]
   );
 

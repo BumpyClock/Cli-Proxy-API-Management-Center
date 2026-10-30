@@ -193,6 +193,11 @@ export function DashboardPage() {
     verdictProviderId: verdict.providerId,
     verdictSentence: `${verdictTitle}${t('dashboard.hero_period')}`,
     attention,
+    primary: {
+      credentialsAt: sources.credentials.receivedAt,
+      trafficAt: sources.traffic.receivedAt,
+      busy: sources.credentials.loading || sources.traffic.loading,
+    },
   });
 
   // Polls and Retry can remove the focused control; keep keyboard users in place.
