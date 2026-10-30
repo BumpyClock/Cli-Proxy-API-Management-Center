@@ -10,7 +10,8 @@ import {
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { IconX } from '../icons';
-import { FOCUSABLE_SELECTOR, holdBackgroundInert, lockScroll, unlockScroll } from '../scrollLock';
+import { openModalSurface, type ModalSurface } from '../modalStack';
+import { FOCUSABLE_SELECTOR, lockScroll, unlockScroll } from '../scrollLock';
 import styles from './Sheet.module.scss';
 
 export type SheetSize = 'md' | 'lg' | 'xl';
@@ -71,7 +72,7 @@ export function Sheet({
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const surfaceRef = useRef<ModalSurface | null>(null);
 
   const getFocusableElements = useCallback(() => {
     if (!sheetRef.current) return [] as HTMLElement[];
@@ -146,10 +147,17 @@ export function Sheet({
   useEffect(() => {
     if (!shouldLockScroll) return;
     lockScroll();
-    const releaseInert = holdBackgroundInert();
+    return () => unlockScroll();
+  }, [shouldLockScroll]);
+
+  // Joins the modal stack: background inert while open, focus restored to the opener.
+  useEffect(() => {
+    if (!shouldLockScroll) return;
+    const surface = openModalSurface(() => sheetRef.current);
+    surfaceRef.current = surface;
     return () => {
-      releaseInert();
-      unlockScroll();
+      surfaceRef.current = null;
+      surface.release();
     };
   }, [shouldLockScroll]);
 
@@ -176,8 +184,6 @@ export function Sheet({
 
   useEffect(() => {
     if (!open) return;
-    previouslyFocusedRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const t = window.setTimeout(() => {
       if (bodyRef.current) bodyRef.current.scrollTop = 0;
       const first = getFocusableElements()[0];
@@ -187,14 +193,10 @@ export function Sheet({
   }, [getFocusableElements, open]);
 
   useEffect(() => {
-    if (open || isVisible) return;
-    previouslyFocusedRef.current?.focus();
-    previouslyFocusedRef.current = null;
-  }, [isVisible, open]);
-
-  useEffect(() => {
     if (!open) return;
     const handleKey = (event: KeyboardEvent) => {
+      // A confirmation stacked on top owns the keyboard.
+      if (surfaceRef.current && !surfaceRef.current.isTop()) return;
       if (event.key === 'Escape') {
         if (closeDisabled) return;
         event.preventDefault();

@@ -990,19 +990,51 @@ export function MainLayout() {
     );
   };
 
-  // Drawer open: move focus into it; Escape closes it and returns focus to the menu button.
+  // The open drawer is modal: focus moves into it and stays within the drawer and
+  // its menu (close) button; Escape closes it. On close, focus that was in the
+  // drawer returns to the menu button.
   useEffect(() => {
     if (!isDrawerNav || !sidebarOpen) return;
-    const first = sidebarRef.current?.querySelector<HTMLElement>('a[href], button:not([disabled])');
-    first?.focus({ preventScroll: true });
+    const sidebar = sidebarRef.current;
+    const menuButton = () => headerRef.current?.querySelector<HTMLElement>('.mobile-menu-btn');
+    const drawerItems = () =>
+      Array.from(
+        sidebar?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []
+      ).filter((el) => el.getClientRects().length > 0);
+    const focusables = () => {
+      const button = menuButton();
+      return button ? [button, ...drawerItems()] : drawerItems();
+    };
+    drawerItems()[0]?.focus({ preventScroll: true });
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+      // A modal opened from the header (e.g. logout) owns the keyboard.
+      if (headerRef.current?.closest('[inert]')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSidebarOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const index = items.indexOf(document.activeElement as HTMLElement);
+      const next = event.shiftKey
+        ? items[index <= 0 ? items.length - 1 : index - 1]
+        : items[index === -1 || index === items.length - 1 ? 0 : index + 1];
       event.preventDefault();
-      setSidebarOpen(false);
-      headerRef.current?.querySelector<HTMLElement>('.mobile-menu-btn')?.focus();
+      next.focus();
     };
     document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      const active = document.activeElement;
+      const lostFocus =
+        !active ||
+        active === document.body ||
+        sidebar?.contains(active) ||
+        active.classList.contains('sidebar-backdrop');
+      if (lostFocus) menuButton()?.focus({ preventScroll: true });
+    };
   }, [isDrawerNav, sidebarOpen]);
 
   const mobileSidebarToggleLabel = sidebarOpen
@@ -1187,8 +1219,9 @@ export function MainLayout() {
           className={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`}
           onClick={() => setSidebarOpen(false)}
           aria-label={t('common.close')}
-          aria-hidden={!sidebarOpen}
-          tabIndex={sidebarOpen ? 0 : -1}
+          // Pointer-only dismissal; keyboard users close with the menu button or Escape.
+          aria-hidden="true"
+          tabIndex={-1}
         />
 
         <aside
@@ -1244,6 +1277,8 @@ export function MainLayout() {
             isPluginResourcePage ? ' content-plugin-resource' : ''
           }`}
           ref={contentRef}
+          // Obscured by the open drawer's backdrop.
+          inert={isDrawerNav && sidebarOpen}
         >
           <main
             className={`main-content${isLogsPage ? ' main-content-logs' : ''}${
