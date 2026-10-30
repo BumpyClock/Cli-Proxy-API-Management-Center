@@ -13,7 +13,6 @@ import type {
 import type { SourceFreshness } from '../logic/freshness';
 import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from '../logic/links';
 import { redactSecrets } from '../logic/redact';
-import { restoreFocusIfLost } from '../focus';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
 import { formatAge } from './formatters';
@@ -274,15 +273,13 @@ export function AttentionPanel({
     setRetrying((current) => new Set(current).add(source));
     void onRetry(source)
       .catch(() => undefined)
-      .finally(() => {
+      .finally(() =>
         setRetrying((current) => {
           const next = new Set(current);
           next.delete(source);
           return next;
-        });
-        // A recovered source drops its item (and the focused Retry): land on the panel title.
-        restoreFocusIfLost('dashboard-attention-title');
-      });
+        })
+      );
   };
 
   if (items.length === 0) {
@@ -291,7 +288,11 @@ export function AttentionPanel({
     const setupNeeded = !pending && checkedCredentials === 0 && checkedProviders === 0;
     if (setupNeeded) {
       return (
-        <section className={styles.allClear} aria-labelledby="dashboard-attention-title">
+        <section
+          className={styles.allClear}
+          aria-labelledby="dashboard-attention-title"
+          data-focus-rescue="dashboard-attention-title"
+        >
           <span className={styles.setupIcon} aria-hidden="true">
             <IconAlertTriangle size={18} />
           </span>
@@ -313,7 +314,11 @@ export function AttentionPanel({
       );
     }
     return (
-      <section className={styles.allClear} aria-labelledby="dashboard-attention-title">
+      <section
+        className={styles.allClear}
+        aria-labelledby="dashboard-attention-title"
+        data-focus-rescue="dashboard-attention-title"
+      >
         <span className={styles.allClearIcon} aria-hidden="true">
           <IconCheckCircle2 size={18} />
         </span>
@@ -341,7 +346,11 @@ export function AttentionPanel({
   }
 
   return (
-    <section className={styles.panel} aria-labelledby="dashboard-attention-title">
+    <section
+      className={styles.panel}
+      aria-labelledby="dashboard-attention-title"
+      data-focus-rescue="dashboard-attention-title"
+    >
       <header className={styles.header}>
         <span className={styles.headerIcon} aria-hidden="true">
           <IconAlertTriangle size={18} />

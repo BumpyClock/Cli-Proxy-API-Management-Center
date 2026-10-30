@@ -26,7 +26,14 @@ import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic
 import { redactUrlCredentials } from './logic/redact';
 import { formatClock } from './logic/time';
 import { summarizeUsage } from './logic/usage';
-import { restoreFocusIfLost } from './focus';
+import {
+  attentionAnnouncements,
+  attentionState,
+  composeAnnouncement,
+  type AnnouncementSnapshot,
+} from './logic/announce';
+import type { AttentionItem } from './logic/attention';
+import { useFocusRescue } from './hooks/useFocusRescue';
 import type { CredentialRow } from './types';
 import { AttentionPanel } from './components/AttentionPanel';
 import { CredentialList } from './components/CredentialList';
@@ -40,6 +47,9 @@ import styles from './dashboard.module.scss';
 
 const DASH = '—';
 const DEFAULT_WINDOW_MINUTES = 200;
+
+/** Messages raised within this window are announced together. */
+const ANNOUNCE_BATCH_MS = 400;
 
 /** Status colour of the headline's full stop. */
 const VERDICT_ACCENTS: Record<VerdictTone, string> = {
@@ -183,29 +193,94 @@ export function DashboardPage() {
 
   /* ---------- Live announcements (screen readers) ---------- */
 
-  // One polite region carries verdict changes and refresh results. The nonce toggles a
+  // One polite region carries headline and attention changes plus refresh and retry
+  // results. Messages raised together (a retry result and the outage it reveals) are
+  // joined into one announcement so neither replaces the other. The nonce toggles a
   // zero-width character so a repeated message is announced again.
   const [live, setLive] = useState({ text: '', nonce: 0 });
-  const announce = useCallback(
-    (text: string) => setLive((previous) => ({ text, nonce: previous.nonce + 1 })),
+  const pendingMessagesRef = useRef<string[]>([]);
+  const flushTimerRef = useRef<number | null>(null);
+  const announce = useCallback((text: string) => {
+    pendingMessagesRef.current.push(text);
+    if (flushTimerRef.current !== null) return;
+    flushTimerRef.current = window.setTimeout(() => {
+      flushTimerRef.current = null;
+      const message = composeAnnouncement(pendingMessagesRef.current);
+      pendingMessagesRef.current = [];
+      if (message) setLive((previous) => ({ text: message, nonce: previous.nonce + 1 }));
+    }, ANNOUNCE_BATCH_MS);
+  }, []);
+  useEffect(
+    () => () => {
+      if (flushTimerRef.current !== null) window.clearTimeout(flushTimerRef.current);
+    },
     []
   );
-  // Announce verdict transitions after the first verdict built from loaded data; the page
-  // itself carries the initial state, and age ticks never change this key.
+
+  // Compare each settled poll with the previous one: a new headline, and new, changed,
+  // or resolved attention items. The first settled state is the baseline (the page
+  // carries it), and ages never take part, so ticking clocks stay silent.
   const verdictKey = `${verdict.kind}|${verdict.providerId ?? ''}|${verdict.count}|${verdict.stale}`;
   const settledVerdict =
     primaryFreshness !== 'pending' && verdict.kind !== 'connecting' && verdict.kind !== 'checking';
-  const announcedVerdictRef = useRef<string | null>(null);
+  const announcedRef = useRef<AnnouncementSnapshot | null>(null);
   useEffect(() => {
     if (!settledVerdict) return;
-    if (announcedVerdictRef.current === null) {
-      announcedVerdictRef.current = verdictKey;
-      return;
-    }
-    if (announcedVerdictRef.current === verdictKey) return;
-    announcedVerdictRef.current = verdictKey;
-    announce(`${verdictTitle}${t('dashboard.hero_period')}`);
-  }, [announce, settledVerdict, t, verdictKey, verdictTitle]);
+    const previous = announcedRef.current;
+    announcedRef.current = { verdictKey, attention: attentionState(attention) };
+    if (!previous) return;
+    const status = (item: AttentionItem) =>
+      item.kind === 'provider'
+        ? t(`dashboard.provider_status_${item.provider.status}`).toLocaleLowerCase()
+        : '';
+    const subject = (item: AttentionItem) =>
+      item.kind === 'provider'
+        ? providerLabel(item.provider.id, t('dashboard.provider_unknown'))
+        : t(`dashboard.source_${item.source}`);
+    const sourceSentence = (item: AttentionItem) =>
+      item.kind === 'source'
+        ? `${t(
+            item.freshness === 'stale'
+              ? 'dashboard.attention_source_stale'
+              : item.receivedAt === null
+                ? 'dashboard.attention_source_missing'
+                : 'dashboard.attention_source_failed',
+            { source: subject(item) }
+          )}${t('dashboard.hero_period')}`
+        : '';
+    const messages = attentionAnnouncements(
+      previous,
+      { verdictKey, verdictProviderId: verdict.providerId, items: attention },
+      {
+        verdict: `${verdictTitle}${t('dashboard.hero_period')}`,
+        newIssue: (item) =>
+          item.kind === 'source'
+            ? sourceSentence(item)
+            : t('dashboard.announce_issue_new', { subject: subject(item), status: status(item) }),
+        changedIssue: (item) =>
+          item.kind === 'source'
+            ? sourceSentence(item)
+            : t('dashboard.announce_issue_changed', {
+                subject: subject(item),
+                status: status(item),
+              }),
+        // A recovered source reads like a successful Retry, so the two collapse into one.
+        resolved: (key) => {
+          const [kind, id] = key.split(':');
+          return kind === 'provider'
+            ? t('dashboard.announce_resolved', {
+                subject: providerLabel(id, t('dashboard.provider_unknown')),
+              })
+            : t('dashboard.announce_source_loaded', { source: t(`dashboard.source_${id}`) });
+        },
+      }
+    );
+    // Queued one by one so the batch can drop repeats (e.g. a Retry's "Loaded credentials.").
+    messages.forEach(announce);
+  }, [announce, attention, settledVerdict, t, verdict.providerId, verdictKey, verdictTitle]);
+
+  // Polls and Retry can remove the focused control; keep keyboard users in place.
+  useFocusRescue();
   /* The status full stop breathes only while steady traffic is flowing and fresh. */
   const heroAlive = verdict.kind === 'good' && primaryFreshness === 'live';
 
@@ -269,7 +344,7 @@ export function DashboardPage() {
       const source = t(`dashboard.source_${id}`);
       try {
         await retrySource(id);
-        announce(t('dashboard.announce_retry_ok', { source }));
+        announce(t('dashboard.announce_source_loaded', { source }));
       } catch (error: unknown) {
         announce(t('dashboard.announce_retry_failed', { source }));
         throw error;
@@ -283,11 +358,7 @@ export function DashboardPage() {
     setRetryingCredentials(true);
     void retryAndAnnounce('credentials')
       .catch(() => undefined)
-      .finally(() => {
-        setRetryingCredentials(false);
-        // The load error (and its focused Retry) is replaced by the list on success.
-        restoreFocusIfLost('dashboard-credentials-title');
-      });
+      .finally(() => setRetryingCredentials(false));
   };
 
   /* ---------- Vitals ---------- */
@@ -590,7 +661,11 @@ export function DashboardPage() {
       </section>
 
       {/* ---------- Credentials ---------- */}
-      <section className={styles.section} ref={credentialsRef}>
+      <section
+        className={styles.section}
+        ref={credentialsRef}
+        data-focus-rescue="dashboard-credentials-title"
+      >
         <header className={styles.sectionHeadRow}>
           <div className={styles.sectionHead}>
             <span className={styles.eyebrow}>{t('dashboard.health_eyebrow')}</span>
