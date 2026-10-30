@@ -248,7 +248,8 @@
     outline-offset: 2px;
   }
 
-  &:disabled {
+  &:disabled,
+  &[aria-disabled='true'] {
     cursor: progress;
     color: var(--text-secondary);
   }
@@ -323,5 +324,15 @@
 @keyframes attentionSpin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Focus lands on the panel title after a Retry clears its item. */
+.title,
+.allClearTitle {
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 4px;
+    border-radius: 4px;
   }
 }

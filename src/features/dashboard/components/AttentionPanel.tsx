@@ -13,6 +13,7 @@ import type {
 import type { SourceFreshness } from '../logic/freshness';
 import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from '../logic/links';
 import { redactSecrets } from '../logic/redact';
+import { restoreFocusIfLost } from '../focus';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
 import { formatAge } from './formatters';
@@ -230,8 +231,9 @@ function SourceItem({
         <button
           type="button"
           className={styles.action}
-          onClick={onRetry}
-          disabled={retrying}
+          // aria-disabled (not disabled) keeps keyboard focus on the button while it works.
+          onClick={retrying ? undefined : onRetry}
+          aria-disabled={retrying || undefined}
           aria-label={
             retrying
               ? undefined
@@ -272,13 +274,15 @@ export function AttentionPanel({
     setRetrying((current) => new Set(current).add(source));
     void onRetry(source)
       .catch(() => undefined)
-      .finally(() =>
+      .finally(() => {
         setRetrying((current) => {
           const next = new Set(current);
           next.delete(source);
           return next;
-        })
-      );
+        });
+        // A recovered source drops its item (and the focused Retry): land on the panel title.
+        restoreFocusIfLost('dashboard-attention-title');
+      });
   };
 
   if (items.length === 0) {
@@ -292,7 +296,7 @@ export function AttentionPanel({
             <IconAlertTriangle size={18} />
           </span>
           <div className={styles.allClearCopy}>
-            <h2 id="dashboard-attention-title" className={styles.allClearTitle}>
+            <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.allClearTitle}>
               {t('dashboard.attention_setup')}
             </h2>
             <p className={styles.allClearDetail}>{t('dashboard.attention_setup_detail')}</p>
@@ -314,7 +318,7 @@ export function AttentionPanel({
           <IconCheckCircle2 size={18} />
         </span>
         <div className={styles.allClearCopy}>
-          <h2 id="dashboard-attention-title" className={styles.allClearTitle}>
+          <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.allClearTitle}>
             {pending ? t('dashboard.attention_checking') : t('dashboard.attention_none')}
           </h2>
           {!pending && (
@@ -342,7 +346,7 @@ export function AttentionPanel({
         <span className={styles.headerIcon} aria-hidden="true">
           <IconAlertTriangle size={18} />
         </span>
-        <h2 id="dashboard-attention-title" className={styles.title}>
+        <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.title}>
           {t('dashboard.attention_title', { count: items.length })}
         </h2>
         <Link className={styles.headerLink} to="/logs">

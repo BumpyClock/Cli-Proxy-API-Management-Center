@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
@@ -26,6 +26,7 @@ import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic
 import { redactUrlCredentials } from './logic/redact';
 import { formatClock } from './logic/time';
 import { summarizeUsage } from './logic/usage';
+import { restoreFocusIfLost } from './focus';
 import type { CredentialRow } from './types';
 import { AttentionPanel } from './components/AttentionPanel';
 import { CredentialList } from './components/CredentialList';
@@ -179,6 +180,32 @@ export function DashboardPage() {
     otherScopeActivity: usageRequests !== null && usageRequests > 0,
   });
   const verdictTitle = useVerdictTitle(verdict);
+
+  /* ---------- Live announcements (screen readers) ---------- */
+
+  // One polite region carries verdict changes and refresh results. The nonce toggles a
+  // zero-width character so a repeated message is announced again.
+  const [live, setLive] = useState({ text: '', nonce: 0 });
+  const announce = useCallback(
+    (text: string) => setLive((previous) => ({ text, nonce: previous.nonce + 1 })),
+    []
+  );
+  // Announce verdict transitions after the first verdict built from loaded data; the page
+  // itself carries the initial state, and age ticks never change this key.
+  const verdictKey = `${verdict.kind}|${verdict.providerId ?? ''}|${verdict.count}|${verdict.stale}`;
+  const settledVerdict =
+    primaryFreshness !== 'pending' && verdict.kind !== 'connecting' && verdict.kind !== 'checking';
+  const announcedVerdictRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!settledVerdict) return;
+    if (announcedVerdictRef.current === null) {
+      announcedVerdictRef.current = verdictKey;
+      return;
+    }
+    if (announcedVerdictRef.current === verdictKey) return;
+    announcedVerdictRef.current = verdictKey;
+    announce(`${verdictTitle}${t('dashboard.hero_period')}`);
+  }, [announce, settledVerdict, t, verdictKey, verdictTitle]);
   /* The status full stop breathes only while steady traffic is flowing and fresh. */
   const heroAlive = verdict.kind === 'good' && primaryFreshness === 'live';
 
@@ -221,9 +248,11 @@ export function DashboardPage() {
   }, [credentials]);
 
   const handleRefresh = async () => {
+    if (refreshing) return;
     setRefreshing(true);
     try {
       await refresh();
+      announce(t('dashboard.announce_refreshed'));
     } catch (error: unknown) {
       showNotification(
         `${t('notification.refresh_failed')}: ${getErrorMessage(error, t('dashboard.source_credentials'))}`,
@@ -234,11 +263,31 @@ export function DashboardPage() {
     }
   };
 
+  // Retry announces its outcome; a failure leaves the error in place, so say it again.
+  const retryAndAnnounce = useCallback(
+    async (id: Parameters<typeof retrySource>[0]) => {
+      const source = t(`dashboard.source_${id}`);
+      try {
+        await retrySource(id);
+        announce(t('dashboard.announce_retry_ok', { source }));
+      } catch (error: unknown) {
+        announce(t('dashboard.announce_retry_failed', { source }));
+        throw error;
+      }
+    },
+    [announce, retrySource, t]
+  );
+
   const retryCredentials = () => {
+    if (retryingCredentials) return;
     setRetryingCredentials(true);
-    void retrySource('credentials')
+    void retryAndAnnounce('credentials')
       .catch(() => undefined)
-      .finally(() => setRetryingCredentials(false));
+      .finally(() => {
+        setRetryingCredentials(false);
+        // The load error (and its focused Retry) is replaced by the list on success.
+        restoreFocusIfLost('dashboard-credentials-title');
+      });
   };
 
   /* ---------- Vitals ---------- */
@@ -415,6 +464,10 @@ export function DashboardPage() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">
+        {live.text}
+        {live.nonce % 2 ? '\u200b' : ''}
+      </div>
       <div className={styles.ambient} aria-hidden="true">
         <span className={styles.gridWash} />
       </div>
@@ -452,7 +505,8 @@ export function DashboardPage() {
               type="button"
               className={styles.refreshButton}
               onClick={() => void handleRefresh()}
-              disabled={refreshing}
+              // aria-disabled (not disabled) keeps keyboard focus on the button while it works.
+              aria-disabled={refreshing || undefined}
               aria-label={refreshing ? undefined : t('dashboard.refresh_now')}
               title={t('dashboard.refresh_now')}
             >
@@ -486,7 +540,7 @@ export function DashboardPage() {
           }
           windowLabel={windowLabel}
           now={now}
-          onRetry={retrySource}
+          onRetry={retryAndAnnounce}
         />
       )}
 
@@ -540,7 +594,9 @@ export function DashboardPage() {
         <header className={styles.sectionHeadRow}>
           <div className={styles.sectionHead}>
             <span className={styles.eyebrow}>{t('dashboard.health_eyebrow')}</span>
-            <h2 className={styles.sectionTitle}>{t('dashboard.health_title')}</h2>
+            <h2 id="dashboard-credentials-title" className={styles.sectionTitle} tabIndex={-1}>
+              {t('dashboard.health_title')}
+            </h2>
             <SourceStamp entries={stampEntries(['credentials'])} now={now} />
           </div>
           <Link to="/oauth" className={styles.sectionLink}>

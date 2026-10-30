@@ -54,7 +54,12 @@ export function CredentialList({
         <div className={styles.loadError} role="alert">
           <p className={styles.loadErrorTitle}>{t('dashboard.credentials_load_failed')}</p>
           <p className={styles.loadErrorDetail}>{redactSecrets(loadError)}</p>
-          <button type="button" className={styles.retry} onClick={onRetry} disabled={retrying}>
+          <button
+            type="button"
+            className={styles.retry}
+            onClick={retrying ? undefined : onRetry}
+            aria-disabled={retrying || undefined}
+          >
             {retrying ? t('dashboard.refreshing') : t('dashboard.action_retry')}
           </button>
         </div>

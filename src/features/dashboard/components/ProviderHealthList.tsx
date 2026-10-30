@@ -57,11 +57,7 @@ export function ProviderHealthList({ providers }: ProviderHealthListProps) {
             className={[styles.row, tone ? styles[`row_${tone}`] : ''].filter(Boolean).join(' ')}
           >
             <div className={styles.identity}>
-              <Link
-                to={providerHref(provider)}
-                className={styles.name}
-                aria-label={t('dashboard.fleet_open_named', { provider: name })}
-              >
+              <Link to={providerHref(provider)} className={styles.name}>
                 {name}
               </Link>
               <span className={styles.meta}>

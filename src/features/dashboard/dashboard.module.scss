@@ -157,7 +157,8 @@
     outline-offset: 2px;
   }
 
-  &:disabled {
+  &:disabled,
+  &[aria-disabled='true'] {
     cursor: progress;
     color: var(--text-secondary);
   }
@@ -239,6 +240,13 @@
   letter-spacing: -0.02em;
   color: var(--text-primary);
   text-wrap: balance;
+
+  /* Focus lands here after a credentials Retry replaces the load error. */
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
 }
 
 .sectionDescription {
@@ -429,4 +437,17 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Screen-reader-only live region for verdict changes and refresh results. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

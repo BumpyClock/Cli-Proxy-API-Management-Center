@@ -38,16 +38,17 @@ const model = () => {
         auth_index: '2',
         next_retry_after: new Date(NOW + 3_600_000).toISOString(),
         recent_requests: buckets({ 12: [1, 5] }),
-        cooldowns: [
-          {
+        // Five models: more than the inline limit, so the "+N more" disclosure renders.
+        cooldowns: ['muse-large', 'muse-small', 'muse-vision', 'muse-audio', 'muse-code'].map(
+          (model) => ({
             scope: 'model',
-            model_key: 'muse-large',
+            model_key: model,
             reason: 'model_not_supported',
             retry_at: new Date(NOW + 3_600_000).toISOString(),
             remaining_seconds: 3600,
             http_status: 404,
-          },
-        ],
+          })
+        ),
       },
       {
         name: 'codex-dev.json',
@@ -88,7 +89,10 @@ const decodeEntities = (text: string) =>
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
 
-/** WCAG 2.5.3: a control's accessible name contains its visible label (voice control). */
+/**
+ * WCAG 2.5.3: a control's accessible name starts with its visible label, so voice
+ * control can target the words on screen.
+ */
 const expectLabelInName = (markup: string) => {
   let checked = 0;
   for (const match of markup.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/g)) {
@@ -98,7 +102,7 @@ const expectLabelInName = (markup: string) => {
       .trim();
     if (!ariaLabel || !visible) continue;
     checked += 1;
-    expect(decodeEntities(ariaLabel).toLowerCase()).toContain(visible.toLowerCase());
+    expect(decodeEntities(ariaLabel).toLowerCase().startsWith(visible.toLowerCase())).toBe(true);
   }
   expect(checked).toBeGreaterThan(0);
 };
@@ -202,6 +206,7 @@ describe('dashboard components render translated, actionable markup', () => {
       ].join('\n');
       expectTranslated(markup);
       expectLabelInName(markup);
+      expect(markup).toMatch(/aria-expanded="false"/);
       expect(markup).toContain('ops@example.com');
       expect(markup).toContain('gpt-5.5');
     });
