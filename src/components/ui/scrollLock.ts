@@ -93,3 +93,24 @@ export const FOCUSABLE_SELECTOR = [
   'textarea:not([disabled])',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
+
+let inertHoldCount = 0;
+
+/**
+ * Makes the app shell (`[data-app-shell]`) inert while a modal surface portaled
+ * outside it is open, so keyboard and assistive-technology users cannot reach
+ * the background. Ref-counted for stacked surfaces; returns the release function.
+ */
+export function holdBackgroundInert(): () => void {
+  if (typeof document === 'undefined') return () => {};
+  const shell = document.querySelector<HTMLElement>('[data-app-shell]');
+  inertHoldCount += 1;
+  shell?.setAttribute('inert', '');
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    inertHoldCount = Math.max(0, inertHoldCount - 1);
+    if (inertHoldCount === 0) shell?.removeAttribute('inert');
+  };
+}

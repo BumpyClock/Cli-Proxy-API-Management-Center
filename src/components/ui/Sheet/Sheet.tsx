@@ -10,7 +10,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { IconX } from '../icons';
-import { FOCUSABLE_SELECTOR, lockScroll, unlockScroll } from '../scrollLock';
+import { FOCUSABLE_SELECTOR, holdBackgroundInert, lockScroll, unlockScroll } from '../scrollLock';
 import styles from './Sheet.module.scss';
 
 export type SheetSize = 'md' | 'lg' | 'xl';
@@ -32,6 +32,12 @@ interface SheetProps {
    * (or a Promise that resolves to false) to keep the sheet open.
    */
   confirmClose?: () => boolean | Promise<boolean>;
+  /**
+   * Identifies the sheet's current content (for example detail vs edit). When it
+   * changes while open, focus moves to the first control in the new content so
+   * keyboard focus never falls back to the page.
+   */
+  focusKey?: string;
 }
 
 const CLOSE_ANIMATION_DURATION = 280;
@@ -53,6 +59,7 @@ export function Sheet({
   className,
   ariaLabel,
   confirmClose,
+  focusKey,
   children,
 }: PropsWithChildren<SheetProps>) {
   const { t } = useTranslation();
@@ -139,8 +146,33 @@ export function Sheet({
   useEffect(() => {
     if (!shouldLockScroll) return;
     lockScroll();
-    return () => unlockScroll();
+    const releaseInert = holdBackgroundInert();
+    return () => {
+      releaseInert();
+      unlockScroll();
+    };
   }, [shouldLockScroll]);
+
+  // Content swap inside an open sheet (detail -> edit): the focused control is
+  // unmounted, so move focus to the first control of the new content.
+  const focusKeyRef = useRef(focusKey);
+  useEffect(() => {
+    if (focusKeyRef.current === focusKey) return;
+    focusKeyRef.current = focusKey;
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      if (bodyRef.current) bodyRef.current.scrollTop = 0;
+      const inBody = bodyRef.current
+        ? Array.from(bodyRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+            (el) => !el.hasAttribute('disabled') && el.tabIndex !== -1
+          )
+        : [];
+      (inBody[0] ?? getFocusableElements()[0] ?? sheetRef.current)?.focus({
+        preventScroll: true,
+      });
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [focusKey, getFocusableElements, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -179,6 +211,12 @@ export function Sheet({
       const firstEl = focusables[0];
       const lastEl = focusables[focusables.length - 1];
       const active = document.activeElement as HTMLElement | null;
+      // Focus that ended up outside the dialog (e.g. on BODY) re-enters it.
+      if (!active || !sheetRef.current?.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? lastEl : firstEl).focus();
+        return;
+      }
       if (event.shiftKey) {
         if (active === firstEl || active === sheetRef.current) {
           event.preventDefault();

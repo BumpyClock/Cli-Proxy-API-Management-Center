@@ -53,6 +53,7 @@ import {
 } from '@/features/plugins/pluginResources';
 import { APIKEY_FUN_DISPLAY_NAME, hasApiKeyFunConfig } from '@/features/providers/sponsor';
 import { triggerHeaderRefresh } from '@/hooks/useHeaderRefresh';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { LANGUAGE_LABEL_KEYS, LANGUAGE_ORDER } from '@/utils/constants';
 import { isSupportedLanguage } from '@/utils/language';
 import { getSidebarShortcutLabel, isSidebarToggleShortcut } from '@/utils/sidebarShortcut';
@@ -332,6 +333,9 @@ export function MainLayout() {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Below this width the sidebar is an off-canvas drawer (see layout.scss).
+  const isDrawerNav = useMediaQuery('(max-width: 768px)');
+  const sidebarRef = useRef<HTMLElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authFilesCount, setAuthFilesCount] = useState<number | null>(null);
   const [railTooltip, setRailTooltip] = useState<{
@@ -986,6 +990,21 @@ export function MainLayout() {
     );
   };
 
+  // Drawer open: move focus into it; Escape closes it and returns focus to the menu button.
+  useEffect(() => {
+    if (!isDrawerNav || !sidebarOpen) return;
+    const first = sidebarRef.current?.querySelector<HTMLElement>('a[href], button:not([disabled])');
+    first?.focus({ preventScroll: true });
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setSidebarOpen(false);
+      headerRef.current?.querySelector<HTMLElement>('.mobile-menu-btn')?.focus();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isDrawerNav, sidebarOpen]);
+
   const mobileSidebarToggleLabel = sidebarOpen
     ? t('sidebar.toggle_collapse', { defaultValue: 'Close navigation' })
     : t('sidebar.toggle_expand', { defaultValue: 'Open navigation' });
@@ -994,6 +1013,7 @@ export function MainLayout() {
 
   return (
     <div
+      data-app-shell=""
       className={`app-shell ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''} ${
         isPluginResourcePage ? 'plugin-resource-shell' : ''
       }`}
@@ -1032,6 +1052,8 @@ export function MainLayout() {
             onClick={() => setSidebarOpen((prev) => !prev)}
             title={mobileSidebarToggleLabel}
             aria-label={mobileSidebarToggleLabel}
+            aria-expanded={sidebarOpen}
+            aria-controls="app-sidebar"
           >
             {sidebarOpen ? headerIcons.close : headerIcons.menu}
           </Button>
@@ -1170,6 +1192,10 @@ export function MainLayout() {
         />
 
         <aside
+          id="app-sidebar"
+          ref={sidebarRef}
+          // A closed off-canvas drawer is off-screen: keep it out of the tab order and AT.
+          inert={isDrawerNav && !sidebarOpen}
           className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
         >
           <div className="sidebar-header">
