@@ -19,6 +19,12 @@ export interface AnnouncementSnapshot {
   attention: AttentionState;
 }
 
+export interface AnnouncementNext {
+  verdictKey: string;
+  verdictProviderId: string | null;
+  items: AttentionItem[];
+}
+
 export interface AnnouncementText {
   /** The headline as a sentence, e.g. "Muse (Meta) is down." */
   verdict: string;
@@ -34,7 +40,7 @@ export interface AnnouncementText {
  */
 export function attentionAnnouncements(
   previous: AnnouncementSnapshot,
-  next: { verdictKey: string; verdictProviderId: string | null; items: AttentionItem[] },
+  next: AnnouncementNext,
   text: AnnouncementText
 ): string[] {
   const messages: string[] = [];
@@ -62,4 +68,19 @@ export function attentionAnnouncements(
 /** Joins messages raised together into one announcement, without repeats. */
 export function composeAnnouncement(messages: string[]): string {
   return [...new Set(messages.map((message) => message.trim()).filter(Boolean))].join(' ');
+}
+
+/**
+ * One announcement for a batch: action results first (what the operator did), then the
+ * net change from the last announced state to the latest one. Intermediate states
+ * between the two (one source updated before another) are never described.
+ */
+export function settleAnnouncement(
+  change: { previous: AnnouncementSnapshot; next: AnnouncementNext; text: AnnouncementText } | null,
+  actionMessages: string[]
+): string {
+  const stateMessages = change
+    ? attentionAnnouncements(change.previous, change.next, change.text)
+    : [];
+  return composeAnnouncement([...actionMessages, ...stateMessages]);
 }

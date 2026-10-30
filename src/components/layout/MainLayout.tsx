@@ -337,6 +337,7 @@ export function MainLayout() {
   // Below this width the sidebar is an off-canvas drawer (see layout.scss).
   const isDrawerNav = useMediaQuery('(max-width: 768px)');
   const sidebarRef = useRef<HTMLElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authFilesCount, setAuthFilesCount] = useState<number | null>(null);
   const [railTooltip, setRailTooltip] = useState<{
@@ -1055,6 +1056,17 @@ export function MainLayout() {
       <div className="top-gradient-blur" aria-hidden="true" />
 
       <header className="main-header" ref={headerRef} inert={drawerOpen}>
+        <a
+          className="skip-link"
+          href="#main-content"
+          onClick={(event) => {
+            // The hash router owns the URL fragment: move focus without navigating.
+            event.preventDefault();
+            mainRef.current?.focus();
+          }}
+        >
+          {t('common.skip_to_content')}
+        </a>
         <button
           type="button"
           className="sidebar-toggle-floating"
@@ -1297,6 +1309,9 @@ export function MainLayout() {
           inert={drawerOpen}
         >
           <main
+            id="main-content"
+            ref={mainRef}
+            tabIndex={-1}
             className={`main-content${isLogsPage ? ' main-content-logs' : ''}${
               isPluginResourcePage ? ' main-content-plugin-resource' : ''
             }`}

@@ -5,7 +5,9 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
  *
  * Regions opt in with `data-focus-rescue="<heading id>"`. When the focused element inside
  * such a region leaves the DOM and focus has fallen back to the page, focus moves to that
- * heading, which now describes the result. Focus the user placed elsewhere is left alone.
+ * heading, which now describes the result, and the heading is scrolled into view (the
+ * scroll containers' scroll-padding keeps it clear of the floating header). Focus the user
+ * placed elsewhere is left alone.
  * Call it from the page that renders the regions; the check runs after every render.
  */
 export function useFocusRescue(): void {
@@ -27,6 +29,9 @@ export function useFocusRescue(): void {
     lastRef.current = null;
     const active = document.activeElement;
     if (active && active !== document.body) return;
-    document.getElementById(last.targetId)?.focus({ preventScroll: true });
+    const target = document.getElementById(last.targetId);
+    if (!target) return;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ block: 'nearest' });
   });
 }

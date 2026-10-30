@@ -3,6 +3,7 @@ import {
   attentionAnnouncements,
   attentionState,
   composeAnnouncement,
+  settleAnnouncement,
   type AnnouncementText,
 } from '../src/features/dashboard/logic/announce';
 import type { AttentionItem } from '../src/features/dashboard/logic/attention';
@@ -106,6 +107,42 @@ describe('dashboard live announcements', () => {
         text('unused')
       )
     ).toEqual([]);
+  });
+
+  test('a batch states the net change, never an intermediate headline', () => {
+    // Incident, then (between polls) one issue left, then all clear: only the end state.
+    const incident = snapshot('down|meta|1|false', [
+      provider('meta', 'down'),
+      provider('claude', 'degraded'),
+    ]);
+    expect(
+      settleAnnouncement(
+        {
+          previous: incident,
+          next: { verdictKey: 'good||0|false', verdictProviderId: null, items: [] },
+          text: text('All systems steady.'),
+        },
+        ['Dashboard data refreshed.']
+      )
+    ).toBe('Dashboard data refreshed. All systems steady.');
+  });
+
+  test('a retry result leads and its recovered source is not repeated', () => {
+    const before = snapshot('unknown||0|false', [source('failed', null)]);
+    expect(
+      settleAnnouncement(
+        {
+          previous: before,
+          next: {
+            verdictKey: 'down|meta|1|false',
+            verdictProviderId: 'meta',
+            items: [provider('meta', 'down'), provider('xai', 'limited')],
+          },
+          text: { ...text('Muse (Meta) is down.'), resolved: () => 'Loaded credentials.' },
+        },
+        ['Loaded credentials.']
+      )
+    ).toBe('Loaded credentials. Muse (Meta) is down. new xai limited');
   });
 
   test('a retry result and the outage it reveals form one announcement', () => {

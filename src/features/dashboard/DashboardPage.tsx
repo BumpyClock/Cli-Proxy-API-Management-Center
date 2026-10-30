@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
@@ -26,13 +26,7 @@ import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic
 import { redactUrlCredentials } from './logic/redact';
 import { formatClock } from './logic/time';
 import { summarizeUsage } from './logic/usage';
-import {
-  attentionAnnouncements,
-  attentionState,
-  composeAnnouncement,
-  type AnnouncementSnapshot,
-} from './logic/announce';
-import type { AttentionItem } from './logic/attention';
+import { useDashboardAnnouncer } from './hooks/useDashboardAnnouncer';
 import { useFocusRescue } from './hooks/useFocusRescue';
 import type { CredentialRow } from './types';
 import { AttentionPanel } from './components/AttentionPanel';
@@ -47,9 +41,6 @@ import styles from './dashboard.module.scss';
 
 const DASH = '—';
 const DEFAULT_WINDOW_MINUTES = 200;
-
-/** Messages raised within this window are announced together. */
-const ANNOUNCE_BATCH_MS = 400;
 
 /** Status colour of the headline's full stop. */
 const VERDICT_ACCENTS: Record<VerdictTone, string> = {
@@ -193,91 +184,16 @@ export function DashboardPage() {
 
   /* ---------- Live announcements (screen readers) ---------- */
 
-  // One polite region carries headline and attention changes plus refresh and retry
-  // results. Messages raised together (a retry result and the outage it reveals) are
-  // joined into one announcement so neither replaces the other. The nonce toggles a
-  // zero-width character so a repeated message is announced again.
-  const [live, setLive] = useState({ text: '', nonce: 0 });
-  const pendingMessagesRef = useRef<string[]>([]);
-  const flushTimerRef = useRef<number | null>(null);
-  const announce = useCallback((text: string) => {
-    pendingMessagesRef.current.push(text);
-    if (flushTimerRef.current !== null) return;
-    flushTimerRef.current = window.setTimeout(() => {
-      flushTimerRef.current = null;
-      const message = composeAnnouncement(pendingMessagesRef.current);
-      pendingMessagesRef.current = [];
-      if (message) setLive((previous) => ({ text: message, nonce: previous.nonce + 1 }));
-    }, ANNOUNCE_BATCH_MS);
-  }, []);
-  useEffect(
-    () => () => {
-      if (flushTimerRef.current !== null) window.clearTimeout(flushTimerRef.current);
-    },
-    []
-  );
-
-  // Compare each settled poll with the previous one: a new headline, and new, changed,
-  // or resolved attention items. The first settled state is the baseline (the page
-  // carries it), and ages never take part, so ticking clocks stay silent.
-  const verdictKey = `${verdict.kind}|${verdict.providerId ?? ''}|${verdict.count}|${verdict.stale}`;
-  const settledVerdict =
-    primaryFreshness !== 'pending' && verdict.kind !== 'connecting' && verdict.kind !== 'checking';
-  const announcedRef = useRef<AnnouncementSnapshot | null>(null);
-  useEffect(() => {
-    if (!settledVerdict) return;
-    const previous = announcedRef.current;
-    announcedRef.current = { verdictKey, attention: attentionState(attention) };
-    if (!previous) return;
-    const status = (item: AttentionItem) =>
-      item.kind === 'provider'
-        ? t(`dashboard.provider_status_${item.provider.status}`).toLocaleLowerCase()
-        : '';
-    const subject = (item: AttentionItem) =>
-      item.kind === 'provider'
-        ? providerLabel(item.provider.id, t('dashboard.provider_unknown'))
-        : t(`dashboard.source_${item.source}`);
-    const sourceSentence = (item: AttentionItem) =>
-      item.kind === 'source'
-        ? `${t(
-            item.freshness === 'stale'
-              ? 'dashboard.attention_source_stale'
-              : item.receivedAt === null
-                ? 'dashboard.attention_source_missing'
-                : 'dashboard.attention_source_failed',
-            { source: subject(item) }
-          )}${t('dashboard.hero_period')}`
-        : '';
-    const messages = attentionAnnouncements(
-      previous,
-      { verdictKey, verdictProviderId: verdict.providerId, items: attention },
-      {
-        verdict: `${verdictTitle}${t('dashboard.hero_period')}`,
-        newIssue: (item) =>
-          item.kind === 'source'
-            ? sourceSentence(item)
-            : t('dashboard.announce_issue_new', { subject: subject(item), status: status(item) }),
-        changedIssue: (item) =>
-          item.kind === 'source'
-            ? sourceSentence(item)
-            : t('dashboard.announce_issue_changed', {
-                subject: subject(item),
-                status: status(item),
-              }),
-        // A recovered source reads like a successful Retry, so the two collapse into one.
-        resolved: (key) => {
-          const [kind, id] = key.split(':');
-          return kind === 'provider'
-            ? t('dashboard.announce_resolved', {
-                subject: providerLabel(id, t('dashboard.provider_unknown')),
-              })
-            : t('dashboard.announce_source_loaded', { source: t(`dashboard.source_${id}`) });
-        },
-      }
-    );
-    // Queued one by one so the batch can drop repeats (e.g. a Retry's "Loaded credentials.").
-    messages.forEach(announce);
-  }, [announce, attention, settledVerdict, t, verdict.providerId, verdictKey, verdictTitle]);
+  const { liveText, track: trackAction } = useDashboardAnnouncer({
+    settled:
+      primaryFreshness !== 'pending' &&
+      verdict.kind !== 'connecting' &&
+      verdict.kind !== 'checking',
+    verdictKey: `${verdict.kind}|${verdict.providerId ?? ''}|${verdict.count}|${verdict.stale}`,
+    verdictProviderId: verdict.providerId,
+    verdictSentence: `${verdictTitle}${t('dashboard.hero_period')}`,
+    attention,
+  });
 
   // Polls and Retry can remove the focused control; keep keyboard users in place.
   useFocusRescue();
@@ -326,8 +242,8 @@ export function DashboardPage() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await refresh();
-      announce(t('dashboard.announce_refreshed'));
+      // A failure is reported by the error toast (role="alert").
+      await trackAction(() => refresh(), { ok: t('dashboard.announce_refreshed') });
     } catch (error: unknown) {
       showNotification(
         `${t('notification.refresh_failed')}: ${getErrorMessage(error, t('dashboard.source_credentials'))}`,
@@ -342,15 +258,12 @@ export function DashboardPage() {
   const retryAndAnnounce = useCallback(
     async (id: Parameters<typeof retrySource>[0]) => {
       const source = t(`dashboard.source_${id}`);
-      try {
-        await retrySource(id);
-        announce(t('dashboard.announce_source_loaded', { source }));
-      } catch (error: unknown) {
-        announce(t('dashboard.announce_retry_failed', { source }));
-        throw error;
-      }
+      await trackAction(() => retrySource(id), {
+        ok: t('dashboard.announce_source_loaded', { source }),
+        failed: t('dashboard.announce_retry_failed', { source }),
+      });
     },
-    [announce, retrySource, t]
+    [retrySource, t, trackAction]
   );
 
   const retryCredentials = () => {
@@ -536,8 +449,7 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <div className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">
-        {live.text}
-        {live.nonce % 2 ? '\u200b' : ''}
+        {liveText}
       </div>
       <div className={styles.ambient} aria-hidden="true">
         <span className={styles.gridWash} />

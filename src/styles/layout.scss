@@ -1050,3 +1050,33 @@
 html {
   scroll-padding-top: calc(var(--header-height, 80px) + 16px);
 }
+
+/* Skip link: first keyboard stop on every page; hidden until focused. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: $z-modal;
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-decoration: none;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(calc(-100% - 24px));
+
+  &:focus,
+  &:focus-visible {
+    transform: none;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+/* The skip target is a container, not a control: no focus ring around the page. */
+.main-content:focus {
+  outline: none;
+}
