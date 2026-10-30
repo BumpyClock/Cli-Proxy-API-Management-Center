@@ -54,12 +54,19 @@ const formatHeadline = (value: number): string =>
 function useVerdictTitle(verdict: Verdict): string {
   const { t } = useTranslation();
   switch (verdict.kind) {
-    case 'down':
-      return verdict.providerId
-        ? t('dashboard.hero_verdict_down_one', {
-            provider: providerLabel(verdict.providerId, t('dashboard.provider_unknown')),
-          })
+    case 'down': {
+      const provider = verdict.providerId
+        ? providerLabel(verdict.providerId, t('dashboard.provider_unknown'))
+        : null;
+      if (verdict.stale) {
+        return provider
+          ? t('dashboard.hero_verdict_down_stale_one', { provider })
+          : t('dashboard.hero_verdict_down_stale_many', { count: verdict.count });
+      }
+      return provider
+        ? t('dashboard.hero_verdict_down_one', { provider })
         : t('dashboard.hero_verdict_down_many', { count: verdict.count });
+    }
     case 'attention':
       return t('dashboard.hero_verdict_attention', { count: verdict.count });
     default:
@@ -257,6 +264,7 @@ export function DashboardPage() {
                 serving: credentials.serving,
                 total: credentials.total - credentials.disabled,
               }),
+        unit: credentials.total === 0 ? undefined : t('dashboard.vitals_serving_unit'),
         tone: credentials.problems > 0 ? 'warning' : undefined,
         detail: (
           <>
@@ -264,11 +272,12 @@ export function DashboardPage() {
               {credentials.total === 0
                 ? t('dashboard.vitals_credentials_none')
                 : [
-                    credentials.problems > 0
-                      ? t('dashboard.vitals_credentials_problems', { count: credentials.problems })
-                      : null,
+                    // "including N limited" qualifies the serving count, so it comes first.
                     credentials.limited > 0
                       ? t('dashboard.vitals_credentials_limited', { count: credentials.limited })
+                      : null,
+                    credentials.problems > 0
+                      ? t('dashboard.vitals_credentials_problems', { count: credentials.problems })
                       : null,
                     credentials.disabled > 0
                       ? t('dashboard.vitals_credentials_disabled', { count: credentials.disabled })
@@ -289,7 +298,14 @@ export function DashboardPage() {
       key: 'requests',
       label: t('dashboard.vitals_requests'),
       value: connected && hasData ? formatHeadline(traffic.total) : DASH,
-      detail: trafficDetail ?? t('dashboard.vitals_window', { window: windowLabel }),
+      detail: (
+        <>
+          <span className={styles.vitalLine}>
+            {t('dashboard.vitals_window', { window: windowLabel })}
+          </span>
+          {trafficDetail}
+        </>
+      ),
     },
     {
       key: 'success',
@@ -300,14 +316,19 @@ export function DashboardPage() {
         traffic.successRate === null
           ? undefined
           : { value: traffic.successRate, tone: successTone, label: t('dashboard.vitals_success') },
-      detail:
-        trafficDetail ??
-        (traffic.total > 0
-          ? t('dashboard.vitals_split', {
-              success: traffic.success.toLocaleString(),
-              failed: traffic.failed.toLocaleString(),
-            })
-          : t('dashboard.vitals_no_requests')),
+      detail: (
+        <>
+          <span className={styles.vitalLine}>
+            {traffic.total > 0
+              ? t('dashboard.vitals_split', {
+                  success: traffic.success.toLocaleString(),
+                  failed: traffic.failed.toLocaleString(),
+                })
+              : t('dashboard.vitals_no_requests')}
+          </span>
+          {trafficDetail}
+        </>
+      ),
     },
     credentialsVital,
     {
@@ -368,7 +389,6 @@ export function DashboardPage() {
   const timeZoneLabel = resolveTimeZoneLabel(
     traffic.endMs !== null ? new Date(traffic.endMs) : undefined
   );
-  const usageSupported = !(usage?.enabled === null && freshness.usage === 'live');
 
   return (
     <div className={styles.page}>
@@ -428,6 +448,11 @@ export function DashboardPage() {
       {connected && (
         <AttentionPanel
           items={attention}
+          evidenceAsOf={
+            primaryFreshness === 'stale' || primaryFreshness === 'failed'
+              ? (sources.credentials.receivedAt ?? sources.traffic.receivedAt)
+              : null
+          }
           checkedCredentials={credentials?.total ?? 0}
           checkedProviders={providers.length}
           primaryFreshness={primaryFreshness}
@@ -511,25 +536,20 @@ export function DashboardPage() {
       </section>
 
       {/* ---------- Usage + runtime ---------- */}
-      <section
-        className={`${styles.detailGrid} ${usageSupported ? '' : styles.detailGridSingle}`}
-        ref={detailRef}
-      >
-        {usageSupported && (
-          <div className={styles.panel} data-reveal>
-            <header className={styles.panelHead}>
-              <span className={styles.eyebrow}>{t('dashboard.usage_eyebrow')}</span>
-              <h2 className={styles.panelTitle}>{t('dashboard.usage_title')}</h2>
-              <SourceStamp entries={stampEntries(['usage'])} now={now} />
-            </header>
-            <UsagePanel
-              usage={usage}
-              windowStartMs={traffic.startMs ?? now - windowMinutes * 60_000}
-              windowLabel={windowLabel}
-              credentialsByIndex={credentialsByIndex}
-            />
-          </div>
-        )}
+      <section className={styles.detailGrid} ref={detailRef}>
+        <div className={styles.panel} data-reveal>
+          <header className={styles.panelHead}>
+            <span className={styles.eyebrow}>{t('dashboard.usage_eyebrow')}</span>
+            <h2 className={styles.panelTitle}>{t('dashboard.usage_title')}</h2>
+            <SourceStamp entries={stampEntries(['usage'])} now={now} />
+          </header>
+          <UsagePanel
+            usage={usage}
+            windowStartMs={traffic.startMs ?? now - windowMinutes * 60_000}
+            windowLabel={windowLabel}
+            credentialsByIndex={credentialsByIndex}
+          />
+        </div>
 
         <div className={styles.panel} data-reveal>
           <header className={styles.panelHead}>

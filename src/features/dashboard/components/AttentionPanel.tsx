@@ -15,7 +15,8 @@ import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from 
 import { redactSecrets } from '../logic/redact';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
-import { credentialRecoveryLines, formatAge } from './formatters';
+import { formatAge } from './formatters';
+import { RecoveryDetails } from './RecoveryDetails';
 import { StatusText } from './StatusText';
 import styles from './AttentionPanel.module.scss';
 
@@ -23,6 +24,8 @@ const MAX_CREDENTIALS_PER_ITEM = 3;
 
 interface AttentionPanelProps {
   items: AttentionItem[];
+  /** Set when credentials or traffic stopped updating: provider evidence is last-known. */
+  evidenceAsOf: number | null;
   checkedCredentials: number;
   checkedProviders: number;
   primaryFreshness: SourceFreshness;
@@ -33,9 +36,6 @@ interface AttentionPanelProps {
 }
 
 function CredentialEvidence({ row, now }: { row: CredentialRow; now: number }) {
-  const { t, i18n } = useTranslation();
-  const lines = credentialRecoveryLines(t, row, now, i18n.language);
-
   return (
     <li className={styles.credential}>
       <span
@@ -47,11 +47,7 @@ function CredentialEvidence({ row, now }: { row: CredentialRow; now: number }) {
         {row.identity.primary || row.name}
       </span>
       {row.reason && <span className={styles.credentialReason}>{row.reason}</span>}
-      {lines.map((line) => (
-        <span key={line} className={styles.credentialMeta}>
-          {line}
-        </span>
-      ))}
+      <RecoveryDetails row={row} now={now} lineClassName={styles.credentialMeta} />
     </li>
   );
 }
@@ -60,10 +56,13 @@ function ProviderItem({
   item,
   windowLabel,
   now,
+  evidenceAsOf,
 }: {
   item: ProviderAttention;
   windowLabel: string;
   now: number;
+  /** Receipt time of the evidence when its source stopped updating, else null. */
+  evidenceAsOf: number | null;
 }) {
   const { t, i18n } = useTranslation();
   const { provider } = item;
@@ -154,6 +153,11 @@ function ProviderItem({
           <StatusText tone={item.severity === 'critical' ? 'critical' : 'warning'}>
             {t(`dashboard.provider_status_${provider.status}`)}
           </StatusText>
+          {evidenceAsOf !== null && (
+            <span className={styles.asOf}>
+              {t('dashboard.attention_as_of', { age: formatAge(t, evidenceAsOf, now) })}
+            </span>
+          )}
         </div>
         {summary.length > 0 && <p className={styles.itemSummary}>{summary.join(' · ')}</p>}
         {shown.length > 0 && (
@@ -245,6 +249,7 @@ function SourceItem({
  */
 export function AttentionPanel({
   items,
+  evidenceAsOf,
   checkedCredentials,
   checkedProviders,
   primaryFreshness,
@@ -340,7 +345,13 @@ export function AttentionPanel({
       <ul className={styles.list}>
         {items.map((item) =>
           item.kind === 'provider' ? (
-            <ProviderItem key={item.key} item={item} windowLabel={windowLabel} now={now} />
+            <ProviderItem
+              key={item.key}
+              item={item}
+              windowLabel={windowLabel}
+              now={now}
+              evidenceAsOf={evidenceAsOf}
+            />
           ) : (
             <SourceItem
               key={item.key}

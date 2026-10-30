@@ -4,7 +4,7 @@ import { buildAuthFilesHref } from '@/features/authFiles/deepLink';
 import type { CredentialHealth, CredentialRow, CredentialState } from '../types';
 import { providerLabel } from '../utils';
 import { redactSecrets } from '../logic/redact';
-import { credentialRecoveryLines } from './formatters';
+import { RecoveryDetails } from './RecoveryDetails';
 import { StatusText, type StatusTone } from './StatusText';
 import styles from './CredentialList.module.scss';
 
@@ -29,17 +29,10 @@ interface CredentialListProps {
 }
 
 function CredentialDetail({ row, now }: { row: CredentialRow; now: number }) {
-  const { t, i18n } = useTranslation();
-  const lines = credentialRecoveryLines(t, row, now, i18n.language);
-  if (!row.reason && lines.length === 0) return null;
   return (
     <span className={styles.detail}>
       {row.reason && <span className={styles.reason}>{row.reason}</span>}
-      {lines.map((line) => (
-        <span key={line} className={styles.detailMeta}>
-          {line}
-        </span>
-      ))}
+      <RecoveryDetails row={row} now={now} lineClassName={styles.detailMeta} />
     </span>
   );
 }

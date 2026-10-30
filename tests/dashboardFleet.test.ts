@@ -420,7 +420,51 @@ describe('attention and verdict', () => {
       hasData: true,
       trafficTotal: traffic.total,
     });
-    expect(verdict).toEqual({ kind: 'down', tone: 'critical', count: 1, providerId: 'meta' });
+    expect(verdict).toEqual({
+      kind: 'down',
+      tone: 'critical',
+      count: 1,
+      providerId: 'meta',
+      stale: false,
+    });
+  });
+
+  test('says an outage was last reported when credentials stopped updating', () => {
+    const { providers, traffic } = buildLiveModel();
+    const verdict = deriveVerdict({
+      connectionStatus: 'connected',
+      attention: buildAttention(providers, sources({ credentials: 'failed' })),
+      primaryFreshness: 'failed',
+      hasData: true,
+      trafficTotal: traffic.total,
+    });
+    expect(verdict).toMatchObject({ kind: 'down', providerId: 'meta', stale: true });
+  });
+
+  test('lists a credentials gap ahead of the provider issues it undermines', () => {
+    const { providers } = buildLiveModel();
+    const keys = buildAttention(providers, sources({ credentials: 'failed', usage: 'failed' })).map(
+      (item) => item.key
+    );
+    expect(keys).toEqual([
+      'source:credentials',
+      'provider:meta',
+      'provider:claude',
+      'source:usage',
+    ]);
+  });
+
+  test('does not count stale issues as current', () => {
+    const { providers, traffic } = buildLiveModel();
+    const withoutOutage = providers.filter((provider) => provider.status !== 'down');
+    const verdict = deriveVerdict({
+      connectionStatus: 'connected',
+      attention: buildAttention(withoutOutage, sources({ traffic: 'stale' })),
+      primaryFreshness: 'stale',
+      hasData: true,
+      trafficTotal: traffic.total,
+    });
+    expect(verdict.kind).toBe('unknown');
   });
 
   test('does not claim steady health from stale data', () => {

@@ -6,6 +6,8 @@ export interface Vital {
   key: string;
   label: string;
   value: string;
+  /** Small word after the value, e.g. "serving". */
+  unit?: string;
   /** Secondary line: the evidence behind the value. */
   detail?: React.ReactNode;
   /** Exceptions only; healthy vitals stay neutral. */
@@ -32,7 +34,10 @@ export function VitalsStrip({ items, ariaLabel }: VitalsStripProps) {
             className={[styles.vital, item.tone ? styles[item.tone] : ''].filter(Boolean).join(' ')}
           >
             <dt className={styles.label}>{item.label}</dt>
-            <dd className={styles.value}>{item.value}</dd>
+            <dd className={styles.value}>
+              {item.value}
+              {item.unit && <span className={styles.unit}>{item.unit}</span>}
+            </dd>
             {item.meter && (
               <dd className={styles.meterRow}>
                 <Meter

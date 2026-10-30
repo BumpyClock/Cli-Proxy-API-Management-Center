@@ -51,68 +51,59 @@ export function formatLatency(ms: number | null): string {
   return `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)} s`;
 }
 
-const MAX_MODEL_NAMES = 3;
+export interface RecoveryInfo {
+  /** "5 models cooling down" plus the affected model keys and the cause. */
+  cooldown: { label: string; models: string[]; cause: string } | null;
+  /** "Eligible again in ..." or "Cooldown ends in ...; recovery isn't guaranteed". */
+  deadline: string | null;
+}
 
 /**
- * Why a credential is limited and when that may change, as separate lines:
- * "1 model cooling down: grok-4-heavy (Quota restriction · HTTP 429)" and
- * "Cooldown ends in 24m (08:28 GMT-7); recovery isn't guaranteed".
+ * Why a credential is limited and when that may change.
  *
  * A credential-level `next_retry_after` is when the router may use it again; model
  * cooldowns only say when the restriction expires. Neither promises recovery.
  */
-export function credentialRecoveryLines(
+export function credentialRecovery(
   t: TFunction,
   row: CredentialRow,
   nowMs: number,
   locale?: string
-): string[] {
-  const lines: string[] = [];
-  const cause = row.cooldown
-    ? [
+): RecoveryInfo {
+  let cooldown: RecoveryInfo['cooldown'] = null;
+  if (row.cooldown) {
+    cooldown = {
+      label: row.cooldown.credentialWide
+        ? t('dashboard.cooldown_credential')
+        : t('dashboard.cooldown_models', { count: row.cooldown.modelCount }),
+      models: row.cooldown.credentialWide ? [] : row.cooldown.models,
+      cause: [
         row.cooldown.reason ? t(cooldownReasonKey(row.cooldown.reason)) : null,
         row.cooldown.httpStatus ? `HTTP ${row.cooldown.httpStatus}` : null,
       ]
         .filter(Boolean)
-        .join(' · ')
-    : '';
-  if (row.cooldown) {
-    let scope: string;
-    if (row.cooldown.credentialWide) {
-      scope = t('dashboard.cooldown_credential');
-    } else if (row.cooldown.models.length > 0) {
-      const shown = row.cooldown.models.slice(0, MAX_MODEL_NAMES);
-      const extra = row.cooldown.models.length - shown.length;
-      scope = t('dashboard.cooldown_models_named', {
-        count: row.cooldown.modelCount,
-        models: extra > 0 ? `${shown.join(', ')} +${extra}` : shown.join(', '),
-      });
-    } else {
-      scope = t('dashboard.cooldown_models', { count: row.cooldown.modelCount });
-    }
-    lines.push(cause ? `${scope} (${cause})` : scope);
+        .join(' · '),
+    };
   }
 
-  if (row.state === 'disabled') return lines;
-  const at = (ms: number) =>
-    `${formatInstant(ms, nowMs, locale)} ${resolveTimeZoneLabel(new Date(ms))}`;
-  if (row.nextRetryAtMs !== null && row.nextRetryAtMs > nowMs) {
-    lines.push(
-      t('dashboard.eligible_in', {
+  let deadline: string | null = null;
+  if (row.state !== 'disabled') {
+    const at = (ms: number) =>
+      `${formatInstant(ms, nowMs, locale)} ${resolveTimeZoneLabel(new Date(ms))}`;
+    if (row.nextRetryAtMs !== null && row.nextRetryAtMs > nowMs) {
+      deadline = t('dashboard.eligible_in', {
         duration: formatDuration(t, (row.nextRetryAtMs - nowMs) / 1000),
         time: at(row.nextRetryAtMs),
-      })
-    );
-  } else if (row.cooldown && row.cooldown.earliestSeconds > 0) {
-    const endsAt = credentialRetryAt(row);
-    if (endsAt !== null && endsAt > nowMs) {
-      lines.push(
-        t('dashboard.cooldown_ends_in', {
+      });
+    } else if (row.cooldown && row.cooldown.earliestSeconds > 0) {
+      const endsAt = credentialRetryAt(row);
+      if (endsAt !== null && endsAt > nowMs) {
+        deadline = t('dashboard.cooldown_ends_in', {
           duration: formatDuration(t, (endsAt - nowMs) / 1000),
           time: at(endsAt),
-        })
-      );
+        });
+      }
     }
   }
-  return lines;
+  return { cooldown, deadline };
 }

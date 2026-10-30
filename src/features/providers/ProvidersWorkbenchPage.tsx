@@ -211,13 +211,17 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
   );
 
   useEffect(() => {
-    if (!revealBrand || activeGroup?.id !== revealBrand) return;
+    if (!revealBrand || !activeGroup || activeGroup.id !== revealBrand) return;
     const panel = resourcePanelRef.current;
     if (!panel) return;
     panel.scrollIntoView({ block: 'start', behavior: 'auto' });
     panel.focus({ preventScroll: true });
+    // A brand with a single key opens straight into that key's details, which also reads
+    // better than the wide table on small screens.
+    const only = activeGroup.resources.length === 1 ? activeGroup.resources[0] : null;
+    if (only) setSheetState({ open: true, brand: only.brand, mode: 'detail', resource: only });
     setRevealBrand(null);
-  }, [activeGroup?.id, revealBrand]);
+  }, [activeGroup, revealBrand]);
 
   const filteredResources = useMemo(() => {
     if (!activeGroup) return [];

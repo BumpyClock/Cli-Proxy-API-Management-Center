@@ -3,6 +3,9 @@ import type { SourceFreshness } from './freshness';
 
 export type DashboardSourceId = 'credentials' | 'traffic' | 'config' | 'models' | 'usage';
 
+/** Sources the verdict and fleet totals are built from. */
+const PRIMARY_SOURCES = new Set<DashboardSourceId>(['credentials', 'traffic']);
+
 export type AttentionSeverity = 'critical' | 'warning';
 
 export interface ProviderAttention {
@@ -72,9 +75,16 @@ export function buildAttention(
       receivedAt: source.receivedAt,
     }));
 
+  // A gap in credentials or traffic undermines every other item, so it leads.
+  const isPrimary = (item: SourceAttention) => PRIMARY_SOURCES.has(item.source);
   const critical = providerItems.filter((item) => item.severity === 'critical');
   const warning = providerItems.filter((item) => item.severity === 'warning');
-  return [...critical, ...warning, ...sourceItems];
+  return [
+    ...sourceItems.filter(isPrimary),
+    ...critical,
+    ...warning,
+    ...sourceItems.filter((item) => !isPrimary(item)),
+  ];
 }
 
 export type VerdictKind =
@@ -89,6 +99,8 @@ export interface Verdict {
   count: number;
   /** Set when exactly one provider is down. */
   providerId: string | null;
+  /** The verdict rests on data that stopped updating; say "last reported". */
+  stale: boolean;
 }
 
 export interface VerdictInput {
@@ -106,7 +118,7 @@ export interface VerdictInput {
  * cannot see: stale or failed sources downgrade "steady" to "unknown".
  */
 export function deriveVerdict(input: VerdictInput): Verdict {
-  const base = { count: 0, providerId: null };
+  const base = { count: 0, providerId: null, stale: false };
   if (input.connectionStatus === 'connecting')
     return { ...base, kind: 'connecting', tone: 'warning' };
   if (input.connectionStatus !== 'connected') return { ...base, kind: 'offline', tone: 'idle' };
@@ -120,16 +132,27 @@ export function deriveVerdict(input: VerdictInput): Verdict {
     (item): item is Extract<AttentionItem, { kind: 'provider' }> =>
       item.kind === 'provider' && item.severity === 'critical'
   );
+  // Credentials or traffic stopped updating: outages are only "last reported", and
+  // anything else is unknown rather than counted as current issues.
+  const outOfDate = input.primaryFreshness === 'stale' || input.primaryFreshness === 'failed';
   if (down.length > 0) {
     return {
       kind: 'down',
       tone: 'critical',
       count: down.length,
       providerId: down.length === 1 ? down[0].provider.id : null,
+      stale: outOfDate,
     };
   }
+  if (outOfDate) return { ...base, kind: 'unknown', tone: 'warning' };
   if (input.attention.length > 0) {
-    return { kind: 'attention', tone: 'warning', count: input.attention.length, providerId: null };
+    return {
+      kind: 'attention',
+      tone: 'warning',
+      count: input.attention.length,
+      providerId: null,
+      stale: false,
+    };
   }
   if (input.primaryFreshness !== 'live') return { ...base, kind: 'unknown', tone: 'warning' };
   if (input.trafficTotal === 0) return { ...base, kind: 'idle', tone: 'idle' };
