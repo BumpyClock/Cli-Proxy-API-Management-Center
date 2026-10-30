@@ -838,6 +838,36 @@
 }
 
 @media (max-width: $breakpoint-mobile) {
+  /* Open drawer: the backdrop also covers the (inert) header; the drawer has its own close. */
+  .app-shell.drawer-open .main-header {
+    z-index: $z-dropdown - 2;
+  }
+
+  .sidebar-drawer-close {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+  }
+
   :root {
     --header-height: 74px;
     --shell-gutter: 12px;

@@ -135,12 +135,10 @@
     "action_add_oauth": "新增 OAuth 憑證",
     "action_inspect_credential": "檢查憑證",
     "action_inspect_credentials": "檢查憑證",
-    "action_inspect_credentials_named": "檢查 {{provider}} 憑證",
+    "action_named": "{{label}}：{{context}}",
     "action_open_provider_named": "開啟 {{provider}} 設定",
     "action_retry": "重試",
-    "action_retry_named": "重新載入{{source}}",
     "action_search_logs": "搜尋日誌",
-    "action_search_logs_named": "搜尋 {{provider}} 的日誌",
     "age_days": "{{count}} 天前",
     "age_hours": "{{count}} 小時前",
     "age_minutes": "{{count}} 分鐘前",
@@ -1755,7 +1753,9 @@
     "expand": "展開",
     "collapse": "收起",
     "subtitle": "CLI Proxy API 管理控制台",
-    "auth_files_count": "驗證檔案：{{count}} 個"
+    "auth_files_count": "驗證檔案：{{count}} 個",
+    "navigation": "導覽",
+    "close_navigation": "關閉導覽"
   },
   "footer": {
     "api_version": "CLI Proxy API 版本",

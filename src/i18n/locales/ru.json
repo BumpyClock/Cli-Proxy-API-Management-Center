@@ -134,12 +134,10 @@
     "action_add_oauth": "Добавить OAuth-учётные данные",
     "action_inspect_credential": "Проверить учётные данные",
     "action_inspect_credentials": "Проверить учётные данные",
-    "action_inspect_credentials_named": "Проверить учётные данные {{provider}}",
+    "action_named": "{{label}}: {{context}}",
     "action_open_provider_named": "Открыть настройки {{provider}}",
     "action_retry": "Повторить",
-    "action_retry_named": "Повторить загрузку: {{source}}",
     "action_search_logs": "Искать в логах",
-    "action_search_logs_named": "Искать {{provider}} в логах",
     "age_days": "{{count}} д назад",
     "age_hours": "{{count}} ч назад",
     "age_minutes": "{{count}} мин назад",
@@ -1749,7 +1747,9 @@
     "expand": "Развернуть",
     "collapse": "Свернуть",
     "subtitle": "Консоль управления CLI Proxy API",
-    "auth_files_count": "Файлов аутентификации: {{count}}"
+    "auth_files_count": "Файлов аутентификации: {{count}}",
+    "navigation": "Навигация",
+    "close_navigation": "Закрыть навигацию"
   },
   "footer": {
     "api_version": "Версия CLI Proxy API",

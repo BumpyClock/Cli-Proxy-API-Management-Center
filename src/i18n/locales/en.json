@@ -135,12 +135,10 @@
     "action_add_oauth": "Add OAuth credential",
     "action_inspect_credential": "Inspect credential",
     "action_inspect_credentials": "Inspect credentials",
-    "action_inspect_credentials_named": "Inspect {{provider}} credentials",
+    "action_named": "{{label}}: {{context}}",
     "action_open_provider_named": "Open {{provider}} settings",
     "action_retry": "Retry",
-    "action_retry_named": "Retry loading {{source}}",
     "action_search_logs": "Search logs",
-    "action_search_logs_named": "Search logs for {{provider}}",
     "age_days": "{{count}}d ago",
     "age_hours": "{{count}}h ago",
     "age_minutes": "{{count}}m ago",
@@ -234,7 +232,7 @@
     "models_fewer": "show fewer",
     "models_fewer_label": "Show fewer models",
     "models_more": "+{{count}} more",
-    "models_more_label": "Show {{count}} more models",
+    "models_more_label": "+{{count}} more models",
     "partial_missing": "Partial: {{sources}} not loaded, so totals are incomplete",
     "partial_short": "Partial: {{sources}} missing",
     "provider_status_degraded": "Degraded",
@@ -1738,7 +1736,9 @@
     "expand": "Expand",
     "collapse": "Collapse",
     "subtitle": "CLI Proxy API Console",
-    "auth_files_count": "Authentication files: {{count}}"
+    "auth_files_count": "Authentication files: {{count}}",
+    "navigation": "Navigation",
+    "close_navigation": "Close navigation"
   },
   "footer": {
     "api_version": "CLI Proxy API Version",

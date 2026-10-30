@@ -54,6 +54,7 @@ import {
 import { APIKEY_FUN_DISPLAY_NAME, hasApiKeyFunConfig } from '@/features/providers/sponsor';
 import { triggerHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { lockScroll, unlockScroll } from '@/components/ui/scrollLock';
 import { LANGUAGE_LABEL_KEYS, LANGUAGE_ORDER } from '@/utils/constants';
 import { isSupportedLanguage } from '@/utils/language';
 import { getSidebarShortcutLabel, isSidebarToggleShortcut } from '@/utils/sidebarShortcut';
@@ -990,32 +991,30 @@ export function MainLayout() {
     );
   };
 
-  // The open drawer is modal: focus moves into it and stays within the drawer and
-  // its menu (close) button; Escape closes it. On close, focus that was in the
-  // drawer returns to the menu button.
+  // The open drawer is a modal dialog: focus moves into it and stays there, the page
+  // behind it (header included) is inert and does not scroll, and Escape or the
+  // drawer's close button dismisses it. Focus left in the drawer returns to the menu button.
+  const drawerOpen = isDrawerNav && sidebarOpen;
   useEffect(() => {
-    if (!isDrawerNav || !sidebarOpen) return;
+    if (!drawerOpen) return;
     const sidebar = sidebarRef.current;
-    const menuButton = () => headerRef.current?.querySelector<HTMLElement>('.mobile-menu-btn');
+    const header = headerRef.current;
     const drawerItems = () =>
       Array.from(
         sidebar?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []
       ).filter((el) => el.getClientRects().length > 0);
-    const focusables = () => {
-      const button = menuButton();
-      return button ? [button, ...drawerItems()] : drawerItems();
-    };
-    drawerItems()[0]?.focus({ preventScroll: true });
+    lockScroll();
+    sidebar?.querySelector<HTMLElement>('.nav-section a[href]')?.focus({ preventScroll: true });
     const handleKey = (event: KeyboardEvent) => {
-      // A modal opened from the header (e.g. logout) owns the keyboard.
-      if (headerRef.current?.closest('[inert]')) return;
+      // A sheet or modal above the shell owns the keyboard.
+      if (document.querySelector('[data-app-shell]')?.hasAttribute('inert')) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         setSidebarOpen(false);
         return;
       }
       if (event.key !== 'Tab') return;
-      const items = focusables();
+      const items = drawerItems();
       if (items.length === 0) return;
       const index = items.indexOf(document.activeElement as HTMLElement);
       const next = event.shiftKey
@@ -1027,15 +1026,18 @@ export function MainLayout() {
     document.addEventListener('keydown', handleKey);
     return () => {
       document.removeEventListener('keydown', handleKey);
+      unlockScroll();
       const active = document.activeElement;
       const lostFocus =
         !active ||
         active === document.body ||
         sidebar?.contains(active) ||
         active.classList.contains('sidebar-backdrop');
-      if (lostFocus) menuButton()?.focus({ preventScroll: true });
+      if (lostFocus) {
+        header?.querySelector<HTMLElement>('.mobile-menu-btn')?.focus({ preventScroll: true });
+      }
     };
-  }, [isDrawerNav, sidebarOpen]);
+  }, [drawerOpen]);
 
   const mobileSidebarToggleLabel = sidebarOpen
     ? t('sidebar.toggle_collapse', { defaultValue: 'Close navigation' })
@@ -1046,13 +1048,13 @@ export function MainLayout() {
   return (
     <div
       data-app-shell=""
-      className={`app-shell ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''} ${
-        isPluginResourcePage ? 'plugin-resource-shell' : ''
-      }`}
+      className={`app-shell ${drawerOpen ? 'drawer-open' : ''} ${
+        sidebarCollapsed ? 'sidebar-is-collapsed' : ''
+      } ${isPluginResourcePage ? 'plugin-resource-shell' : ''}`}
     >
       <div className="top-gradient-blur" aria-hidden="true" />
 
-      <header className="main-header" ref={headerRef}>
+      <header className="main-header" ref={headerRef} inert={drawerOpen}>
         <button
           type="button"
           className="sidebar-toggle-floating"
@@ -1229,6 +1231,9 @@ export function MainLayout() {
           ref={sidebarRef}
           // A closed off-canvas drawer is off-screen: keep it out of the tab order and AT.
           inert={isDrawerNav && !sidebarOpen}
+          role={drawerOpen ? 'dialog' : undefined}
+          aria-modal={drawerOpen ? true : undefined}
+          aria-label={drawerOpen ? t('sidebar.navigation') : undefined}
           className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
         >
           <div className="sidebar-header">
@@ -1241,6 +1246,17 @@ export function MainLayout() {
                 </span>
               )}
             </div>
+            {isDrawerNav && (
+              <button
+                type="button"
+                className="sidebar-drawer-close"
+                onClick={() => setSidebarOpen(false)}
+                aria-label={t('sidebar.close_navigation')}
+                title={t('sidebar.close_navigation')}
+              >
+                {headerIcons.close}
+              </button>
+            )}
           </div>
 
           <div className="nav-section">
@@ -1278,7 +1294,7 @@ export function MainLayout() {
           }`}
           ref={contentRef}
           // Obscured by the open drawer's backdrop.
-          inert={isDrawerNav && sidebarOpen}
+          inert={drawerOpen}
         >
           <main
             className={`main-content${isLogsPage ? ' main-content-logs' : ''}${

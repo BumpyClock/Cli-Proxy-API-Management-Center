@@ -80,6 +80,29 @@ const expectTranslated = (markup: string) => {
   expect(markup).not.toContain('{{');
 };
 
+const decodeEntities = (text: string) =>
+  text
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+
+/** WCAG 2.5.3: a control's accessible name contains its visible label (voice control). */
+const expectLabelInName = (markup: string) => {
+  let checked = 0;
+  for (const match of markup.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/g)) {
+    const ariaLabel = /aria-label="([^"]*)"/.exec(match[2])?.[1];
+    const visible = decodeEntities(match[3].replace(/<[^>]+>/g, ''))
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!ariaLabel || !visible) continue;
+    checked += 1;
+    expect(decodeEntities(ariaLabel).toLowerCase()).toContain(visible.toLowerCase());
+  }
+  expect(checked).toBeGreaterThan(0);
+};
+
 describe('dashboard components render translated, actionable markup', () => {
   test('attention panel names the failing credential and links to it', async () => {
     await i18n.changeLanguage('en');
@@ -178,6 +201,7 @@ describe('dashboard components render translated, actionable markup', () => {
         ),
       ].join('\n');
       expectTranslated(markup);
+      expectLabelInName(markup);
       expect(markup).toContain('ops@example.com');
       expect(markup).toContain('gpt-5.5');
     });

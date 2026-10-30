@@ -453,7 +453,7 @@ export function DashboardPage() {
               className={styles.refreshButton}
               onClick={() => void handleRefresh()}
               disabled={refreshing}
-              aria-label={t('dashboard.refresh_now')}
+              aria-label={refreshing ? undefined : t('dashboard.refresh_now')}
               title={t('dashboard.refresh_now')}
             >
               <IconRefreshCw

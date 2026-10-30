@@ -117,15 +117,18 @@ function ProviderItem({
   const actions: Array<{ key: string; to: string; label: string; ariaLabel: string }> = [];
   const problems = provider.problemCredentials.length;
   const evidenceRows = problems > 0 ? provider.problemCredentials : provider.limitedCredentials;
+  // Accessible names start with the visible label so voice control can target them.
+  const named = (label: string) => t('dashboard.action_named', { label, context: name });
   if (evidenceRows.length > 0 || (provider.trafficFailing && provider.credentials.total > 0)) {
+    const label =
+      evidenceRows.length === 1
+        ? t('dashboard.action_inspect_credential')
+        : t('dashboard.action_inspect_credentials');
     actions.push({
       key: 'credentials',
       to: providerCredentialsHref(provider),
-      label:
-        evidenceRows.length === 1
-          ? t('dashboard.action_inspect_credential')
-          : t('dashboard.action_inspect_credentials'),
-      ariaLabel: t('dashboard.action_inspect_credentials_named', { provider: name }),
+      label,
+      ariaLabel: named(label),
     });
   }
   if (provider.trafficFailing && provider.apiKeys > 0) {
@@ -139,7 +142,7 @@ function ProviderItem({
       key: 'logs',
       to: providerLogsHref(provider.id),
       label: t('dashboard.action_search_logs'),
-      ariaLabel: t('dashboard.action_search_logs_named', { provider: name }),
+      ariaLabel: named(t('dashboard.action_search_logs')),
     });
   }
   const shown = evidenceRows.slice(0, MAX_CREDENTIALS_PER_ITEM);
@@ -229,7 +232,11 @@ function SourceItem({
           className={styles.action}
           onClick={onRetry}
           disabled={retrying}
-          aria-label={t('dashboard.action_retry_named', { source })}
+          aria-label={
+            retrying
+              ? undefined
+              : t('dashboard.action_named', { label: t('dashboard.action_retry'), context: source })
+          }
         >
           <IconRefreshCw
             size={14}
