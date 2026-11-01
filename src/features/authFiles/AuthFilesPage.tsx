@@ -13,6 +13,7 @@ import { getQuotaCacheKey } from '@/utils/quota/identity';
 import {
   QUOTA_PROVIDER_TYPES,
   clampCardPageSize,
+  authFileProviderId,
   getTypeLabel,
   isProblemAuthFile,
   isRuntimeOnlyAuthFile,
@@ -401,8 +402,7 @@ export function AuthFilesPage() {
   const existingTypes = useMemo(() => {
     const types = new Set<string>(['all']);
     files.forEach((file) => {
-      const type = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
-      if (type) types.add(type);
+      types.add(authFileProviderId(file));
     });
     return Array.from(types);
   }, [files]);
@@ -441,8 +441,7 @@ export function AuthFilesPage() {
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: filesMatchingStatusFilters.length };
     filesMatchingStatusFilters.forEach((file) => {
-      const type = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
-      if (!type) return;
+      const type = authFileProviderId(file);
       counts[type] = (counts[type] || 0) + 1;
     });
     return counts;
@@ -454,7 +453,7 @@ export function AuthFilesPage() {
   const filtered = useMemo(
     () =>
       filesMatchingStatusFilters.filter((item) => {
-        const type = normalizeProviderKey(String(item.type ?? item.provider ?? ''));
+        const type = authFileProviderId(item);
         const matchType = normalizedFilter === 'all' || type === normalizedFilter;
         return matchType && matchesAuthFileSearch(item, normalizedSearch, wildcardSearch);
       }),

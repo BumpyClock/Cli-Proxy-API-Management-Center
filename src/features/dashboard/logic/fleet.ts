@@ -1,7 +1,7 @@
 import {
   hasAuthFileStatusWarning,
   isProblemAuthFile,
-  normalizeProviderKey,
+  authFileProviderId,
 } from '@/features/authFiles/constants';
 import { summarizeCooldowns } from '@/features/authFiles/cooldowns';
 import { deriveAuthFileIdentity } from '@/features/authFiles/identity';
@@ -68,11 +68,6 @@ export function countsOf(buckets: Array<{ success: number; failed: number }>): T
   const total = success + failed;
   return { success, failed, total, successRate: total > 0 ? (success / total) * 100 : null };
 }
-
-const providerIdOfAuthFile = (file: AuthFileItem): string => {
-  const candidate = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
-  return candidate && candidate !== 'empty' ? candidate : 'unknown';
-};
 
 const normalizeUsageProvider = (value: string): string => {
   const key = value.trim().toLowerCase();
@@ -373,7 +368,7 @@ export function buildFleetModel(input: FleetInput): FleetModel {
     const mirrorsApiKey =
       accountType === 'api_key' && Boolean(account) && apiKeysFromUsage.has(account);
 
-    const providerId = providerIdOfAuthFile(file);
+    const providerId = authFileProviderId(file);
     const timed = align(file.recentRequests ?? [], authAnchor);
     const cooldown = summarizeCredentialCooldown(file);
     const nextRetryRaw = parseTimestampMs(file['next_retry_after']);

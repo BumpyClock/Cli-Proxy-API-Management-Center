@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { getErrorMessage } from '@/utils/helpers';
 import { createPoller, EMPTY_POLLER_STATE, type PollerState } from '../logic/poller';
+import { redactSecrets } from '../logic/redact';
 
 export interface PolledResource<T> extends PollerState<T> {
   /** Load now. Resolves with fresh data or rejects with the failure. */
@@ -44,7 +45,8 @@ export function usePolledResource<T>({
             intervalMs,
             timeoutMs,
             isHidden: isDocumentHidden,
-            describeError: (error) => getErrorMessage(error, 'Request failed'),
+            describeError: (error) =>
+              redactSecrets(getErrorMessage(error, 'Request failed')).slice(0, 200),
           })
         : null,
     // `scope` is a dependency on purpose: a new connection gets a new poller.

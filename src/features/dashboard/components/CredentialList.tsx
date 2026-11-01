@@ -126,7 +126,7 @@ export function CredentialList({
       <ul className={styles.list}>
         {rows.map((row) => (
           <li
-            key={`${row.name}:${row.identity.primary}`}
+            key={JSON.stringify([row.name, row.authIndex])}
             className={[
               styles.row,
               STATE_TONE[row.state] ? styles[`row_${STATE_TONE[row.state]}`] : '',

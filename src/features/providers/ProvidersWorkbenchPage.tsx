@@ -26,6 +26,7 @@ import { useProviderWorkbench } from './useProviderWorkbench';
 import { PROVIDER_BRAND_ORDER } from './descriptors';
 import {
   getProviderFilterState,
+  applyProviderBrandDeepLink,
   readProvidersWorkbenchUiState,
   writeProvidersWorkbenchUiState,
   type ProviderFilterState,
@@ -163,13 +164,14 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     const requested = searchParams.get('brand');
     if (!requested) return;
     if (!fixedBrand && (PROVIDER_BRAND_ORDER as string[]).includes(requested)) {
-      setActiveBrand(requested as ProviderBrand);
-      setRevealBrand(requested as ProviderBrand);
+      const brand = requested as ProviderBrand;
+      persistUiState((prev) => applyProviderBrandDeepLink(prev, brand));
+      setRevealBrand(brand);
     }
     const next = new URLSearchParams(searchParams);
     next.delete('brand');
     setSearchParams(next, { replace: true });
-  }, [fixedBrand, searchParams, setActiveBrand, setSearchParams]);
+  }, [fixedBrand, searchParams, persistUiState, setSearchParams]);
 
   const allGroups = useMemo(() => workbench.snapshot?.groups ?? [], [workbench.snapshot]);
   const groups = useMemo(

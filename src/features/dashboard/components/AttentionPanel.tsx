@@ -169,7 +169,11 @@ function ProviderItem({
         {shown.length > 0 && (
           <ul className={styles.credentials}>
             {shown.map((row) => (
-              <CredentialEvidence key={`${row.name}:${row.identity.primary}`} row={row} now={now} />
+              <CredentialEvidence
+                key={JSON.stringify([row.name, row.authIndex])}
+                row={row}
+                now={now}
+              />
             ))}
             {hidden > 0 && (
               <li className={styles.credentialMore}>

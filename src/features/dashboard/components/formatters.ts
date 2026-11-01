@@ -2,7 +2,6 @@ import type { TFunction } from 'i18next';
 import { cooldownReasonKey } from '@/features/authFiles/cooldowns';
 import { resolveTimeZoneLabel } from '@/utils/time/timezone';
 import type { CredentialRow } from '../types';
-import { credentialRetryAt } from '../logic/fleet';
 import { ageParts, formatInstant } from '../logic/time';
 
 /** "just now", "15s ago", "3m ago". */
@@ -96,8 +95,8 @@ export function credentialRecovery(
         time: at(row.nextRetryAtMs),
       });
     } else if (row.cooldown && row.cooldown.earliestSeconds > 0) {
-      const endsAt = credentialRetryAt(row);
-      if (endsAt !== null && endsAt > nowMs) {
+      const endsAt = row.cooldown.receivedAtMs + row.cooldown.earliestSeconds * 1000;
+      if (endsAt > nowMs) {
         deadline = t('dashboard.cooldown_ends_in', {
           duration: formatDuration(t, (endsAt - nowMs) / 1000),
           time: at(endsAt),
