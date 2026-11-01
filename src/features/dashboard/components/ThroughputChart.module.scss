@@ -39,12 +39,23 @@
   flex: none;
 }
 
+.legendZone {
+  margin-left: auto;
+  font-family: $font-mono;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .swatchSuccess {
   background: var(--viz-success);
 }
 
 .swatchFailure {
-  background: var(--viz-failure);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--viz-failure) 0 2px,
+    color-mix(in srgb, var(--viz-failure) 45%, var(--bg-primary)) 2px 3.5px
+  );
 }
 
 /* ---------- 绘图区 ---------- */
@@ -72,7 +83,7 @@
   right: 0;
   transform: translateY(-50%);
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -151,6 +162,16 @@
   filter: brightness(1.06);
 }
 
+/* The newest bucket is still filling: faded, with a dashed outline marking it as partial. */
+.columnPartial .stack {
+  opacity: 0.55;
+}
+
+.columnPartial .segment {
+  outline: 1px dashed var(--text-secondary);
+  outline-offset: 1px;
+}
+
 .segment {
   display: block;
   width: 100%;
@@ -163,7 +184,12 @@
 }
 
 .segmentFailure {
-  background: var(--viz-failure);
+  /* Stripes distinguish failures without relying on colour alone. */
+  background: repeating-linear-gradient(
+    135deg,
+    var(--viz-failure) 0 3px,
+    color-mix(in srgb, var(--viz-failure) 45%, var(--bg-primary)) 3px 5px
+  );
 }
 
 /* 堆叠段之间留 2px 表面色间隙 —— 用留白而不是描边来分隔 */
@@ -210,7 +236,7 @@
   display: grid;
   place-items: center;
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   pointer-events: none;
 }
 
@@ -273,7 +299,7 @@
   margin-top: 2px;
   padding-top: 4px;
   border-top: 1px solid var(--border-color);
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -293,7 +319,7 @@
   position: absolute;
   transform: translateX(-50%);
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -319,9 +345,14 @@
   }
 
   thead th {
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     font-weight: 600;
     white-space: nowrap;
+  }
+
+  /* The time column reads left to right, header included. */
+  thead th:first-child {
+    text-align: left;
   }
 
   tbody th[scope='row'] {

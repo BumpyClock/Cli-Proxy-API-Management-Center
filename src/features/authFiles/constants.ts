@@ -99,6 +99,11 @@ export const clampCardPageSize = (value: number) =>
 
 export const normalizeProviderKey = normalizeOAuthProviderKey;
 
+export const authFileProviderId = (file: AuthFileItem): string => {
+  const candidate = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
+  return candidate && candidate !== 'empty' ? candidate : 'unknown';
+};
+
 export const supportsAuthFileManualRefresh = (provider: unknown): boolean =>
   AUTH_FILE_MANUAL_REFRESH_PROVIDERS.has(normalizeProviderKey(String(provider ?? '')));
 

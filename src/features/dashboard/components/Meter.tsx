@@ -1,3 +1,4 @@
+import { formatPercent } from '@/utils/format';
 import { toneForSuccessRate, type MeterTone } from '../utils';
 import styles from './Meter.module.scss';
 
@@ -9,7 +10,7 @@ const TONE_COLORS: Record<MeterTone, string> = {
 };
 
 interface MeterProps {
-  /** 0–100；null 表示窗口内无请求 */
+  /** 0 to 100; null means no requests in the window (the caller states that in text). */
   value: number | null;
   tone?: MeterTone;
   ariaLabel: string;
@@ -17,8 +18,9 @@ interface MeterProps {
 }
 
 /**
- * 细条计量器：填充色承载严重度，轨道是同色淡化步阶，
- * 因此在整条上都能读出状态。
+ * Thin meter: the fill carries severity and the track is a faded step of the same colour,
+ * so the state reads along the whole bar. A rate is exposed as role="meter"; with no rate
+ * the bar is decorative and hidden from assistive technology.
  */
 export function Meter({ value, tone, ariaLabel, className }: MeterProps) {
   const resolvedTone = tone ?? toneForSuccessRate(value);
@@ -28,11 +30,16 @@ export function Meter({ value, tone, ariaLabel, className }: MeterProps) {
     <div
       className={[styles.track, className].filter(Boolean).join(' ')}
       style={{ '--meter-fill': TONE_COLORS[resolvedTone] } as React.CSSProperties}
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={value === null ? undefined : Math.round(clamped)}
-      aria-label={ariaLabel}
+      {...(value === null
+        ? { 'aria-hidden': true }
+        : {
+            role: 'meter',
+            'aria-valuemin': 0,
+            'aria-valuemax': 100,
+            'aria-valuenow': Number(clamped.toFixed(1)),
+            'aria-valuetext': formatPercent(clamped),
+            'aria-label': ariaLabel,
+          })}
     >
       <div className={styles.fill} style={{ width: `${clamped}%` }} />
     </div>

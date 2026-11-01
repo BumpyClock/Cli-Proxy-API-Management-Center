@@ -1,0 +1,108 @@
+import type { TFunction } from 'i18next';
+import { cooldownReasonKey } from '@/features/authFiles/cooldowns';
+import { resolveTimeZoneLabel } from '@/utils/time/timezone';
+import type { CredentialRow } from '../types';
+import { ageParts, formatInstant } from '../logic/time';
+
+/** "just now", "15s ago", "3m ago". */
+export function formatAge(t: TFunction, sinceMs: number, nowMs: number): string {
+  const { unit, value } = ageParts(sinceMs, nowMs);
+  switch (unit) {
+    case 'now':
+      return t('dashboard.age_now');
+    case 'second':
+      return t('dashboard.age_seconds', { count: value });
+    case 'minute':
+      return t('dashboard.age_minutes', { count: value });
+    case 'hour':
+      return t('dashboard.age_hours', { count: value });
+    default:
+      return t('dashboard.age_days', { count: value });
+  }
+}
+
+/** Compact duration for countdowns: "45s", "12m", "10h 7m", "2d 4h". */
+export function formatDuration(t: TFunction, totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  if (seconds < 60) return t('dashboard.duration_s', { s: seconds });
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return t('dashboard.duration_m', { m: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    const rest = minutes % 60;
+    return rest === 0
+      ? t('dashboard.duration_h', { h: hours })
+      : t('dashboard.duration_hm', { h: hours, m: rest });
+  }
+  const days = Math.floor(hours / 24);
+  const restHours = hours % 24;
+  return restHours === 0
+    ? t('dashboard.duration_d', { d: days })
+    : t('dashboard.duration_dh', { d: days, h: restHours });
+}
+
+const DASH = '—';
+
+/** `850 ms`, `1.2 s`, `14 s`. */
+export function formatLatency(ms: number | null): string {
+  if (ms === null || !Number.isFinite(ms)) return DASH;
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)} s`;
+}
+
+export interface RecoveryInfo {
+  /** "5 models cooling down" plus the affected model keys and the cause. */
+  cooldown: { label: string; models: string[]; cause: string } | null;
+  /** "Eligible again in ..." or "Cooldown ends in ...; recovery isn't guaranteed". */
+  deadline: string | null;
+}
+
+/**
+ * Why a credential is limited and when that may change.
+ *
+ * A credential-level `next_retry_after` is when the router may use it again; model
+ * cooldowns only say when the restriction expires. Neither promises recovery.
+ */
+export function credentialRecovery(
+  t: TFunction,
+  row: CredentialRow,
+  nowMs: number,
+  locale?: string
+): RecoveryInfo {
+  let cooldown: RecoveryInfo['cooldown'] = null;
+  if (row.cooldown) {
+    cooldown = {
+      label: row.cooldown.credentialWide
+        ? t('dashboard.cooldown_credential')
+        : t('dashboard.cooldown_models', { count: row.cooldown.modelCount }),
+      models: row.cooldown.credentialWide ? [] : row.cooldown.models,
+      cause: [
+        row.cooldown.reason ? t(cooldownReasonKey(row.cooldown.reason)) : null,
+        row.cooldown.httpStatus ? `HTTP ${row.cooldown.httpStatus}` : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  }
+
+  let deadline: string | null = null;
+  if (row.state !== 'disabled') {
+    const at = (ms: number) =>
+      `${formatInstant(ms, nowMs, locale)} ${resolveTimeZoneLabel(new Date(ms))}`;
+    if (row.nextRetryAtMs !== null && row.nextRetryAtMs > nowMs) {
+      deadline = t('dashboard.eligible_in', {
+        duration: formatDuration(t, (row.nextRetryAtMs - nowMs) / 1000),
+        time: at(row.nextRetryAtMs),
+      });
+    } else if (row.cooldown && row.cooldown.earliestSeconds > 0) {
+      const endsAt = row.cooldown.receivedAtMs + row.cooldown.earliestSeconds * 1000;
+      if (endsAt > nowMs) {
+        deadline = t('dashboard.cooldown_ends_in', {
+          duration: formatDuration(t, (endsAt - nowMs) / 1000),
+          time: at(endsAt),
+        });
+      }
+    }
+  }
+  return { cooldown, deadline };
+}

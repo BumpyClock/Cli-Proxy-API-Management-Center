@@ -1,0 +1,300 @@
+import { describe, expect, test } from 'bun:test';
+import { attentionState, type AnnouncementText } from '../src/features/dashboard/logic/announce';
+import type { AttentionItem } from '../src/features/dashboard/logic/attention';
+import { LiveAnnouncer, type AnnouncerUpdate } from '../src/features/dashboard/logic/liveAnnouncer';
+import type { ProviderHealth } from '../src/features/dashboard/types';
+
+/** Manual clock: timers fire only when the test advances time. */
+function fakeTimers() {
+  let current = 0;
+  let nextId = 1;
+  const pending = new Map<number, { at: number; callback: () => void }>();
+  return {
+    set: (callback: () => void, ms: number) => {
+      const id = nextId++;
+      pending.set(id, { at: current + ms, callback });
+      return id;
+    },
+    clear: (id: unknown) => {
+      pending.delete(id as number);
+    },
+    now: () => current,
+    advance(ms: number) {
+      const target = current + ms;
+      for (;;) {
+        const due = [...pending.entries()]
+          .filter(([, timer]) => timer.at <= target)
+          .sort((a, b) => a[1].at - b[1].at)[0];
+        if (!due) break;
+        pending.delete(due[0]);
+        current = due[1].at;
+        due[1].callback();
+      }
+      current = target;
+    },
+  };
+}
+
+const provider = (id: string, status: ProviderHealth['status']): AttentionItem => ({
+  kind: 'provider',
+  key: `provider:${id}`,
+  severity: status === 'down' ? 'critical' : 'warning',
+  provider: { id, status } as ProviderHealth,
+});
+
+const HEADLINES: Record<string, string> = {
+  incident: 'Muse (Meta) is down.',
+  partial: '1 issue needs attention.',
+  steady: 'All systems steady.',
+};
+
+const text = (verdictKey: string): AnnouncementText => ({
+  verdict: HEADLINES[verdictKey],
+  newIssue: (item) => (item.kind === 'provider' ? `New issue: ${item.provider.id}.` : ''),
+  changedIssue: (item) => (item.kind === 'provider' ? `${item.provider.id} changed.` : ''),
+  resolved: (key) => `Resolved: ${key}.`,
+});
+
+const state = (
+  verdictKey: 'incident' | 'partial' | 'steady',
+  primary: AnnouncerUpdate['primary']
+): AnnouncerUpdate => {
+  const items =
+    verdictKey === 'incident'
+      ? [provider('meta', 'down'), provider('claude', 'degraded')]
+      : verdictKey === 'partial'
+        ? [provider('claude', 'degraded')]
+        : [];
+  return {
+    snapshot: { verdictKey, attention: attentionState(items) },
+    next: { verdictKey, verdictProviderId: verdictKey === 'incident' ? 'meta' : null, items },
+    text: text(verdictKey),
+    primary,
+  };
+};
+
+function setup() {
+  const timers = fakeTimers();
+  const spoken: string[] = [];
+  const announcer = new LiveAnnouncer((message) => spoken.push(message), timers, {
+    batchMs: 500,
+    maxHoldMs: 15_000,
+  });
+  return { timers, spoken, announcer };
+}
+
+describe('LiveAnnouncer', () => {
+  test('the first settled state is silent', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    timers.advance(20_000);
+    expect(spoken).toEqual([]);
+  });
+
+  test('staggered sources announce only the final state, even 5 s apart', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials land first: one issue left, traffic still in flight for 5 s.
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    timers.advance(5_000);
+    expect(spoken).toEqual([]);
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 3, busy: false }));
+    timers.advance(1_000);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('a source that reported earlier is awaited even when nothing is in flight', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: false }));
+    timers.advance(3_000);
+    expect(spoken).toEqual([]);
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 4, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('a traffic report from before the change does not count as caught up', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Traffic polls on its own (drifted) schedule with nothing new to say.
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 2, busy: false }));
+    // Credentials then bring the change; traffic's earlier report must not satisfy the hold.
+    announcer.update(state('partial', { credentialsAt: 3, trafficAt: 2, busy: false }));
+    timers.advance(5_000);
+    expect(spoken).toEqual([]);
+    announcer.update(state('steady', { credentialsAt: 3, trafficAt: 4, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('an unchanged poll does not start the hold clock', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials poll with nothing new while traffic is quiet: nothing is pending.
+    announcer.update(state('incident', { credentialsAt: 2, trafficAt: 1, busy: false }));
+    timers.advance(10_000);
+    // The change begins now and traffic stays quiet: the hold runs from here.
+    announcer.update(state('partial', { credentialsAt: 3, trafficAt: 1, busy: false }));
+    timers.advance(6_000);
+    expect(spoken).toEqual([]);
+    timers.advance(9_500);
+    expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
+  });
+
+  test('a quiet source delays the announcement by at most one interval', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Traffic is not in flight and does not report again in time.
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: false }));
+    timers.advance(14_000);
+    expect(spoken).toEqual([]);
+    timers.advance(2_000);
+    expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
+  });
+
+  test('a request in flight longer than the hold is waited for, then announced once', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials land; traffic stays in flight for 17 s, longer than the 15 s limit.
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    timers.advance(17_000);
+    expect(spoken).toEqual([]);
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 3, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('once both sources reported after the change, a newer poll in flight does not hold it', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Traffic reports first (Claude recovered), then credentials (Muse recovered) while
+    // traffic's next, slow poll is already in flight.
+    announcer.update(state('partial', { credentialsAt: 1, trafficAt: 2, busy: false }));
+    announcer.update(state('steady', { credentialsAt: 3, trafficAt: 2, busy: true }));
+    timers.advance(600);
+    expect(spoken).toEqual(['All systems steady.']);
+  });
+
+  test('after a forced announcement, the owed source is announced as soon as it reports', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: false }));
+    timers.advance(16_000);
+    expect(spoken).toEqual(['1 issue needs attention. Resolved: provider:meta.']);
+    // Traffic finally reports: credentials already reported after the change, so no new hold.
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 3, busy: false }));
+    timers.advance(600);
+    expect(spoken).toEqual([
+      '1 issue needs attention. Resolved: provider:meta.',
+      'All systems steady.',
+    ]);
+  });
+
+  test('a new outage is announced at once, without waiting for the other source', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('steady', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    // Credentials show the outage; traffic's slow poll is still in flight.
+    announcer.update(state('incident', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    timers.advance(600);
+    expect(spoken).toEqual(['Muse (Meta) is down. New issue: claude.']);
+  });
+
+  test('mixed escalation and recovery speak only the escalation until both sources report', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    const mixed = state('partial', { credentialsAt: 2, trafficAt: 1, busy: true });
+    mixed.next.items.push(provider('xai', 'limited'));
+    mixed.snapshot.attention = attentionState(mixed.next.items);
+    mixed.text.verdict = '2 issues need attention.';
+    announcer.update(mixed);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+    timers.advance(17_000);
+    expect(spoken).toEqual(['New issue: xai.']);
+
+    // Traffic reports without restoring Meta. Its earlier recovery must still be pending.
+    announcer.update({ ...mixed, primary: { credentialsAt: 2, trafficAt: 3, busy: false } });
+    timers.advance(600);
+    expect(spoken).toEqual([
+      'New issue: xai.',
+      '2 issues need attention. Resolved: provider:meta.',
+    ]);
+  });
+
+  test('a partial improvement stays pending beside a new incident', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    const mixed = state('partial', { credentialsAt: 2, trafficAt: 1, busy: true });
+    mixed.next.items.push(provider('meta', 'limited'), provider('xai', 'degraded'));
+    mixed.snapshot.attention = attentionState(mixed.next.items);
+    mixed.text.verdict = '3 issues need attention.';
+    announcer.update(mixed);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+    announcer.update({ ...mixed, primary: { credentialsAt: 2, trafficAt: 3, busy: false } });
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.', '3 issues need attention. meta changed.']);
+  });
+
+  test('a provisional recovery reversed by traffic is never announced', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    const mixed = state('partial', { credentialsAt: 2, trafficAt: 1, busy: true });
+    mixed.next.items.push(provider('xai', 'limited'));
+    mixed.snapshot.attention = attentionState(mixed.next.items);
+    announcer.update(mixed);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+
+    const settled = state('incident', { credentialsAt: 2, trafficAt: 3, busy: false });
+    settled.next.items.push(provider('xai', 'limited'));
+    settled.snapshot.attention = attentionState(settled.next.items);
+    announcer.update(settled);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+  });
+
+  test('a secondary incident under the same headline is announced', () => {
+    const { timers, spoken, announcer } = setup();
+    const muse = (primary: AnnouncerUpdate['primary'], items: AttentionItem[]) => ({
+      snapshot: { verdictKey: 'incident', attention: attentionState(items) },
+      next: { verdictKey: 'incident', verdictProviderId: 'meta', items },
+      text: text('incident'),
+      primary,
+    });
+    announcer.update(
+      muse({ credentialsAt: 1, trafficAt: 1, busy: false }, [provider('meta', 'down')])
+    );
+    announcer.update(
+      muse({ credentialsAt: 2, trafficAt: 2, busy: false }, [
+        provider('meta', 'down'),
+        provider('claude', 'degraded'),
+      ])
+    );
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: claude.']);
+  });
+
+  test('a Refresh holds state changes and its result leads the announcement', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    announcer.actionStarted();
+    announcer.update(state('partial', { credentialsAt: 2, trafficAt: 1, busy: true }));
+    announcer.update(state('steady', { credentialsAt: 2, trafficAt: 2, busy: false }));
+    timers.advance(2_000);
+    expect(spoken).toEqual([]);
+    announcer.actionFinished('Dashboard data refreshed.');
+    timers.advance(600);
+    expect(spoken).toEqual(['Dashboard data refreshed. All systems steady.']);
+  });
+
+  test('a failed Retry is announced even when nothing else changed', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    announcer.actionStarted();
+    announcer.actionFinished("Still couldn't load credentials.");
+    timers.advance(600);
+    expect(spoken).toEqual(["Still couldn't load credentials."]);
+  });
+});

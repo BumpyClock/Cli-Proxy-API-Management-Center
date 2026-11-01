@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInterval } from '@/hooks/useInterval';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useRevealOnScroll } from '@/hooks/motion';
@@ -13,6 +13,7 @@ import { getQuotaCacheKey } from '@/utils/quota/identity';
 import {
   QUOTA_PROVIDER_TYPES,
   clampCardPageSize,
+  authFileProviderId,
   getTypeLabel,
   isProblemAuthFile,
   isRuntimeOnlyAuthFile,
@@ -32,6 +33,7 @@ import { ProviderTabs } from '@/features/authFiles/components/ProviderTabs';
 import { VaultHeader } from '@/features/authFiles/components/VaultHeader';
 import { VaultPulse } from '@/features/authFiles/components/VaultPulse';
 import { invalidateAuthFileDerivedCaches } from '@/features/authFiles/cacheInvalidation';
+import { AUTH_FILES_DEEP_LINK_KEYS, parseAuthFilesDeepLink } from '@/features/authFiles/deepLink';
 import {
   buildWildcardSearch,
   matchesAuthFileSearch,
@@ -83,6 +85,9 @@ export function AuthFilesPage() {
   const pageTransitionLayer = usePageTransitionLayer();
   const isCurrentLayer = pageTransitionLayer ? pageTransitionLayer.status === 'current' : true;
   const navigate = useNavigate();
+  // A link such as `?provider=meta&status=problem&search=file.json` (from the dashboard)
+  // overrides the persisted filters, then its parameters are removed from the URL.
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [filter, setFilter] = useState<'all' | string>('all');
   const [statusFilterMode, setStatusFilterMode] = useState<AuthFilesStatusFilterMode>('all');
@@ -251,6 +256,21 @@ export function AuthFilesPage() {
     setUiStateHydrated(true);
   }, []);
 
+  // Runs after hydration so the link wins over persisted filters, and again for every new
+  // link that arrives while the page is open.
+  useEffect(() => {
+    if (!uiStateHydrated) return;
+    const deepLink = parseAuthFilesDeepLink(searchParams);
+    if (!deepLink) return;
+    setFilter(deepLink.provider ?? 'all');
+    setStatusFilterMode(deepLink.status ?? 'all');
+    setSearch(deepLink.search ?? '');
+    setPage(1);
+    const next = new URLSearchParams(searchParams);
+    AUTH_FILES_DEEP_LINK_KEYS.forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, uiStateHydrated]);
+
   useEffect(() => {
     if (!uiStateHydrated) return;
 
@@ -382,8 +402,7 @@ export function AuthFilesPage() {
   const existingTypes = useMemo(() => {
     const types = new Set<string>(['all']);
     files.forEach((file) => {
-      const type = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
-      if (type) types.add(type);
+      types.add(authFileProviderId(file));
     });
     return Array.from(types);
   }, [files]);
@@ -422,8 +441,7 @@ export function AuthFilesPage() {
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = { all: filesMatchingStatusFilters.length };
     filesMatchingStatusFilters.forEach((file) => {
-      const type = normalizeProviderKey(String(file.type ?? file.provider ?? ''));
-      if (!type) return;
+      const type = authFileProviderId(file);
       counts[type] = (counts[type] || 0) + 1;
     });
     return counts;
@@ -435,7 +453,7 @@ export function AuthFilesPage() {
   const filtered = useMemo(
     () =>
       filesMatchingStatusFilters.filter((item) => {
-        const type = normalizeProviderKey(String(item.type ?? item.provider ?? ''));
+        const type = authFileProviderId(item);
         const matchType = normalizedFilter === 'all' || type === normalizedFilter;
         return matchType && matchesAuthFileSearch(item, normalizedSearch, wildcardSearch);
       }),

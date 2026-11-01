@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import type { HttpMethod, ParsedLogLine, StatusGroup } from './logTypes';
 import { resolveStatusGroup } from './logTypes';
@@ -105,11 +105,11 @@ export function useLogFilters(options: UseLogFiltersOptions): UseLogFiltersRetur
     );
   };
 
-  const clearStructuredFilters = () => {
+  const clearStructuredFilters = useCallback(() => {
     setMethodFilters([]);
     setStatusFilters([]);
     setPathFilters([]);
-  };
+  }, [setMethodFilters, setStatusFilters, setPathFilters]);
 
   return {
     methodFilters,

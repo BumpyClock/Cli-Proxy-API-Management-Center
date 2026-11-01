@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -153,7 +154,9 @@ export function LogsPage() {
   const [clearingLogs, setClearingLogs] = useState(false);
   const [error, setError] = useState('');
   const [autoRefresh, setAutoRefresh] = useLocalStorage('logsPage.autoRefresh', false);
-  const [searchQuery, setSearchQuery] = useState('');
+  // `?search=claude` (from a dashboard alert) pre-fills the filter, then leaves the URL clean.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') ?? '');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [hideManagementLogs, setHideManagementLogs] = useLocalStorage(
     'logsPage.hideManagementLogs',
@@ -552,6 +555,16 @@ export function LogsPage() {
   }, [baseLines, hideManagementLogs, trimmedSearchQuery]);
 
   const filters = useLogFilters({ parsedLines: parsedSearchLines });
+  const { clearStructuredFilters } = filters;
+  useEffect(() => {
+    const requested = searchParams.get('search');
+    if (requested === null) return;
+    setSearchQuery(requested);
+    clearStructuredFilters();
+    const next = new URLSearchParams(searchParams);
+    next.delete('search');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, clearStructuredFilters]);
   const structuredFiltersPanelId = 'logs-structured-filters';
   const structuredFilterCount =
     filters.methodFilters.length + filters.statusFilters.length + filters.pathFilters.length;

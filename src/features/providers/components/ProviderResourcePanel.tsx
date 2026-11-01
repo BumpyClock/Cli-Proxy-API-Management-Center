@@ -35,6 +35,8 @@ interface ProviderResourcePanelProps {
   onDelete: (resource: ProviderResource) => void;
   onToggleDisabled?: (resource: ProviderResource, disabled: boolean) => void;
   onCreate: () => void;
+  /** Root element, so a deep link can scroll the selected brand into view. */
+  panelRef?: React.Ref<HTMLElement>;
 }
 
 export function ProviderResourcePanel({
@@ -51,6 +53,7 @@ export function ProviderResourcePanel({
   onDelete,
   onToggleDisabled,
   onCreate,
+  panelRef,
 }: ProviderResourcePanelProps) {
   const { t, i18n } = useTranslation();
   const logo = PROVIDER_LOGOS[group.id];
@@ -104,7 +107,7 @@ export function ProviderResourcePanel({
   );
 
   return (
-    <section className={styles.panel}>
+    <section className={styles.panel} ref={panelRef} tabIndex={-1}>
       <div className={styles.header}>
         <div className={styles.headerMain}>
           <div className={styles.titleArea}>

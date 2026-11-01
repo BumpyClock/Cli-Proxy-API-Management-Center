@@ -89,7 +89,7 @@ Check the CLI Proxy API server documentation/config comments for the full authen
 
 ## What you can manage (mapped to the UI pages)
 
-- **Dashboard**: connection status, server version/build date, quick counts, model availability snapshot.
+- **Dashboard**: live operations view. Credentials, traffic, configuration, and usage refresh every 15 seconds while the page is visible; the model list every minute. An evidence-based status headline, an attention list linking straight to failing credentials and providers, provider and credential health with cooldown reasons and retry times, traffic in your local timezone, and per-model volume, latency, and recent failures when usage statistics are on. Every section shows how old its data is. Dashboard links reset conflicting destination filters; credentials with missing or empty provider types remain discoverable under Other in Auth Files. Returning from an OAuth editor preserves the mounted Auth Files page. Usage shows its exact evidence window and warns when historical cutoffs or retention gaps limit the counts.
 - **Config Panel**: visual editor for common `config.yaml` fields, basic settings, proxy `api-keys`, and source editing with YAML highlighting/search plus a save diff preview.
 - **AI Providers**:
   - Gemini/Codex/Claude/Vertex key entries (base URL, headers, proxy, model aliases, excluded models, prefix).

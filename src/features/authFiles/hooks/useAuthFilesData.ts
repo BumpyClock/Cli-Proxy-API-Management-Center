@@ -11,7 +11,7 @@ import {
   getTypeLabel,
   isProblemAuthFile,
   isRuntimeOnlyAuthFile,
-  normalizeProviderKey,
+  authFileProviderId,
   supportsAuthFileManualRefresh,
 } from '@/features/authFiles/constants';
 
@@ -370,10 +370,7 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
             } else {
               const filesToDelete = files.filter((file) => {
                 if (isRuntimeOnlyAuthFile(file)) return false;
-                if (
-                  isFiltered &&
-                  normalizeProviderKey(String(file.type ?? file.provider ?? '')) !== filter
-                ) {
+                if (isFiltered && authFileProviderId(file) !== filter) {
                   return false;
                 }
                 if (isProblemOnly && !isProblemAuthFile(file)) return false;

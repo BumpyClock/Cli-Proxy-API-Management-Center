@@ -10,6 +10,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { IconX } from '../icons';
+import { openModalSurface, type ModalSurface } from '../modalStack';
 import { FOCUSABLE_SELECTOR, lockScroll, unlockScroll } from '../scrollLock';
 import styles from './Sheet.module.scss';
 
@@ -32,6 +33,12 @@ interface SheetProps {
    * (or a Promise that resolves to false) to keep the sheet open.
    */
   confirmClose?: () => boolean | Promise<boolean>;
+  /**
+   * Identifies the sheet's current content (for example detail vs edit). When it
+   * changes while open, focus moves to the first control in the new content so
+   * keyboard focus never falls back to the page.
+   */
+  focusKey?: string;
 }
 
 const CLOSE_ANIMATION_DURATION = 280;
@@ -53,6 +60,7 @@ export function Sheet({
   className,
   ariaLabel,
   confirmClose,
+  focusKey,
   children,
 }: PropsWithChildren<SheetProps>) {
   const { t } = useTranslation();
@@ -64,7 +72,7 @@ export function Sheet({
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const surfaceRef = useRef<ModalSurface | null>(null);
 
   const getFocusableElements = useCallback(() => {
     if (!sheetRef.current) return [] as HTMLElement[];
@@ -142,10 +150,40 @@ export function Sheet({
     return () => unlockScroll();
   }, [shouldLockScroll]);
 
+  // Joins the modal stack: background inert while open, focus restored to the opener.
+  useEffect(() => {
+    if (!shouldLockScroll) return;
+    const surface = openModalSurface(() => sheetRef.current);
+    surfaceRef.current = surface;
+    return () => {
+      surfaceRef.current = null;
+      surface.release();
+    };
+  }, [shouldLockScroll]);
+
+  // Content swap inside an open sheet (detail -> edit): the focused control is
+  // unmounted, so move focus to the first control of the new content.
+  const focusKeyRef = useRef(focusKey);
+  useEffect(() => {
+    if (focusKeyRef.current === focusKey) return;
+    focusKeyRef.current = focusKey;
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      if (bodyRef.current) bodyRef.current.scrollTop = 0;
+      const inBody = bodyRef.current
+        ? Array.from(bodyRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+            (el) => !el.hasAttribute('disabled') && el.tabIndex !== -1
+          )
+        : [];
+      (inBody[0] ?? getFocusableElements()[0] ?? sheetRef.current)?.focus({
+        preventScroll: true,
+      });
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [focusKey, getFocusableElements, open]);
+
   useEffect(() => {
     if (!open) return;
-    previouslyFocusedRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const t = window.setTimeout(() => {
       if (bodyRef.current) bodyRef.current.scrollTop = 0;
       const first = getFocusableElements()[0];
@@ -155,14 +193,10 @@ export function Sheet({
   }, [getFocusableElements, open]);
 
   useEffect(() => {
-    if (open || isVisible) return;
-    previouslyFocusedRef.current?.focus();
-    previouslyFocusedRef.current = null;
-  }, [isVisible, open]);
-
-  useEffect(() => {
     if (!open) return;
     const handleKey = (event: KeyboardEvent) => {
+      // A confirmation stacked on top owns the keyboard.
+      if (surfaceRef.current && !surfaceRef.current.isTop()) return;
       if (event.key === 'Escape') {
         if (closeDisabled) return;
         event.preventDefault();
@@ -179,6 +213,12 @@ export function Sheet({
       const firstEl = focusables[0];
       const lastEl = focusables[focusables.length - 1];
       const active = document.activeElement as HTMLElement | null;
+      // Focus that ended up outside the dialog (e.g. on BODY) re-enters it.
+      if (!active || !sheetRef.current?.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? lastEl : firstEl).focus();
+        return;
+      }
       if (event.shiftKey) {
         if (active === firstEl || active === sheetRef.current) {
           event.preventDefault();

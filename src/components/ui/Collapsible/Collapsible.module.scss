@@ -25,6 +25,10 @@
     display: none;
   }
 
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+
   &:hover {
     background: color-mix(in srgb, var(--accent-bg) 35%, transparent);
   }

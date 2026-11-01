@@ -229,6 +229,8 @@
 
   .language-menu-popover {
     min-width: 164px;
+    /* Anchored to the trigger's right edge; never wider than the viewport. */
+    max-width: calc(100vw - 2 * var(--shell-gutter, 12px));
     padding: $spacing-xs;
     display: flex;
     flex-direction: column;
@@ -257,13 +259,14 @@
     }
 
     &:focus-visible {
-      outline: none;
+      outline: 2px solid var(--text-primary);
+      outline-offset: -2px;
       background: color-mix(in srgb, var(--text-primary) 8%, transparent);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 22%, transparent);
     }
 
+    /* Selected: weight and the check mark, in full-contrast text. */
     &.active {
-      color: var(--primary-color);
+      color: var(--text-primary);
       font-weight: 600;
     }
   }
@@ -300,8 +303,8 @@
     }
 
     &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 22%, transparent);
+      outline: 2px solid var(--text-primary);
+      outline-offset: 2px;
     }
 
     &.active {
@@ -553,7 +556,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-primary) 42%, transparent);
+    color: var(--text-secondary);
     user-select: none;
   }
 
@@ -788,6 +791,8 @@
   height: 100vh;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  /* Focused or anchored content scrolls clear of the floating header. */
+  scroll-padding-top: calc(var(--header-height) + 16px);
 
   @supports (height: 100dvh) {
     height: 100dvh;
@@ -836,6 +841,36 @@
 }
 
 @media (max-width: $breakpoint-mobile) {
+  /* Open drawer: the backdrop also covers the (inert) header; the drawer has its own close. */
+  .app-shell.drawer-open .main-header {
+    z-index: $z-dropdown - 2;
+  }
+
+  .sidebar-drawer-close {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+  }
+
   :root {
     --header-height: 74px;
     --shell-gutter: 12px;
@@ -878,11 +913,6 @@
 
     .mobile-menu-btn {
       display: inline-flex;
-    }
-
-    .language-menu-popover {
-      right: auto;
-      left: 0;
     }
 
     .theme-menu-popover {
@@ -1012,4 +1042,39 @@
       overflow: visible;
     }
   }
+}
+
+/* On narrow screens the document scrolls; keep focus clear of the fixed header there too. */
+html {
+  scroll-padding-top: calc(var(--header-height, 80px) + 16px);
+}
+
+/* Skip link: first keyboard stop on every page; hidden until focused. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: $z-modal;
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-decoration: none;
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(calc(-100% - 24px));
+
+  &:focus,
+  &:focus-visible {
+    transform: none;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+/* The skip target is a container, not a control: no focus ring around the page. */
+.main-content:focus {
+  outline: none;
 }

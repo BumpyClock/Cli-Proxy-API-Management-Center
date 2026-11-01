@@ -7,6 +7,9 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  /* Clip without becoming a scroll container: focus and scrollIntoView must scroll the
+     real scroller (which honours scroll-padding), not nudge this wrapper. */
+  overflow: clip;
 
   &__layer {
     display: flex;

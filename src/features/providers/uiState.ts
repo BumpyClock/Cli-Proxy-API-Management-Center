@@ -74,6 +74,18 @@ export const getProviderFilterState = (
   brand: ProviderBrand
 ): ProviderFilterState => state.filtersByBrand[brand] ?? DEFAULT_PROVIDER_FILTER_STATE;
 
+export const applyProviderBrandDeepLink = (
+  state: ProvidersWorkbenchUiState,
+  brand: ProviderBrand
+): ProvidersWorkbenchUiState => ({
+  ...state,
+  activeBrand: brand,
+  filtersByBrand: {
+    ...state.filtersByBrand,
+    [brand]: { ...getProviderFilterState(state, brand), filter: '', selectedModels: [] },
+  },
+});
+
 export const readProvidersWorkbenchUiState = (): ProvidersWorkbenchUiState => {
   if (typeof window === 'undefined') return createDefaultProvidersWorkbenchUiState();
 

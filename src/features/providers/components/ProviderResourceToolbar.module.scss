@@ -148,3 +148,10 @@
   font-size: 13px;
   word-break: break-all;
 }
+
+@media (pointer: coarse) {
+  .dirBtn {
+    width: 44px;
+    height: 44px;
+  }
+}

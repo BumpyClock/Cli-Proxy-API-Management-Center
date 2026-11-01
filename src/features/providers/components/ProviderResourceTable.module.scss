@@ -252,3 +252,47 @@
     color: var(--destructive-color);
   }
 }
+
+/* Narrow screens: the sticky actions column covered most of the table. Let it scroll with
+   the row so status and keys stay readable. */
+@media (max-width: 640px) {
+  .actionsHead,
+  .actionsCell {
+    position: static;
+    width: auto;
+    min-width: 0;
+    box-shadow: none;
+  }
+}
+
+/* Touch: 44px targets, with the destructive action set apart from edit. */
+@media (pointer: coarse) {
+  .actions {
+    gap: 8px;
+  }
+
+  .iconBtn {
+    flex: none;
+    width: 44px;
+    height: 44px;
+  }
+
+  .iconBtnDanger {
+    margin-left: 12px;
+  }
+
+  .toggleWrap {
+    flex: none;
+  }
+
+  /* The fixed 176px column cannot hold three 44px targets plus the toggle. */
+  .providerTable col:last-child {
+    width: 256px !important;
+  }
+
+  .actionsHead,
+  .actionsCell {
+    width: 256px;
+    min-width: 256px;
+  }
+}

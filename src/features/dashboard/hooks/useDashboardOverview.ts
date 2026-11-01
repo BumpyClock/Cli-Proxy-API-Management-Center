@@ -1,95 +1,50 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { authFilesApi } from '@/services/api';
-import { useAuthStore, useConfigStore, useModelsStore } from '@/stores';
+import { useCallback, useEffect, useMemo } from 'react';
+import { publishAuthFilesCount } from '@/features/authFiles/authFilesEvents';
+import { useTranslation } from 'react-i18next';
+import { apiKeyUsageApi, authFilesApi, modelsApi, usageApi } from '@/services/api';
+import { useAuthStore, useConfigStore } from '@/stores';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
-import { useProviderRecentRequests } from '@/components/providers/hooks/useProviderRecentRequests';
-import {
-  mergeRecentRequestBucketGroups,
-  normalizeRecentRequestUsageEntry,
-  type RecentRequestBucket,
-} from '@/utils/recentRequests';
 import type { Config } from '@/types';
-import type { AuthFileItem } from '@/types/authFile';
-import {
-  TRAFFIC_BUCKET_MINUTES,
-  type CredentialHealth,
-  type DashboardCounts,
-  type ProviderTraffic,
-  type TrafficWindow,
-} from '../types';
+import type { UsageSnapshot } from '@/types/usage';
+import { parseTimestampMs } from '@/utils/timestamp';
+import type { DashboardCounts } from '../types';
+import type { DashboardSourceId } from '../logic/attention';
+import { buildFleetModel } from '../logic/fleet';
+import type { SourceStatus } from '../logic/freshness';
+import { usePolledResource, type PolledResource } from './usePolledResource';
 
-const EMPTY_TRAFFIC: TrafficWindow = {
-  buckets: [],
-  totalSuccess: 0,
-  totalFailure: 0,
-  total: 0,
-  successRate: null,
-  peakTotal: 0,
-  peakIndex: -1,
-  windowMinutes: 0,
+/** Polling cadence per source while the dashboard is visible. */
+export const DASHBOARD_POLL_MS: Record<DashboardSourceId, number> = {
+  credentials: 15_000,
+  traffic: 15_000,
+  config: 15_000,
+  /** The advertised model list rarely changes; its stamp states the slower cadence. */
+  models: 60_000,
+  usage: 15_000,
 };
 
-/** `api-key-usage` 的键形如 `<baseUrl>|<apiKey>`，取第一个分隔符之后的部分 */
-const apiKeyFromCompositeKey = (compositeKey: string): string => {
-  const separatorIndex = compositeKey.indexOf('|');
-  return separatorIndex < 0 ? '' : compositeKey.slice(separatorIndex + 1).trim();
+/** Upper bound per attempt, so a stalled request surfaces as a failure instead of hanging. */
+const DASHBOARD_TIMEOUT_MS: Record<DashboardSourceId, number> = {
+  credentials: 20_000,
+  traffic: 20_000,
+  config: 20_000,
+  models: 15_000,
+  usage: 75_000,
 };
 
-const providerIdOfAuthFile = (file: AuthFileItem): string => {
-  const candidate = String(file.type ?? file.provider ?? '')
-    .trim()
-    .toLowerCase();
-  return candidate && candidate !== 'empty' ? candidate : 'unknown';
-};
+export const DASHBOARD_SOURCE_IDS: DashboardSourceId[] = [
+  'credentials',
+  'traffic',
+  'config',
+  'models',
+  'usage',
+];
 
-const buildTrafficWindow = (bucketGroups: RecentRequestBucket[][]): TrafficWindow => {
-  const buckets = mergeRecentRequestBucketGroups(bucketGroups);
-  if (buckets.length === 0) {
-    return EMPTY_TRAFFIC;
-  }
-
-  let totalSuccess = 0;
-  let totalFailure = 0;
-  let peakTotal = 0;
-  let peakIndex = -1;
-
-  buckets.forEach((bucket, index) => {
-    const bucketTotal = bucket.success + bucket.failed;
-    totalSuccess += bucket.success;
-    totalFailure += bucket.failed;
-    if (bucketTotal > peakTotal) {
-      peakTotal = bucketTotal;
-      peakIndex = index;
-    }
-  });
-
-  const total = totalSuccess + totalFailure;
-
-  return {
-    buckets,
-    totalSuccess,
-    totalFailure,
-    total,
-    successRate: total > 0 ? (totalSuccess / total) * 100 : null,
-    peakTotal,
-    peakIndex,
-    windowMinutes: buckets.length * TRAFFIC_BUCKET_MINUTES,
-  };
-};
-
-interface ProviderAccumulator {
-  credentials: number;
-  success: number;
-  failure: number;
-  bucketGroups: RecentRequestBucket[][];
+export interface UsageSourceData {
+  /** null when the backend does not expose usage statistics at all. */
+  enabled: boolean | null;
+  usage: UsageSnapshot | null;
 }
-
-const createAccumulator = (): ProviderAccumulator => ({
-  credentials: 0,
-  success: 0,
-  failure: 0,
-  bucketGroups: [],
-});
 
 export const getProviderKeyCounts = (config: Config) => ({
   gemini: config.geminiApiKeys?.length ?? 0,
@@ -102,195 +57,194 @@ export const getProviderKeyCounts = (config: Config) => ({
   openai: config.openaiCompatibility?.length ?? 0,
 });
 
+const statusOf = <T>(resource: PolledResource<T>): SourceStatus => ({
+  receivedAt: resource.receivedAt,
+  error: resource.error,
+  loading: resource.loading,
+});
+
 /**
- * 汇总仪表盘所需的全部数据。
+ * Everything the dashboard shows, kept current by polling.
  *
- * 流量数据有两个互不重叠的来源：`api-key-usage`（配置内联的 API Key 凭证）
- * 与 `auth-files`（文件/运行时凭证）。后端对二者的判定条件互斥，但插件提供的
- * 凭证理论上可同时命中，因此这里按 `account_type` + `account` 做一次防御性去重。
+ * Credentials, API-key traffic, configuration, and usage statistics refresh every 15
+ * seconds; the model list every minute. Each source reports its own receipt time and
+ * error so the page can say how old every number is.
  */
 export function useDashboardOverview() {
+  const { t } = useTranslation();
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const apiBase = useAuthStore((state) => state.apiBase);
-  const config = useConfigStore((state) => state.config);
+  const managementKey = useAuthStore((state) => state.managementKey);
+  const storeConfig = useConfigStore((state) => state.config);
   const fetchConfig = useConfigStore((state) => state.fetchConfig);
-
-  const models = useModelsStore((state) => state.models);
-  const modelsLoading = useModelsStore((state) => state.loading);
-  const modelsError = useModelsStore((state) => state.error);
-  const fetchModelsFromStore = useModelsStore((state) => state.fetchModels);
-
-  const connected = connectionStatus === 'connected';
   const resolveApiKeysForModels = useApiKeysForModels();
 
-  const { usageByProvider, refreshRecentRequests } = useProviderRecentRequests({
+  const connected = connectionStatus === 'connected';
+  const scope = `${apiBase}\u0000${managementKey}`;
+
+  const credentialsResource = usePolledResource({
+    scope,
     enabled: connected,
+    intervalMs: DASHBOARD_POLL_MS.credentials,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.credentials,
+    load: () => authFilesApi.list(),
   });
 
-  const [authFiles, setAuthFiles] = useState<AuthFileItem[] | null>(null);
+  const trafficResource = usePolledResource({
+    scope,
+    enabled: connected,
+    intervalMs: DASHBOARD_POLL_MS.traffic,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.traffic,
+    load: () => apiKeyUsageApi.getUsage(),
+  });
 
-  const loadAuthFiles = useCallback(async () => {
-    if (!connected) return;
-    try {
-      const response = await authFilesApi.list();
-      setAuthFiles(response.files);
-    } catch {
-      setAuthFiles(null);
-    }
-  }, [connected]);
+  const configResource = usePolledResource({
+    scope,
+    enabled: connected,
+    intervalMs: DASHBOARD_POLL_MS.config,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.config,
+    load: () => fetchConfig(true),
+  });
 
-  const loadModels = useCallback(async () => {
-    if (!connected || !apiBase) return;
-    try {
+  // Fetched directly rather than through the shared models store, so a request that
+  // outlives its session can only reach this scoped resource, which discards it.
+  const modelsResource = usePolledResource({
+    scope,
+    enabled: connected && Boolean(apiBase),
+    intervalMs: DASHBOARD_POLL_MS.models,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.models,
+    load: async (signal) => {
       const apiKeys = await resolveApiKeysForModels();
-      await fetchModelsFromStore(apiBase, apiKeys[0]);
-    } catch {
-      // 模型列表失败不应影响仪表盘其余部分
-    }
-  }, [connected, apiBase, resolveApiKeysForModels, fetchModelsFromStore]);
+      if (signal.aborted) throw new Error('Request aborted');
+      return modelsApi.fetchModels(
+        apiBase,
+        apiKeys[0],
+        {},
+        {
+          signal,
+          timeout: DASHBOARD_TIMEOUT_MS.models,
+        }
+      );
+    },
+  });
 
+  const usageResource = usePolledResource<UsageSourceData>({
+    scope,
+    enabled: connected,
+    intervalMs: DASHBOARD_POLL_MS.usage,
+    timeoutMs: DASHBOARD_TIMEOUT_MS.usage,
+    load: async () => {
+      const enabled = await usageApi.getStatisticsEnabled();
+      if (enabled !== true) return { enabled, usage: null };
+      const response = await usageApi.getUsage();
+      return { enabled, usage: response?.usage ?? null };
+    },
+  });
+
+  // Keep the sidebar's Auth Files badge in step with what the dashboard shows. While the
+  // credentials source is failing, the count is unknown rather than last-known.
+  const credentialFileCount = credentialsResource.data?.files.length ?? null;
+  const credentialsFailing = credentialsResource.error !== null;
   useEffect(() => {
     if (!connected) return;
-    void fetchConfig().catch(() => undefined);
-    void loadAuthFiles();
-    void loadModels();
-  }, [connected, fetchConfig, loadAuthFiles, loadModels]);
+    if (credentialsFailing) publishAuthFilesCount(null);
+    else if (credentialFileCount !== null) publishAuthFilesCount(credentialFileCount);
+  }, [connected, credentialFileCount, credentialsFailing]);
 
-  const refresh = useCallback(async () => {
-    if (!connected) return;
-    await Promise.allSettled([
-      fetchConfig(true),
-      loadAuthFiles(),
-      loadModels(),
-      refreshRecentRequests(),
-    ]);
-  }, [connected, fetchConfig, loadAuthFiles, loadModels, refreshRecentRequests]);
-
-  const providerKeyCounts = useMemo(() => (config ? getProviderKeyCounts(config) : null), [config]);
-
-  const { traffic, providers } = useMemo(() => {
-    const accumulators = new Map<string, ProviderAccumulator>();
-    const allBucketGroups: RecentRequestBucket[][] = [];
-    const apiKeysFromUsage = new Set<string>();
-
-    const accumulatorFor = (providerId: string): ProviderAccumulator => {
-      const existing = accumulators.get(providerId);
-      if (existing) return existing;
-      const created = createAccumulator();
-      accumulators.set(providerId, created);
-      return created;
-    };
-
-    usageByProvider.forEach((entriesByKey, providerId) => {
-      const accumulator = accumulatorFor(providerId);
-      entriesByKey.forEach((entry, compositeKey) => {
-        const apiKey = apiKeyFromCompositeKey(compositeKey);
-        if (apiKey) {
-          apiKeysFromUsage.add(apiKey);
-        }
-        accumulator.credentials += 1;
-        accumulator.success += entry.success;
-        accumulator.failure += entry.failed;
-        if (entry.recentRequests.length > 0) {
-          accumulator.bucketGroups.push(entry.recentRequests);
-          allBucketGroups.push(entry.recentRequests);
-        }
-      });
-    });
-
-    (authFiles ?? []).forEach((file) => {
-      const accountType = String(file.account_type ?? '')
-        .trim()
-        .toLowerCase();
-      const account = String(file.account ?? '').trim();
-      // 已经由 api-key-usage 统计过的凭证不再重复计入
-      if (accountType === 'api_key' && account && apiKeysFromUsage.has(account)) {
-        return;
-      }
-
-      const accumulator = accumulatorFor(providerIdOfAuthFile(file));
-      const entry = normalizeRecentRequestUsageEntry(file);
-      accumulator.credentials += 1;
-      accumulator.success += entry.success;
-      accumulator.failure += entry.failed;
-      if (entry.recentRequests.length > 0) {
-        accumulator.bucketGroups.push(entry.recentRequests);
-        allBucketGroups.push(entry.recentRequests);
-      }
-    });
-
-    const providerRows: ProviderTraffic[] = Array.from(accumulators.entries())
-      .map(([id, accumulator]) => {
-        const total = accumulator.success + accumulator.failure;
-        return {
-          id,
-          credentials: accumulator.credentials,
-          success: accumulator.success,
-          failure: accumulator.failure,
-          total,
-          successRate: total > 0 ? (accumulator.success / total) * 100 : null,
-          buckets: mergeRecentRequestBucketGroups(accumulator.bucketGroups),
-        };
-      })
-      .sort(
-        (a, b) => b.total - a.total || b.credentials - a.credentials || a.id.localeCompare(b.id)
-      );
-
-    return {
-      traffic: buildTrafficWindow(allBucketGroups),
-      providers: providerRows,
-    };
-  }, [usageByProvider, authFiles]);
-
-  const credentials = useMemo<CredentialHealth | null>(() => {
-    if (!authFiles) return null;
-
-    let disabled = 0;
-    let unavailable = 0;
-    const countsByType = new Map<string, number>();
-
-    authFiles.forEach((file) => {
-      if (file.disabled) {
-        disabled += 1;
-      } else if (file.unavailable) {
-        unavailable += 1;
-      }
-      const type = providerIdOfAuthFile(file);
-      countsByType.set(type, (countsByType.get(type) ?? 0) + 1);
-    });
-
-    return {
-      total: authFiles.length,
-      active: authFiles.length - disabled - unavailable,
-      disabled,
-      unavailable,
-      byType: Array.from(countsByType.entries())
-        .map(([type, count]) => ({ type, count }))
-        .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type)),
-    };
-  }, [authFiles]);
-
-  const counts = useMemo<DashboardCounts>(
+  const resources = useMemo(
     () => ({
-      managementKeys: config ? (config.apiKeys?.length ?? 0) : null,
+      credentials: credentialsResource,
+      traffic: trafficResource,
+      config: configResource,
+      models: modelsResource,
+      usage: usageResource,
+    }),
+    [credentialsResource, trafficResource, configResource, modelsResource, usageResource]
+  );
+
+  const fleet = useMemo(
+    () =>
+      buildFleetModel({
+        authFiles: credentialsResource.data?.files ?? null,
+        observedAtMs: (() => {
+          const parsed = parseTimestampMs(credentialsResource.data?.observedAt);
+          return Number.isFinite(parsed) ? parsed : null;
+        })(),
+        authFilesReceivedAt: credentialsResource.receivedAt,
+        keyUsage: trafficResource.data,
+        keyUsageReceivedAt: trafficResource.receivedAt,
+      }),
+    [
+      credentialsResource.data,
+      credentialsResource.receivedAt,
+      trafficResource.data,
+      trafficResource.receivedAt,
+    ]
+  );
+
+  // The header "Refresh all" clears the shared config store before reloading. Fall back to
+  // this page's last good snapshot so a failed reload does not blank the runtime panel.
+  const config = storeConfig ?? configResource.data;
+
+  const counts = useMemo<DashboardCounts>(() => {
+    const providerKeyCounts = config ? getProviderKeyCounts(config) : null;
+    return {
+      clientApiKeys: config ? (config.apiKeys?.length ?? 0) : null,
       providerKeys: providerKeyCounts
         ? Object.values(providerKeyCounts).reduce((sum, count) => sum + count, 0)
         : null,
-      credentials: authFiles ? authFiles.length : null,
-      models: modelsLoading || modelsError ? null : models.length,
-    }),
-    [config, providerKeyCounts, authFiles, models.length, modelsLoading, modelsError]
+      credentials: fleet.credentials ? fleet.credentials.total : null,
+      models: modelsResource.data ? modelsResource.data.length : null,
+    };
+  }, [config, fleet.credentials, modelsResource.data]);
+
+  const sources = useMemo(
+    () =>
+      Object.fromEntries(
+        DASHBOARD_SOURCE_IDS.map((id) => [id, statusOf(resources[id] as PolledResource<unknown>)])
+      ) as Record<DashboardSourceId, SourceStatus>,
+    [resources]
   );
+
+  // Credentials and traffic feed one headline: a Retry of either refreshes both and ends
+  // when both have answered, so they stay in step and the Retry's announcement covers the
+  // whole headline. The result (success or failure) is the requested source's.
+  const retrySource = useCallback(
+    async (id: DashboardSourceId) => {
+      const partner = id === 'credentials' ? 'traffic' : id === 'traffic' ? 'credentials' : null;
+      const requested = resources[id].refresh();
+      if (partner) await Promise.allSettled([requested, resources[partner].refresh()]);
+      await requested;
+    },
+    [resources]
+  );
+
+  /**
+   * Header "Refresh all". Rejects when any source fails, naming the failures, so the
+   * header never reports success for a partial refresh.
+   */
+  const refresh = useCallback(async () => {
+    if (!connected) return;
+    const results = await Promise.allSettled(
+      DASHBOARD_SOURCE_IDS.map((id) => resources[id].refresh())
+    );
+    const failed = DASHBOARD_SOURCE_IDS.filter((_, index) => results[index].status === 'rejected');
+    if (failed.length > 0) {
+      throw new Error(failed.map((id) => t(`dashboard.source_${id}`)).join(', '));
+    }
+  }, [connected, resources, t]);
 
   return {
     connectionStatus,
     connected,
     config,
     counts,
-    providerKeyCounts,
-    traffic,
-    providers,
-    credentials,
+    traffic: fleet.traffic,
+    providers: fleet.providers,
+    credentials: fleet.credentials,
+    usage: usageResource.data,
+    sources,
     refresh,
+    retrySource,
   };
 }

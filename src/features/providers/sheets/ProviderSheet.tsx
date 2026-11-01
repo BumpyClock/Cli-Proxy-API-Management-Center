@@ -253,6 +253,7 @@ export function ProviderSheet({
                     : `/ai-providers/${state.brand}`,
       })}
       footer={footer}
+      focusKey={state.mode}
       closeDisabled={submitting}
       confirmClose={confirmDiscardIfDirty}
     >

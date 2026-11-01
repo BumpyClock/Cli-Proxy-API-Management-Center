@@ -40,7 +40,11 @@ import {
   useNotificationStore,
   useThemeStore,
 } from '@/stores';
-import { AUTH_FILES_CHANGED_EVENT } from '@/features/authFiles/authFilesEvents';
+import {
+  AUTH_FILES_CHANGED_EVENT,
+  AUTH_FILES_COUNT_EVENT,
+  type AuthFilesCountDetail,
+} from '@/features/authFiles/authFilesEvents';
 import {
   collectPluginResourceEntries,
   PLUGIN_RESOURCES_REFRESH_EVENT,
@@ -49,6 +53,8 @@ import {
 } from '@/features/plugins/pluginResources';
 import { APIKEY_FUN_DISPLAY_NAME, hasApiKeyFunConfig } from '@/features/providers/sponsor';
 import { triggerHeaderRefresh } from '@/hooks/useHeaderRefresh';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { lockScroll, unlockScroll } from '@/components/ui/scrollLock';
 import { LANGUAGE_LABEL_KEYS, LANGUAGE_ORDER } from '@/utils/constants';
 import { isSupportedLanguage } from '@/utils/language';
 import { getSidebarShortcutLabel, isSidebarToggleShortcut } from '@/utils/sidebarShortcut';
@@ -104,35 +110,82 @@ interface SidebarNavGroup {
 const flattenNavItems = (items: SidebarNavItem[]): SidebarNavLinkItem[] =>
   items.flatMap((item) => (item.kind === 'drawer' ? item.children : [item]));
 
-/** 点击菜单外或按下 Escape 时关闭弹出菜单 */
-function useMenuDismiss(
-  open: boolean,
-  menuRef: RefObject<HTMLDivElement | null>,
-  onClose: () => void
-) {
+/**
+ * Header popover menus (language, theme): opening focuses the checked item; arrow keys,
+ * Home, and End move between items; Escape or a selection closes the menu and returns
+ * focus to its trigger; pressing outside or tabbing away closes it.
+ */
+function useMenu(open: boolean, menuRef: RefObject<HTMLDivElement | null>, onClose: () => void) {
   useEffect(() => {
-    if (!open) {
-      return;
+    if (!open) return;
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []
+    );
+    (items.find((item) => item.getAttribute('aria-checked') === 'true') ?? items[0])?.focus();
+  }, [open, menuRef]);
+
+  // Closing by Escape or selection removes the focused item: hand focus back to the trigger.
+  const wasOpenRef = useRef(open);
+  useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      const active = document.activeElement;
+      const focusLost = !active || active === document.body || menuRef.current?.contains(active);
+      if (focusLost) menuRef.current?.querySelector<HTMLElement>('[aria-haspopup]')?.focus();
     }
+    wasOpenRef.current = open;
+  }, [open, menuRef]);
+
+  useEffect(() => {
+    if (!open) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        onClose();
+      const target = event.target as Node;
+      const trigger = menuRef.current?.querySelector<HTMLElement>('[aria-haspopup]');
+      if (trigger?.contains(target)) {
+        // Let click close the menu before focus restoration, not focusin before click.
+        event.preventDefault();
+        return;
       }
+      if (!menuRef.current?.contains(target)) onClose();
     };
-
-    const handleEscape = (event: KeyboardEvent) => {
+    // Tab or Shift+Tab out of the popover (including back to its trigger) closes it.
+    const handleFocusIn = (event: FocusEvent) => {
+      const popover = menuRef.current?.querySelector('[role="menu"]');
+      if (!popover?.contains(event.target as Node)) onClose();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
         onClose();
+        return;
       }
+      const items = Array.from(
+        menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []
+      );
+      const index = items.indexOf(document.activeElement as HTMLElement);
+      if (index === -1) return;
+      const target =
+        event.key === 'ArrowDown' || event.key === 'ArrowRight'
+          ? index + 1
+          : event.key === 'ArrowUp' || event.key === 'ArrowLeft'
+            ? index - 1
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? items.length - 1
+                : null;
+      if (target === null) return;
+      event.preventDefault();
+      items[(target + items.length) % items.length]?.focus();
     };
 
     document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [open, menuRef, onClose]);
 }
@@ -328,6 +381,10 @@ export function MainLayout() {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Below this width the sidebar is an off-canvas drawer (see layout.scss).
+  const isDrawerNav = useMediaQuery('(max-width: 768px)');
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authFilesCount, setAuthFilesCount] = useState<number | null>(null);
   const [railTooltip, setRailTooltip] = useState<{
@@ -448,8 +505,8 @@ export function MainLayout() {
 
   const closeLanguageMenu = useCallback(() => setLanguageMenuOpen(false), []);
   const closeThemeMenu = useCallback(() => setThemeMenuOpen(false), []);
-  useMenuDismiss(languageMenuOpen, languageMenuRef, closeLanguageMenu);
-  useMenuDismiss(themeMenuOpen, themeMenuRef, closeThemeMenu);
+  useMenu(languageMenuOpen, languageMenuRef, closeLanguageMenu);
+  useMenu(themeMenuOpen, themeMenuRef, closeThemeMenu);
 
   const toggleLanguageMenu = useCallback(() => {
     setLanguageMenuOpen((prev) => !prev);
@@ -523,14 +580,24 @@ export function MainLayout() {
       void loadAuthFilesCount();
     }, 0);
 
+    // A page that already polls credentials publishes its count; adopt it and drop any
+    // older request still in flight.
+    const adoptAuthFilesCount = (event: Event) => {
+      const { count } = (event as CustomEvent<AuthFilesCountDetail>).detail ?? { count: null };
+      authFilesCountRequestRef.current += 1;
+      setAuthFilesCount(count);
+    };
+
     window.addEventListener(PLUGIN_RESOURCES_REFRESH_EVENT, loadPluginResources);
     window.addEventListener(AUTH_FILES_CHANGED_EVENT, loadAuthFilesCount);
+    window.addEventListener(AUTH_FILES_COUNT_EVENT, adoptAuthFilesCount);
 
     return () => {
       authFilesCountRequestRef.current += 1;
       window.clearTimeout(timer);
       window.removeEventListener(PLUGIN_RESOURCES_REFRESH_EVENT, loadPluginResources);
       window.removeEventListener(AUTH_FILES_CHANGED_EVENT, loadAuthFilesCount);
+      window.removeEventListener(AUTH_FILES_COUNT_EVENT, adoptAuthFilesCount);
     };
   }, [apiBase, loadPluginResources, loadAuthFilesCount]);
 
@@ -972,6 +1039,54 @@ export function MainLayout() {
     );
   };
 
+  // The open drawer is a modal dialog: focus moves into it and stays there, the page
+  // behind it (header included) is inert and does not scroll, and Escape or the
+  // drawer's close button dismisses it. Focus left in the drawer returns to the menu button.
+  const drawerOpen = isDrawerNav && sidebarOpen;
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const sidebar = sidebarRef.current;
+    const header = headerRef.current;
+    const drawerItems = () =>
+      Array.from(
+        sidebar?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []
+      ).filter((el) => el.getClientRects().length > 0);
+    lockScroll();
+    sidebar?.querySelector<HTMLElement>('.nav-section a[href]')?.focus({ preventScroll: true });
+    const handleKey = (event: KeyboardEvent) => {
+      // A sheet or modal above the shell owns the keyboard.
+      if (document.querySelector('[data-app-shell]')?.hasAttribute('inert')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSidebarOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = drawerItems();
+      if (items.length === 0) return;
+      const index = items.indexOf(document.activeElement as HTMLElement);
+      const next = event.shiftKey
+        ? items[index <= 0 ? items.length - 1 : index - 1]
+        : items[index === -1 || index === items.length - 1 ? 0 : index + 1];
+      event.preventDefault();
+      next.focus();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      unlockScroll();
+      const active = document.activeElement;
+      const lostFocus =
+        !active ||
+        active === document.body ||
+        sidebar?.contains(active) ||
+        active.classList.contains('sidebar-backdrop');
+      if (lostFocus) {
+        header?.querySelector<HTMLElement>('.mobile-menu-btn')?.focus({ preventScroll: true });
+      }
+    };
+  }, [drawerOpen]);
+
   const mobileSidebarToggleLabel = sidebarOpen
     ? t('sidebar.toggle_collapse', { defaultValue: 'Close navigation' })
     : t('sidebar.toggle_expand', { defaultValue: 'Open navigation' });
@@ -980,13 +1095,25 @@ export function MainLayout() {
 
   return (
     <div
-      className={`app-shell ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''} ${
-        isPluginResourcePage ? 'plugin-resource-shell' : ''
-      }`}
+      data-app-shell=""
+      className={`app-shell ${drawerOpen ? 'drawer-open' : ''} ${
+        sidebarCollapsed ? 'sidebar-is-collapsed' : ''
+      } ${isPluginResourcePage ? 'plugin-resource-shell' : ''}`}
     >
       <div className="top-gradient-blur" aria-hidden="true" />
 
-      <header className="main-header" ref={headerRef}>
+      <header className="main-header" ref={headerRef} inert={drawerOpen}>
+        <a
+          className="skip-link"
+          href="#main-content"
+          onClick={(event) => {
+            // The hash router owns the URL fragment: move focus without navigating.
+            event.preventDefault();
+            mainRef.current?.focus();
+          }}
+        >
+          {t('common.skip_to_content')}
+        </a>
         <button
           type="button"
           className="sidebar-toggle-floating"
@@ -1018,6 +1145,8 @@ export function MainLayout() {
             onClick={() => setSidebarOpen((prev) => !prev)}
             title={mobileSidebarToggleLabel}
             aria-label={mobileSidebarToggleLabel}
+            aria-expanded={sidebarOpen}
+            aria-controls="app-sidebar"
           >
             {sidebarOpen ? headerIcons.close : headerIcons.menu}
           </Button>
@@ -1058,6 +1187,7 @@ export function MainLayout() {
                     onClick={() => handleLanguageSelect(lang)}
                     role="menuitemradio"
                     aria-checked={language === lang}
+                    tabIndex={-1}
                   >
                     <span>{t(LANGUAGE_LABEL_KEYS[lang])}</span>
                     {language === lang ? <span className="language-menu-check">✓</span> : null}
@@ -1098,6 +1228,7 @@ export function MainLayout() {
                     onClick={() => handleThemeSelect(tc.key)}
                     role="menuitemradio"
                     aria-checked={theme === tc.key}
+                    tabIndex={-1}
                   >
                     <div
                       className="theme-card-preview"
@@ -1151,11 +1282,19 @@ export function MainLayout() {
           className={`sidebar-backdrop ${sidebarOpen ? 'visible' : ''}`}
           onClick={() => setSidebarOpen(false)}
           aria-label={t('common.close')}
-          aria-hidden={!sidebarOpen}
-          tabIndex={sidebarOpen ? 0 : -1}
+          // Pointer-only dismissal; keyboard users close with the menu button or Escape.
+          aria-hidden="true"
+          tabIndex={-1}
         />
 
         <aside
+          id="app-sidebar"
+          ref={sidebarRef}
+          // A closed off-canvas drawer is off-screen: keep it out of the tab order and AT.
+          inert={isDrawerNav && !sidebarOpen}
+          role={drawerOpen ? 'dialog' : undefined}
+          aria-modal={drawerOpen ? true : undefined}
+          aria-label={drawerOpen ? t('sidebar.navigation') : undefined}
           className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}
         >
           <div className="sidebar-header">
@@ -1168,6 +1307,17 @@ export function MainLayout() {
                 </span>
               )}
             </div>
+            {isDrawerNav && (
+              <button
+                type="button"
+                className="sidebar-drawer-close"
+                onClick={() => setSidebarOpen(false)}
+                aria-label={t('sidebar.close_navigation')}
+                title={t('sidebar.close_navigation')}
+              >
+                {headerIcons.close}
+              </button>
+            )}
           </div>
 
           <div className="nav-section">
@@ -1204,8 +1354,13 @@ export function MainLayout() {
             isPluginResourcePage ? ' content-plugin-resource' : ''
           }`}
           ref={contentRef}
+          // Obscured by the open drawer's backdrop.
+          inert={drawerOpen}
         >
           <main
+            id="main-content"
+            ref={mainRef}
+            tabIndex={-1}
             className={`main-content${isLogsPage ? ' main-content-logs' : ''}${
               isPluginResourcePage ? ' main-content-plugin-resource' : ''
             }`}

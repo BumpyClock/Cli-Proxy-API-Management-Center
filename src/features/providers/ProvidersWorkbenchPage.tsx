@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
@@ -22,8 +23,10 @@ import { APIKEY_FUN_DISPLAY_NAME } from './sponsor';
 import { isMultiProtocolSponsorBrand } from './sponsorDefinitions';
 import { isSponsorPartialMutationError } from './sponsorMutationRecovery';
 import { useProviderWorkbench } from './useProviderWorkbench';
+import { PROVIDER_BRAND_ORDER } from './descriptors';
 import {
   getProviderFilterState,
+  applyProviderBrandDeepLink,
   readProvidersWorkbenchUiState,
   writeProvidersWorkbenchUiState,
   type ProviderFilterState,
@@ -152,6 +155,24 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     [persistUiState]
   );
 
+  // `?brand=claude` (from a dashboard alert) opens that brand, brings its settings into
+  // view once they render, then leaves the URL clean.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const resourcePanelRef = useRef<HTMLElement>(null);
+  const [revealBrand, setRevealBrand] = useState<ProviderBrand | null>(null);
+  useEffect(() => {
+    const requested = searchParams.get('brand');
+    if (!requested) return;
+    if (!fixedBrand && (PROVIDER_BRAND_ORDER as string[]).includes(requested)) {
+      const brand = requested as ProviderBrand;
+      persistUiState((prev) => applyProviderBrandDeepLink(prev, brand));
+      setRevealBrand(brand);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('brand');
+    setSearchParams(next, { replace: true });
+  }, [fixedBrand, searchParams, persistUiState, setSearchParams]);
+
   const allGroups = useMemo(() => workbench.snapshot?.groups ?? [], [workbench.snapshot]);
   const groups = useMemo(
     () =>
@@ -190,6 +211,19 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     },
     [activeBrand, persistUiState]
   );
+
+  useEffect(() => {
+    if (!revealBrand || !activeGroup || activeGroup.id !== revealBrand) return;
+    const panel = resourcePanelRef.current;
+    if (!panel) return;
+    panel.scrollIntoView({ block: 'start', behavior: 'auto' });
+    panel.focus({ preventScroll: true });
+    // A brand with a single key opens straight into that key's details, which also reads
+    // better than the wide table on small screens.
+    const only = activeGroup.resources.length === 1 ? activeGroup.resources[0] : null;
+    if (only) setSheetState({ open: true, brand: only.brand, mode: 'detail', resource: only });
+    setRevealBrand(null);
+  }, [activeGroup, revealBrand]);
 
   const filteredResources = useMemo(() => {
     if (!activeGroup) return [];
@@ -271,8 +305,7 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     [groups]
   );
   const quickStartResource = useMemo(
-    () =>
-      fixedBrand === 'apikeyFun' && activeGroup ? (activeGroup.resources[0] ?? null) : null,
+    () => (fixedBrand === 'apikeyFun' && activeGroup ? (activeGroup.resources[0] ?? null) : null),
     [activeGroup, fixedBrand]
   );
 
@@ -455,6 +488,7 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
           />
         ) : (
           <ProviderResourcePanel
+            panelRef={resourcePanelRef}
             group={activeGroup}
             filter={filter}
             onFilterChange={(value) => updateActiveFilterState({ filter: value })}
