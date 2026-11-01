@@ -200,6 +200,61 @@ describe('LiveAnnouncer', () => {
     expect(spoken).toEqual(['Muse (Meta) is down. New issue: claude.']);
   });
 
+  test('mixed escalation and recovery speak only the escalation until both sources report', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    const mixed = state('partial', { credentialsAt: 2, trafficAt: 1, busy: true });
+    mixed.next.items.push(provider('xai', 'limited'));
+    mixed.snapshot.attention = attentionState(mixed.next.items);
+    mixed.text.verdict = '2 issues need attention.';
+    announcer.update(mixed);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+    timers.advance(17_000);
+    expect(spoken).toEqual(['New issue: xai.']);
+
+    // Traffic reports without restoring Meta. Its earlier recovery must still be pending.
+    announcer.update({ ...mixed, primary: { credentialsAt: 2, trafficAt: 3, busy: false } });
+    timers.advance(600);
+    expect(spoken).toEqual([
+      'New issue: xai.',
+      '2 issues need attention. Resolved: provider:meta.',
+    ]);
+  });
+
+  test('a partial improvement stays pending beside a new incident', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    const mixed = state('partial', { credentialsAt: 2, trafficAt: 1, busy: true });
+    mixed.next.items.push(provider('meta', 'limited'), provider('xai', 'degraded'));
+    mixed.snapshot.attention = attentionState(mixed.next.items);
+    mixed.text.verdict = '3 issues need attention.';
+    announcer.update(mixed);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+    announcer.update({ ...mixed, primary: { credentialsAt: 2, trafficAt: 3, busy: false } });
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.', '3 issues need attention. meta changed.']);
+  });
+
+  test('a provisional recovery reversed by traffic is never announced', () => {
+    const { timers, spoken, announcer } = setup();
+    announcer.update(state('incident', { credentialsAt: 1, trafficAt: 1, busy: false }));
+    const mixed = state('partial', { credentialsAt: 2, trafficAt: 1, busy: true });
+    mixed.next.items.push(provider('xai', 'limited'));
+    mixed.snapshot.attention = attentionState(mixed.next.items);
+    announcer.update(mixed);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+
+    const settled = state('incident', { credentialsAt: 2, trafficAt: 3, busy: false });
+    settled.next.items.push(provider('xai', 'limited'));
+    settled.snapshot.attention = attentionState(settled.next.items);
+    announcer.update(settled);
+    timers.advance(600);
+    expect(spoken).toEqual(['New issue: xai.']);
+  });
+
   test('a secondary incident under the same headline is announced', () => {
     const { timers, spoken, announcer } = setup();
     const muse = (primary: AnnouncerUpdate['primary'], items: AttentionItem[]) => ({

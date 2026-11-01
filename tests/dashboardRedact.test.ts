@@ -23,6 +23,14 @@ describe('redactSecrets', () => {
     expect(redactSecrets('{"access_token": "abcdef123456"}')).toBe('{"access_token": "***"}');
   });
 
+  test('masks labelled secrets regardless of length and consumes complete quoted values', () => {
+    expect(redactSecrets('api_key=abc12&token=x')).toBe('api_key=***&token=***');
+    expect(redactSecrets('{"password":"correct horse battery staple"}')).toBe('{"password":"***"}');
+    expect(redactSecrets("password='two words' next=visible")).toBe("password='***' next=visible");
+    const escaped = JSON.stringify({ client_secret: 'short "quoted" secret \\ tail' });
+    expect(JSON.parse(redactSecrets(escaped))).toEqual({ client_secret: '***' });
+  });
+
   test('masks URL credentials and long opaque tokens', () => {
     expect(redactSecrets('dial http://bob:hunter22@proxy:8080 failed')).toBe(
       'dial http://bob:***@proxy:8080 failed'

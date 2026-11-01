@@ -1,5 +1,6 @@
 import {
   escalates,
+  escalationSnapshot,
   sameAnnouncementState,
   settleAnnouncement,
   type AnnouncementNext,
@@ -44,10 +45,10 @@ const advanced = (now: number | null, before: number | null) =>
  *   timeout settles the headline), otherwise for at most `maxHoldMs` after the change,
  *   never after an unchanged poll. If that limit forces an announcement, the sources
  *   still owed a report stay owed, so their answer is announced at once.
- * New or worse issues skip the hold: a later report can add to them but not contradict
- * them, so operators hear an outage as soon as the page shows it. The announcement is the
- * net change from the announced state to the latest one, so partial recoveries between
- * the two sources' reports are not spoken. Refresh and Retry hold
+ * New or worse issues skip the hold, but any recovery in the same update stays pending
+ * in the existing comparison baseline. Operators hear the urgent issues without a
+ * provisional recovery or headline. Once sources catch up, the net remaining change is
+ * announced. Refresh and Retry hold
  * announcements until they end; then their result leads.
  */
 export class LiveAnnouncer {
@@ -139,7 +140,24 @@ export class LiveAnnouncer {
     const base = this.actionEnded || this.changeStartedAt === null ? null : this.changeBase;
     // New or worse issues are spoken at once; a recovery waits for both sources.
     const urgent = !!latest && !!this.announced && escalates(this.announced, latest.snapshot);
-    const ready = !base || urgent || this.caughtUp(base);
+    const ready = !base || this.caughtUp(base);
+    if (!ready && urgent && latest && this.announced) {
+      const snapshot = escalationSnapshot(this.announced, latest.snapshot);
+      const message = settleAnnouncement(
+        { previous: this.announced, next: latest.next, text: latest.text, snapshot },
+        []
+      );
+      this.announced = snapshot;
+      if (message) this.emit(message);
+      if (!sameAnnouncementState(snapshot, latest.snapshot)) {
+        this.schedule();
+      } else {
+        this.carriedBase = base;
+        this.changeBase = null;
+        this.changeStartedAt = null;
+      }
+      return;
+    }
     if (!ready) {
       const held = this.changeStartedAt === null ? 0 : this.timers.now() - this.changeStartedAt;
       // A source is still owed a report: wait while a request is in flight (its answer or

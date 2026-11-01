@@ -18,8 +18,11 @@ const RULES: Array<[RegExp, string | Replacer]> = [
   [/\b(Bearer|Basic|Token)\s+[A-Za-z0-9._~+/=-]{8,}/gi, '$1 ***'],
   // key=value or "key": "value" pairs whose name says secret
   [
-    /\b((?:api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|client[_-]?secret|secret|password|passwd|token)["']?\s*[:=]\s*["']?)[^\s"'&,;}]{6,}/gi,
-    '$1***',
+    /\b((?:api[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|client[_-]?secret|secret|password|passwd|token)["']?\s*[:=]\s*)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s"'&,;}]+)/gi,
+    (_match, label, value) => {
+      const quote = value[0] === '"' || value[0] === "'" ? value[0] : '';
+      return `${label}${quote}***${quote}`;
+    },
   ],
   // JSON Web Tokens
   [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, '***'],

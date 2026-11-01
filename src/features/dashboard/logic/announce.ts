@@ -32,17 +32,27 @@ const SEVERITY: Record<string, number> = {
   limited: 1,
 };
 
-/**
- * True when `next` adds an issue or makes one worse. Such news is safe to speak before
- * the other source reports: a later report can add to it but not contradict it, unlike a
- * partial recovery.
- */
+const isEscalation = (before: string | undefined, after: string): boolean =>
+  before === undefined || (SEVERITY[after] ?? 0) > (SEVERITY[before] ?? 0);
+
+/** True when `next` adds an issue or makes one worse. Recoveries can still coexist. */
 export function escalates(previous: AnnouncementSnapshot, next: AnnouncementSnapshot): boolean {
+  return [...next.attention].some(([key, value]) =>
+    isEscalation(previous.attention.get(key), value)
+  );
+}
+
+/** Keep provisional recoveries and their headline out of an urgent announcement. */
+export function escalationSnapshot(
+  previous: AnnouncementSnapshot,
+  next: AnnouncementSnapshot
+): AnnouncementSnapshot {
+  const attention = new Map(previous.attention);
   for (const [key, value] of next.attention) {
-    const before = previous.attention.get(key);
-    if (before === undefined || (SEVERITY[value] ?? 0) > (SEVERITY[before] ?? 0)) return true;
+    if (isEscalation(previous.attention.get(key), value)) attention.set(key, value);
   }
-  return false;
+  const pendingRecovery = [...attention].some(([key, value]) => next.attention.get(key) !== value);
+  return { verdictKey: pendingRecovery ? previous.verdictKey : next.verdictKey, attention };
 }
 
 export interface AnnouncementSnapshot {
@@ -72,13 +82,18 @@ export interface AnnouncementText {
 export function attentionAnnouncements(
   previous: AnnouncementSnapshot,
   next: AnnouncementNext,
-  text: AnnouncementText
+  text: AnnouncementText,
+  snapshot: AnnouncementSnapshot = {
+    verdictKey: next.verdictKey,
+    attention: attentionState(next.items),
+  }
 ): string[] {
   const messages: string[] = [];
-  const verdictChanged = previous.verdictKey !== next.verdictKey;
+  const verdictChanged = previous.verdictKey !== snapshot.verdictKey;
   if (verdictChanged) messages.push(text.verdict);
 
   for (const item of next.items) {
+    if (snapshot.attention.get(item.key) !== stateOf(item)) continue;
     const before = previous.attention.get(item.key);
     if (before === stateOf(item)) continue;
     const namedByVerdict =
@@ -88,9 +103,8 @@ export function attentionAnnouncements(
   }
 
   if (next.items.length > 0) {
-    const current = new Set(next.items.map((item) => item.key));
     for (const key of previous.attention.keys()) {
-      if (!current.has(key)) messages.push(text.resolved(key));
+      if (!snapshot.attention.has(key)) messages.push(text.resolved(key));
     }
   }
   return messages;
@@ -107,11 +121,16 @@ export function composeAnnouncement(messages: string[]): string {
  * between the two (one source updated before another) are never described.
  */
 export function settleAnnouncement(
-  change: { previous: AnnouncementSnapshot; next: AnnouncementNext; text: AnnouncementText } | null,
+  change: {
+    previous: AnnouncementSnapshot;
+    next: AnnouncementNext;
+    text: AnnouncementText;
+    snapshot?: AnnouncementSnapshot;
+  } | null,
   actionMessages: string[]
 ): string {
   const stateMessages = change
-    ? attentionAnnouncements(change.previous, change.next, change.text)
+    ? attentionAnnouncements(change.previous, change.next, change.text, change.snapshot)
     : [];
   return composeAnnouncement([...actionMessages, ...stateMessages]);
 }
