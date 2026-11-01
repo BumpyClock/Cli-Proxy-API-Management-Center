@@ -24,7 +24,7 @@ import {
 } from './logic/attention';
 import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic/freshness';
 import { redactUrlCredentials } from './logic/redact';
-import { formatClock } from './logic/time';
+import { formatClock, formatInstant } from './logic/time';
 import { summarizeUsage } from './logic/usage';
 import { useDashboardAnnouncer } from './hooks/useDashboardAnnouncer';
 import { useFocusRescue } from './hooks/useFocusRescue';
@@ -164,10 +164,17 @@ export function DashboardPage() {
     () => (usage?.enabled ? summarizeUsage(usage.usage, usageWindowStart, usageWindowEnd) : null),
     [usage, usageWindowStart, usageWindowEnd]
   );
+  const usageWindowLabel = t('dashboard.usage_window_bounds', {
+    start: `${formatInstant(usageWindowStart, now, i18n.language)} ${resolveTimeZoneLabel(new Date(usageWindowStart))}`,
+    end: `${formatInstant(usageWindowEnd, now, i18n.language)} ${resolveTimeZoneLabel(new Date(usageWindowEnd))}`,
+  });
   // Credential traffic covers credentials listed now; usage statistics also keep requests
   // from credentials that were removed. Flag a material disagreement instead of letting
   // one of them read as the whole truth.
-  const usageRequests = usageSummary && freshness.usage === 'live' ? usageSummary.requests : null;
+  const usageRequests =
+    usageSummary && usageSummary.coverageStartMs === null && freshness.usage === 'live'
+      ? usageSummary.requests
+      : null;
   const usageDiffers =
     usageRequests !== null &&
     Math.abs(usageRequests - traffic.total) >
@@ -632,7 +639,8 @@ export function DashboardPage() {
           <UsagePanel
             usage={usage}
             summary={usageSummary}
-            windowLabel={windowLabel}
+            windowLabel={usageWindowLabel}
+            historicalWindow={usageWindowEnd < now}
             credentialsByIndex={credentialsByIndex}
           />
         </div>

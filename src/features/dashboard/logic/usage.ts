@@ -26,7 +26,7 @@ export interface UsageSummary {
   tokens: number;
   models: UsageModelSummary[];
   failures: UsageFailure[];
-  /** Earliest retained request inside the window when retention cut the window short. */
+  /** Known coverage starts here; the window end means no retained coverage in the window. */
   coverageStartMs: number | null;
 }
 
@@ -111,13 +111,13 @@ export function summarizeUsage(
         }
       });
 
-      // Retention dropped this model's older details and the oldest kept one is already
-      // inside the window, so the window is only partly covered for this model.
+      // Retention can remove the entire historical window, not only its first samples.
       const dropped = numberOf(snapshot?.total_requests) > details.length;
-      if (dropped && inWindow > 0 && oldestRetainedMs > windowStartMs) {
-        accumulatorFor(model).truncated = true;
+      if (dropped && oldestRetainedMs > windowStartMs) {
+        if (inWindow > 0) accumulatorFor(model).truncated = true;
+        const coverageStart = Math.min(oldestRetainedMs, windowEndMs);
         coverageStartMs =
-          coverageStartMs === null ? oldestRetainedMs : Math.max(coverageStartMs, oldestRetainedMs);
+          coverageStartMs === null ? coverageStart : Math.max(coverageStartMs, coverageStart);
       }
     });
   });

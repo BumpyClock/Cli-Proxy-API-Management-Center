@@ -13,11 +13,18 @@ interface UsagePanelProps {
   /** Window summary of `usage`, computed once by the page; null when usage is off. */
   summary: UsageSummary | null;
   windowLabel: string;
+  historicalWindow: boolean;
   credentialsByIndex: Map<string, CredentialRow>;
 }
 
 /** Per-model volume and latency plus the newest failed requests. */
-export function UsagePanel({ usage, summary, windowLabel, credentialsByIndex }: UsagePanelProps) {
+export function UsagePanel({
+  usage,
+  summary,
+  windowLabel,
+  historicalWindow,
+  credentialsByIndex,
+}: UsagePanelProps) {
   const { t, i18n } = useTranslation();
 
   if (!usage) {
@@ -45,10 +52,27 @@ export function UsagePanel({ usage, summary, windowLabel, credentialsByIndex }: 
     );
   }
 
+  const windowNotice = historicalWindow ? (
+    <p className={styles.note}>{t('dashboard.usage_window_historical')}</p>
+  ) : null;
+  const coverageNotice =
+    summary.coverageStartMs !== null ? (
+      <p className={styles.note}>{t('dashboard.usage_coverage')}</p>
+    ) : null;
+
   if (summary.requests === 0) {
     return (
       <div className={styles.off}>
-        <p className={styles.note}>{t('dashboard.usage_empty', { window: windowLabel })}</p>
+        {windowNotice}
+        <p className={styles.note}>
+          {t(
+            summary.coverageStartMs !== null
+              ? 'dashboard.usage_empty_unknown'
+              : 'dashboard.usage_empty',
+            { window: windowLabel }
+          )}
+        </p>
+        {coverageNotice}
         <Link className={styles.moreLink} to="/usage">
           {t('dashboard.usage_link')} <span aria-hidden="true">→</span>
         </Link>
@@ -58,6 +82,7 @@ export function UsagePanel({ usage, summary, windowLabel, credentialsByIndex }: 
 
   return (
     <div className={styles.body}>
+      {windowNotice}
       <table className={styles.table}>
         <caption className={styles.caption}>
           {t('dashboard.usage_caption', { window: windowLabel })}
@@ -122,13 +147,7 @@ export function UsagePanel({ usage, summary, windowLabel, credentialsByIndex }: 
         )}
       </div>
 
-      {summary.coverageStartMs !== null && (
-        <p className={styles.note}>
-          {t('dashboard.usage_coverage', {
-            time: formatClock(summary.coverageStartMs, i18n.language),
-          })}
-        </p>
-      )}
+      {coverageNotice}
 
       <Link className={styles.moreLink} to="/usage">
         {t('dashboard.usage_link')} <span aria-hidden="true">→</span>

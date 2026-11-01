@@ -214,7 +214,24 @@ describe('dashboard components render translated, actionable markup', () => {
           createElement(UsagePanel, {
             usage,
             summary: summarizeUsage(usage.usage, NOW - 200 * 60_000, NOW),
-            windowLabel: '3h 20m',
+            windowLabel: '01:00 UTC to 02:00 UTC',
+            historicalWindow: true,
+            credentialsByIndex,
+          })
+        ),
+        render(
+          createElement(UsagePanel, {
+            usage,
+            summary: {
+              requests: 0,
+              failed: 0,
+              tokens: 0,
+              models: [],
+              failures: [],
+              coverageStartMs: NOW,
+            },
+            windowLabel: '01:00 UTC to 02:00 UTC',
+            historicalWindow: true,
             credentialsByIndex,
           })
         ),
@@ -222,7 +239,8 @@ describe('dashboard components render translated, actionable markup', () => {
           createElement(UsagePanel, {
             usage: { enabled: false, usage: null },
             summary: null,
-            windowLabel: '3h 20m',
+            windowLabel: '01:00 UTC to 02:00 UTC',
+            historicalWindow: false,
             credentialsByIndex,
           })
         ),
@@ -234,6 +252,31 @@ describe('dashboard components render translated, actionable markup', () => {
       expect(markup).toContain('gpt-5.5');
     });
   }
+
+  test('historical usage with no retained coverage reports unknown counts and its bounds', async () => {
+    await i18n.changeLanguage('en');
+    const markup = render(
+      createElement(UsagePanel, {
+        usage: { enabled: true, usage: {} },
+        summary: {
+          requests: 0,
+          failed: 0,
+          tokens: 0,
+          models: [],
+          failures: [],
+          coverageStartMs: NOW,
+        },
+        windowLabel: '01:00 UTC to 02:00 UTC',
+        historicalWindow: true,
+        credentialsByIndex: new Map(),
+      })
+    );
+    expect(markup).toContain('01:00 UTC to 02:00 UTC');
+    expect(markup).toContain('Historical traffic window');
+    expect(markup).toContain('Request and failure counts are unknown');
+    expect(markup).not.toContain('No requests recorded');
+    expectTranslated(markup);
+  });
 
   test('a success rate is a meter; no rate is text, not indeterminate progress', () => {
     const measured = renderToStaticMarkup(

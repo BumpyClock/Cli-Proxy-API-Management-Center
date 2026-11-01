@@ -58,6 +58,7 @@ describe('summarizeUsage', () => {
     expect(summary.requests).toBe(3);
     expect(summary.failed).toBe(0);
     expect(summary.tokens).toBe(450);
+    expect(summary.coverageStartMs).toBeNull();
     expect(summarizeUsage(snapshot, Date.parse(at(12)), Date.parse(at(20))).requests).toBe(1);
     expect(summary.failures).toEqual([]);
     expect(summary.models.find((model) => model.model === 'gpt-5.5')).toMatchObject({
@@ -67,7 +68,7 @@ describe('summarizeUsage', () => {
     });
   });
 
-  test('out-of-window models do not create rows or a retention gap', () => {
+  test('retention beyond the window reports unknown coverage without creating model rows', () => {
     const summary = summarizeUsage(
       {
         apis: {
@@ -81,7 +82,7 @@ describe('summarizeUsage', () => {
     );
     expect(summary.requests).toBe(0);
     expect(summary.models).toEqual([]);
-    expect(summary.coverageStartMs).toBeNull();
+    expect(summary.coverageStartMs).toBe(Date.parse(at(30)));
   });
 
   test('ranks models by volume with latency percentiles', () => {
