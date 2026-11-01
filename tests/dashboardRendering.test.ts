@@ -213,7 +213,7 @@ describe('dashboard components render translated, actionable markup', () => {
         render(
           createElement(UsagePanel, {
             usage,
-            summary: summarizeUsage(usage.usage, NOW - 200 * 60_000),
+            summary: summarizeUsage(usage.usage, NOW - 200 * 60_000, NOW),
             windowLabel: '3h 20m',
             credentialsByIndex,
           })

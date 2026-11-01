@@ -14,5 +14,6 @@
 - Dashboard credential rows distinguish auth indices, and model cooldown deadlines remain visible after an earlier credential retry time has passed.
 - Dashboard source errors use secret redaction and are limited to 200 characters. Explicitly labelled short secrets and quoted passphrases are also redacted, including truncated values.
 - Live announcements report new issues immediately without prematurely announcing recoveries in the same poll.
+- Usage totals, latency, and failures use both traffic-window bounds, excluding later requests when traffic data is stale.
 - Provider deep-link targets retain a visible keyboard focus indicator.
 - Clicking an open header menu's trigger closes it without reopening; keyboard Tab and Escape behavior is preserved.

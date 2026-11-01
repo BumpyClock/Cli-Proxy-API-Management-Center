@@ -52,8 +52,8 @@ interface ModelAccumulator {
 }
 
 /**
- * Per-model volume, latency, and recent failures for requests at or after
- * `windowStartMs` (server clock).
+ * Per-model volume, latency, and recent failures inside the half-open window
+ * `windowStartMs <= timestamp < windowEndMs`.
  *
  * Request details are retained in memory up to a backend limit per API and model. When a
  * model's retained details start after the window does, its counts are a floor:
@@ -63,6 +63,7 @@ interface ModelAccumulator {
 export function summarizeUsage(
   usage: UsageSnapshot | null | undefined,
   windowStartMs: number,
+  windowEndMs: number,
   limits: { models?: number; failures?: number } = {}
 ): UsageSummary {
   const modelLimit = limits.models ?? 6;
@@ -90,7 +91,7 @@ export function summarizeUsage(
         const timeMs = parseTimestampMs(detail?.timestamp);
         if (!Number.isFinite(timeMs)) return;
         oldestRetainedMs = Math.min(oldestRetainedMs, timeMs);
-        if (timeMs < windowStartMs) return;
+        if (timeMs < windowStartMs || timeMs >= windowEndMs) return;
 
         inWindow += 1;
         const accumulator = accumulatorFor(model);

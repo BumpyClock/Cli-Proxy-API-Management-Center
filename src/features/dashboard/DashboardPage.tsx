@@ -159,9 +159,10 @@ export function DashboardPage() {
   /* ---------- Usage (separate source, same window) ---------- */
 
   const usageWindowStart = traffic.startMs ?? now - DEFAULT_WINDOW_MINUTES * 60_000;
+  const usageWindowEnd = traffic.endMs ?? now;
   const usageSummary = useMemo(
-    () => (usage?.enabled ? summarizeUsage(usage.usage, usageWindowStart) : null),
-    [usage, usageWindowStart]
+    () => (usage?.enabled ? summarizeUsage(usage.usage, usageWindowStart, usageWindowEnd) : null),
+    [usage, usageWindowStart, usageWindowEnd]
   );
   // Credential traffic covers credentials listed now; usage statistics also keep requests
   // from credentials that were removed. Flag a material disagreement instead of letting

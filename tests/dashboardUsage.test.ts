@@ -4,6 +4,7 @@ import type { UsageSnapshot } from '../src/types/usage';
 
 const at = (minute: number) => new Date(Date.UTC(2026, 9, 30, 5, minute)).toISOString();
 const WINDOW_START = Date.UTC(2026, 9, 30, 5, 10);
+const WINDOW_END = Date.UTC(2026, 9, 30, 6, 0);
 
 const snapshot: UsageSnapshot = {
   total_requests: 7,
@@ -46,14 +47,45 @@ describe('percentile', () => {
 
 describe('summarizeUsage', () => {
   test('counts only requests inside the window', () => {
-    const summary = summarizeUsage(snapshot, WINDOW_START);
+    const summary = summarizeUsage(snapshot, WINDOW_START, WINDOW_END);
     expect(summary.requests).toBe(5);
     expect(summary.failed).toBe(2);
     expect(summary.tokens).toBe(450);
   });
 
+  test('excludes requests at and after the window end from every usage aggregate', () => {
+    const summary = summarizeUsage(snapshot, WINDOW_START, Date.parse(at(30)));
+    expect(summary.requests).toBe(3);
+    expect(summary.failed).toBe(0);
+    expect(summary.tokens).toBe(450);
+    expect(summarizeUsage(snapshot, Date.parse(at(12)), Date.parse(at(20))).requests).toBe(1);
+    expect(summary.failures).toEqual([]);
+    expect(summary.models.find((model) => model.model === 'gpt-5.5')).toMatchObject({
+      requests: 2,
+      p50: 800,
+      p95: 1200,
+    });
+  });
+
+  test('out-of-window models do not create rows or a retention gap', () => {
+    const summary = summarizeUsage(
+      {
+        apis: {
+          client: {
+            models: { late: { total_requests: 100, details: [{ timestamp: at(40) }] } },
+          },
+        },
+      },
+      WINDOW_START,
+      Date.parse(at(30))
+    );
+    expect(summary.requests).toBe(0);
+    expect(summary.models).toEqual([]);
+    expect(summary.coverageStartMs).toBeNull();
+  });
+
   test('ranks models by volume with latency percentiles', () => {
-    const summary = summarizeUsage(snapshot, WINDOW_START);
+    const summary = summarizeUsage(snapshot, WINDOW_START, WINDOW_END);
     expect(summary.models).toEqual([
       {
         model: 'gpt-5.5',
@@ -77,7 +109,7 @@ describe('summarizeUsage', () => {
   });
 
   test('lists failures newest first and skips missing latency', () => {
-    const summary = summarizeUsage(snapshot, WINDOW_START);
+    const summary = summarizeUsage(snapshot, WINDOW_START, WINDOW_END);
     expect(summary.failures).toEqual([
       { timeMs: Date.parse(at(40)), model: 'claude-opus', authIndex: null, latencyMs: null },
       { timeMs: Date.parse(at(30)), model: 'gpt-5.5', authIndex: '7', latencyMs: 4000 },
@@ -102,7 +134,7 @@ describe('summarizeUsage', () => {
         },
       },
     };
-    const summary = summarizeUsage(busy, WINDOW_START);
+    const summary = summarizeUsage(busy, WINDOW_START, WINDOW_END);
     expect(summary.coverageStartMs).toBe(Date.UTC(2026, 9, 30, 5, 30));
     expect(summary.models.find((row) => row.model === 'busy')?.truncated).toBe(true);
   });
@@ -118,14 +150,15 @@ describe('summarizeUsage', () => {
           },
         },
       },
-      WINDOW_START
+      WINDOW_START,
+      WINDOW_END
     );
     expect(summary.coverageStartMs).toBeNull();
     expect(summary.models[0].truncated).toBe(false);
   });
 
   test('handles a missing snapshot', () => {
-    expect(summarizeUsage(null, WINDOW_START)).toEqual({
+    expect(summarizeUsage(null, WINDOW_START, WINDOW_END)).toEqual({
       requests: 0,
       failed: 0,
       tokens: 0,
@@ -136,7 +169,7 @@ describe('summarizeUsage', () => {
   });
 
   test('never carries client API keys into the summary', () => {
-    expect(JSON.stringify(summarizeUsage(snapshot, WINDOW_START))).not.toContain(
+    expect(JSON.stringify(summarizeUsage(snapshot, WINDOW_START, WINDOW_END))).not.toContain(
       'sk-client-secret'
     );
   });
