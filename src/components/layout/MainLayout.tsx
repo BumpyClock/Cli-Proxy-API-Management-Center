@@ -139,7 +139,14 @@ function useMenu(open: boolean, menuRef: RefObject<HTMLDivElement | null>, onClo
     if (!open) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) onClose();
+      const target = event.target as Node;
+      const trigger = menuRef.current?.querySelector<HTMLElement>('[aria-haspopup]');
+      if (trigger?.contains(target)) {
+        // Let click close the menu before focus restoration, not focusin before click.
+        event.preventDefault();
+        return;
+      }
+      if (!menuRef.current?.contains(target)) onClose();
     };
     // Tab or Shift+Tab out of the popover (including back to its trigger) closes it.
     const handleFocusIn = (event: FocusEvent) => {

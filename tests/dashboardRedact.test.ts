@@ -31,6 +31,14 @@ describe('redactSecrets', () => {
     expect(JSON.parse(redactSecrets(escaped))).toEqual({ client_secret: '***' });
   });
 
+  test('masks quoted secrets truncated at any point, including an escape character', () => {
+    const raw = JSON.stringify({ password: 'correct "quoted" words \\ tail' });
+    for (let end = '{"password":"'.length; end < raw.length; end += 1) {
+      expect(redactSecrets(raw.slice(0, end))).toBe('{"password":"***"');
+    }
+    expect(redactSecrets("token='short secret")).toBe("token='***'");
+  });
+
   test('masks URL credentials and long opaque tokens', () => {
     expect(redactSecrets('dial http://bob:hunter22@proxy:8080 failed')).toBe(
       'dial http://bob:***@proxy:8080 failed'

@@ -12,6 +12,7 @@
 - Dashboard links reveal credentials with missing provider metadata and clear conflicting saved provider and log filters.
 - Returning from OAuth editors preserves the Auth Files page after a deep-link URL is cleaned up.
 - Dashboard credential rows distinguish auth indices, and model cooldown deadlines remain visible after an earlier credential retry time has passed.
-- Dashboard source errors use secret redaction and are limited to 200 characters. Explicitly labelled short secrets and quoted passphrases are also redacted.
+- Dashboard source errors use secret redaction and are limited to 200 characters. Explicitly labelled short secrets and quoted passphrases are also redacted, including truncated values.
 - Live announcements report new issues immediately without prematurely announcing recoveries in the same poll.
 - Provider deep-link targets retain a visible keyboard focus indicator.
+- Clicking an open header menu's trigger closes it without reopening; keyboard Tab and Escape behavior is preserved.
