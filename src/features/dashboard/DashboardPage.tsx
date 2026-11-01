@@ -171,14 +171,14 @@ export function DashboardPage() {
   // Credential traffic covers credentials listed now; usage statistics also keep requests
   // from credentials that were removed. Flag a material disagreement instead of letting
   // one of them read as the whole truth.
-  const usageRequests =
+  const comparableUsageRequests =
     usageSummary && usageSummary.coverageStartMs === null && freshness.usage === 'live'
       ? usageSummary.requests
       : null;
   const usageDiffers =
-    usageRequests !== null &&
-    Math.abs(usageRequests - traffic.total) >
-      Math.max(5, 0.1 * Math.max(usageRequests, traffic.total));
+    comparableUsageRequests !== null &&
+    Math.abs(comparableUsageRequests - traffic.total) >
+      Math.max(5, 0.1 * Math.max(comparableUsageRequests, traffic.total));
 
   // Receipts of the sources behind provider evidence: credential files and API-key traffic.
   const evidence = useMemo(
@@ -204,7 +204,7 @@ export function DashboardPage() {
     primaryFreshness,
     hasData,
     trafficTotal: traffic.total,
-    otherScopeActivity: usageRequests !== null && usageRequests > 0,
+    otherScopeActivity: freshness.usage === 'live' && (usageSummary?.requests ?? 0) > 0,
   });
   const verdictTitle = useVerdictTitle(verdict);
 
@@ -388,7 +388,7 @@ export function DashboardPage() {
           {trafficDetail}
           {usageDiffers && (
             <span className={`${styles.vitalLine} ${styles.partialNote}`}>
-              {t('dashboard.vitals_usage_differs', { count: usageRequests ?? 0 })}
+              {t('dashboard.vitals_usage_differs', { count: comparableUsageRequests ?? 0 })}
             </span>
           )}
         </>

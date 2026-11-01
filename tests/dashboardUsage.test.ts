@@ -85,6 +85,23 @@ describe('summarizeUsage', () => {
     expect(summary.coverageStartMs).toBe(Date.parse(at(30)));
   });
 
+  test('aggregated model counts remain a floor when another API lost all window samples', () => {
+    const complete = { models: { shared: { details: [{ timestamp: at(20) }] } } };
+    const missing = {
+      models: { shared: { total_requests: 100, details: [{ timestamp: at(40) }] } },
+    };
+    for (const apis of [
+      { complete, missing },
+      { missing, complete },
+    ]) {
+      const summary = summarizeUsage({ apis }, WINDOW_START, Date.parse(at(30)));
+      expect(summary.requests).toBe(1);
+      expect(summary.models).toHaveLength(1);
+      expect(summary.models[0].truncated).toBe(true);
+      expect(summary.coverageStartMs).toBe(Date.parse(at(30)));
+    }
+  });
+
   test('ranks models by volume with latency percentiles', () => {
     const summary = summarizeUsage(snapshot, WINDOW_START, WINDOW_END);
     expect(summary.models).toEqual([

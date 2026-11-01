@@ -26,7 +26,7 @@ export interface UsageSummary {
   tokens: number;
   models: UsageModelSummary[];
   failures: UsageFailure[];
-  /** Known coverage starts here; the window end means no retained coverage in the window. */
+  /** Complete coverage across API/model sources starts here; the window end means none. */
   coverageStartMs: number | null;
 }
 
@@ -85,7 +85,6 @@ export function summarizeUsage(
     Object.entries(api?.models ?? {}).forEach(([model, snapshot]) => {
       const details = snapshot?.details ?? [];
       let oldestRetainedMs = Number.POSITIVE_INFINITY;
-      let inWindow = 0;
 
       details.forEach((detail) => {
         const timeMs = parseTimestampMs(detail?.timestamp);
@@ -93,7 +92,6 @@ export function summarizeUsage(
         oldestRetainedMs = Math.min(oldestRetainedMs, timeMs);
         if (timeMs < windowStartMs || timeMs >= windowEndMs) return;
 
-        inWindow += 1;
         const accumulator = accumulatorFor(model);
         accumulator.requests += 1;
         accumulator.tokens += numberOf(detail?.tokens?.total_tokens);
@@ -114,7 +112,7 @@ export function summarizeUsage(
       // Retention can remove the entire historical window, not only its first samples.
       const dropped = numberOf(snapshot?.total_requests) > details.length;
       if (dropped && oldestRetainedMs > windowStartMs) {
-        if (inWindow > 0) accumulatorFor(model).truncated = true;
+        accumulatorFor(model).truncated = true;
         const coverageStart = Math.min(oldestRetainedMs, windowEndMs);
         coverageStartMs =
           coverageStartMs === null ? coverageStart : Math.max(coverageStartMs, coverageStart);
@@ -123,6 +121,7 @@ export function summarizeUsage(
   });
 
   const models = Array.from(byModel.entries())
+    .filter(([, accumulator]) => accumulator.requests > 0)
     .map(([model, accumulator]) => {
       const sorted = [...accumulator.latencies].sort((a, b) => a - b);
       return {
