@@ -16,6 +16,10 @@
 
 ### Fixed
 
+- Provider-level quota refresh reloads authoritative auth-file snapshots before querying the current page, including updated Qoder usage.
+- Copilot reset dates reject impossible calendar dates while preserving valid leap days and timezone offsets.
+- Active sidebar plugin drawer carets retain the selected foreground color.
+
 - Dashboard links reveal credentials with missing provider metadata and clear conflicting saved provider and log filters.
 - Returning from OAuth editors preserves the Auth Files page after a deep-link URL is cleaned up.
 - Dashboard credential rows distinguish auth indices, and model cooldown deadlines remain visible after an earlier credential retry time has passed.

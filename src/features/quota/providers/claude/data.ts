@@ -30,6 +30,7 @@ import {
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import type { QuotaProviderData } from '../types';
+import { observeQuota, observeWindow } from '../observations';
 
 export type ClaudeQuotaData = {
   windows: ClaudeQuotaWindow[];
@@ -209,6 +210,20 @@ export const CLAUDE_CONFIG: QuotaProviderData<ClaudeQuotaState, ClaudeQuotaData>
   i18nPrefix: 'claude_quota',
   filterFn: (file) => isClaudeFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchClaudeQuota,
+  getObservations: (state) =>
+    observeQuota(
+      (state.windows ?? [])
+        .map((window, index) =>
+          observeWindow({
+            id: window.id || `window-${index}`,
+            label: window.label ?? '',
+            remainingPercent: window.usedPercent == null ? null : 100 - window.usedPercent,
+            resetAtMs: window.resetAtMs ?? null,
+            periodHours: window.periodHours ?? null,
+          })
+        )
+        .filter((window) => window.resetAtMs !== null)
+    ),
   storeSelector: (state) => state.claudeQuota,
   storeSetter: 'setClaudeQuota',
   buildLoadingState: () => ({ status: 'loading', windows: [] }),

@@ -37,7 +37,6 @@ import {
 } from './constants';
 import {
   buildTabCounts,
-  canRefreshQuotaAfterList,
   classifyQuotaFiles,
   filterEntriesByTab,
   filterEntriesBySearch,
@@ -46,6 +45,7 @@ import {
   type QuotaFileEntry,
 } from './logic';
 import { nextRecoveryMs } from './resetSchedule';
+import { resolveQuotaRefreshTargets, type QuotaRefreshIntent } from './refreshScope';
 import { QUOTA_ADAPTERS, getQuotaSetter, type QuotaCardState } from './providers';
 import type { QuotaProviderType } from './providers/types';
 import { useDevinQuotaAutoLoad } from './providers/devin/useDevinQuotaAutoLoad';
@@ -256,40 +256,47 @@ export function QuotaPage() {
   const { batchLoading, loadQuota } = useQuotaBatchLoader();
   const { resettingQuotaName, refreshQuota, resetQuota } = useQuotaActions(disableControls);
 
-  const pendingRefreshRef = useRef<number | null>(null);
+  const pendingRefreshRef = useRef<QuotaRefreshIntent | null>(null);
   const prevLoadingRef = useRef(loading);
 
-  // 刷新全部：先重取文件列表，待其落定（loading 下降沿）再批量拉当前页额度
-  const handleRefreshAll = useCallback(() => {
-    if (disableControls) return;
-    pendingRefreshRef.current = sessionGeneration;
-    void loadFiles();
-  }, [disableControls, loadFiles, sessionGeneration]);
+  // Both scopes refetch auth files before resolving the current page's quota targets.
+  const handleRefresh = useCallback(
+    (scope: QuotaTabId) => {
+      if (disableControls) return;
+      pendingRefreshRef.current = { sessionGeneration, scope };
+      void loadFiles();
+    },
+    [disableControls, loadFiles, sessionGeneration]
+  );
+
+  const handleRefreshAll = useCallback(() => handleRefresh('all'), [handleRefresh]);
+  const handleProviderRefresh = useCallback(
+    (providerEntries: QuotaFileEntry[]) => {
+      const provider = providerEntries[0]?.type;
+      if (provider) handleRefresh(provider);
+    },
+    [handleRefresh]
+  );
 
   useEffect(() => {
     const wasLoading = prevLoadingRef.current;
     prevLoadingRef.current = loading;
 
-    const requestedSession = pendingRefreshRef.current;
-    if (requestedSession === null) return;
-    if (requestedSession !== sessionGeneration) {
+    const intent = pendingRefreshRef.current;
+    if (intent === null) return;
+    if (intent.sessionGeneration !== sessionGeneration) {
       pendingRefreshRef.current = null;
       return;
     }
     if (loading || !wasLoading) return;
 
     pendingRefreshRef.current = null;
-    if (
-      canRefreshQuotaAfterList(
-        requestedSession,
-        sessionGeneration,
-        filesGeneration,
-        Boolean(error),
-        disableControls
-      )
-    ) {
-      void loadQuota(pageItems);
-    }
+    const targets = resolveQuotaRefreshTargets(
+      intent,
+      { sessionGeneration, filesGeneration, hasError: Boolean(error), disabled: disableControls },
+      pageItems
+    );
+    if (targets.length > 0) void loadQuota(targets);
   }, [disableControls, error, filesGeneration, loading, loadQuota, pageItems, sessionGeneration]);
 
   useDevinQuotaAutoLoad(
@@ -434,7 +441,7 @@ export function QuotaPage() {
             quotaFor={getQuota}
             resolvedTheme={resolvedTheme}
             disabled={!canUseActions || batchLoading}
-            onRefresh={(providerEntries) => void loadQuota(providerEntries)}
+            onRefresh={handleProviderRefresh}
           >
             <div className={styles.grid}>
               {pageItems.map((entry, index) => (

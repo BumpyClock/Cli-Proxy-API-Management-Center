@@ -4,7 +4,6 @@ import {
   HOUR_MS,
   buildTimelineLane,
   laneHasWindow,
-  pickLaneWindow,
   projectLane,
   projectResetCredits,
   startOfDay,
@@ -13,6 +12,7 @@ import {
   windowsIn,
 } from '../src/features/quota/quotaTimelineModel';
 import type { TimelineLane } from '../src/features/quota/quotaTimelineModel';
+import { pickLaneWindow } from '@/features/quota/providers/observations';
 
 const at = (y: number, m: number, d: number, h = 0, min = 0) => new Date(y, m, d, h, min).getTime();
 

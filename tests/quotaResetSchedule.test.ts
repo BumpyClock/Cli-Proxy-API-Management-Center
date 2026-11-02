@@ -4,14 +4,13 @@
 
 import { describe, expect, test } from 'bun:test';
 import {
-  XAI_WEEKLY_ROW_ID,
   collectQuotaRowInstants,
   nextRecoveryMs,
   pickSoonestRowId,
   pickUrgentRowId,
-  resetCreditRowId,
 } from '@/features/quota/resetSchedule';
 import { DAY_MS, HOUR_MS } from '@/utils/time/durations';
+import { XAI_WEEKLY_ROW_ID, resetCreditRowId } from '@/features/quota/providers/observations';
 
 const NOW = new Date(2026, 7, 2, 12).getTime();
 const iso = (ms: number) => new Date(ms).toISOString();

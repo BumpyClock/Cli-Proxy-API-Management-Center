@@ -202,8 +202,14 @@ describe('Copilot quota normalization', () => {
     expect(
       normalizeCopilotQuota({ copilot_plan: '', access_type_sku: ' copilot_business ' }).plan
     ).toBe('copilot_business');
-    for (const reset of [null, 0, '', 'invalid', '12/01/2099']) {
+    for (const reset of [null, 0, '', 'invalid', '12/01/2099', '2099-02-30', '2099-02-29', '2099-04-31T12:00:00Z', '2099-02-30T12:00:00+05:00']) {
       expect(normalizeCopilotQuota({ quota_reset_date: reset }).resetAtMs).toBeNull();
+    }
+  });
+
+  test('accepts leap days and timezone offsets without confusing UTC rollover with an invalid date', () => {
+    for (const reset of ['2096-02-29', '2096-02-29T01:00:00+05:00', '2099-12-01T04:30:00+05:00']) {
+      expect(normalizeCopilotQuota({ quota_reset_date: reset }).resetAtMs).toBe(Date.parse(reset));
     }
   });
 

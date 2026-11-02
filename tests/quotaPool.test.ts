@@ -1,19 +1,20 @@
 import { describe, expect, test } from 'bun:test';
-import { buildPoolLane, buildQuotaPool, quotaPoolPath } from '@/features/quota/quotaPoolModel';
+import {
+  buildQuotaPool,
+  quotaPoolPath,
+  type PoolQuotaObservation,
+} from '@/features/quota/quotaPoolModel';
 import type { CopilotQuotaState } from '@/types';
-import type { TimelineLane } from '@/features/quota/quotaTimelineModel';
+import { normalizeCopilotQuota } from '@/services/api/copilot';
+import { getQuotaObservations } from '@/features/quota/providers/registry';
+import { selectQuotaWindow } from '@/features/quota/providers/observations';
 
 const now = Date.parse('2026-11-01T12:00:00Z');
 const hour = 3_600_000;
-const lane = (remaining: number | null, reset: number | null): TimelineLane => ({
-  name: 'fixture',
-  displayName: 'Fixture account',
-  provider: 'claude',
-  anchorMs: reset,
-  periodHours: 168,
-  remaining,
-  limits: [],
-  resetCredits: [],
+const lane = (remaining: number | null, reset: number | null): PoolQuotaObservation => ({
+  remainingPercent: remaining,
+  resetAtMs: reset,
+  unlimited: false,
 });
 
 describe('provider quota overview', () => {
@@ -35,19 +36,16 @@ describe('provider quota overview', () => {
         ],
       },
     };
-    const input = {
-      name: 'copilot',
-      displayName: 'Copilot',
-      provider: 'github-copilot' as const,
-      quota,
-    };
-    const result = buildPoolLane(input);
+    const result = selectQuotaWindow(getQuotaObservations('github-copilot', quota));
+    if (!result) throw new Error('Expected premium allowance observation');
     expect(result.periodHours).toBeNull();
-    expect(result.remaining).toBe(73);
+    expect(result.remainingPercent).toBe(73);
     expect(
       buildQuotaPool([result], now, now + 800 * hour).points.filter((p) => p.restored > 0)
     ).toEqual([{ atMs: now + hour, remaining: 100, restored: 27 }]);
-    expect(buildPoolLane({ ...input, quota: { status: 'loading' } }).remaining).toBeNull();
+    expect(
+      selectQuotaWindow(getQuotaObservations('github-copilot', { status: 'loading' }))
+    ).toBeNull();
     const unlimited: CopilotQuotaState = {
       ...quota,
       data: {
@@ -63,9 +61,31 @@ describe('provider quota overview', () => {
         ],
       },
     };
+    const unlimitedObservation = selectQuotaWindow(
+      getQuotaObservations('github-copilot', unlimited)
+    );
     expect(
-      buildQuotaPool([buildPoolLane({ ...input, quota: unlimited })], now, now + hour).remaining
+      buildQuotaPool(unlimitedObservation ? [unlimitedObservation] : [], now, now + hour).remaining
     ).toBeNull();
+  });
+
+  test('unknown unlimited status is not a finite account or a projected reset gain', () => {
+    const quota: CopilotQuotaState = {
+      status: 'success',
+      data: normalizeCopilotQuota({
+        quota_reset_date: new Date(now + hour).toISOString(),
+        quota_snapshots: { premium_interactions: { percent_remaining: 25 } },
+      }),
+    };
+    const selected = selectQuotaWindow(getQuotaObservations('github-copilot', quota));
+    if (!selected) throw new Error('Expected unknown allowance observation');
+    expect(selected.unlimited).toBeNull();
+    const pool = buildQuotaPool([selected], now, now + 2 * hour);
+    expect(pool.remaining).toBeNull();
+    expect(pool.capacity).toBe(0);
+    expect(pool.measuredCount).toBe(0);
+    expect(pool.points).toEqual([]);
+    expect(pool.nextResetAtMs).toBeNull();
   });
 
   test('sums only measured account equivalents, not missing accounts', () => {

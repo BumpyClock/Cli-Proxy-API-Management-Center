@@ -3,14 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { IconChevronLeft, IconRefreshCw } from '@/components/ui/icons';
 import { useNow } from '@/hooks/useNow';
 import type { ResolvedTheme } from '@/types';
-import { getQuotaCacheKey } from '@/utils/quota/identity';
 import { formatRelativeInstant } from '@/utils/quota';
 import { getAuthFileIcon, getTypeLabel } from '@/features/authFiles/constants';
 import { QUOTA_TAB_ORDER } from '../constants';
 import type { QuotaFileEntry } from '../logic';
 import type { QuotaCardState } from '../providers';
 import { DAY_MS, type TimelineMode } from '../quotaTimelineModel';
-import { buildPoolLane, buildQuotaPool, quotaPoolPath } from '../quotaPoolModel';
+import { buildQuotaPool, quotaPoolPath } from '../quotaPoolModel';
+import { getQuotaObservations } from '../providers/registry';
+import { selectQuotaWindow, type QuotaWindowObservation } from '../providers/observations';
 import styles from './QuotaOverview.module.scss';
 
 interface QuotaOverviewProps {
@@ -134,18 +135,18 @@ export function QuotaOverview({
         <>
           <p className={styles.scope}>{t('quota_management.pool_scope')}</p>
           {groups.map(({ provider, entries: providerEntries }) => {
-            const lanes = providerEntries
+            const windows = providerEntries
               .map((entry) =>
-                buildPoolLane({
-                  name: getQuotaCacheKey(entry.file),
-                  displayName: entry.file.name,
-                  provider,
-                  quota: quotaFor(entry),
-                  maxPeriodHours: mode === 'session' ? 5 : 14 * 24,
-                })
+                selectQuotaWindow(
+                  getQuotaObservations(provider, quotaFor(entry)),
+                  mode === 'session' ? 5 : 14 * 24
+                )
               )
-              .filter((lane) => mode !== 'session' || lane.periodHours === 5);
-            const pool = buildQuotaPool(lanes, now, endMs);
+              .filter(
+                (window): window is QuotaWindowObservation =>
+                  window !== null && (mode !== 'session' || window.periodHours === 5)
+              );
+            const pool = buildQuotaPool(windows, now, endMs);
             const path = quotaPoolPath(pool, startMs, endMs, WIDTH, HEIGHT);
             const loaded = providerEntries.filter(
               (entry) => quotaFor(entry)?.status === 'success'

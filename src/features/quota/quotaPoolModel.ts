@@ -1,18 +1,9 @@
-import type { CopilotQuotaState } from '@/types';
-import { buildTimelineLane, type TimelineLane, type TimelineLaneInput } from './quotaTimelineModel';
+import type { QuotaWindowObservation } from './providers/observations';
 
-/** Copilot reports a reset date, not a recurring duration. Keep that distinction. */
-export function buildPoolLane(input: TimelineLaneInput): TimelineLane {
-  const lane = buildTimelineLane(input);
-  if (input.provider !== 'github-copilot' || input.quota?.status !== 'success') return lane;
-  const data = (input.quota as CopilotQuotaState).data;
-  const premium = data?.resources.find((resource) => resource.id === 'premium_interactions');
-  return {
-    ...lane,
-    anchorMs: data?.resetAtMs ?? null,
-    remaining: premium?.unlimited === false ? premium.remainingPercent : null,
-  };
-}
+export type PoolQuotaObservation = Pick<
+  QuotaWindowObservation,
+  'remainingPercent' | 'resetAtMs' | 'unlimited'
+>;
 
 export interface QuotaPoolPoint {
   atMs: number;
@@ -33,12 +24,15 @@ export interface QuotaPool {
  * Only the next reported reset is known. No historical usage or repeat resets are inferred.
  */
 export function buildQuotaPool(
-  lanes: readonly TimelineLane[],
+  observations: readonly PoolQuotaObservation[],
   now: number,
   endMs: number
 ): QuotaPool {
-  const measured = lanes.filter(
-    (lane) => lane.remaining !== null && (lane.anchorMs === null || lane.anchorMs > now)
+  const measured = observations.filter(
+    (window) =>
+      window.unlimited === false &&
+      window.remainingPercent !== null &&
+      (window.resetAtMs === null || window.resetAtMs > now)
   );
   const capacity = measured.length * 100;
   if (measured.length === 0) {
@@ -52,11 +46,14 @@ export function buildQuotaPool(
     };
   }
 
-  const remaining = measured.reduce((sum, lane) => sum + (lane.remaining ?? 0), 0);
+  const remaining = measured.reduce((sum, window) => sum + (window.remainingPercent ?? 0), 0);
   const resets = new Map<number, number>();
-  measured.forEach((lane) => {
-    if (lane.anchorMs === null || lane.anchorMs <= now) return;
-    resets.set(lane.anchorMs, (resets.get(lane.anchorMs) ?? 0) + 100 - (lane.remaining ?? 0));
+  measured.forEach((window) => {
+    if (window.resetAtMs === null || window.resetAtMs <= now) return;
+    resets.set(
+      window.resetAtMs,
+      (resets.get(window.resetAtMs) ?? 0) + 100 - (window.remainingPercent ?? 0)
+    );
   });
   const events = [...resets].sort(([a], [b]) => a - b);
   const points: QuotaPoolPoint[] = [{ atMs: now, remaining, restored: 0 }];

@@ -103,7 +103,7 @@ Check the CLI Proxy API server documentation/config comments for the full authen
 
 ### Quota UI verification with mock data
 
-Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`. Connect the local UI at `http://127.0.0.1:5173` to `http://127.0.0.1:8318` using any nonempty mock management key. All fixture accounts are labelled `mock-*`; no provider credentials are needed or used. Open Quota Management, refresh, then check Remaining, Accounts, provider filters, date navigation, light/dark themes, and mobile layouts. Stop the fixture server afterward. `bun test tests/quotaPool.test.ts tests/copilotQuota.test.ts` checks the quota math and Copilot integration.
+Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`. Connect the local UI at `http://127.0.0.1:5173` to `http://127.0.0.1:8318` using any nonempty mock management key. All fixture accounts are labelled `mock-*`; no provider credentials are needed or used. Open Quota Management, refresh, then check Remaining, Accounts, provider filters, date navigation, light/dark themes, and mobile layouts. To verify Qoder refresh, load its quota, then run `curl -X POST http://127.0.0.1:8318/v0/management/__mock/qoder -H 'Content-Type: application/json' --data '{"used":90}'` and use the provider Refresh action. Account details must show updated usage. This control endpoint exists only in the local fixture. Stop the fixture server afterward. `bun test tests/quotaObservations.test.ts tests/quotaRefreshScope.test.ts tests/quotaPool.test.ts tests/copilotQuotaApi.test.ts` checks provider observations, fresh refresh targets, quota math, and the Copilot boundary.
 
 ## Tech Stack
 

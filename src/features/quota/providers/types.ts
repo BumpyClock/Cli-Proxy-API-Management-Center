@@ -6,6 +6,7 @@
  */
 
 import type { TFunction } from 'i18next';
+import type { QuotaObservations } from './observations';
 import type {
   AntigravityQuotaState,
   AuthFileItem,
@@ -55,13 +56,20 @@ export interface QuotaStore {
   clearQuotaCache: () => void;
 }
 
-export interface QuotaProviderData<TState, TData> {
+export interface QuotaCardState {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  error?: string;
+  errorStatus?: number;
+}
+
+export interface QuotaProviderData<TState extends QuotaCardState, TData> {
   type: QuotaProviderType;
   i18nPrefix: string;
   filterFn: (file: AuthFileItem) => boolean;
   fetchQuota: (file: AuthFileItem, t: TFunction) => Promise<TData>;
   resetQuota?: (file: AuthFileItem, t: TFunction) => Promise<TData>;
   canResetQuota?: (quota: TState) => boolean;
+  getObservations: (state: TState) => QuotaObservations;
   storeSelector: (state: QuotaStore) => Record<string, TState>;
   storeSetter: keyof QuotaStore;
   buildLoadingState: () => TState;

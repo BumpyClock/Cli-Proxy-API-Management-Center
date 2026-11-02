@@ -4,6 +4,7 @@ import { apiCallApi } from '@/services/api/apiCall';
 import { useQuotaStore } from '@/stores/useQuotaStore';
 import { isDevinFile, isDisabledAuthFile } from '@/utils/quota';
 import type { QuotaProviderData } from '../types';
+import { observeQuota, observeWindow } from '../observations';
 import { createDevinQuotaFetcher, DevinQuotaError } from './requests';
 
 const fetchSnapshot = createDevinQuotaFetcher({
@@ -44,6 +45,18 @@ export const DEVIN_CONFIG: QuotaProviderData<DevinQuotaState, DevinQuotaData> = 
       throw error;
     }
   },
+  getObservations: (state) =>
+    observeQuota(
+      (state.windows ?? []).map((window) =>
+        observeWindow({
+          id: window.id,
+          label: window.label ?? window.id,
+          remainingPercent: window.remainingPercent,
+          resetAtMs: window.resetAtMs,
+          periodHours: window.periodHours,
+        })
+      )
+    ),
   storeSelector: (state) => state.devinQuota,
   storeSetter: 'setDevinQuota',
   buildLoadingState: () => ({ status: 'loading', ...emptyData() }),

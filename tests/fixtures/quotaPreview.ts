@@ -13,7 +13,9 @@ const files = [
     auth_index: `codex-${i + 1}`,
   })),
   { name: 'mock-copilot.json', type: 'github-copilot', auth_index: 'copilot-1' },
+  { name: 'mock-qoder.json', type: 'qoder', auth_index: 'qoder-1' },
 ];
+let qoderUsed = 10;
 const reset = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
 const headers = {
   'Access-Control-Allow-Origin': 'http://127.0.0.1:5173',
@@ -31,7 +33,19 @@ Bun.serve({
     const url = new URL(req.url);
     const path = url.pathname.replace('/v0/management', '');
     if (path === '/config') return json({ 'mock-data': true });
-    if (path === '/auth-files') return json({ files });
+    if (path === '/__mock/qoder' && req.method === 'POST') {
+      const { used } = (await req.json()) as { used?: number };
+      if (typeof used !== 'number' || !Number.isFinite(used) || used < 0 || used > 100)
+        return json({ error: 'Expected used between 0 and 100' }, 400);
+      qoderUsed = used;
+      return json({ used });
+    }
+    if (path === '/auth-files')
+      return json({
+        files: files.map((file) =>
+          file.type === 'qoder' ? { ...file, usage: { used: qoderUsed, total: 100 } } : file
+        ),
+      });
     if (path === '/copilot-quota') {
       if (url.searchParams.get('auth_index') !== 'copilot-1')
         return json({ error: 'Wrong mock credential' }, 400);

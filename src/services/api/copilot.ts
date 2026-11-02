@@ -54,14 +54,28 @@ export function normalizeCopilotQuota(payload: unknown): CopilotQuotaData {
     }
   );
   const reset = typeof source.quota_reset_date === 'string' ? source.quota_reset_date.trim() : '';
-  // Date-only values denote UTC midnight; never guess a recurring monthly duration.
-  const resetAtMs = /^\d{4}-\d{2}-\d{2}(?:$|T)/.test(reset) ? Date.parse(reset) : NaN;
+  // Validate the source calendar independently of timezone conversion; Date.parse rolls Feb 30.
+  const parts = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(reset);
+  let resetAtMs: number | null = null;
+  if (parts) {
+    const [, year, month, day] = parts.map(Number);
+    const calendar = new Date(0);
+    calendar.setUTCFullYear(year, month - 1, day);
+    if (
+      calendar.getUTCFullYear() === year &&
+      calendar.getUTCMonth() === month - 1 &&
+      calendar.getUTCDate() === day
+    ) {
+      const parsed = Date.parse(reset);
+      if (Number.isFinite(parsed) && parsed > 0) resetAtMs = parsed;
+    }
+  }
   return {
     plan:
       (typeof source.copilot_plan === 'string' && source.copilot_plan.trim()) ||
       (typeof source.access_type_sku === 'string' && source.access_type_sku.trim()) ||
       null,
-    resetAtMs: Number.isFinite(resetAtMs) && resetAtMs > 0 ? resetAtMs : null,
+    resetAtMs,
     resources,
   };
 }
