@@ -96,10 +96,14 @@ Check the CLI Proxy API server documentation/config comments for the full authen
   - OpenAI-compatible providers (multiple API keys, custom headers, model alias import via `/v1/models`, optional browser-side "chat/completions" test).
 - **Auth Files**: upload/download/delete JSON credentials, filter/search/pagination, runtime-only indicators, view supported models per credential (when the server supports it), manage OAuth excluded models (supports `*` wildcards), configure OAuth model alias mappings.
 - **OAuth**: start OAuth/device flows for Codex, Anthropic/Claude, Antigravity, Kimi, Qoder, and xAI/Grok; poll status; submit callback URLs or xAI/Grok displayed codes; import Vertex JSON credentials and iFlow cookies.
-- **Quota Management**: manage quota limits and usage for Claude, Antigravity, Codex, Kimi, Qoder, xAI/Grok, and other providers.
+- **Quota Management**: provider-wide remaining-quota charts with account details, provider filters, search, date navigation, and weekly/5-hour views. Charts sum measured account percentages (100% per account), not transferable credits or plan-weighted capacity. Dashed forecasts apply only each account's next reported reset, assuming no further usage. Historical burn rates and exhaustion times are not invented. Coverage excludes unknown or expired windows. Refresh explicitly to query quotas; Accounts retains per-credential refresh and supported reset actions. GitHub Copilot shows premium interactions, chat, completions, unlimited allowances, plan, and reset dates through the backend's `/v0/management/copilot-quota` endpoint using the selected credential's `auth_index`.
 - **Usage Statistics**: view request totals, token totals, hourly trends, and per API/model usage from `/v0/management/usage`.
 - **Logs**: tail logs with incremental polling, auto-refresh, search, hide management traffic, clear logs; download request error log files.
 - **System**: quick links, update check, request logging toggle, local login data cleanup, and fetch `/v1/models` (grouped view). Requires at least one proxy API key to query models.
+
+### Quota UI verification with mock data
+
+Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`. Connect the local UI at `http://127.0.0.1:5173` to `http://127.0.0.1:8318` using any nonempty mock management key. All fixture accounts are labelled `mock-*`; no provider credentials are needed or used. Open Quota Management, refresh, then check Remaining, Accounts, provider filters, date navigation, light/dark themes, and mobile layouts. Stop the fixture server afterward. `bun test tests/quotaPool.test.ts tests/copilotQuota.test.ts` checks the quota math and Copilot integration.
 
 ## Tech Stack
 

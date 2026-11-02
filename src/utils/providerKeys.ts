@@ -1,6 +1,8 @@
 const OAUTH_PROVIDER_ALIASES: Record<string, string> = {
   'anti-gravity': 'antigravity',
   grok: 'xai',
+  copilot: 'github-copilot',
+  github: 'github-copilot',
   muse: 'meta',
   'x-ai': 'xai',
   'x.ai': 'xai',

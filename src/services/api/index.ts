@@ -3,6 +3,7 @@ export * from './apiCall';
 export * from './antigravitySubscription';
 export * from './apiKeyUsage';
 export * from './config';
+export * from './copilot';
 export * from './configFile';
 export * from './apiKeys';
 export * from './providers';

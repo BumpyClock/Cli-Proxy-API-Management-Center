@@ -165,26 +165,25 @@
 
 // 深色主题（#191919）
 [data-theme='dark'] {
-  // 极简暖灰：深色模式（提升对比度与层级）
-  --bg-secondary: #151412; // 页面背景
-  --bg-primary: #1d1b18; // 容器/卡片背景
-  --bg-tertiary: #262320; // hover/次级背景
-  --bg-hover: #2e2a26;
-  --bg-quinary: #191714;
+  --bg-secondary: #0e1012;
+  --bg-primary: #151719;
+  --bg-tertiary: #222528;
+  --bg-hover: #2a2d31;
+  --bg-quinary: #121416;
   --bg-error-light: rgba(198, 87, 70, 0.18);
-  --floating-surface: #2a2723;
+  --floating-surface: #222528;
   --floating-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
 
-  --text-primary: #f6f4f1;
-  --text-secondary: #c9c3bb;
-  --text-tertiary: #9c958d;
-  --text-quaternary: #6f6962;
+  --text-primary: #f2f3f5;
+  --text-secondary: #a4a8ae;
+  --text-tertiary: #8d929a;
+  --text-quaternary: #707780;
   --text-muted: var(--text-tertiary);
 
-  --border-color: #3a3530;
+  --border-color: #292d32;
   --border-secondary: var(--border-color);
-  --border-primary: #4a453f;
-  --border-hover: #5a544d;
+  --border-primary: #383e45;
+  --border-hover: #505863;
 
   --primary-color: #8b8680;
   --primary-hover: #9a948e;

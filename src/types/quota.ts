@@ -268,6 +268,28 @@ export interface DevinQuotaState extends DevinQuotaData {
   errorStatus?: number;
 }
 
+export interface CopilotQuotaResource {
+  id: 'premium_interactions' | 'chat' | 'completions';
+  remainingPercent: number | null;
+  remaining: number | null;
+  entitlement: number | null;
+  unlimited: boolean | null;
+}
+
+/** Display fields only, normalized at the Management API boundary. */
+export interface CopilotQuotaData {
+  plan: string | null;
+  resetAtMs: number | null;
+  resources: CopilotQuotaResource[];
+}
+
+export interface CopilotQuotaState {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  data?: CopilotQuotaData;
+  error?: string;
+  errorStatus?: number;
+}
+
 /** A whitelisted quota observation from Meta's Muse key endpoint. */
 export interface MetaQuotaWindow {
   id: 'window' | 'weekly';

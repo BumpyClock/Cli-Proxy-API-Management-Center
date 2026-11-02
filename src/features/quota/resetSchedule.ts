@@ -18,6 +18,7 @@
  * tests fighting each other.
  */
 
+import type { CopilotQuotaState } from '@/types';
 import { parseIsoToMs } from '@/utils/quota';
 import { HOUR_MS } from '@/utils/time/durations';
 import type { QuotaProviderType } from './providers/types';
@@ -127,6 +128,27 @@ export function collectQuotaRowInstants(
 
   if (provider === 'kimi') {
     return collectRows((quota as { rows?: WindowLike[] }).rows ?? [], 'row');
+  }
+
+  if (provider === 'github-copilot') {
+    const data = (quota as CopilotQuotaState).data;
+    if (!data || data.resetAtMs === null) return [];
+    const resetAtMs = data.resetAtMs;
+    return data.resources
+      .filter(
+        (resource) =>
+          resource.unlimited !== true &&
+          (resource.remainingPercent !== null
+            ? resource.remainingPercent < 100
+            : resource.remaining !== null &&
+              resource.entitlement !== null &&
+              resource.remaining < resource.entitlement)
+      )
+      .map((resource) => ({
+        rowId: resource.id,
+        atMs: resetAtMs,
+        kind: 'window' as const,
+      }));
   }
 
   if (provider === 'meta') {

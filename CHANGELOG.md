@@ -4,8 +4,15 @@
 
 ### Added
 
+- Provider-first quota overview with remaining-capacity charts, next-reset projections, coverage, date navigation, and account-level details. Forecasts assume no further consumption and do not invent history or burn rates.
+- GitHub Copilot quota cards and filters, including premium interactions, unlimited chat/completions, plan, and reset dates through the credential-scoped management endpoint.
+
 - Live operations dashboard with evidence-based incidents, direct actions, per-source freshness, local-time traffic charts, and usage insights.
 - Keyboard focus containment for stacked dialogs and the mobile drawer, live incident announcements, keyboard header menus, and a skip link.
+
+### Changed
+
+- Neutral dark surfaces, compact quota controls, provider pills, and high-contrast sidebar selection follow the supplied quota-workbench design.
 
 ### Fixed
 
