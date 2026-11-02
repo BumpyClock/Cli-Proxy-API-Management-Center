@@ -8,6 +8,7 @@ export function resolveAuthProvider(file: AuthFileItem): string {
   const raw = file.provider ?? file.type ?? '';
   const key = String(raw).trim().toLowerCase().replace(/_/g, '-');
   if (key === 'x-ai' || key === 'grok') return 'xai';
+  if (key === 'copilot' || key === 'github') return 'github-copilot';
   return key;
 }
 
@@ -21,6 +22,10 @@ export function isClaudeFile(file: AuthFileItem): boolean {
 
 export function isCodexFile(file: AuthFileItem): boolean {
   return resolveAuthProvider(file) === 'codex';
+}
+
+export function isCopilotFile(file: AuthFileItem): boolean {
+  return resolveAuthProvider(file) === 'github-copilot';
 }
 
 export function isDevinFile(file: AuthFileItem): boolean {

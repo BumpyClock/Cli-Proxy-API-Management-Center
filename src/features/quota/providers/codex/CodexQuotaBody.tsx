@@ -20,7 +20,8 @@ import { formatDateTimeValue } from '@/utils/format';
 import { useNow } from '@/hooks/useNow';
 import { QuotaMeter } from '../../components/QuotaMeter';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
-import { collectQuotaRowInstants, pickUrgentRowId, resetCreditRowId } from '../../resetSchedule';
+import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
+import { resetCreditRowId } from '../observations';
 import type { QuotaBodyProps, QuotaClassMap } from '../../types';
 
 const getPlanValueClass = (planType: string | null, classes: QuotaClassMap): string => {

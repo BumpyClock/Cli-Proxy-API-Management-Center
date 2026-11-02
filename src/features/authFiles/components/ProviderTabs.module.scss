@@ -110,6 +110,69 @@
   line-height: 1.4;
 }
 
+.pillShell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+
+  .tabs {
+    flex: 1;
+  }
+}
+
+.moreProviders {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  svg {
+    transform: rotate(180deg);
+  }
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+}
+
+.pills {
+  gap: 5px;
+  padding: 2px;
+  border-bottom: 0;
+
+  .tab {
+    padding: 8px 11px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .tabActive {
+    background: var(--bg-primary);
+    border-color: var(--border-primary);
+  }
+
+  .tabCount {
+    padding: 0 2px;
+    background: none;
+  }
+}
+
 .tabCount {
   font-family: $font-mono;
   font-size: 10.5px;

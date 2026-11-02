@@ -26,6 +26,7 @@ import {
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import type { QuotaProviderData } from '../types';
+import { observeQuota, observeWindow, XAI_WEEKLY_ROW_ID } from '../observations';
 
 const XAI_PAID_HEALTH_REQUEST_TIMEOUT_MS = 15000;
 
@@ -184,6 +185,28 @@ export const XAI_CONFIG: QuotaProviderData<XaiQuotaState, XaiBillingSummary> = {
   i18nPrefix: 'xai_quota',
   filterFn: (file) => isXaiFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchXaiQuota,
+  getObservations: (state) => {
+    const billing = state.billing;
+    if (!billing || billing.periodType !== 'weekly') return observeQuota([]);
+    const window = observeWindow({
+      id: XAI_WEEKLY_ROW_ID,
+      label: '',
+      remainingPercent: billing.usagePercent == null ? null : 100 - billing.usagePercent,
+      resetAtMs: billing.resetAtMs ?? null,
+      periodHours: billing.periodHours ?? 168,
+    });
+    const limits = (billing.productUsage ?? []).flatMap((product) =>
+      product.usagePercent == null
+        ? []
+        : [
+            {
+              label: product.product ?? '',
+              remaining: Math.min(100, Math.max(0, 100 - product.usagePercent)),
+            },
+          ]
+    );
+    return observeQuota([window], [], limits);
+  },
   storeSelector: (state) => state.xaiQuota,
   storeSetter: 'setXaiQuota',
   buildLoadingState: () => ({ status: 'loading', billing: null }),

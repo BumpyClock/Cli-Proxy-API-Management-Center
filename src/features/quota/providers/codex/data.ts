@@ -38,6 +38,8 @@ import {
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import type { QuotaProviderData } from '../types';
+import { observeQuota, observeWindow, resetCreditRowId } from '../observations';
+import { parseIsoToMs } from '@/utils/quota/resetInstants';
 
 const CODEX_OPTIONAL_REQUEST_TIMEOUT_MS = 8000;
 
@@ -498,6 +500,11 @@ const resetCodexQuota = async (file: AuthFileItem, t: TFunction): Promise<CodexQ
   return fetchCodexQuota(file, t);
 };
 
+const ACCOUNT_WINDOW_PREFERENCES: Partial<Record<string, 'session' | 'weekly'>> = {
+  'five-hour': 'session',
+  weekly: 'weekly',
+};
+
 export const CODEX_CONFIG: QuotaProviderData<CodexQuotaState, CodexQuotaData> = {
   type: 'codex',
   i18nPrefix: 'codex_quota',
@@ -505,6 +512,36 @@ export const CODEX_CONFIG: QuotaProviderData<CodexQuotaState, CodexQuotaData> = 
   fetchQuota: fetchCodexQuota,
   resetQuota: resetCodexQuota,
   canResetQuota: (quota) => (quota.rateLimitResetCreditsAvailableCount ?? 0) > 0,
+  getObservations: (state) =>
+    observeQuota(
+      (state.windows ?? [])
+        .map((window, index) =>
+          observeWindow({
+            id: window.id || `window-${index}`,
+            label: window.label ?? '',
+            remainingPercent: window.usedPercent == null ? null : 100 - window.usedPercent,
+            resetAtMs: window.resetAtMs ?? null,
+            periodHours: window.periodHours ?? null,
+            preferredFor:
+              (window.periodHours ?? 0) > 0
+                ? (ACCOUNT_WINDOW_PREFERENCES[window.id] ?? null)
+                : null,
+          })
+        )
+        .filter((window) => window.resetAtMs !== null),
+      (state.rateLimitResetCredits ?? []).flatMap((credit, index) => {
+        const expiresAtMs = parseIsoToMs(credit.expiresAt);
+        return credit.status !== 'available' || expiresAtMs === null
+          ? []
+          : [
+              {
+                id: resetCreditRowId(credit, index),
+                grantedAtMs: parseIsoToMs(credit.grantedAt),
+                expiresAtMs,
+              },
+            ];
+      })
+    ),
   storeSelector: (state) => state.codexQuota,
   storeSetter: 'setCodexQuota',
   buildLoadingState: () => ({

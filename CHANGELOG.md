@@ -4,10 +4,21 @@
 
 ### Added
 
+- Provider-first quota overview with remaining-capacity charts, next-reset projections, coverage, date navigation, and account-level details. Forecasts assume no further consumption and do not invent history or burn rates.
+- GitHub Copilot quota cards and filters, including premium interactions, unlimited chat/completions, plan, and reset dates through the credential-scoped management endpoint.
+
 - Live operations dashboard with evidence-based incidents, direct actions, per-source freshness, local-time traffic charts, and usage insights.
 - Keyboard focus containment for stacked dialogs and the mobile drawer, live incident announcements, keyboard header menus, and a skip link.
 
+### Changed
+
+- Neutral dark surfaces, compact quota controls, provider pills, and high-contrast sidebar selection follow the supplied quota-workbench design.
+
 ### Fixed
+
+- Provider-level quota refresh reloads authoritative auth-file snapshots before querying the current page, including updated Qoder usage.
+- Copilot reset dates reject impossible calendar dates while preserving valid leap days and timezone offsets.
+- Active sidebar plugin drawer carets retain the selected foreground color.
 
 - Dashboard links reveal credentials with missing provider metadata and clear conflicting saved provider and log filters.
 - Returning from OAuth editors preserves the Auth Files page after a deep-link URL is cleaned up.

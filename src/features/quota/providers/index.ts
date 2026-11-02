@@ -1,77 +1,53 @@
-/**
- * 额度提供商适配器 = 数据层（data.ts，React-free）+ 渲染体（*QuotaBody.tsx）。
- *
- * 页面侧以擦除泛型的 QuotaAdapter 视图统一消费（与 AuthFileQuotaSection 的
- * 窄接口 cast 同一模式）；具体状态类型由各 data.ts 的强类型导出承载。
- */
-
 import type { ComponentType } from 'react';
-import type { TFunction } from 'i18next';
 import { useQuotaStore } from '@/stores';
-import type { AuthFileItem } from '@/types';
 import type { QuotaBodyProps } from '../types';
-import type { QuotaProviderType, QuotaStore } from './types';
-import { ANTIGRAVITY_CONFIG } from './antigravity/data';
+import type { QuotaCardState, QuotaProviderData, QuotaProviderType } from './types';
+import { QUOTA_PROVIDER_DATA } from './registry';
 import { AntigravityQuotaBody } from './antigravity/AntigravityQuotaBody';
-import { CLAUDE_CONFIG } from './claude/data';
 import { ClaudeQuotaBody } from './claude/ClaudeQuotaBody';
-import { DEVIN_CONFIG } from './devin/data';
-import { DevinQuotaBody } from './devin/DevinQuotaBody';
-import { CODEX_CONFIG } from './codex/data';
 import { CodexQuotaBody } from './codex/CodexQuotaBody';
-import { META_CONFIG } from './meta/data';
-import { MetaQuotaBody } from './meta/MetaQuotaBody';
-import { KIMI_CONFIG } from './kimi/data';
+import { CopilotQuotaBody } from './copilot/CopilotQuotaBody';
+import { DevinQuotaBody } from './devin/DevinQuotaBody';
 import { KimiQuotaBody } from './kimi/KimiQuotaBody';
-import { QODER_CONFIG } from './qoder/data';
+import { MetaQuotaBody } from './meta/MetaQuotaBody';
 import { QoderQuotaBody } from './qoder/QoderQuotaBody';
-import { XAI_CONFIG } from './xai/data';
 import { XaiQuotaBody } from './xai/XaiQuotaBody';
 
-/** 所有 provider 额度状态的公共骨架（各 *QuotaState 的结构子集）。 */
-export interface QuotaCardState {
-  status: 'idle' | 'loading' | 'success' | 'error';
-  error?: string;
-  errorStatus?: number;
-}
+export type { QuotaCardState } from './types';
 
-export interface QuotaAdapter {
-  type: QuotaProviderType;
-  i18nPrefix: string;
-  filterFn: (file: AuthFileItem) => boolean;
-  fetchQuota: (file: AuthFileItem, t: TFunction) => Promise<unknown>;
-  resetQuota?: (file: AuthFileItem, t: TFunction) => Promise<unknown>;
-  canResetQuota?: (quota: QuotaCardState) => boolean;
-  storeSelector: (state: QuotaStore) => Record<string, QuotaCardState>;
-  storeSetter: keyof QuotaStore;
-  buildLoadingState: () => QuotaCardState;
-  buildSuccessState: (data: unknown) => QuotaCardState;
-  buildErrorState: (message: string, status?: number) => QuotaCardState;
+export interface QuotaAdapter extends QuotaProviderData<QuotaCardState, unknown> {
   Body: ComponentType<QuotaBodyProps<QuotaCardState>>;
 }
 
+/** Check the concrete data/body pairing before exposing the runtime-selected UI adapter. */
+function withBody<TState extends QuotaCardState, TData>(
+  data: QuotaProviderData<TState, TData>,
+  Body: ComponentType<QuotaBodyProps<NoInfer<TState>>>
+): QuotaAdapter {
+  // SAFETY: data builders and Body share TState before the provider-selected view erases it.
+  return { ...data, Body } as unknown as QuotaAdapter;
+}
+
 export const QUOTA_ADAPTERS: Record<QuotaProviderType, QuotaAdapter> = {
-  antigravity: {
-    ...ANTIGRAVITY_CONFIG,
-    Body: AntigravityQuotaBody,
-  } as unknown as QuotaAdapter,
-  claude: { ...CLAUDE_CONFIG, Body: ClaudeQuotaBody } as unknown as QuotaAdapter,
-  codex: { ...CODEX_CONFIG, Body: CodexQuotaBody } as unknown as QuotaAdapter,
-  devin: { ...DEVIN_CONFIG, Body: DevinQuotaBody } as unknown as QuotaAdapter,
-  kimi: { ...KIMI_CONFIG, Body: KimiQuotaBody } as unknown as QuotaAdapter,
-  meta: { ...META_CONFIG, Body: MetaQuotaBody } as unknown as QuotaAdapter,
-  qoder: { ...QODER_CONFIG, Body: QoderQuotaBody } as unknown as QuotaAdapter,
-  xai: { ...XAI_CONFIG, Body: XaiQuotaBody } as unknown as QuotaAdapter,
+  antigravity: withBody(QUOTA_PROVIDER_DATA.antigravity, AntigravityQuotaBody),
+  claude: withBody(QUOTA_PROVIDER_DATA.claude, ClaudeQuotaBody),
+  codex: withBody(QUOTA_PROVIDER_DATA.codex, CodexQuotaBody),
+  'github-copilot': withBody(QUOTA_PROVIDER_DATA['github-copilot'], CopilotQuotaBody),
+  devin: withBody(QUOTA_PROVIDER_DATA.devin, DevinQuotaBody),
+  kimi: withBody(QUOTA_PROVIDER_DATA.kimi, KimiQuotaBody),
+  meta: withBody(QUOTA_PROVIDER_DATA.meta, MetaQuotaBody),
+  qoder: withBody(QUOTA_PROVIDER_DATA.qoder, QoderQuotaBody),
+  xai: withBody(QUOTA_PROVIDER_DATA.xai, XaiQuotaBody),
 };
 
 export type QuotaMapUpdater = (
   updater: (prev: Record<string, QuotaCardState>) => Record<string, QuotaCardState>
 ) => void;
 
-/** 取 adapter 对应的 store setter（getState 直读，不建立订阅）。 */
+/** Read the matching setter without subscribing to the store. */
 export const getQuotaSetter = (adapter: QuotaAdapter): QuotaMapUpdater =>
+  // SAFETY: registered storeSetter names the updater for this adapter's concrete quota map.
   useQuotaStore.getState()[adapter.storeSetter] as unknown as QuotaMapUpdater;
 
-/** 取 adapter 对应的额度缓存快照（getState 直读，不建立订阅）。 */
 export const getQuotaMap = (adapter: QuotaAdapter): Record<string, QuotaCardState> =>
-  adapter.storeSelector(useQuotaStore.getState() as unknown as QuotaStore);
+  adapter.storeSelector(useQuotaStore.getState());

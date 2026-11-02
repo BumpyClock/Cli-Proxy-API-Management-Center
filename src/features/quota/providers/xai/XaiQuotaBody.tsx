@@ -10,7 +10,8 @@ import { buildResetDisplay, formatQuotaResetTime, parseIsoToMs } from '@/utils/q
 import { useNow } from '@/hooks/useNow';
 import { QuotaMeter } from '../../components/QuotaMeter';
 import { QuotaResetLabel } from '../../components/QuotaResetLabel';
-import { XAI_WEEKLY_ROW_ID, collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
+import { collectQuotaRowInstants, pickUrgentRowId } from '../../resetSchedule';
+import { XAI_WEEKLY_ROW_ID } from '../observations';
 import type { QuotaBodyProps } from '../../types';
 
 const formatUsdFromCents = (cents: number | null): string => {

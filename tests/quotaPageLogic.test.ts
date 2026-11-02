@@ -69,6 +69,7 @@ describe('buildTabCounts', () => {
       claude: 1,
       antigravity: 0,
       codex: 2,
+      'github-copilot': 0,
       xai: 1,
       kimi: 1,
       devin: 0,

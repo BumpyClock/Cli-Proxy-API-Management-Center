@@ -31,6 +31,7 @@ import {
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import type { QuotaProviderData } from '../types';
+import { observeQuota, observeWindow } from '../observations';
 
 export type AntigravityQuotaData = {
   groups: AntigravityQuotaGroup[];
@@ -204,6 +205,22 @@ export const ANTIGRAVITY_CONFIG: QuotaProviderData<AntigravityQuotaState, Antigr
   i18nPrefix: 'antigravity_quota',
   filterFn: (file) => isAntigravityFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchAntigravityQuota,
+  getObservations: (state) =>
+    observeQuota(
+      (state.groups ?? [])
+        .flatMap((group) => group.buckets ?? [])
+        .map((bucket, index) =>
+          observeWindow({
+            id: bucket.id || `bucket-${index}`,
+            label: bucket.label ?? '',
+            remainingPercent:
+              bucket.remainingFraction == null ? null : Math.round(bucket.remainingFraction * 100),
+            resetAtMs: bucket.resetAtMs ?? null,
+            periodHours: bucket.periodHours ?? null,
+          })
+        )
+        .filter((window) => window.resetAtMs !== null)
+    ),
   storeSelector: (state) => state.antigravityQuota,
   storeSetter: 'setAntigravityQuota',
   buildLoadingState: () => ({

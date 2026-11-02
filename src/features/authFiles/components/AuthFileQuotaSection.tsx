@@ -13,19 +13,11 @@ import { isRuntimeOnlyAuthFile, type QuotaProviderType } from '@/features/authFi
 import { Button } from '@/components/ui/Button';
 import { IconRefreshCw } from '@/components/ui/icons';
 import { bindQuotaClasses } from '@/features/quota/types';
-import { QUOTA_ADAPTERS, type QuotaCardState } from '@/features/quota/providers';
+import { QUOTA_ADAPTERS, getQuotaSetter } from '@/features/quota/providers';
 import styles from './AuthFileQuota.module.scss';
 
 /** 认证文件卡片外衣：紧凑额度样式绑定成类型化契约（缺键在模块初始化即抛）。 */
 const compactQuotaClasses = bindQuotaClasses(styles, 'AuthFileQuota.module.scss');
-
-const assertNever = (value: never): never => {
-  throw new Error(`Unsupported quota type: ${value}`);
-};
-
-type QuotaMapUpdater = (
-  updater: (prev: Record<string, QuotaCardState>) => Record<string, QuotaCardState>
-) => void;
 
 export type AuthFileQuotaSectionProps = {
   file: AuthFileItem;
@@ -42,23 +34,8 @@ export function AuthFileQuotaSection(props: AuthFileQuotaSectionProps) {
   const adapter = QUOTA_ADAPTERS[quotaType];
   const cacheKey = getQuotaCacheKey(file);
 
-  const storedQuota = useQuotaStore((state) => {
-    if (quotaType === 'antigravity')
-      return state.antigravityQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'claude') return state.claudeQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'codex') return state.codexQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'devin') return state.devinQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'kimi') return state.kimiQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'meta') return state.metaQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'qoder') return state.qoderQuota[cacheKey] as QuotaCardState | undefined;
-    if (quotaType === 'xai') return state.xaiQuota[cacheKey] as QuotaCardState | undefined;
-    return assertNever(quotaType);
-  });
-  const quota = storedQuota;
-
-  const updateQuotaState = useQuotaStore(
-    (state) => state[adapter.storeSetter] as unknown as QuotaMapUpdater
-  );
+  const quota = useQuotaStore((state) => adapter.storeSelector(state)[cacheKey]);
+  const updateQuotaState = getQuotaSetter(adapter);
 
   const refreshQuotaForFile = useCallback(async () => {
     if (disableControls) return;

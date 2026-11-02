@@ -16,6 +16,7 @@ import {
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import type { QuotaProviderData } from '../types';
+import { observeQuota, observeWindow } from '../observations';
 
 const fetchKimiQuota = async (file: AuthFileItem, t: TFunction): Promise<KimiQuotaRow[]> => {
   const rawAuthIndex = file['auth_index'] ?? file.authIndex;
@@ -48,6 +49,21 @@ export const KIMI_CONFIG: QuotaProviderData<KimiQuotaState, KimiQuotaRow[]> = {
   i18nPrefix: 'kimi_quota',
   filterFn: (file) => isKimiFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchKimiQuota,
+  getObservations: (state) =>
+    observeQuota(
+      (state.rows ?? [])
+        .map((row, index) =>
+          observeWindow({
+            id: row.id || `row-${index}`,
+            label: row.label ?? '',
+            remainingPercent:
+              row.limit > 0 ? Math.round(((row.limit - row.used) / row.limit) * 100) : null,
+            resetAtMs: row.resetAtMs ?? null,
+            periodHours: row.periodHours ?? null,
+          })
+        )
+        .filter((window) => window.resetAtMs !== null)
+    ),
   storeSelector: (state) => state.kimiQuota,
   storeSetter: 'setKimiQuota',
   buildLoadingState: () => ({ status: 'loading', rows: [] }),

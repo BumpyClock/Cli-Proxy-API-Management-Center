@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { IconFilterAll } from '@/components/ui/icons';
+import { IconChevronLeft, IconFilterAll } from '@/components/ui/icons';
 import {
   getAuthFileIcon,
   getThemeSurfaceIconBackground,
@@ -15,6 +15,7 @@ export type ProviderTabsProps = {
   types: string[];
   counts: Record<string, number>;
   active: string;
+  variant?: 'underline' | 'pills';
   resolvedTheme: ResolvedTheme;
   onChange: (type: string) => void;
 };
@@ -27,11 +28,23 @@ export function ProviderTabs({
   types,
   counts,
   active,
+  variant = 'underline',
   resolvedTheme,
   onChange,
 }: ProviderTabsProps) {
   const { t } = useTranslation();
   const tabsRef = useRef<HTMLDivElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const strip = tabsRef.current;
+    if (!strip || variant !== 'pills') return;
+    const observer = new ResizeObserver(() =>
+      setHasOverflow(strip.scrollWidth > strip.clientWidth + 2)
+    );
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, [variant, types, counts]);
 
   useEffect(() => {
     const strip = tabsRef.current;
@@ -42,8 +55,13 @@ export function ProviderTabs({
     return () => strip.removeEventListener('wheel', onWheel);
   }, []);
 
-  return (
-    <div ref={tabsRef} className={styles.tabs} role="group" aria-label={t('auth_files.filter_all')}>
+  const tabs = (
+    <div
+      ref={tabsRef}
+      className={`${styles.tabs} ${variant === 'pills' ? styles.pills : ''}`}
+      role="group"
+      aria-label={t('auth_files.filter_all')}
+    >
       {types.map((type) => {
         const isActive = active === type;
         const label = type === 'all' ? t('auth_files.filter_all') : getTypeLabel(t, type);
@@ -82,5 +100,28 @@ export function ProviderTabs({
         );
       })}
     </div>
+  );
+
+  return variant === 'pills' ? (
+    <div className={styles.pillShell}>
+      {tabs}
+      {hasOverflow && (
+        <button
+          type="button"
+          className={styles.moreProviders}
+          aria-label={t('quota_management.pool_more_providers')}
+          onClick={() => {
+            const strip = tabsRef.current;
+            if (!strip) return;
+            const atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
+            strip.scrollTo({ left: atEnd ? 0 : strip.scrollLeft + strip.clientWidth * 0.75 });
+          }}
+        >
+          <IconChevronLeft size={16} aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  ) : (
+    tabs
   );
 }
