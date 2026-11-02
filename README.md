@@ -132,6 +132,9 @@ The UI language is automatically detected from browser settings and can be manua
 
 ## Build & release notes
 
+- Linux CI, PR verification, release and fork-sync jobs select Boat. Existing job names, full upstream-sync verification, release history and publication gates are unchanged.
+- Public execution is owner-only under the separately approved `BumpyClock` Boat policy. Outsider/bot execution remains blocked. Runner migration does not dispatch a workflow or repair provider billing.
+
 - Vite produces a **single HTML** output (`dist/index.html`) with all assets inlined (via `vite-plugin-singlefile`).
 - Tagging `vX.Y.Z` triggers `.github/workflows/release.yml` to publish `dist/management.html`.
 - The maintained fork may use `vX.Y.Z-N` release tags for fork-owned dashboard builds.

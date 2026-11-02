@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: boat
 
     permissions:
       contents: write
