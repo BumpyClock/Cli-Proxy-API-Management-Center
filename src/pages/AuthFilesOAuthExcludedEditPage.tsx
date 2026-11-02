@@ -4,14 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { IconEyeOff, IconNetwork } from '@/components/ui/icons';
+import { IconNetwork } from '@/components/ui/icons';
 import { OAuthEditorProviderCard } from '@/features/authFiles/components/OAuthEditorProviderCard';
 import {
   ExcludedModelsPicker,
   normalizeExcludedRules,
   type ExcludedModelsCatalogState,
 } from '@/components/excludedModels';
-import { SecondaryScreenShell } from '@/components/common/SecondaryScreenShell';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useAuthStore, useNotificationStore } from '@/stores';
@@ -21,6 +22,7 @@ import { getStringSetSignature, isOAuthEditorDirty } from '@/features/authFiles/
 import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import { getErrorMessage } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
+import bodyStyles from './AuthFilesOAuthExcludedEditPage.module.scss';
 
 type AuthFileModelItem = { id: string; display_name?: string; type?: string; owned_by?: string };
 
@@ -332,23 +334,27 @@ export function AuthFilesOAuthExcludedEditPage() {
     initialLoadError === null;
 
   return (
-    <SecondaryScreenShell
-      ref={swipeRef}
-      title={title}
-      onBack={handleBack}
-      backLabel={t('common.back')}
-      backAriaLabel={t('common.back')}
-      contentClassName={styles.pageContent}
-      topBarClassName={styles.topBar}
-      rightAction={
-        <Button size="sm" onClick={handleSave} loading={saving} disabled={!canSave}>
-          {t('oauth_excluded.save')}
-        </Button>
-      }
-      isLoading={initialLoading}
-      loadingLabel={t('common.loading')}
-    >
-      {excludedUnsupported ? (
+    <div ref={swipeRef} className={styles.pageContent}>
+      <PageHeader
+        title={title}
+        description={t('oauth_excluded.editor_description')}
+        actions={
+          <>
+            <Button variant="secondary" size="sm" onClick={handleBack}>
+              {t('common.back')}
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!canSave}>
+              {t('oauth_excluded.save')}
+            </Button>
+          </>
+        }
+      />
+      {initialLoading ? (
+        <div className={styles.loading} role="status">
+          <LoadingSpinner size={16} />
+          {t('common.loading')}
+        </div>
+      ) : excludedUnsupported ? (
         <Card>
           <EmptyState
             title={t('oauth_excluded.upgrade_required_title')}
@@ -369,16 +375,6 @@ export function AuthFilesOAuthExcludedEditPage() {
         </Card>
       ) : (
         <>
-          <div className={styles.intro}>
-            <span className={styles.introIcon}>
-              <IconEyeOff size={22} aria-hidden="true" />
-            </span>
-            <div>
-              <h1 className={styles.introTitle}>{t('oauth_excluded.title')}</h1>
-              <p className={styles.description}>{t('oauth_excluded.editor_description')}</p>
-            </div>
-          </div>
-
           <OAuthEditorProviderCard
             provider={provider}
             options={providerOptions}
@@ -390,23 +386,23 @@ export function AuthFilesOAuthExcludedEditPage() {
           <Card className={styles.settingsCard}>
             <div className={styles.editorHeader}>
               <div className={styles.sectionHeading}>
-                <span className={styles.stepNumber} aria-hidden="true">
+                <span className={styles.editorStepNumber} aria-hidden="true">
                   02
                 </span>
                 <div className={styles.headingCopy}>
-                  <h2 className={styles.sectionTitle} id="oauth-excluded-models-label">
+                  <h2 className={styles.editorSectionTitle} id="oauth-excluded-models-label">
                     {t('oauth_excluded.models_label')}
                   </h2>
-                  <p className={styles.description}>{t('oauth_excluded.models_hint')}</p>
+                  <p className={styles.editorDescription}>{t('oauth_excluded.models_hint')}</p>
                 </div>
               </div>
               {resolvedProviderKey && (
-                <span className={styles.countBadge}>
+                <span className={bodyStyles.countBadge}>
                   {t('excluded_models.trigger_summary_rules', { n: effectiveRules.length })}
                 </span>
               )}
             </div>
-            <div className={styles.editorBody}>
+            <div className={bodyStyles.editorBody}>
               {resolvedProviderKey ? (
                 <ExcludedModelsPicker
                   value={effectiveRules}
@@ -417,7 +413,7 @@ export function AuthFilesOAuthExcludedEditPage() {
                   labelledBy="oauth-excluded-models-label"
                 />
               ) : (
-                <div className={styles.emptyModels}>
+                <div className={bodyStyles.emptyModels}>
                   <IconNetwork size={24} aria-hidden="true" />
                   {t('oauth_excluded.provider_required')}
                 </div>
@@ -426,6 +422,6 @@ export function AuthFilesOAuthExcludedEditPage() {
           </Card>
         </>
       )}
-    </SecondaryScreenShell>
+    </div>
   );
 }

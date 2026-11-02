@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
 import type { HeaderMetaSegment } from '../uiState';
 import styles from './ConfigHeader.module.scss';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export type ConfigHeaderProps = {
   /** ▍mono meta 行的段落序列（uiState.buildHeaderMeta 的产物）。 */
@@ -34,12 +35,10 @@ export function ConfigHeader({
   };
 
   return (
-    <header className={styles.header}>
-      <div className={styles.copy}>
-        <h1 className={styles.title} data-reveal>
-          {t('config_management.title')}
-        </h1>
-        <p className={styles.meta} data-reveal>
+    <PageHeader
+      title={t('config_management.title')}
+      meta={
+        <span className={styles.meta}>
           {meta.map((segment, index) => (
             <Fragment key={segment.key}>
               {index > 0 ? (
@@ -54,20 +53,22 @@ export function ConfigHeader({
               </span>
             </Fragment>
           ))}
-        </p>
-      </div>
-      <div className={styles.actions} data-reveal>
-        {extraActions}
-        <button
-          type="button"
-          className={styles.ghostAction}
-          onClick={onReload}
-          disabled={reloadDisabled}
-        >
-          <IconRefreshCw size={14} className={reloading ? styles.spinning : undefined} />
-          {t('config_management.reload')}
-        </button>
-      </div>
-    </header>
+        </span>
+      }
+      actions={
+        <div className={styles.actions}>
+          {extraActions}
+          <button
+            type="button"
+            className={styles.ghostAction}
+            onClick={onReload}
+            disabled={reloadDisabled}
+          >
+            <IconRefreshCw size={14} className={reloading ? styles.spinning : undefined} />
+            {t('config_management.reload')}
+          </button>
+        </div>
+      }
+    />
   );
 }

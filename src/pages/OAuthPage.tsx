@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { IconPlug } from '@/components/ui/icons';
@@ -668,10 +669,9 @@ export function OAuthPage() {
     }
   };
 
-  const renderOAuthProviderCard = (provider: OAuthProviderCard, featured = false) => {
+  const renderOAuthProviderCard = (provider: OAuthProviderCard) => {
     const state = states[provider.id] || {};
-    const showKimiSignUp =
-      featured && provider.kind === 'builtin' && ['kimi', 'kimi-ai'].includes(provider.id);
+    const showKimiSignUp = provider.kind === 'builtin' && ['kimi', 'kimi-ai'].includes(provider.id);
     const canSubmitCallback =
       (provider.kind === 'plugin' || CALLBACK_SUPPORTED.has(provider.id)) && Boolean(state.url);
     const loginButtonLabel =
@@ -689,7 +689,7 @@ export function OAuthPage() {
     return (
       <Card
         key={provider.id}
-        className={featured ? styles.featuredCard : undefined}
+        className={styles.providerRow}
         title={
           <span className={styles.cardTitle}>
             <OAuthProviderIcon provider={provider} theme={resolvedTheme} />
@@ -698,8 +698,10 @@ export function OAuthPage() {
         }
         extra={
           showKimiSignUp ? (
-            <div className={styles.featuredActions}>
+            <div className={styles.rowActions}>
               <Button
+                variant="ghost"
+                className={styles.signupLink}
                 onClick={() =>
                   window.open(
                     provider.id === 'kimi-ai'
@@ -728,9 +730,7 @@ export function OAuthPage() {
         }
       >
         <div className={styles.cardContent}>
-          <div className={featured ? styles.featuredHint : styles.cardHint}>
-            {getProviderText(provider, 'oauth_hint')}
-          </div>
+          <div className={styles.cardHint}>{getProviderText(provider, 'oauth_hint')}</div>
           {state.url && (
             <div className={styles.authUrlBox}>
               <div className={styles.authUrlLabel}>
@@ -860,28 +860,13 @@ export function OAuthPage() {
     );
   };
 
-  const featuredProviders = providerCards.filter((provider) =>
-    ['kimi', 'kimi-ai'].includes(provider.id)
-  );
-  const otherOAuthProviders = providerCards.filter(
-    (provider) => !['kimi', 'kimi-ai'].includes(provider.id)
-  );
-
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>{t('nav.oauth', { defaultValue: 'OAuth' })}</h1>
+      <PageHeader title={t('nav.oauth')} />
 
       <div className={styles.content}>
-        <section className={styles.providerSection}>
-          <div className={styles.providerList}>
-            {featuredProviders.map((provider) => renderOAuthProviderCard(provider, true))}
-          </div>
-        </section>
-
-        <section className={styles.providerSection}>
-          <div className={styles.providerList}>
-            {otherOAuthProviders.map((provider) => renderOAuthProviderCard(provider))}
-          </div>
+        <section className={styles.providerList} aria-label={t('nav.oauth')}>
+          {providerCards.map((provider) => renderOAuthProviderCard(provider))}
         </section>
 
         {/* Vertex JSON 登录 */}

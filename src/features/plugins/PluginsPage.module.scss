@@ -6,7 +6,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: 16px;
   width: 100%;
 }
 
@@ -21,7 +21,7 @@
 .title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -75,7 +75,7 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: $radius-full;
+  border-radius: 5px;
   border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
   background: color-mix(in srgb, var(--bg-primary) 56%, transparent);
   font-size: 12px;
@@ -92,7 +92,7 @@
 
 .statusDotOn {
   background: $success-color;
-  box-shadow: 0 0 6px rgba($success-color, 0.5);
+  box-shadow: none;
 }
 
 .statusDotOff {
@@ -168,7 +168,7 @@
   flex-direction: column;
   gap: 1px;
   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: $radius-lg;
+  border-radius: 8px;
   overflow: hidden;
   background: color-mix(in srgb, var(--border-color) 30%, transparent);
 }
@@ -456,7 +456,7 @@
 .configForm {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: 16px;
 }
 
 .formSection {
@@ -583,5 +583,55 @@
       width: 100%;
     }
   }
+}
 
+.page {
+  min-width: 0;
+}
+.statusBar {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  gap: 8px 16px;
+}
+.statusPill {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: $font-mono;
+  font-weight: 400;
+}
+.page :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    animation: none;
+    transition: none;
+  }
+}
+
+.pluginList {
+  gap: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.pluginRow {
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 14px;
+  background: var(--bg-secondary);
+}
+.pluginRow:last-child {
+  border-bottom: 0;
+}
+.logoBox {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
 }

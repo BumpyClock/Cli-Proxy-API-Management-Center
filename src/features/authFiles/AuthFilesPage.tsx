@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useInterval } from '@/hooks/useInterval';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useRevealOnScroll } from '@/hooks/motion';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { copyToClipboard } from '@/utils/clipboard';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
@@ -14,7 +15,6 @@ import {
   QUOTA_PROVIDER_TYPES,
   clampCardPageSize,
   authFileProviderId,
-  getTypeLabel,
   isProblemAuthFile,
   isRuntimeOnlyAuthFile,
   normalizeProviderKey,
@@ -31,7 +31,6 @@ import { OAuthExcludedCard } from '@/features/authFiles/components/OAuthExcluded
 import { OAuthModelAliasCard } from '@/features/authFiles/components/OAuthModelAliasCard';
 import { ProviderTabs } from '@/features/authFiles/components/ProviderTabs';
 import { VaultHeader } from '@/features/authFiles/components/VaultHeader';
-import { VaultPulse } from '@/features/authFiles/components/VaultPulse';
 import { invalidateAuthFileDerivedCaches } from '@/features/authFiles/cacheInvalidation';
 import { AUTH_FILES_DEEP_LINK_KEYS, parseAuthFilesDeepLink } from '@/features/authFiles/deepLink';
 import {
@@ -60,9 +59,6 @@ import styles from './AuthFilesPage.module.scss';
 const DEFAULT_REGULAR_PAGE_SIZE = 9;
 const DEFAULT_COMPACT_PAGE_SIZE = 12;
 const SKELETON_CARD_COUNT = 6;
-/** 首屏卡片级联入场总预算，与 useRevealGroup 同一 360ms 语汇。 */
-const CARD_ENTRANCE_BUDGET_MS = 360;
-
 const resolveStatusFilterMode = (
   problemOnly: boolean,
   disabledOnly: boolean
@@ -129,7 +125,6 @@ export function AuthFilesPage() {
     error,
     uploading,
     deleting,
-    deletingAll,
     statusUpdating,
     manualRefreshing,
     batchStatusUpdating,
@@ -138,7 +133,6 @@ export function AuthFilesPage() {
     handleUploadClick,
     handleFileChange,
     handleDelete,
-    handleDeleteAll,
     handleDownload,
     handleManualRefresh,
     handleStatusToggle,
@@ -490,24 +484,6 @@ export function AuthFilesPage() {
   const activeCount = useMemo(() => files.filter((file) => file.disabled !== true).length, [files]);
   const problemCount = useMemo(() => files.filter(isProblemAuthFile).length, [files]);
 
-  /* ---------- 首屏卡片一次性级联入场 ----------
-   * 首批数据渲染后立即翻转 cardsAnimated；已挂载的卡片在挂载时捕获过
-   * 自己的延迟（AuthFileCard 内 useState 初始化），不受后续 null 影响，
-   * 而过滤/翻页/轮询新挂载的卡片拿到 null——不重播。 */
-
-  const [cardsAnimated, setCardsAnimated] = useState(false);
-  const enableCardEntrance = !cardsAnimated && isCurrentLayer && !loading && pageItems.length > 0;
-  useEffect(() => {
-    if (enableCardEntrance) {
-      setCardsAnimated(true);
-    }
-  }, [enableCardEntrance]);
-  const cardEntranceDelay = (index: number): number | null => {
-    if (!enableCardEntrance) return null;
-    if (pageItems.length <= 1) return 0;
-    return Math.round((index / (pageItems.length - 1)) * CARD_ENTRANCE_BUDGET_MS);
-  };
-
   /* ---------- 杂项 ---------- */
 
   const copyTextWithNotification = useCallback(
@@ -560,34 +536,10 @@ export function AuthFilesPage() {
     setPage(1);
   }, []);
 
-  const deleteAllButtonLabel = (() => {
-    if (enabledOnly || disabledOnly) {
-      return t('auth_files.delete_filtered_result_button');
-    }
-    if (problemOnly) {
-      return normalizedFilter === 'all'
-        ? t('auth_files.delete_problem_button')
-        : t('auth_files.delete_problem_button_with_type', {
-            type: getTypeLabel(t, normalizedFilter),
-          });
-    }
-    return normalizedFilter === 'all'
-      ? t('auth_files.delete_all_button')
-      : `${t('common.delete')} ${getTypeLabel(t, normalizedFilter)}`;
-  })();
-
   const oauthSectionRef = useRevealOnScroll<HTMLDivElement>();
 
   const isFirstRunEmpty = !loading && files.length === 0 && !error;
   const isNoResults = !loading && files.length > 0 && pageItems.length === 0;
-
-  const gridClasses = [
-    styles.grid,
-    compactMode ? styles.gridCompact : '',
-    activeQuotaFilter ? styles.gridQuota : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
 
   return (
     <div className={styles.page}>
@@ -611,7 +563,17 @@ export function AuthFilesPage() {
         onChange={handleFileChange}
       />
 
-      <VaultPulse files={files} statusBarCache={statusBarCache} />
+      <nav className={styles.subnav} aria-label={t('redesign.authFiles.sections')}>
+        {[
+          ['/auth-files', 'credentials'],
+          ['/auth-files/oauth-excluded', 'disablement'],
+          ['/auth-files/oauth-model-alias', 'aliases'],
+        ].map(([to, key]) => (
+          <NavLink key={to} to={to} end>
+            {t(`redesign.authFiles.${key}`)}
+          </NavLink>
+        ))}
+      </nav>
 
       <section className={styles.workbench} aria-label={t('auth_files.title_section')}>
         <ProviderTabs
@@ -642,21 +604,6 @@ export function AuthFilesPage() {
           onPageSizeCommit={commitPageSizeInput}
           compactMode={compactMode}
           onCompactModeChange={setCompactMode}
-          deleteLabel={deleteAllButtonLabel}
-          deleteDisabled={disableControls || loading || deletingAll || files.length === 0}
-          deleteLoading={deletingAll}
-          onDelete={() =>
-            handleDeleteAll({
-              filter,
-              problemOnly,
-              disabledOnly,
-              enabledOnly,
-              onResetFilterToAll: () => setFilter('all'),
-              onResetProblemOnly: () => setStatusFilterMode('all'),
-              onResetDisabledOnly: () => setStatusFilterMode('all'),
-              onResetEnabledOnly: () => setStatusFilterMode('all'),
-            })
-          }
         />
 
         {error && (
@@ -666,9 +613,9 @@ export function AuthFilesPage() {
         )}
 
         {loading ? (
-          <div className={gridClasses} aria-hidden="true">
+          <div className={styles.loadingRows} aria-label={t('common.loading')} role="status">
             {Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => (
-              <Skeleton key={index} height={206} rounded={14} />
+              <Skeleton key={index} height={72} rounded={0} />
             ))}
           </div>
         ) : isFirstRunEmpty ? (
@@ -701,30 +648,65 @@ export function AuthFilesPage() {
             }
           />
         ) : (
-          <div className={gridClasses}>
-            {pageItems.map((file, index) => (
-              <AuthFileCard
-                key={getQuotaCacheKey(file)}
-                file={file}
-                compact={compactMode}
-                selected={selectedFiles.has(file.name)}
-                resolvedTheme={resolvedTheme}
-                disableControls={disableControls}
-                deleting={deleting}
-                statusUpdating={statusUpdating}
-                manualRefreshing={manualRefreshing}
-                quotaFilterType={activeQuotaFilter}
-                statusBarCache={statusBarCache}
-                entranceDelayMs={cardEntranceDelay(index)}
-                onShowModels={showModels}
-                onDownload={handleDownload}
-                onManualRefresh={handleManualRefresh}
-                onOpenPrefixProxyEditor={openPrefixProxyEditor}
-                onDelete={handleDelete}
-                onToggleStatus={handleStatusToggle}
-                onToggleSelect={toggleSelect}
-              />
-            ))}
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <caption className={styles.srOnly}>{t('redesign.authFiles.credentials')}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <SelectionCheckbox
+                      checked={
+                        selectablePageItems.length > 0 &&
+                        selectablePageItems.every((file) => selectedFiles.has(file.name))
+                      }
+                      disabled={selectablePageItems.length === 0}
+                      ariaLabel={t('auth_files.batch_select_page')}
+                      onChange={(checked) => {
+                        if (checked) selectAllVisible(pageItems);
+                        else
+                          selectablePageItems.forEach((file) => {
+                            if (selectedFiles.has(file.name)) toggleSelect(file.name);
+                          });
+                      }}
+                    />
+                  </th>
+                  <th scope="col">{t('redesign.authFiles.credential')}</th>
+                  <th scope="col">{t('common.status')}</th>
+                  <th scope="col">{t('auth_files.card_requests')}</th>
+                  <th scope="col">{t('redesign.authFiles.quota')}</th>
+                  <th scope="col">{t('redesign.authFiles.updated')}</th>
+                  <th scope="col">{t('auth_files.status_toggle_label')}</th>
+                  <th scope="col">{t('redesign.authFiles.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.map((file) => (
+                  <AuthFileCard
+                    key={getQuotaCacheKey(file)}
+                    file={file}
+                    compact={compactMode}
+                    selected={selectedFiles.has(file.name)}
+                    resolvedTheme={resolvedTheme}
+                    disableControls={disableControls}
+                    deleting={deleting}
+                    statusUpdating={statusUpdating}
+                    manualRefreshing={manualRefreshing}
+                    quotaFilterType={activeQuotaFilter}
+                    statusBarCache={statusBarCache}
+                    onShowModels={showModels}
+                    onDownload={handleDownload}
+                    onManualRefresh={handleManualRefresh}
+                    onOpenPrefixProxyEditor={openPrefixProxyEditor}
+                    onDelete={handleDelete}
+                    onToggleStatus={handleStatusToggle}
+                    onToggleSelect={toggleSelect}
+                  />
+                ))}
+              </tbody>
+            </table>
+            <div className={styles.tableFoot}>
+              {t('redesign.authFiles.shown', { count: pageItems.length, total: sorted.length })}
+            </div>
           </div>
         )}
 

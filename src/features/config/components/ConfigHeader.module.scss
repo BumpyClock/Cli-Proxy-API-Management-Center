@@ -38,16 +38,6 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   color: var(--text-secondary);
-
-  /* 终端游标：全站页头 meta 行的结构记号 */
-  &::before {
-    content: '▍';
-    color: var(--viz-success);
-    font-size: 13px;
-    line-height: 1;
-    align-self: center;
-    margin-right: 1px;
-  }
 }
 
 .metaDot {
@@ -108,7 +98,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }

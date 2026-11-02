@@ -242,6 +242,9 @@ export function useDashboardOverview() {
     traffic: fleet.traffic,
     providers: fleet.providers,
     credentials: fleet.credentials,
+    credentialFiles: credentialsResource.data?.files ?? [],
+    credentialFilesReady:
+      credentialsResource.receivedAt !== null && credentialsResource.error === null,
     usage: usageResource.data,
     sources,
     refresh,

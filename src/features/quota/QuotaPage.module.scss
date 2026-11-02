@@ -59,7 +59,7 @@
 
   &:focus-within {
     border-color: var(--border-hover);
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--focus-ring, var(--accent-color));
     outline-offset: 2px;
   }
 }
@@ -110,7 +110,7 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--focus-ring, var(--accent-color));
     outline-offset: -2px;
   }
 
@@ -134,7 +134,7 @@
 
     &:focus-visible,
     &[aria-expanded='true'] {
-      outline: 2px solid var(--primary-color);
+      outline: 2px solid var(--focus-ring, var(--accent-color));
       outline-offset: 2px;
       background: var(--bg-secondary);
       color: var(--text-primary);
@@ -217,4 +217,33 @@
   .page {
     gap: 16px;
   }
+}
+
+.checkStatus,
+.checkWarning {
+  margin: -8px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.checkWarning {
+  color: var(--warning-color);
+}
+.filters {
+  min-width: 0;
+}
+.filters summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 4px 0;
+  margin-bottom: 12px;
+}
+.filters summary:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent-color));
+  outline-offset: 2px;
+}
+.filters[open] {
+  display: grid;
+  gap: 12px;
 }

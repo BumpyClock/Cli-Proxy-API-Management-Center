@@ -4,8 +4,8 @@
 .panel {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  border-radius: 8px;
+  box-shadow: none;
   padding: 20px;
   min-width: 0;
   display: flex;
@@ -82,7 +82,7 @@
 .title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.22;
   letter-spacing: 0;
@@ -166,24 +166,6 @@
   }
 }
 
-.emptyActionButtonEmphasis {
-  color: var(--amber-text);
-  border-color: color-mix(in srgb, var(--amber-color) 48%, var(--border-color));
-  background: color-mix(in srgb, var(--amber-color) 14%, var(--bg-primary));
-  font-weight: 600;
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--amber-color) 18%, transparent);
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--amber-color) 72%, var(--border-color));
-    background: color-mix(in srgb, var(--amber-color) 20%, var(--bg-primary));
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--amber-color) 18%, transparent);
-  }
-
-  &:focus-visible {
-    outline-color: var(--amber-color);
-  }
-}
-
 .primaryAction {
   height: 38px;
   font-size: 14px;
@@ -211,7 +193,7 @@
   }
 
   .title {
-    font-size: 22px;
+    font-size: 14px;
     line-height: 1.25;
   }
 
@@ -226,5 +208,14 @@
       width: 100%;
       justify-content: center;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+  .panel * {
+    transition: none;
   }
 }

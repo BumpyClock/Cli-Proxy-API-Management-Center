@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Button } from '@/components/ui/Button';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +41,8 @@ export function PluginResourcePage() {
   const [data, setData] = useState<PluginListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [frameFailed, setFrameFailed] = useState(false);
+  const [frameLoading, setFrameLoading] = useState(true);
 
   const connected = connectionStatus === 'connected';
   const pluginID = useMemo(() => safeDecodeURIComponent(params.pluginId), [params.pluginId]);
@@ -52,6 +57,8 @@ export function PluginResourcePage() {
 
     setLoading(true);
     setError('');
+    setFrameFailed(false);
+    setFrameLoading(true);
     try {
       const plugins = await pluginsApi.list();
       setData(plugins);
@@ -89,6 +96,23 @@ export function PluginResourcePage() {
 
   return (
     <div className={styles.page}>
+      <PageHeader
+        title={resource?.label || t('plugin_resource.unavailable')}
+        meta={resource ? `${resource.pluginTitle} · ${resource.menu.path}` : pluginID}
+        actions={
+          <>
+            <Link to="/plugins">{t('plugin_management.title')}</Link>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void loadResource()}
+              disabled={loading}
+            >
+              {t('common.refresh')}
+            </Button>
+          </>
+        }
+      />
       {loading ? (
         <div className={styles.stateShell}>
           <div className={styles.statusPanel}>{t('common.loading')}</div>
@@ -111,14 +135,30 @@ export function PluginResourcePage() {
             description={t('plugin_resource.empty_src_desc')}
           />
         </div>
+      ) : frameFailed ? (
+        <div className={styles.stateShell}>
+          <EmptyState title={t('plugin_resource.load_failed')} />
+        </div>
       ) : (
-        <iframe
-          className={styles.frame}
-          src={iframeSrc}
-          title={resource.label}
-          referrerPolicy="no-referrer"
-          allow="clipboard-read; clipboard-write"
-        />
+        <div className={styles.frameShell} aria-busy={frameLoading}>
+          {frameLoading && (
+            <div className={styles.statusPanel} role="status">
+              {t('common.loading')}
+            </div>
+          )}
+          <iframe
+            className={styles.frame}
+            src={iframeSrc}
+            title={resource.label}
+            referrerPolicy="no-referrer"
+            allow="clipboard-read; clipboard-write"
+            onLoad={() => setFrameLoading(false)}
+            onError={() => {
+              setFrameLoading(false);
+              setFrameFailed(true);
+            }}
+          />
+        </div>
       )}
     </div>
   );

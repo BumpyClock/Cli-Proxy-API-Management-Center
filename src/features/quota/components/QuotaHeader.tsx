@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
-import { useCountUp } from '@/hooks/motion';
+import { PageHeader } from '@/components/ui/PageHeader';
 import styles from './QuotaHeader.module.scss';
 
 export type QuotaHeaderProps = {
@@ -17,15 +17,10 @@ export function QuotaHeader(props: QuotaHeaderProps) {
   const { totalCount, loadedCount, attentionCount, refreshing, disableControls, onRefreshAll } =
     props;
   const { t } = useTranslation();
-  // 批量结果陆续落地时，「已加载」是页面上唯一滚动的数字
-  const displayLoadedCount = useCountUp(loadedCount);
-
   return (
-    <header className={styles.header}>
-      <div className={styles.copy}>
-        <h1 className={styles.title} data-reveal>
-          {t('quota_management.title')}
-        </h1>
+    <PageHeader
+      title={t('quota_management.title')}
+      meta={
         <p className={styles.meta} data-reveal>
           <span className={styles.metaTotal}>
             {t('quota_management.meta_credentials', { count: totalCount })}
@@ -34,7 +29,7 @@ export function QuotaHeader(props: QuotaHeaderProps) {
             ·
           </span>
           <span className={loadedCount > 0 ? styles.metaLoaded : styles.metaMuted}>
-            {t('quota_management.meta_loaded', { count: displayLoadedCount })}
+            {t('quota_management.meta_loaded', { count: loadedCount })}
           </span>
           {attentionCount > 0 && (
             <>
@@ -47,18 +42,28 @@ export function QuotaHeader(props: QuotaHeaderProps) {
             </>
           )}
         </p>
-      </div>
-      <div className={styles.actions} data-reveal>
-        <button
-          type="button"
-          className={styles.primaryAction}
-          onClick={onRefreshAll}
-          disabled={disableControls || refreshing}
-        >
-          <IconRefreshCw size={14} className={refreshing ? styles.spinning : undefined} />
-          {t('quota_management.refresh_all_credentials')}
-        </button>
-      </div>
-    </header>
+      }
+      actions={
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.primaryAction}
+            onClick={onRefreshAll}
+            disabled={disableControls || refreshing}
+            aria-label={t('quota_management.refresh_all_credentials')}
+            title={t('quota_management.refresh_all_credentials')}
+          >
+            <IconRefreshCw
+              size={16}
+              aria-hidden="true"
+              className={refreshing ? styles.spinning : undefined}
+            />
+            <span className={styles.refreshLabel}>
+              {t('quota_management.refresh_all_credentials')}
+            </span>
+          </button>
+        </div>
+      }
+    />
   );
 }

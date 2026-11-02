@@ -4,6 +4,8 @@
 
 ### Added
 
+- Shared Recharts time-series charts with numbered series, keyboard point inspection, reduced-motion support, and accessible data tables. Dashboard quota uses the same authoritative account/reset model as Quota Management.
+
 - Provider-first quota overview with remaining-capacity charts, next-reset projections, coverage, date navigation, and account-level details. Forecasts assume no further consumption and do not invent history or burn rates.
 - GitHub Copilot quota cards and filters, including premium interactions, unlimited chat/completions, plan, and reset dates through the credential-scoped management endpoint.
 
@@ -12,9 +14,19 @@
 
 ### Changed
 
+- Healthy dashboards use a neutral heading and omit the empty attention panel. Actual incidents and first-time provider setup remain visible.
+
+- Redesigned the application shell and route workspaces with consistent headers, compact desktop comparison tables, adaptive mobile rows, section-based settings, calmer diagnostics, and distinct action, warning, failure, and chart colors across all themes and locales. Healthy connection badges no longer occupy the sidebar or header.
+- Quota checks now run automatically on route entry, retain cached snapshots during refresh, and report partial outcomes and timestamps. Graphs compare independent accounts on a fixed 0–100% scale; filter, search, window, and series changes do not refetch.
+- Usage distinguishes collection-off, unknown, empty, failed, stale, and live states. History uses only backend-dated buckets, retains same-session snapshots on failure, and keeps identifiers masked.
+
 - Neutral dark surfaces, compact quota controls, provider pills, and high-contrast sidebar selection follow the supplied quota-workbench design.
 
 ### Fixed
+
+- Quota observations share per-credential request ownership across routes and account actions. Invalidated or superseded responses cannot replace newer snapshots.
+- Automatic xAI checks never send inference requests. Paid health testing requires a separate action labeled with its potential cost.
+- Snapshot-backed account refreshes reload authoritative auth-file usage before recording success. Quota projections stay sparse, evidence tables mount on demand, and account window labels use shipped translations.
 
 - Provider-level quota refresh reloads authoritative auth-file snapshots before querying the current page, including updated Qoder usage.
 - Copilot reset dates reject impossible calendar dates while preserving valid leap days and timezone offsets.

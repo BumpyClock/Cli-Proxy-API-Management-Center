@@ -6,7 +6,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: 16px;
   width: 100%;
 }
 
@@ -21,7 +21,7 @@
 .title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -157,7 +157,7 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: $radius-full;
+  border-radius: 5px;
   border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
   background: color-mix(in srgb, var(--bg-primary) 56%, transparent);
   font-size: 12px;
@@ -174,7 +174,7 @@
 
 .statusDotOn {
   background: $success-color;
-  box-shadow: 0 0 6px rgba($success-color, 0.5);
+  box-shadow: none;
 }
 
 .statusDotOff {
@@ -258,7 +258,7 @@
   gap: 6px;
   padding: 5px 12px;
   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: $radius-full;
+  border-radius: 5px;
   background: var(--bg-primary);
   color: var(--text-secondary);
   font-size: 12px;
@@ -288,7 +288,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 5px;
-  border-radius: $radius-full;
+  border-radius: 5px;
   background: color-mix(in srgb, var(--border-color) 45%, transparent);
   color: var(--text-secondary);
   font-size: 11px;
@@ -315,7 +315,7 @@
   gap: $spacing-sm;
   padding: $spacing-md;
   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: $radius-lg;
+  border-radius: 8px;
   background: var(--bg-primary);
   transition:
     border-color $transition-fast,
@@ -529,7 +529,7 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: $radius-full;
+  border-radius: 5px;
   background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
   border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
   color: var(--text-tertiary);
@@ -770,7 +770,7 @@
   gap: $spacing-md;
   padding: $spacing-md;
   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: $radius-lg;
+  border-radius: 8px;
   background: var(--bg-primary);
 }
 
@@ -854,4 +854,73 @@
   .page {
     gap: $spacing-md;
   }
+}
+
+.page {
+  min-width: 0;
+}
+.statusBar {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  gap: 8px 16px;
+}
+.statusPill {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: $font-mono;
+  font-weight: 400;
+}
+.page :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    animation: none;
+    transition: none;
+  }
+}
+
+.cardGrid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+}
+.card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  padding: 14px;
+}
+.logoBox {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.cardHeader {
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+.cardTitle {
+  font-size: 14px;
+}
+.metaItem {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.badgeUntrusted {
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+
+.badgeOfficial {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--info-color);
+  border: 1px solid var(--border-color);
 }

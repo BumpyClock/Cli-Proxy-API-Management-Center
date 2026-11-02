@@ -146,16 +146,19 @@ const requestXaiPaidHealth = async (authIndex: string): Promise<XaiBillingSummar
   return buildXaiPaidHealthSummary(profile);
 };
 
-const fetchXaiQuota = async (file: AuthFileItem, t: TFunction): Promise<XaiBillingSummary> => {
-  const rawAuthIndex = file['auth_index'] ?? file.authIndex;
-  const authIndex = normalizeAuthIndex(rawAuthIndex);
-  if (!authIndex) {
-    throw new Error(t('xai_quota.missing_auth_index'));
-  }
+const requireXaiAuthIndex = (file: AuthFileItem, t: TFunction): string => {
+  const authIndex = normalizeAuthIndex(file['auth_index'] ?? file.authIndex);
+  if (!authIndex) throw new Error(t('xai_quota.missing_auth_index'));
+  return authIndex;
+};
 
-  if (isPaidXaiAuthFile(file)) {
-    return requestXaiPaidHealth(authIndex);
-  }
+const fetchXaiHealth = (file: AuthFileItem, t: TFunction): Promise<XaiBillingSummary> =>
+  requestXaiPaidHealth(requireXaiAuthIndex(file, t));
+
+const observeXaiQuota = async (file: AuthFileItem, t: TFunction): Promise<XaiBillingSummary> => {
+  const authIndex = requireXaiAuthIndex(file, t);
+  // Paid OAuth has no observable allowance. Entry checks must not test inference instead.
+  if (isPaidXaiAuthFile(file)) throw new Error(t('xai_quota.empty_data'));
 
   const requestHeader = buildXaiRequestHeaders(file);
   const [weeklyResult, monthlyResult] = await Promise.allSettled([
@@ -167,16 +170,22 @@ const fetchXaiQuota = async (file: AuthFileItem, t: TFunction): Promise<XaiBilli
   const summary = mergeXaiBillingSummaries(weeklySummary, monthlySummary);
   if (summary) return summary;
 
-  const billingError =
-    weeklyResult.status === 'rejected' && monthlyResult.status === 'rejected'
-      ? weeklyResult.reason
-      : new Error(t('xai_quota.empty_data'));
+  throw weeklyResult.status === 'rejected' && monthlyResult.status === 'rejected'
+    ? weeklyResult.reason
+    : new Error(t('xai_quota.empty_data'));
+};
 
+/** Preserve the explicit provider-query contract, including its paid fallback. */
+const fetchXaiQuota = async (file: AuthFileItem, t: TFunction): Promise<XaiBillingSummary> => {
+  if (isPaidXaiAuthFile(file)) return fetchXaiHealth(file, t);
   try {
-    return await requestXaiPaidHealth(authIndex);
-  } catch {
-    // Preserve the original free billing error when neither account mode can be queried.
-    throw billingError;
+    return await observeXaiQuota(file, t);
+  } catch (billingError) {
+    try {
+      return await fetchXaiHealth(file, t);
+    } catch {
+      throw billingError;
+    }
   }
 };
 
@@ -185,6 +194,12 @@ export const XAI_CONFIG: QuotaProviderData<XaiQuotaState, XaiBillingSummary> = {
   i18nPrefix: 'xai_quota',
   filterFn: (file) => isXaiFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchXaiQuota,
+  observation: { source: 'remote', read: observeXaiQuota },
+  healthTest: {
+    run: fetchXaiHealth,
+    labelKey: 'xai_quota.test_health',
+    labelFallback: 'Test API health (sends an inference request; may incur charges)',
+  },
   getObservations: (state) => {
     const billing = state.billing;
     if (!billing || billing.periodType !== 'weekly') return observeQuota([]);

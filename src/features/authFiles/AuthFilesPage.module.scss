@@ -36,24 +36,102 @@
   overflow-wrap: anywhere;
 }
 
-/* ---------- 卡片网格 ---------- */
-
-.grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-  align-items: stretch;
+.loadingRows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
-
-.gridCompact {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+.tableContainer {
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
 }
-
-/* provider tab 激活（配额模式）时卡片承载配额区，需要更宽的列。
-   值与 .grid 相同但**必须保留且排在 .gridCompact 之后**：三个类同时挂在网格上，
-   同specificity 靠源序决胜，删掉这条会让「紧凑 + 配额」从 340 掉回 260。 */
-.gridQuota {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 13px;
+  th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  th:first-child {
+    width: 4%;
+  }
+  th:nth-child(2) {
+    width: 21%;
+  }
+  th:nth-child(3) {
+    width: 16%;
+  }
+  th:nth-child(4) {
+    width: 14%;
+  }
+  th:nth-child(5) {
+    width: 19%;
+  }
+  th:nth-child(6) {
+    width: 12%;
+  }
+  th:nth-child(7) {
+    width: 6%;
+  }
+  th:last-child {
+    width: 8%;
+  }
+}
+.tableFoot {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  font: 12px/1.5 $font-mono;
+  color: var(--text-secondary);
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.subnav {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  a {
+    padding: 12px 0;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  a[aria-current='page'] {
+    border-bottom-color: var(--accent-color, var(--primary-color));
+    color: var(--text-primary);
+  }
+  a:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--primary-color));
+    outline-offset: -2px;
+  }
+}
+@media (max-width: 1100px) {
+  .table,
+  .table tbody {
+    display: block;
+  }
+  .table thead {
+    display: none;
+  }
+  .subnav {
+    gap: 20px;
+  }
 }
 
 .emptyActions {

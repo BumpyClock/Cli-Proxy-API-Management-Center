@@ -2,17 +2,10 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
-import { IconSearch, IconSlidersHorizontal, IconTrash2 } from '@/components/ui/icons';
-import {
-  MAX_CARD_PAGE_SIZE,
-  MIN_CARD_PAGE_SIZE,
-} from '@/features/authFiles/constants';
-import type {
-  AuthFilesSortMode,
-  AuthFilesStatusFilterMode,
-} from '@/features/authFiles/uiState';
+import { IconSearch, IconSlidersHorizontal } from '@/components/ui/icons';
+import { MAX_CARD_PAGE_SIZE, MIN_CARD_PAGE_SIZE } from '@/features/authFiles/constants';
+import type { AuthFilesSortMode, AuthFilesStatusFilterMode } from '@/features/authFiles/uiState';
 import styles from './AuthFilesToolbar.module.scss';
 
 export type AuthFilesToolbarProps = {
@@ -29,16 +22,8 @@ export type AuthFilesToolbarProps = {
   onPageSizeCommit: (rawValue: string) => void;
   compactMode: boolean;
   onCompactModeChange: (value: boolean) => void;
-  deleteLabel: string;
-  deleteDisabled: boolean;
-  deleteLoading: boolean;
-  onDelete: () => void;
 };
 
-/**
- * 工作区工具栏：搜索 · 状态分段 · 排序 · 显示设置 popover。
- * 「删除筛选结果」放在工具栏最右端——与限定它作用域的过滤器相邻（映射原则）。
- */
 export function AuthFilesToolbar(props: AuthFilesToolbarProps) {
   const {
     search,
@@ -54,10 +39,6 @@ export function AuthFilesToolbar(props: AuthFilesToolbarProps) {
     onPageSizeCommit,
     compactMode,
     onCompactModeChange,
-    deleteLabel,
-    deleteDisabled,
-    deleteLoading,
-    onDelete,
   } = props;
   const { t } = useTranslation();
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
@@ -138,7 +119,7 @@ export function AuthFilesToolbar(props: AuthFilesToolbarProps) {
           aria-expanded={displaySettingsOpen}
           aria-controls="auth-files-display-settings"
           title={t('auth_files.display_options_label')}
-        onClick={() => setDisplaySettingsOpen((open) => !open)}
+          onClick={() => setDisplaySettingsOpen((open) => !open)}
         >
           <IconSlidersHorizontal size={15} />
           <span>{t('auth_files.display_options_label')}</span>
@@ -176,16 +157,6 @@ export function AuthFilesToolbar(props: AuthFilesToolbarProps) {
           </div>
         )}
       </div>
-
-      <button
-        type="button"
-        className={styles.deleteAction}
-        onClick={onDelete}
-        disabled={deleteDisabled}
-      >
-        {deleteLoading ? <LoadingSpinner size={13} /> : <IconTrash2 size={14} />}
-        {deleteLabel}
-      </button>
     </div>
   );
 }

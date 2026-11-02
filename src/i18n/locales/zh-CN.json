@@ -87,7 +87,9 @@
     "error_not_found": "未找到 Management API，请确认服务地址指向 CLIProxyAPI 后端",
     "error_server": "后端处理管理接口时发生错误，请查看服务日志",
     "error_cors": "跨域请求被阻止，请检查服务器配置",
-    "error_ssl": "SSL/TLS 证书验证失败"
+    "error_ssl": "SSL/TLS 证书验证失败",
+    "show_key": "显示管理密钥",
+    "hide_key": "隐藏管理密钥"
   },
   "header": {
     "refresh_all": "刷新全部",
@@ -737,6 +739,7 @@
     "unit_default": "credits"
   },
   "xai_quota": {
+    "test_health": "测试 API 健康状态（发送推理请求，可能产生费用）",
     "title": "Grok 额度",
     "empty_title": "暂无 xAI/Grok 认证",
     "empty_desc": "使用 xAI OAuth 登录后即可查看 Grok 额度。",
@@ -2105,5 +2108,138 @@
     "failures": "失败",
     "models": "模型",
     "no_data": "暂无使用数据"
+  },
+  "redesign": {
+    "authFiles": {
+      "sections": "认证文件分区",
+      "credentials": "凭证",
+      "disablement": "OAuth 模型禁用",
+      "aliases": "OAuth 模型别名",
+      "select": "选择",
+      "credential": "凭证",
+      "quota": "配额",
+      "updated": "更新时间",
+      "actions": "操作",
+      "actionsFor": "{{name}} 的操作",
+      "notReported": "未报告",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "problem": "异常",
+      "shown": "显示 {{count}} 条，共 {{total}} 条",
+      "quotaRemaining": "剩余 {{value}}",
+      "quotaUnlimited": "无上限",
+      "quotaDetails": "{{name}} 的额度详情"
+    },
+    "dashboardQuota": {
+      "title": "剩余额度",
+      "subtitle": "当前快照 · 未来 7 天",
+      "refresh": "检查额度",
+      "open_quota": "打开额度管理",
+      "disconnected": "连接后可检查额度。",
+      "waiting": "正在等待凭证文件。",
+      "checking": "正在检查符合条件的账户。缓存快照保持可见。",
+      "failed": "{{count}} 个账户的额度检查失败。已有快照会保留并标记为过期。",
+      "snapshots": "供应商报告的快照，并非实时用量。",
+      "no_data": "没有报告剩余百分比。缺失或失败的数据不视为零。",
+      "no_eligible": "没有符合条件的账户。已停用和不受支持的凭证会被跳过。",
+      "coverage": "{{eligible}} 个符合条件的账户中，{{measured}} 个有测量值 · {{unavailable}} 个无百分比 · {{skipped}} 个已跳过",
+      "stale": "已过期",
+      "chart_label": "各账户从现在到未来 7 天的剩余额度。纵轴固定为 0 到 100%。虚线仅预测下一次重置，并非历史用量。",
+      "evidence": "圆点表示报告的快照。虚线阶梯仅预测下一次已报告的重置，并假设不再使用额度。每个账户使用供应商选定的一个窗口；额度相互独立。不提供历史用量。过期快照不预测重置。",
+      "oldest_snapshot": "最早的显示快照 ·",
+      "unknown_time": "快照时间不可用。",
+      "no_snapshot": "暂无测量快照。",
+      "refresh_policy": "每次进入页面检查一次。不自动轮询额度。"
+    },
+    "chart": {
+      "series": "图表数据系列",
+      "unreported": "未报告",
+      "keyboard": "使用方向键查看数据点。Home 和 End 键跳至首尾数据点。",
+      "choose_series": "选择数据系列以显示数据。",
+      "table": "查看数据表",
+      "time": "时间"
+    },
+    "dashboard": {
+      "request_flow": "请求趋势",
+      "traffic_interval": "每 10 分钟的请求数 · {{zone}} · 最新时间段仍可能更新"
+    },
+    "providers": {
+      "configured": "已配置",
+      "setupTitle": "设置步骤",
+      "setupProvider": "连接上游提供商",
+      "setupOAuth": "如果提供商使用 OAuth，请添加 OAuth 凭据",
+      "setupClient": "在配置面板中创建客户端 API 密钥",
+      "setupUsage": "从客户端发送请求，然后查看使用统计"
+    },
+    "quota": {
+      "checking": "正在检查额度…",
+      "checked": "检查于 {{time}} · {{success}} 已更新 · {{failed}} 失败 · {{skipped}} 已跳过。",
+      "filters": "筛选账户",
+      "skippedAccounts": "已跳过的账户",
+      "disabled": "已禁用",
+      "unsupported": "不支持或不符合条件",
+      "remaining": "剩余额度",
+      "assumption": "虚线仅表示下次重置的预测，假设不再使用。",
+      "series": "账户曲线",
+      "stale": "过期快照",
+      "evidence": "快照为已报告的数值。虚线阶梯仅预测下次重置，假设不再使用。无历史消耗数据。各账户与套餐的额度相互独立。过期快照不预测重置。",
+      "breakdown": "账户明细",
+      "independent": "独立额度",
+      "account": "账户",
+      "snapshot": "快照",
+      "failed": "检查失败",
+      "refreshAccount": "刷新 {{name}}",
+      "method": "图表说明"
+    },
+    "settings": {
+      "section": "分区",
+      "modelSearch": "筛选模型",
+      "noModels": "没有匹配的模型。",
+      "rememberHint": "使用可逆混淆保存在此浏览器中。请勿在共享设备上启用。",
+      "logColumns": {
+        "time": "时间",
+        "level": "级别",
+        "status": "状态",
+        "latency": "延迟",
+        "method": "方法",
+        "path": "路径",
+        "client": "客户端",
+        "source": "来源"
+      },
+      "official": "官方"
+    },
+    "usage": {
+      "state_loading": "正在加载使用统计…",
+      "state_off": "统计收集已关闭",
+      "state_unknown": "统计收集状态未知",
+      "state_empty": "统计收集已开启 · 尚无请求记录",
+      "state_live": "统计收集已开启 · 快照已加载",
+      "state_stale": "缓存快照 · 需要刷新",
+      "state_error": "使用统计获取失败",
+      "retry": "重试",
+      "off_title": "使用统计已关闭",
+      "off_detail": "此后端未记录使用情况。总数和图表已隐藏，因为零会被误解为没有流量，而实际是未记录。开启收集后仅记录后续请求，不会补录之前的流量。",
+      "open_config": "前往配置开启",
+      "unknown_title": "此后端未报告统计收集状态",
+      "unknown_detail": "无法获取 usage-statistics-enabled 标志，无法确认是否正在收集统计，因此隐藏总数和图表。请在管理中心信息中检查后端版本。",
+      "open_system": "打开管理中心信息",
+      "coverage": "使用统计保存在后端内存中，重启后清空。收集关闭期间的流量不会补录。后端未报告统计收集的开始时间。",
+      "empty_detail": "统计收集已开启，但尚未记录任何请求。请通过代理发送请求，然后刷新。",
+      "no_cached_data": "没有之前已确认的使用统计快照。请重试以加载使用统计。",
+      "stale_error": "刷新失败，正在显示上次已确认的快照。",
+      "refreshing_cached": "正在刷新。下方数值来自上次已确认的快照。",
+      "age_stale": "此快照已有至少 {{minutes}} 分钟。请刷新以检查当前计数。",
+      "flag_failed": "无法检查统计收集标志。",
+      "snapshot_failed": "无法加载使用统计快照。",
+      "requests_by_day": "每日请求数",
+      "tokens_by_day": "每日令牌数",
+      "daily_evidence": "后端报告的每日总数。缺失日期不会补录。按小时汇总的数据不是带日期的历史记录。",
+      "no_dated_data": "未报告带日期的总数。仅在后端提供日期时显示每日数据点。",
+      "model_evidence": "按请求数列出前 12 个模型/API 组合。延迟仅使用保留的请求明细计算，不代表全部历史样本。",
+      "unreported": "未报告",
+      "p50": "p50 延迟",
+      "p95": "p95 延迟",
+      "milliseconds": "{{value}} 毫秒"
+    }
   }
 }

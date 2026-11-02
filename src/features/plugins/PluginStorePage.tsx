@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -845,7 +846,9 @@ export function PluginStorePage() {
                 <IconAlertTriangle size={11} />
                 {t('plugin_store.badge_untrusted')}
               </span>
-            ) : null}
+            ) : (
+              <span className={styles.badgeOfficial}>{t('redesign.settings.official')}</span>
+            )}
             {isUpdate ? (
               <span className={styles.badgeWarning}>{t('plugin_store.badge_update')}</span>
             ) : entry.installed ? (
@@ -986,10 +989,7 @@ export function PluginStorePage() {
   return (
     <div className={styles.page}>
       {/* ── Page Header ── */}
-      <div className={styles.pageHeader}>
-        <h1 className={styles.title}>{t('plugin_store.title')}</h1>
-        <p className={styles.description}>{t('plugin_store.description')}</p>
-      </div>
+      <PageHeader title={t('plugin_store.title')} description={t('plugin_store.description')} />
 
       {/* ── Security Banner ── */}
       <div className={styles.securityBanner} role="note">

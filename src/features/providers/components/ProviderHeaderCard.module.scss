@@ -1,181 +1,75 @@
-@use '../../../styles/mixins' as *;
 @use '../../../styles/variables' as *;
 
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.row {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  @media (min-width: 1024px) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-.titleArea {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.title {
-  margin: 0;
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-primary);
-}
-
 .quickStartCard {
-  gap: 14px;
-
-  .title {
-    font-size: 32px;
-    font-weight: 720;
-    line-height: 1.18;
-    letter-spacing: 0;
-  }
-
-  .btn {
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
-  }
+  min-width: 0;
 }
-
-.subtitle {
-  margin: 0;
-  font-size: 14px;
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
-
-  @media (min-width: 1024px) {
-    justify-content: flex-end;
-  }
+  gap: 8px;
 }
-
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 500;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
   cursor: pointer;
-  transition:
-    background-color $transition-fast,
-    border-color $transition-fast,
-    color $transition-fast;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-primary);
-
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 }
-
 .btnOutline {
-  border-color: var(--border-color);
   background: var(--bg-primary);
-
+  color: var(--text-primary);
   &:hover:not(:disabled) {
-    background: var(--bg-tertiary);
-    border-color: var(--border-hover);
+    background: var(--bg-secondary);
   }
 }
-
 .btnPrimary {
   background: var(--primary-color);
   color: var(--primary-contrast);
-
   &:hover:not(:disabled) {
     background: var(--primary-hover);
   }
-
-  &:active:not(:disabled) {
-    background: var(--primary-active);
-  }
 }
-
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px 16px;
 }
-
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  background: var(--muted-bg);
-  color: var(--muted-foreground);
-  font-size: 13px;
-  font-weight: 500;
+  color: var(--text-secondary);
+  font: 12px/1.5 $font-mono;
 }
-
 .chipPrimary {
-  border-color: var(--primary-30);
-  background: var(--primary-10);
-  color: var(--primary-color);
+  color: var(--text-primary);
 }
-
-.chipAmber {
-  border-color: var(--amber-30);
-  background: var(--amber-10);
-  color: var(--amber-text);
-}
-
-.spin {
-  display: inline-flex;
-  animation: pwc-spin 0.9s linear infinite;
-}
-
 .btnIcon {
   display: inline-flex;
-  align-items: center;
 }
-
-@keyframes pwc-spin {
-  from {
-    transform: rotate(0deg);
-  }
+.spin {
+  display: inline-flex;
+  animation: provider-spin 0.9s linear infinite;
+}
+@keyframes provider-spin {
   to {
     transform: rotate(360deg);
   }
 }
-
-@media (max-width: 768px) {
-  .quickStartCard {
-    .title {
-      font-size: 28px;
-      line-height: 1.2;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
   }
 }

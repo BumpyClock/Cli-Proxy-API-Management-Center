@@ -1,12 +1,3 @@
-/**
- * 额度卡片：头部（提供商图标 + mono 文件名）+ 四态 body + 动作 footer。
- *
- * - idle：整个 body 是一个点击加载按钮（上游直连有速率考虑，不自动拉取）；
- * - loading：双幽灵行骨架（aria-busy，文字等价视觉隐藏）；
- * - error：失败色条 + footer 刷新即重试；
- * - success：provider Body（穿 QuotaBody.module.scss 全页外衣）。
- */
-
 import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
@@ -64,7 +55,7 @@ export function QuotaCard(props: QuotaCardProps) {
       : ({ '--card-delay': `${mountEntranceDelayMs}ms` } as CSSProperties);
 
   const status = quota?.status ?? 'idle';
-  const loading = status === 'loading';
+  const loading = status === 'loading' || Boolean(quota?.refreshing);
   const iconSrc = getAuthFileIcon(entry.type, resolvedTheme);
   const typeLabel = getTypeLabel(t, entry.type);
   const errorMessage = resolveQuotaErrorMessage(
@@ -104,6 +95,11 @@ export function QuotaCard(props: QuotaCardProps) {
         </span>
       </header>
 
+      {quota?.stale && (
+        <p className={styles.errorStrip} role="status">
+          {t('redesign.quota.stale')} · {quota.error}
+        </p>
+      )}
       <div className={styles.body}>
         {status === 'idle' ? (
           <button
@@ -115,7 +111,7 @@ export function QuotaCard(props: QuotaCardProps) {
             <IconRefreshCw size={15} aria-hidden="true" className={styles.idleGlyph} />
             <span className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</span>
           </button>
-        ) : loading ? (
+        ) : status === 'loading' ? (
           <div className={styles.skeleton} aria-busy="true">
             <span className={styles.srOnly}>{t(`${adapter.i18nPrefix}.loading`)}</span>
             {[0, 1].map((row) => (

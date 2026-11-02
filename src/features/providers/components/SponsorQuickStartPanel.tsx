@@ -102,7 +102,7 @@ export function SponsorQuickStartPanel({
               <span>{t('providersPage.actions.new')}</span>
             </button>
             <a
-              className={`${styles.emptyActionButton} ${styles.emptyActionButtonEmphasis}`}
+              className={`${styles.emptyActionButton}`}
               href={APIKEY_FUN_AFFILIATE_URL}
               target="_blank"
               rel="noreferrer"

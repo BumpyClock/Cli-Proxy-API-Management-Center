@@ -37,6 +37,7 @@ export const QODER_CONFIG: QuotaProviderData<QoderQuotaState, QoderUsageSnapshot
   i18nPrefix: 'qoder_quota',
   filterFn: (file) => isQoderFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchQoderQuota,
+  observation: { source: 'auth-files' },
   getObservations: () => observeQuota([]),
   storeSelector: (state) => state.qoderQuota,
   storeSetter: 'setQoderQuota',

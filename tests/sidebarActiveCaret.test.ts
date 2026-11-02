@@ -6,7 +6,7 @@ describe('active sidebar drawer styling', () => {
     const { css } = compile('src/styles/layout.scss');
     expect(css).toMatch(/\.sidebar \.nav-item\.active \.nav-drawer-caret\s*\{\s*color: inherit;/);
     expect(css).toMatch(
-      /\.sidebar \.nav-item\.active\s*\{[^}]*background: var\(--text-primary\);[^}]*color: var\(--bg-secondary\);/
+      /\.sidebar \.nav-item\.active\s*\{[^}]*background: var\(--bg-hover\);[^}]*color: var\(--text-primary\);/
     );
   });
 });

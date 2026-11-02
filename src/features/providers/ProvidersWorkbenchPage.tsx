@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
@@ -26,6 +26,7 @@ import { useProviderWorkbench } from './useProviderWorkbench';
 import { PROVIDER_BRAND_ORDER } from './descriptors';
 import {
   getProviderFilterState,
+  resolveProviderBrand,
   applyProviderBrandDeepLink,
   readProvidersWorkbenchUiState,
   writeProvidersWorkbenchUiState,
@@ -181,12 +182,7 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
         : allGroups.filter((group) => group.id !== 'apikeyFun'),
     [allGroups, fixedBrand]
   );
-  const firstVisibleBrand = groups[0]?.id ?? fixedBrand ?? 'gemini';
-  const activeBrand =
-    fixedBrand ??
-    (groups.some((group) => group.id === uiState.activeBrand)
-      ? uiState.activeBrand
-      : firstVisibleBrand);
+  const activeBrand = resolveProviderBrand(groups, uiState.activeBrand, fixedBrand);
   const activeFilterState = getProviderFilterState(uiState, activeBrand);
   const filter = activeFilterState.filter;
   const providerSortBy = activeFilterState.sortBy;
@@ -505,6 +501,26 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
           />
         )}
       </div>
+
+      {fixedBrand === 'apikeyFun' ? (
+        <section className={styles.setup} aria-labelledby="quick-start-steps">
+          <h2 id="quick-start-steps">{t('redesign.providers.setupTitle')}</h2>
+          <ol>
+            <li>
+              <Link to="/ai-providers">{t('redesign.providers.setupProvider')}</Link>
+            </li>
+            <li>
+              <Link to="/oauth">{t('redesign.providers.setupOAuth')}</Link>
+            </li>
+            <li>
+              <Link to="/config">{t('redesign.providers.setupClient')}</Link>
+            </li>
+            <li>
+              <Link to="/usage">{t('redesign.providers.setupUsage')}</Link>
+            </li>
+          </ol>
+        </section>
+      ) : null}
 
       {!fixedBrand ? (
         <ProviderSheet

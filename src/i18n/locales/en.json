@@ -87,7 +87,9 @@
     "error_not_found": "Management API not found, confirm the server address points to the CLIProxyAPI backend",
     "error_server": "Backend failed while handling the management request, check the server logs",
     "error_cors": "Cross-origin request blocked, please check server configuration",
-    "error_ssl": "SSL/TLS certificate verification failed"
+    "error_ssl": "SSL/TLS certificate verification failed",
+    "show_key": "Show management key",
+    "hide_key": "Hide management key"
   },
   "header": {
     "refresh_all": "Refresh All",
@@ -747,6 +749,7 @@
     "unit_default": "credits"
   },
   "xai_quota": {
+    "test_health": "Test API health (sends an inference request; may incur charges)",
     "title": "Grok Quota",
     "empty_title": "No xAI/Grok Auth Files",
     "empty_desc": "Log in with xAI OAuth to view Grok quota.",
@@ -2115,5 +2118,138 @@
     "failures": "Failures",
     "models": "Models",
     "no_data": "No usage data available"
+  },
+  "redesign": {
+    "authFiles": {
+      "sections": "Auth Files sections",
+      "credentials": "Credentials",
+      "disablement": "OAuth Model Disablement",
+      "aliases": "OAuth Model Aliases",
+      "select": "Select",
+      "credential": "Credential",
+      "quota": "Quota",
+      "updated": "Updated",
+      "actions": "Actions",
+      "actionsFor": "Actions for {{name}}",
+      "notReported": "Not reported",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "problem": "Problem",
+      "shown": "{{count}} of {{total}} shown",
+      "quotaRemaining": "{{value}} remaining",
+      "quotaUnlimited": "Unlimited",
+      "quotaDetails": "Quota details for {{name}}"
+    },
+    "dashboardQuota": {
+      "title": "Remaining quota",
+      "subtitle": "Current snapshots · Next 7 days",
+      "refresh": "Check quota",
+      "open_quota": "Open quota management",
+      "disconnected": "Connect to check quota.",
+      "waiting": "Waiting for credential files.",
+      "checking": "Checking eligible accounts. Cached snapshots stay visible.",
+      "failed": "Quota checks failed · {{count}}. Any previous snapshots are retained and marked stale.",
+      "snapshots": "Reported snapshots, not live usage.",
+      "no_data": "No reported remaining percentages. Missing or failed values are not zero.",
+      "no_eligible": "No eligible accounts. Disabled and unsupported credentials are skipped.",
+      "coverage": "{{measured}} of {{eligible}} eligible accounts measured · {{unavailable}} without a percentage · {{skipped}} skipped",
+      "stale": "Stale",
+      "chart_label": "Remaining quota by account, from now through the next 7 days. Fixed 0 to 100 percent scale. Dashed next-reset projections, not usage history.",
+      "evidence": "Dots are reported snapshots. Dashed steps show only the next reported reset, assuming no further use. One provider-selected window per account; allowances are independent. No usage history. Stale snapshots do not project resets.",
+      "oldest_snapshot": "Oldest displayed snapshot ·",
+      "unknown_time": "Snapshot time unavailable.",
+      "no_snapshot": "No measured snapshot available.",
+      "refresh_policy": "Automatic check on entry only. No automatic quota polling."
+    },
+    "chart": {
+      "series": "Chart series",
+      "unreported": "Not reported",
+      "keyboard": "Use arrow keys to inspect points. Home and End jump to the first and last point.",
+      "choose_series": "Select a series to show its data.",
+      "table": "View data table",
+      "time": "Time"
+    },
+    "dashboard": {
+      "request_flow": "Request flow",
+      "traffic_interval": "Requests per 10 minutes · {{zone}} · latest bucket may still be filling"
+    },
+    "providers": {
+      "configured": "Configured",
+      "setupTitle": "Setup steps",
+      "setupProvider": "Connect an upstream provider",
+      "setupOAuth": "Add an OAuth credential if your provider uses OAuth",
+      "setupClient": "Create a client API key in Config Panel",
+      "setupUsage": "Send a request from your client, then inspect Usage Statistics"
+    },
+    "quota": {
+      "checking": "Checking quota…",
+      "checked": "Checked {{time}} · {{success}} updated · {{failed}} failed · {{skipped}} skipped.",
+      "filters": "Filter accounts",
+      "skippedAccounts": "Skipped accounts",
+      "disabled": "Disabled",
+      "unsupported": "Unsupported or ineligible",
+      "remaining": "Remaining quota",
+      "assumption": "Dashed = next-reset projection, assuming no further use.",
+      "series": "Account series",
+      "stale": "Stale snapshot",
+      "evidence": "Snapshots are reported values. Dashed steps project only the next reset, assuming no further use. No historical consumption is available. Accounts and plans have independent allowances. Stale snapshots have no reset projection.",
+      "breakdown": "Account breakdown",
+      "independent": "Independent allowances",
+      "account": "Account",
+      "snapshot": "Snapshot",
+      "failed": "Check failed",
+      "refreshAccount": "Refresh {{name}}",
+      "method": "How to read this chart"
+    },
+    "settings": {
+      "section": "Section",
+      "modelSearch": "Filter models",
+      "noModels": "No models match this search.",
+      "rememberHint": "Saved in this browser with reversible obfuscation. Skip on shared devices.",
+      "logColumns": {
+        "time": "Time",
+        "level": "Level",
+        "status": "Status",
+        "latency": "Latency",
+        "method": "Method",
+        "path": "Path",
+        "client": "Client",
+        "source": "Source"
+      },
+      "official": "Official"
+    },
+    "usage": {
+      "state_loading": "Loading usage statistics…",
+      "state_off": "Collection off",
+      "state_unknown": "Collection status unknown",
+      "state_empty": "Collection on · No requests recorded",
+      "state_live": "Collection on · Snapshot loaded",
+      "state_stale": "Cached snapshot · Refresh needed",
+      "state_error": "Usage fetch failed",
+      "retry": "Retry",
+      "off_title": "Usage statistics are off",
+      "off_detail": "This backend is not recording usage. Totals and charts are hidden because zero would mean not recorded, not no traffic. Enabling collection records future requests only; earlier traffic is not backfilled.",
+      "open_config": "Turn on in Config",
+      "unknown_title": "This backend does not report its collection status",
+      "unknown_detail": "The usage-statistics-enabled flag is unavailable. Collection cannot be verified, so totals and charts are hidden. Check backend versions in Management Center Info.",
+      "open_system": "Open Management Center Info",
+      "coverage": "Usage is stored in backend memory and resets on restart. Traffic while collection is off is not backfilled. The backend does not report the collection start time.",
+      "empty_detail": "Collection is on. No requests have been recorded yet. Send a request through the proxy, then refresh.",
+      "no_cached_data": "No previously verified usage snapshot is available. Retry to load usage.",
+      "stale_error": "Refresh failed. Showing the last verified snapshot.",
+      "refreshing_cached": "Refreshing. Values below are from the previous verified snapshot.",
+      "age_stale": "This snapshot is at least {{minutes}} minutes old. Refresh to check current counts.",
+      "flag_failed": "Could not check the collection flag.",
+      "snapshot_failed": "Could not load the usage snapshot.",
+      "requests_by_day": "Requests by day",
+      "tokens_by_day": "Tokens by day",
+      "daily_evidence": "Backend-reported daily totals. Missing dates are not backfilled. Hour-of-day totals are not dated history.",
+      "no_dated_data": "No dated totals reported. Daily points appear only when the backend supplies dates.",
+      "model_evidence": "Top 12 model/API pairs by requests. Latency uses retained request details only, not all-time samples.",
+      "unreported": "Not reported",
+      "p50": "p50 latency",
+      "p95": "p95 latency",
+      "milliseconds": "{{value}} ms"
+    }
   }
 }

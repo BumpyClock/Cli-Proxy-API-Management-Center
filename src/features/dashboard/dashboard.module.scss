@@ -8,71 +8,19 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(28px, 4.5vh, 52px);
-}
-
-/* ---------- 环境层（ambient）---------- */
-
-/*
- * 页面被 .page-transition（overflow: hidden）裁切，环境层绝不能伸出页面顶端，
- * 否则会在容器上缘被硬切出一条分界线。因此这里不做越界定位：
- * 强度用 mask 从顶端 0 平滑升起，任何祖先在哪裁切都只会切到零强度区。
- */
-.ambient {
-  position: absolute;
-  inset: 0 -40px auto;
-  height: 560px;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.gridWash {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, var(--border-color) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
-  background-size: 72px 72px;
-  opacity: 0.16;
-  /* 同样从顶端 0 淡入（intersect 取两层交集），避免网格在裁切线处满强度起步 */
-  mask-image:
-    linear-gradient(to bottom, transparent, #000 48px),
-    radial-gradient(ellipse 70% 60% at 50% 0%, #000 0%, transparent 78%);
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent, #000 48px),
-    radial-gradient(ellipse 70% 60% at 50% 0%, #000 0%, transparent 78%);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  gap: 24px;
 }
 
 /* ---------- Hero ---------- */
 
 .hero {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: $spacing-md;
-  padding-top: clamp($spacing-sm, 2vh, 28px);
-}
-
-/* Verdict headline: computed from live evidence. Sized so a two-line verdict still fits beside the panel. */
-.heroTitle {
-  margin: 0;
-  font-size: clamp(30px, 3.8vw, 46px);
-  line-height: 1.05;
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  color: var(--text-primary);
-  text-wrap: balance;
+  min-width: 0;
 }
 
 /* 句号即状态灯，颜色由 TSX 按语义色注入 */
 .heroPeriod {
   display: inline;
-  margin-inline-start: clamp(4px, 0.08em, 7px);
+  margin-inline-start: 0;
   letter-spacing: 0;
 }
 
@@ -83,19 +31,6 @@
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
-}
-
-.heroMeta {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  font-family: $font-mono;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
 }
 
 .heroMetaText {
@@ -129,8 +64,8 @@
     padding: 6px 16px;
   }
 
-  border-radius: $radius-full;
-  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-primary);
   font: inherit;
@@ -199,11 +134,10 @@
 /* ---------- 通用区块 ---------- */
 
 .section {
-  position: relative;
-  z-index: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: 16px;
 }
 
 .sectionHead {
@@ -212,31 +146,11 @@
   gap: 6px;
 }
 
-/* 终端光标前缀是全页的结构记号 */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: $font-mono;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-
-  &::before {
-    content: '▍';
-    color: var(--viz-success);
-    font-size: 12px;
-    line-height: 1;
-  }
-}
-
 .sectionTitle {
   margin: 0;
-  font-size: clamp(22px, 2.6vw, 30px);
-  line-height: 1.18;
-  font-weight: 650;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text-primary);
   text-wrap: balance;
@@ -252,19 +166,25 @@
 .sectionDescription {
   margin: 0;
   max-width: 64ch;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--text-secondary);
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  padding: clamp($spacing-lg, 2.4vw, 28px);
-  border-radius: 16px;
+  min-width: 0;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  background: var(--bg-primary);
+
+  > header {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+  }
 }
 
 .panelHead {
@@ -275,8 +195,8 @@
 
 .panelTitle {
   margin: 0;
-  font-size: 18px;
-  font-weight: 650;
+  font-size: 15px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-primary);
 }

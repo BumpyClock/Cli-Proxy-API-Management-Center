@@ -109,6 +109,50 @@ const expectLabelInName = (markup: string) => {
 };
 
 describe('dashboard components render translated, actionable markup', () => {
+  test('healthy and pending attention states render nothing in every locale', async () => {
+    for (const language of LOCALES) {
+      await i18n.changeLanguage(language);
+      for (const [primaryFreshness, primaryReceivedAt] of [
+        ['live', NOW],
+        ['pending', null],
+      ] as const) {
+        expect(
+          render(
+            createElement(AttentionPanel, {
+              items: [],
+              checkedCredentials: 4,
+              checkedProviders: 5,
+              primaryFreshness,
+              primaryReceivedAt,
+              windowLabel: '3h 20m',
+              now: NOW,
+              onRetry: async () => undefined,
+            })
+          )
+        ).toBe('');
+      }
+    }
+  });
+
+  test('a new installation still offers actionable provider setup', async () => {
+    await i18n.changeLanguage('en');
+    const markup = render(
+      createElement(AttentionPanel, {
+        items: [],
+        checkedCredentials: 0,
+        checkedProviders: 0,
+        primaryFreshness: 'live',
+        primaryReceivedAt: NOW,
+        windowLabel: '3h 20m',
+        now: NOW,
+        onRetry: async () => undefined,
+      })
+    );
+    expect(markup).toContain('href="/oauth"');
+    expect(markup).toContain('href="/ai-providers"');
+    expect(markup).not.toContain('Nothing needs attention');
+  });
+
   test('attention panel names the failing credential and links to it', async () => {
     await i18n.changeLanguage('en');
     const fleet = model();
