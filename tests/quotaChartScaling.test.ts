@@ -95,6 +95,7 @@ function renderOverview(count: number) {
         seriesNumbers: numbers,
         resolvedTheme: 'light',
         disabled: false,
+        canObserve: () => true,
         onRefresh: () => {},
         children: null,
       })

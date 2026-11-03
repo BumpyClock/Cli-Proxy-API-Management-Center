@@ -1745,7 +1745,8 @@
     "not_found": "找不到插件頁面",
     "not_found_desc": "目前後端插件清單未宣告此插件頁面。",
     "empty_src": "插件頁面位址為空",
-    "empty_src_desc": "此插件選單未提供可嵌入的頁面位址。"
+    "empty_src_desc": "此插件選單未提供可嵌入的頁面位址。",
+    "open_in_new_tab": "在新分頁開啟資源"
   },
   "system_info": {
     "title": "管理中心資訊",

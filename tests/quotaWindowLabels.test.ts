@@ -84,6 +84,7 @@ describe('quota breakdown window labels from production locales', () => {
             quotaFor: (entry) => snapshots[entry.type],
             resolvedTheme: 'light',
             disabled: false,
+            canObserve: () => true,
             onRefresh: () => {},
             children: null,
           })

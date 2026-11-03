@@ -2265,5 +2265,8 @@
       "p95": "Задержка p95",
       "milliseconds": "{{value}} мс"
     }
+  },
+  "plugin_resource": {
+    "open_in_new_tab": "Открыть ресурс в новой вкладке"
   }
 }

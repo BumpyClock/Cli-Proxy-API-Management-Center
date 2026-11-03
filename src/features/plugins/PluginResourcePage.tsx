@@ -14,6 +14,7 @@ import {
   collectPluginResourceEntries,
   PLUGIN_RESOURCES_REFRESH_EVENT,
   resolvePluginAssetURL,
+  resolvePluginResourceOpenURL,
 } from './pluginResources';
 import styles from './PluginResourcePage.module.scss';
 
@@ -31,38 +32,6 @@ const parseMenuIndex = (value = '') => {
   const index = Number.parseInt(value, 10);
   return Number.isInteger(index) && index >= 0 ? index : -1;
 };
-
-function PluginFrame({ src, title }: { src: string; title: string }) {
-  const { t } = useTranslation();
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>('loading');
-
-  if (status === 'failed') {
-    return (
-      <div className={styles.stateShell}>
-        <EmptyState title={t('plugin_resource.load_failed')} />
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.frameShell} aria-busy={status === 'loading'}>
-      {status === 'loading' && (
-        <div className={styles.statusPanel} role="status">
-          {t('common.loading')}
-        </div>
-      )}
-      <iframe
-        className={styles.frame}
-        src={src}
-        title={title}
-        referrerPolicy="no-referrer"
-        allow="clipboard-read; clipboard-write"
-        onLoad={() => setStatus('loaded')}
-        onError={() => setStatus('failed')}
-      />
-    </div>
-  );
-}
 
 export function PluginResourcePage() {
   const { t } = useTranslation();
@@ -123,6 +92,7 @@ export function PluginResourcePage() {
   }, [data?.plugins, menuIndex, pluginID]);
 
   const iframeSrc = resource ? resolvePluginAssetURL(resource.menu.path, apiBase) : '';
+  const openHref = resolvePluginResourceOpenURL(iframeSrc, window.location.href);
 
   return (
     <div className={styles.page}>
@@ -132,6 +102,11 @@ export function PluginResourcePage() {
         actions={
           <>
             <Link to="/plugins">{t('plugin_management.title')}</Link>
+            {openHref && (
+              <a href={openHref} target="_blank" rel="noopener noreferrer">
+                {t('plugin_resource.open_in_new_tab')}
+              </a>
+            )}
             <Button
               variant="secondary"
               size="sm"
@@ -145,7 +120,9 @@ export function PluginResourcePage() {
       />
       {loading ? (
         <div className={styles.stateShell}>
-          <div className={styles.statusPanel}>{t('common.loading')}</div>
+          <div className={styles.statusPanel} role="status">
+            {t('common.loading')}
+          </div>
         </div>
       ) : error ? (
         <div className={styles.stateShell}>
@@ -166,7 +143,16 @@ export function PluginResourcePage() {
           />
         </div>
       ) : (
-        <PluginFrame key={`${iframeSrc}:${frameAttempt}`} src={iframeSrc} title={resource.label} />
+        <div className={styles.frameShell}>
+          <iframe
+            key={`${iframeSrc}:${frameAttempt}`}
+            className={styles.frame}
+            src={iframeSrc}
+            title={resource.label}
+            referrerPolicy="no-referrer"
+            allow="clipboard-read; clipboard-write"
+          />
+        </div>
       )}
     </div>
   );

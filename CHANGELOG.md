@@ -24,6 +24,8 @@
 
 ### Fixed
 
+- Opaque plugin embeds no longer infer availability from iframe events; safe web resources have a translated direct-open fallback. Account overview refresh controls honor observation eligibility.
+
 - Bulk quota observations publish immutable provider snapshots in two phases rather than copying the entire cache for every account. Cached 403/404 failures retain translated remediation guidance.
 - Plugin resources clear the fixed application header and fit the remaining viewport. Active provider subtitles retain full contrast.
 

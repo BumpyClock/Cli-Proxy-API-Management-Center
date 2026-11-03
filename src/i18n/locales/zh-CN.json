@@ -1719,7 +1719,8 @@
     "not_found": "未找到插件页面",
     "not_found_desc": "该插件页面未在当前后端插件列表中声明。",
     "empty_src": "插件页面地址为空",
-    "empty_src_desc": "该插件菜单未提供可嵌入的页面地址。"
+    "empty_src_desc": "该插件菜单未提供可嵌入的页面地址。",
+    "open_in_new_tab": "在新标签页打开资源"
   },
   "system_info": {
     "title": "管理中心信息",

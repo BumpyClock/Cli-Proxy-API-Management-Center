@@ -38,21 +38,19 @@ describe('usage request eligibility', () => {
 });
 
 describe('runtime interaction wiring', () => {
-  test('iframe state belongs to the source and refresh attempt', () => {
+  test('opaque iframe navigation retains source/retry identity without availability claims', () => {
     const page = source('src/features/plugins/PluginResourcePage.tsx');
-    expect(page).toContain('<PluginFrame key={`${iframeSrc}:${frameAttempt}`} src={iframeSrc}');
+    expect(page).toContain('key={`${iframeSrc}:${frameAttempt}`}');
     expect(page).toContain('setFrameAttempt((attempt) => attempt + 1)');
-    expect(page).toMatch(
-      /function PluginFrame[\s\S]*useState<'loading' \| 'loaded' \| 'failed'>\('loading'\)/
-    );
-    expect(page).toMatch(/onError=\{\(\) => setStatus\('failed'\)\}/);
+    expect(page).not.toMatch(/on(?:Load|Error)=|aria-busy=/);
+    expect(page).toMatch(/href=\{openHref\}\s+target="_blank"\s+rel="noopener noreferrer"/);
+    expect(page).toContain("t('plugin_resource.open_in_new_tab')");
+    expect(page).toContain('role="status"');
   });
 
   test('log row exposes copy semantics and both keyboard activations', () => {
     const page = source('src/pages/LogsPage.tsx');
-    expect(page).toContain(
-      'role="button"\n                          aria-label={t(\'logs.copy_line_accessible\''
-    );
+    expect(page).toMatch(/role="button"\s+aria-label=\{t\('logs\.copy_line_accessible'/);
     expect(page).toContain("event.key === 'Enter' || event.key === ' '");
     expect(page).toMatch(/event\.preventDefault\(\);\s*void copyLogLine\(line\.raw\)/);
   });

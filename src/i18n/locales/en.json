@@ -1729,7 +1729,8 @@
     "not_found": "Plugin page not found",
     "not_found_desc": "This plugin page is not declared by the current backend plugin list.",
     "empty_src": "Plugin page URL is empty",
-    "empty_src_desc": "This plugin menu does not provide an embeddable page URL."
+    "empty_src_desc": "This plugin menu does not provide an embeddable page URL.",
+    "open_in_new_tab": "Open resource in new tab"
   },
   "system_info": {
     "title": "Management Center Info",

@@ -13,7 +13,10 @@ const entries: QuotaFileEntry[] = [
   { type: 'claude', file: { name: 'private-email@example.invalid.json', type: 'claude' } },
   { type: 'claude', file: { name: 'not-loaded.json', type: 'claude' } },
 ];
-const render = (quotaFor: (entry: QuotaFileEntry) => QuotaCardState | undefined) =>
+const render = (
+  quotaFor: (entry: QuotaFileEntry) => QuotaCardState | undefined,
+  canObserve: (entry: QuotaFileEntry) => boolean = () => true
+) =>
   renderToStaticMarkup(
     createElement(
       I18nextProvider,
@@ -23,6 +26,7 @@ const render = (quotaFor: (entry: QuotaFileEntry) => QuotaCardState | undefined)
         quotaFor,
         resolvedTheme: 'dark',
         disabled: false,
+        canObserve,
         onRefresh: () => {},
         children: createElement('div', null, 'Account-only details'),
       })
@@ -64,6 +68,19 @@ describe('quota overview rendering', () => {
     expect(markup).toContain(i18n.t('quota_management.pool_account_details'));
     expect(markup).toContain(i18n.t('quota_management.pool_unknown'));
     expect(markup).not.toContain('<strong>0%</strong>');
+  });
+
+  test('unsupported observations disable only their account refresh control', () => {
+    const markup = render(
+      () => undefined,
+      (entry) => entry === entries[1]
+    );
+    const rows = markup.match(/<tr>[\s\S]*?<\/tr>/g) ?? [];
+    const unsupported = rows.find((row) => row.includes('private-email@example.invalid'));
+    const supported = rows.find((row) => row.includes('not-loaded'));
+    expect(unsupported).toContain('disabled=""');
+    expect(supported).toBeDefined();
+    expect(supported).not.toContain('disabled=""');
   });
 
   test('shipped overview and chart translations have key and interpolation parity', () => {

@@ -11,6 +11,7 @@ const sections = [
   'redesign.settings',
   'xai_quota.test_health',
   'logs.copy_line_accessible',
+  'plugin_resource.open_in_new_tab',
 ];
 
 describe('production locale regression checks', () => {

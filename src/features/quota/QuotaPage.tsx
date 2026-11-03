@@ -495,6 +495,9 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
             quotaFor={getQuota}
             resolvedTheme={resolvedTheme}
             disabled={!canUseActions || batchLoading}
+            canObserve={(entry) =>
+              !entry.file.disabled && (QUOTA_ADAPTERS[entry.type].canObserve?.(entry.file) ?? true)
+            }
             onRefresh={handleProviderRefresh}
           >
             <div className={styles.grid}>

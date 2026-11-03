@@ -16,6 +16,7 @@ interface QuotaOverviewProps {
   seriesNumbers?: ReadonlyMap<string, number>;
   resolvedTheme: ResolvedTheme;
   disabled: boolean;
+  canObserve: (entry: QuotaFileEntry) => boolean;
   onRefresh: (entries: QuotaFileEntry[]) => void;
   children: ReactNode;
 }
@@ -25,6 +26,7 @@ export function QuotaOverview({
   quotaFor,
   seriesNumbers = new Map(),
   disabled,
+  canObserve,
   onRefresh,
   children,
 }: QuotaOverviewProps) {
@@ -181,7 +183,12 @@ export function QuotaOverview({
                   <td>
                     <button
                       type="button"
-                      disabled={disabled || quota?.refreshing || quota?.status === 'loading'}
+                      disabled={
+                        disabled ||
+                        !canObserve(entry) ||
+                        quota?.refreshing ||
+                        quota?.status === 'loading'
+                      }
                       onClick={() => onRefresh([entry])}
                       aria-label={t('redesign.quota.refreshAccount', { name: label })}
                     >
