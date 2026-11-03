@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Input } from '@/components/ui/Input';
+import { copyToClipboard } from '@/utils/clipboard';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
@@ -109,7 +112,19 @@ export function SystemPage() {
     () => (i18n.language?.toLowerCase().startsWith('zh') ? '其他' : 'Other'),
     [i18n.language]
   );
-  const groupedModels = useMemo(() => classifyModels(models, { otherLabel }), [models, otherLabel]);
+  const [modelSearch, setModelSearch] = useState('');
+  const groupedModels = useMemo(
+    () =>
+      classifyModels(
+        models.filter((model) =>
+          [model.name, model.alias, model.description].some((value) =>
+            value?.toLowerCase().includes(modelSearch.trim().toLowerCase())
+          )
+        ),
+        { otherLabel }
+      ),
+    [models, modelSearch, otherLabel]
+  );
   const requestLogEnabled = config?.requestLog ?? false;
   const requestLogDirty = requestLogDraft !== requestLogEnabled;
   const canEditRequestLog = auth.connectionStatus === 'connected' && Boolean(config);
@@ -295,7 +310,20 @@ export function SystemPage() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>{t('system_info.title')}</h1>
+      <PageHeader
+        title={t('system_info.title')}
+        meta={auth.apiBase || t(`common.${auth.connectionStatus}_status`)}
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void handleVersionCheck()}
+            loading={checkingVersion}
+          >
+            {t('system_info.version_check_button')}
+          </Button>
+        }
+      />
       <div className={styles.content}>
         <Card className={styles.aboutCard}>
           <div className={styles.aboutHeader}>
@@ -318,18 +346,6 @@ export function SystemPage() {
             <div className={styles.infoTile}>
               <div className={styles.tileHeader}>
                 <div className={styles.tileLabel}>{t('footer.api_version')}</div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={styles.tileAction}
-                  onClick={() => void handleVersionCheck()}
-                  loading={checkingVersion}
-                  title={t('system_info.version_check_button')}
-                  aria-label={t('system_info.version_check_button')}
-                >
-                  {t('system_info.version_check_button')}
-                </Button>
               </div>
               <div className={styles.tileValue}>{apiVersion}</div>
             </div>
@@ -345,9 +361,29 @@ export function SystemPage() {
               <div className={styles.tileSub}>{auth.apiBase || '-'}</div>
             </div>
           </div>
+          <div className={styles.factActions}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                const copied = await copyToClipboard(
+                  `${t('footer.version')}: ${appVersion}\n${t('footer.api_version')}: ${apiVersion}\n${t('footer.build_date')}: ${buildTime}\n${t('connection.status')}: ${auth.connectionStatus}\n${auth.apiBase}`
+                );
+                showNotification(
+                  t(copied ? 'logs.copy_success' : 'logs.copy_failed'),
+                  copied ? 'success' : 'error'
+                );
+              }}
+            >
+              {t('common.copy')}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={openRequestLogModal}>
+              {t('basic_settings.request_log_title')}
+            </Button>
+          </div>
         </Card>
 
-        <Card title={t('system_info.quick_links_title')}>
+        <Card title={t('system_info.quick_links_title')} className={styles.linksCard}>
           <p className={styles.sectionDescription}>{t('system_info.quick_links_desc')}</p>
           <div className={styles.quickLinks}>
             <a
@@ -419,7 +455,16 @@ export function SystemPage() {
             </Button>
           }
         >
-          <p className={styles.sectionDescription}>{t('system_info.models_desc')}</p>
+          <Input
+            type="search"
+            value={modelSearch}
+            onChange={(event) => setModelSearch(event.target.value)}
+            placeholder={t('redesign.settings.modelSearch')}
+            aria-label={t('redesign.settings.modelSearch')}
+          />
+          <p className={styles.sectionDescription}>
+            {t('system_info.models_count', { count: models.length })}
+          </p>
           {modelStatus && (
             <div className={`status-badge ${modelStatus.type}`}>{modelStatus.message}</div>
           )}
@@ -430,11 +475,16 @@ export function SystemPage() {
             <div className="hint">{t('system_info.models_empty')}</div>
           ) : (
             <div className="item-list">
+              {groupedModels.length === 0 && <p role="status">{t('redesign.settings.noModels')}</p>}
               {groupedModels.map((group) => {
                 const iconSrc = getIconForCategory(group.id);
                 return (
-                  <div key={group.id} className="item-row">
-                    <div className="item-meta">
+                  <details
+                    key={group.id}
+                    className={styles.modelGroup}
+                    open={modelSearch.trim() ? true : undefined}
+                  >
+                    <summary>
                       <div className={styles.groupTitle}>
                         {iconSrc && <img src={iconSrc} alt="" className={styles.groupIcon} />}
                         <span className="item-title">{group.label}</span>
@@ -442,7 +492,7 @@ export function SystemPage() {
                       <div className="item-subtitle">
                         {t('system_info.models_count', { count: group.items.length })}
                       </div>
-                    </div>
+                    </summary>
                     <div className={styles.modelTags}>
                       {group.items.map((model) => (
                         <span
@@ -455,7 +505,7 @@ export function SystemPage() {
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </details>
                 );
               })}
             </div>

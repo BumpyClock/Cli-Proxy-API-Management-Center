@@ -27,7 +27,9 @@
 .tabsRow {
   display: flex;
   min-width: 0;
-  border-bottom: 1px solid var(--border-color);
+  align-self: start;
+  position: sticky;
+  top: calc(var(--header-height) + 16px);
 }
 
 .panel {
@@ -39,5 +41,21 @@
 @include mobile {
   .page {
     gap: 16px;
+  }
+}
+
+.visualLayout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .visualLayout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .tabsRow {
+    position: static;
   }
 }

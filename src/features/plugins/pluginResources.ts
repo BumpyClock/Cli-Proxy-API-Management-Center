@@ -24,6 +24,16 @@ export const getPluginTitle = (plugin: PluginListEntry) =>
 export const buildPluginResourceRoute = (pluginID: string, menuIndex: number) =>
   `/plugin-pages/${encodeURIComponent(pluginID)}/${menuIndex}`;
 
+export const resolvePluginResourceOpenURL = (value: string, documentURL: string) => {
+  if (!value.trim()) return '';
+  try {
+    const url = new URL(value, documentURL);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
+  } catch {
+    return '';
+  }
+};
+
 export const resolvePluginAssetURL = (value: string, apiBase: string) => {
   const trimmed = value.trim();
   if (!trimmed) return '';

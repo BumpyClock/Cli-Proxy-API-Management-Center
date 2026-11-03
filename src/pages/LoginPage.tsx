@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
@@ -185,16 +185,6 @@ export function LoginPage() {
     t,
   ]);
 
-  const handleSubmitKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === 'Enter' && !loading) {
-        event.preventDefault();
-        handleSubmit();
-      }
-    },
-    [loading, handleSubmit]
-  );
-
   if (isAuthenticated && !autoLoading && !autoLoginSuccess) {
     const redirect = (location.state as RedirectState | null)?.from?.pathname || '/';
     return <Navigate to={redirect} replace />;
@@ -205,15 +195,6 @@ export function LoginPage() {
 
   return (
     <div className={styles.container}>
-      {/* 左侧品牌展示区 */}
-      <div className={styles.brandPanel}>
-        <div className={styles.brandContent}>
-          <span className={styles.brandWord}>CLI</span>
-          <span className={styles.brandWord}>PROXY</span>
-          <span className={styles.brandWord}>API</span>
-        </div>
-      </div>
-
       {/* 右侧功能交互区 */}
       <div className={styles.formPanel}>
         {showSplash ? (
@@ -230,10 +211,22 @@ export function LoginPage() {
           /* 登录表单 */
           <div className={styles.formContent}>
             {/* Logo */}
-            <img src={INLINE_LOGO_JPEG} alt="Logo" className={styles.logo} />
+            <div className={styles.identity}>
+              <img src={INLINE_LOGO_JPEG} alt="" className={styles.logo} />
+              <div>
+                <h1>{t('splash.title')}</h1>
+                <p>{t('login.subtitle')}</p>
+              </div>
+            </div>
 
             {/* 登录表单卡片 */}
-            <div className={styles.loginCard}>
+            <form
+              className={styles.loginCard}
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!loading) void handleSubmit();
+              }}
+            >
               <div className={styles.loginHeader}>
                 <div className={styles.titleRow}>
                   <div className={styles.title}>{t('title.login')}</div>
@@ -282,9 +275,10 @@ export function LoginPage() {
                 type={showKey ? 'text' : 'password'}
                 name="cpa-management-key"
                 autoComplete="current-password"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'login-error' : undefined}
                 value={managementKey}
                 onChange={(e) => setManagementKey(e.target.value)}
-                onKeyDown={handleSubmitKeyDown}
                 rightElement={
                   <button
                     type="button"
@@ -316,12 +310,18 @@ export function LoginPage() {
                 />
               </div>
 
-              <Button fullWidth onClick={handleSubmit} loading={loading}>
+              <p className={styles.hint}>{t('redesign.settings.rememberHint')}</p>
+
+              <Button fullWidth type="submit" loading={loading}>
                 {loading ? t('login.submitting') : t('login.submit_button')}
               </Button>
 
-              {error && <div className={styles.errorBox}>{error}</div>}
-            </div>
+              {error && (
+                <div id="login-error" className={styles.errorBox} role="alert">
+                  {error}
+                </div>
+              )}
+            </form>
           </div>
         )}
       </div>

@@ -1,13 +1,19 @@
 @use './variables.scss' as *;
 
 :root {
-  --header-height: 64px;
+  --header-height: 56px;
   --shell-gutter: 16px;
-  --sidebar-panel-width: 208px;
+  --sidebar-panel-width: 248px;
   --sidebar-collapsed-width: 60px;
   --sidebar-active-width: var(--sidebar-panel-width);
   --sidebar-gap: 0px;
-  --floating-control-size: 38px;
+  --floating-control-size: 32px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --floating-control-size: 44px;
+  }
 }
 
 .app-shell {
@@ -50,90 +56,88 @@
   position: fixed;
   top: 0;
   right: 0;
-  left: 0;
+  left: var(--sidebar-active-width);
   z-index: $z-dropdown + 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   height: var(--header-height);
-  pointer-events: none;
-  background: transparent;
-  border: 0;
+  padding: 0 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  transition: left $transition-normal;
 
   .sidebar-toggle-floating {
-    position: fixed;
-    top: 50%;
-    left: calc(var(--sidebar-active-width) - 12px);
-    width: 24px;
-    height: 52px;
-    padding: 0;
-    border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
-    border-radius: 14px;
-    background: var(--bg-primary);
-    color: color-mix(in srgb, var(--text-secondary) 88%, transparent);
-    box-shadow:
-      4px 0 14px rgb(0 0 0 / 0.18),
-      inset 0 1px 0 rgb(255 255 255 / 0.03);
-    cursor: pointer;
-    pointer-events: auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transform: translateY(-50%);
-    transition:
-      background $transition-fast,
-      border-color $transition-fast,
-      color $transition-fast,
-      transform $transition-fast,
-      left $transition-normal;
+    flex: 0 0 auto;
+    width: var(--floating-control-size);
+    height: var(--floating-control-size);
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
 
     svg {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
     }
 
     &:hover {
-      background: color-mix(in srgb, var(--bg-primary) 90%, var(--text-primary) 10%);
-      border-color: color-mix(in srgb, var(--border-hover) 86%, transparent);
+      background: var(--bg-hover);
       color: var(--text-primary);
-      transform: translateY(-50%) translateX(2px);
-    }
-
-    &:active {
-      transform: translateY(-50%) translateX(0);
     }
 
     &:focus-visible {
-      outline: none;
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--primary-color) 24%, transparent),
-        4px 0 14px rgb(0 0 0 / 0.18);
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
     }
+  }
+
+  .header-context {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  .header-brand {
+    flex: 0 0 auto;
+    font-weight: 600;
+  }
+
+  .header-separator {
+    color: var(--text-tertiary);
+  }
+
+  .header-route {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mobile-sidebar-actions,
   .header-actions {
-    position: absolute;
-    top: var(--shell-gutter);
     display: inline-flex;
     align-items: center;
+    flex: 0 0 auto;
     gap: 4px;
-    padding: 6px;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: var(--bg-secondary);
     color: var(--text-secondary);
-    box-shadow: none;
-    --glass-blur: 16px;
-    backdrop-filter: var(--glass-backdrop-filter);
-    -webkit-backdrop-filter: var(--glass-backdrop-filter);
-    pointer-events: auto;
   }
 
   .mobile-sidebar-actions {
-    left: var(--shell-gutter);
     display: none;
   }
 
   .header-actions {
-    right: var(--shell-gutter);
+    margin-left: auto;
   }
 
   .mobile-sidebar-actions .btn,
@@ -142,7 +146,7 @@
     height: var(--floating-control-size);
     min-width: var(--floating-control-size);
     padding: 0;
-    border-radius: 11px;
+    border-radius: 6px;
     background: transparent;
     color: var(--text-secondary);
     border-color: transparent;
@@ -155,14 +159,13 @@
     }
 
     &:hover {
-      background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+      background: var(--bg-hover);
       color: var(--text-primary);
-      border-color: transparent;
     }
 
     &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 26%, transparent);
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
     }
   }
 
@@ -365,13 +368,13 @@
   z-index: $z-dropdown - 1;
   width: var(--sidebar-panel-width);
   height: 100vh;
-  padding: 14px 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: 16px;
   flex-shrink: 0;
   overflow-y: auto;
-  background: var(--bg-primary);
+  background: var(--sidebar-bg);
   border: 0;
   border-right: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
   border-radius: 0;
@@ -505,14 +508,14 @@
   .nav-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 18px;
     flex: 1;
   }
 
   .nav-group {
     display: flex;
     flex-direction: column;
-    gap: $spacing-xs;
+    gap: 2px;
   }
 
   .nav-group-label {
@@ -567,12 +570,13 @@
   }
 
   .nav-item {
-    padding: 6px 10px;
-    border-radius: 9px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 6px;
     border: 1px solid transparent;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -663,10 +667,11 @@
     }
 
     &.active {
-      background: var(--text-primary);
-      color: var(--bg-secondary);
+      background: var(--bg-hover);
+      color: var(--text-primary);
       border-color: transparent;
-      box-shadow: none;
+      font-weight: 600;
+      box-shadow: inset 2px 0 0 var(--accent-color);
 
       .nav-icon,
       .nav-drawer-caret {
@@ -782,11 +787,11 @@
 .main-content {
   flex: 1 0 auto;
   min-height: 100%;
-  padding: 70px clamp(20px, 3vw, 48px) 40px;
+  padding: calc(var(--header-height) + 24px) clamp(20px, 2.4vw, 36px) 32px;
   display: flex;
   flex-direction: column;
   gap: $spacing-lg;
-  overflow-x: hidden;
+  overflow-x: clip;
 
   &.main-content-logs {
     flex: 1 1 auto;
@@ -843,10 +848,10 @@
   }
 
   :root {
-    --header-height: 74px;
+    --header-height: 56px;
     --shell-gutter: 12px;
     --sidebar-panel-width: min(280px, calc(100vw - 24px));
-    --floating-control-size: 36px;
+    --floating-control-size: 44px;
   }
 
   .top-gradient-blur {
@@ -858,30 +863,25 @@
   }
 
   .main-header {
-    .sidebar-toggle-floating {
+    left: 0;
+    gap: 8px;
+    padding: 0 8px;
+
+    .sidebar-toggle-floating,
+    .header-brand,
+    .header-separator {
       display: none;
     }
 
+    .header-context {
+      flex: 1 1 auto;
+    }
+
     .header-actions {
-      top: var(--shell-gutter);
-      right: var(--shell-gutter);
-      max-width: calc(
-        100vw - var(--shell-gutter) - var(--shell-gutter) - var(--floating-control-size) - 14px
-      );
-      padding: 5px;
-      gap: 2px;
-      border-radius: 14px;
+      gap: 0;
     }
 
-    .mobile-sidebar-actions {
-      display: inline-flex;
-      top: var(--shell-gutter);
-      left: var(--shell-gutter);
-      padding: 5px;
-      gap: 2px;
-      border-radius: 14px;
-    }
-
+    .mobile-sidebar-actions,
     .mobile-menu-btn {
       display: inline-flex;
     }

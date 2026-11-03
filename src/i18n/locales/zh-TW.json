@@ -87,7 +87,9 @@
     "error_not_found": "找不到 Management API，請確認服務位址指向 CLIProxyAPI 後端",
     "error_server": "後端處理管理介面時發生錯誤，請查看服務日誌",
     "error_cors": "跨域請求被阻擋，請檢查伺服器設定",
-    "error_ssl": "SSL/TLS 憑證驗證失敗"
+    "error_ssl": "SSL/TLS 憑證驗證失敗",
+    "show_key": "顯示管理金鑰",
+    "hide_key": "隱藏管理金鑰"
   },
   "header": {
     "refresh_all": "全部重新整理",
@@ -737,6 +739,7 @@
     "unit_default": "credits"
   },
   "xai_quota": {
+    "test_health": "測試 API 健康狀態（傳送推論請求，可能產生費用）",
     "title": "Grok 配額",
     "empty_title": "暫無 xAI/Grok 驗證",
     "empty_desc": "使用 xAI OAuth 登入後即可查看 Grok 配額。",
@@ -1160,7 +1163,8 @@
     "search_empty_desc": "嘗試更換關鍵字或清空篩選條件。",
     "double_click_copy_hint": "雙擊複製記錄原文",
     "copy_success": "已複製記錄原文",
-    "copy_failed": "複製失敗"
+    "copy_failed": "複製失敗",
+    "copy_line_accessible": "複製日誌行：{{line}}"
   },
   "config_management": {
     "title": "設定面板",
@@ -1741,7 +1745,8 @@
     "not_found": "找不到插件頁面",
     "not_found_desc": "目前後端插件清單未宣告此插件頁面。",
     "empty_src": "插件頁面位址為空",
-    "empty_src_desc": "此插件選單未提供可嵌入的頁面位址。"
+    "empty_src_desc": "此插件選單未提供可嵌入的頁面位址。",
+    "open_in_new_tab": "在新分頁開啟資源"
   },
   "system_info": {
     "title": "管理中心資訊",
@@ -2131,5 +2136,138 @@
     "failures": "失敗",
     "models": "模型",
     "no_data": "暫無使用資料"
+  },
+  "redesign": {
+    "authFiles": {
+      "sections": "驗證檔案分區",
+      "credentials": "憑證",
+      "disablement": "OAuth 模型停用",
+      "aliases": "OAuth 模型別名",
+      "select": "選取",
+      "credential": "憑證",
+      "quota": "配額",
+      "updated": "更新時間",
+      "actions": "操作",
+      "actionsFor": "{{name}} 的操作",
+      "notReported": "未回報",
+      "enabled": "已啟用",
+      "disabled": "已停用",
+      "problem": "異常",
+      "shown": "顯示 {{count}} 筆，共 {{total}} 筆",
+      "quotaRemaining": "剩餘 {{value}}",
+      "quotaUnlimited": "無上限",
+      "quotaDetails": "{{name}} 的額度詳情"
+    },
+    "dashboardQuota": {
+      "title": "剩餘額度",
+      "subtitle": "目前快照 · 未來 7 天",
+      "refresh": "檢查額度",
+      "open_quota": "開啟額度管理",
+      "disconnected": "連線後可檢查額度。",
+      "waiting": "正在等候憑證檔案。",
+      "checking": "正在檢查符合條件的帳戶。快取快照保持可見。",
+      "failed": "{{count}} 個帳戶的額度檢查失敗。既有快照會保留並標記為過期。",
+      "snapshots": "供應商回報的快照，並非即時用量。",
+      "no_data": "未回報剩餘百分比。缺少或失敗的資料不視為零。",
+      "no_eligible": "沒有符合條件的帳戶。已停用和不支援的憑證會被略過。",
+      "coverage": "{{eligible}} 個符合條件的帳戶中，{{measured}} 個有測量值 · {{unavailable}} 個無百分比 · {{skipped}} 個已略過",
+      "stale": "已過期",
+      "chart_label": "各帳戶從現在到未來 7 天的剩餘額度。縱軸固定為 0 到 100%。虛線僅預測下一次重設，並非歷史用量。",
+      "evidence": "圓點表示回報的快照。虛線階梯僅預測下一次已回報的重設，並假設不再使用額度。每個帳戶使用供應商選定的一個視窗；額度彼此獨立。不提供歷史用量。過期快照不預測重設。",
+      "oldest_snapshot": "最早的顯示快照 ·",
+      "unknown_time": "快照時間不可用。",
+      "no_snapshot": "目前沒有測量快照。",
+      "refresh_policy": "每次進入頁面檢查一次。不自動輪詢額度。"
+    },
+    "chart": {
+      "series": "圖表資料系列",
+      "unreported": "未回報",
+      "keyboard": "使用方向鍵查看資料點。Home 和 End 鍵跳至首尾資料點。",
+      "choose_series": "選擇資料系列以顯示資料。",
+      "table": "查看資料表",
+      "time": "時間"
+    },
+    "dashboard": {
+      "request_flow": "請求趨勢",
+      "traffic_interval": "每 10 分鐘的請求數 · {{zone}} · 最新時段仍可能更新"
+    },
+    "providers": {
+      "configured": "已設定",
+      "setupTitle": "設定步驟",
+      "setupProvider": "連線至上游供應商",
+      "setupOAuth": "如果供應商使用 OAuth，請新增 OAuth 憑證",
+      "setupClient": "在設定面板中建立用戶端 API 金鑰",
+      "setupUsage": "從用戶端傳送請求，然後查看使用統計"
+    },
+    "quota": {
+      "checking": "正在檢查額度…",
+      "checked": "檢查於 {{time}} · {{success}} 已更新 · {{failed}} 失敗 · {{skipped}} 已略過。",
+      "filters": "篩選帳戶",
+      "skippedAccounts": "已略過的帳戶",
+      "disabled": "已停用",
+      "unsupported": "不支援或不符合條件",
+      "remaining": "剩餘額度",
+      "assumption": "虛線僅表示下次重設的預測，假設不再使用。",
+      "series": "帳戶曲線",
+      "stale": "過期快照",
+      "evidence": "快照為已回報的數值。虛線階梯僅預測下次重設，假設不再使用。無歷史消耗資料。各帳戶與方案的額度相互獨立。過期快照不預測重設。",
+      "breakdown": "帳戶明細",
+      "independent": "獨立額度",
+      "account": "帳戶",
+      "snapshot": "快照",
+      "failed": "檢查失敗",
+      "refreshAccount": "重新整理 {{name}}",
+      "method": "圖表說明"
+    },
+    "settings": {
+      "section": "區段",
+      "modelSearch": "篩選模型",
+      "noModels": "沒有符合的模型。",
+      "rememberHint": "使用可逆混淆儲存在此瀏覽器中。請勿在共用裝置上啟用。",
+      "logColumns": {
+        "time": "時間",
+        "level": "等級",
+        "status": "狀態",
+        "latency": "延遲",
+        "method": "方法",
+        "path": "路徑",
+        "client": "用戶端",
+        "source": "來源"
+      },
+      "official": "官方"
+    },
+    "usage": {
+      "state_loading": "正在載入使用統計…",
+      "state_off": "統計收集已關閉",
+      "state_unknown": "統計收集狀態未知",
+      "state_empty": "統計收集已開啟 · 尚無請求紀錄",
+      "state_live": "統計收集已開啟 · 快照已載入",
+      "state_stale": "快取快照 · 需要重新整理",
+      "state_error": "使用統計取得失敗",
+      "retry": "重試",
+      "off_title": "使用統計已關閉",
+      "off_detail": "此後端未記錄使用情況。總數與圖表已隱藏，因為零會被誤解為沒有流量，實際上是未記錄。開啟收集後僅記錄後續請求，不會補錄先前的流量。",
+      "open_config": "前往設定開啟",
+      "unknown_title": "此後端未回報統計收集狀態",
+      "unknown_detail": "無法取得 usage-statistics-enabled 旗標，無法確認是否正在收集統計，因此隱藏總數與圖表。請在管理中心資訊中檢查後端版本。",
+      "open_system": "開啟管理中心資訊",
+      "coverage": "使用統計儲存在後端記憶體中，重新啟動後清空。收集關閉期間的流量不會補錄。後端未回報統計收集的開始時間。",
+      "empty_detail": "統計收集已開啟，但尚未記錄任何請求。請透過代理傳送請求，然後重新整理。",
+      "no_cached_data": "沒有先前已確認的使用統計快照。請重試以載入使用統計。",
+      "stale_error": "重新整理失敗，正在顯示上次已確認的快照。",
+      "refreshing_cached": "正在重新整理。下方數值來自上次已確認的快照。",
+      "age_stale": "此快照已有至少 {{minutes}} 分鐘。請重新整理以檢查目前計數。",
+      "flag_failed": "無法檢查統計收集旗標。",
+      "snapshot_failed": "無法載入使用統計快照。",
+      "requests_by_day": "每日請求數",
+      "tokens_by_day": "每日權杖數",
+      "daily_evidence": "後端回報的每日總數。缺失日期不會補錄。按小時彙總的資料不是帶日期的歷史紀錄。",
+      "no_dated_data": "未回報帶日期的總數。僅在後端提供日期時顯示每日資料點。",
+      "model_evidence": "按請求數列出前 12 個模型/API 組合。延遲僅使用保留的請求明細計算，不代表全部歷史樣本。",
+      "unreported": "未回報",
+      "p50": "p50 延遲",
+      "p95": "p95 延遲",
+      "milliseconds": "{{value}} 毫秒"
+    }
   }
 }

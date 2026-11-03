@@ -60,13 +60,28 @@ export interface QuotaCardState {
   status: 'idle' | 'loading' | 'success' | 'error';
   error?: string;
   errorStatus?: number;
+  refreshing?: boolean;
+  stale?: boolean;
+  checkedAt?: number;
 }
 
 export interface QuotaProviderData<TState extends QuotaCardState, TData> {
   type: QuotaProviderType;
   i18nPrefix: string;
   filterFn: (file: AuthFileItem) => boolean;
+  /** Explicit provider request. Some providers historically include inference here. */
   fetchQuota: (file: AuthFileItem, t: TFunction) => Promise<TData>;
+  /** Whether this credential exposes an allowance to ordinary observation. */
+  canObserve?: (file: AuthFileItem) => boolean;
+  /** Override explicit requests with a non-generative read, or require a fresh auth-file list. */
+  observation?:
+    | { source: 'auth-files' }
+    | { source: 'remote'; read: (file: AuthFileItem, t: TFunction) => Promise<TData> };
+  healthTest?: {
+    run: (file: AuthFileItem, t: TFunction) => Promise<TData>;
+    labelKey: string;
+    labelFallback: string;
+  };
   resetQuota?: (file: AuthFileItem, t: TFunction) => Promise<TData>;
   canResetQuota?: (quota: TState) => boolean;
   getObservations: (state: TState) => QuotaObservations;

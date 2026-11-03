@@ -1,5 +1,10 @@
 import type { QuotaTabId } from './constants';
 import { canRefreshQuotaAfterList, filterEntriesByTab, type QuotaFileEntry } from './logic';
+import { getQuotaDataAdapter } from './providers/registry';
+
+export function observableQuotaEntries(entries: QuotaFileEntry[]): QuotaFileEntry[] {
+  return entries.filter(({ file, type }) => getQuotaDataAdapter(type).canObserve?.(file) ?? true);
+}
 
 export interface QuotaRefreshIntent {
   sessionGeneration: number;
@@ -13,7 +18,7 @@ interface QuotaRefreshSnapshot {
   disabled: boolean;
 }
 
-/** Resolve only against the current page recomputed from the accepted auth-file list. */
+/** Resolve against eligible entries from the accepted auth-file snapshot. */
 export function resolveQuotaRefreshTargets(
   intent: QuotaRefreshIntent,
   snapshot: QuotaRefreshSnapshot,
@@ -30,5 +35,31 @@ export function resolveQuotaRefreshTargets(
   ) {
     return [];
   }
-  return filterEntriesByTab(pageItems, intent.scope);
+  return observableQuotaEntries(filterEntriesByTab(pageItems, intent.scope));
+}
+
+/** A route mount checks once per connection; view controls never enter this decision. */
+export function resolveQuotaEntryCheck(
+  checkedGeneration: number | null,
+  loading: boolean,
+  snapshot: QuotaRefreshSnapshot,
+  entries: QuotaFileEntry[]
+): QuotaFileEntry[] | null {
+  if (
+    loading ||
+    checkedGeneration === snapshot.sessionGeneration ||
+    !canRefreshQuotaAfterList(
+      snapshot.sessionGeneration,
+      snapshot.sessionGeneration,
+      snapshot.filesGeneration,
+      snapshot.hasError,
+      snapshot.disabled
+    )
+  )
+    return null;
+  return resolveQuotaRefreshTargets(
+    { sessionGeneration: snapshot.sessionGeneration, scope: 'all' },
+    snapshot,
+    entries
+  );
 }

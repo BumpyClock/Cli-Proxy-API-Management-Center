@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { IconInfo, IconNetwork, IconPlus } from '@/components/ui/icons';
+import { IconInfo, IconPlus } from '@/components/ui/icons';
 import { OAuthEditorProviderCard } from '@/features/authFiles/components/OAuthEditorProviderCard';
 import { OAuthAliasMappingRow } from '@/features/authFiles/components/OAuthAliasMappingRow';
-import { SecondaryScreenShell } from '@/components/common/SecondaryScreenShell';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useAuthStore, useNotificationStore } from '@/stores';
@@ -20,6 +21,7 @@ import {
 import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import { generateId, getErrorMessage } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
+import bodyStyles from './AuthFilesOAuthModelAliasEditPage.module.scss';
 
 type AuthFileModelItem = { id: string; display_name?: string; type?: string; owned_by?: string };
 
@@ -392,23 +394,27 @@ export function AuthFilesOAuthModelAliasEditPage() {
     initialLoadError === null;
 
   return (
-    <SecondaryScreenShell
-      ref={swipeRef}
-      title={title}
-      onBack={handleBack}
-      backLabel={t('common.back')}
-      backAriaLabel={t('common.back')}
-      contentClassName={styles.pageContent}
-      topBarClassName={styles.topBar}
-      rightAction={
-        <Button size="sm" onClick={handleSave} loading={saving} disabled={!canSave}>
-          {t('oauth_model_alias.save')}
-        </Button>
-      }
-      isLoading={initialLoading}
-      loadingLabel={t('common.loading')}
-    >
-      {modelAliasUnsupported ? (
+    <div ref={swipeRef} className={styles.pageContent}>
+      <PageHeader
+        title={title}
+        description={t('oauth_model_alias.editor_description')}
+        actions={
+          <>
+            <Button variant="secondary" size="sm" onClick={handleBack}>
+              {t('common.back')}
+            </Button>
+            <Button size="sm" onClick={handleSave} loading={saving} disabled={!canSave}>
+              {t('oauth_model_alias.save')}
+            </Button>
+          </>
+        }
+      />
+      {initialLoading ? (
+        <div className={styles.loading} role="status">
+          <LoadingSpinner size={16} />
+          {t('common.loading')}
+        </div>
+      ) : modelAliasUnsupported ? (
         <Card>
           <EmptyState
             title={t('oauth_model_alias.upgrade_required_title')}
@@ -429,16 +435,6 @@ export function AuthFilesOAuthModelAliasEditPage() {
         </Card>
       ) : (
         <>
-          <div className={styles.intro}>
-            <span className={styles.introIcon}>
-              <IconNetwork size={22} aria-hidden="true" />
-            </span>
-            <div>
-              <h1 className={styles.introTitle}>{t('oauth_model_alias.title')}</h1>
-              <p className={styles.description}>{t('oauth_model_alias.editor_description')}</p>
-            </div>
-          </div>
-
           <OAuthEditorProviderCard
             provider={provider}
             options={providerOptions}
@@ -450,12 +446,14 @@ export function AuthFilesOAuthModelAliasEditPage() {
           <Card className={styles.settingsCard}>
             <div className={styles.editorHeader}>
               <div className={styles.sectionHeading}>
-                <span className={styles.stepNumber} aria-hidden="true">
+                <span className={styles.editorStepNumber} aria-hidden="true">
                   02
                 </span>
                 <div className={styles.headingCopy}>
-                  <h2 className={styles.sectionTitle}>{t('oauth_model_alias.alias_label')}</h2>
-                  <p className={styles.description}>{t('oauth_model_alias.mapping_hint')}</p>
+                  <h2 className={styles.editorSectionTitle}>
+                    {t('oauth_model_alias.alias_label')}
+                  </h2>
+                  <p className={styles.editorDescription}>{t('oauth_model_alias.mapping_hint')}</p>
                 </div>
               </div>
               <Button
@@ -469,12 +467,12 @@ export function AuthFilesOAuthModelAliasEditPage() {
               </Button>
             </div>
 
-            <div className={styles.catalogHint}>
+            <div className={bodyStyles.catalogHint}>
               <IconInfo size={15} aria-hidden="true" />
-              <p className={styles.description}>{headerHint}</p>
+              <p className={styles.editorDescription}>{headerHint}</p>
             </div>
 
-            <div className={styles.mappingsBody}>
+            <div className={bodyStyles.mappingsBody}>
               {mappings.map((entry, index) => (
                 <OAuthAliasMappingRow
                   key={entry.id}
@@ -497,6 +495,6 @@ export function AuthFilesOAuthModelAliasEditPage() {
           </Card>
         </>
       )}
-    </SecondaryScreenShell>
+    </div>
   );
 }

@@ -139,13 +139,7 @@ export function ProviderResourcePanel({
             ) : registrationUrl ? (
               <>
                 <a
-                  className={[
-                    styles.sponsorLink,
-                    styles.sponsorLinkEmphasis,
-                    group.id === 'kimi' ? styles.sponsorLinkKimi : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+                  className={styles.sponsorLink}
                   href={registrationUrl}
                   target="_blank"
                   rel="noreferrer"
@@ -194,7 +188,7 @@ export function ProviderResourcePanel({
           <div className={styles.emptyAction}>
             {showSponsorRegistrationLink ? (
               <a
-                className={`${styles.emptyActionButton} ${styles.emptyActionButtonEmphasis}`}
+                className={styles.emptyActionButton}
                 href={APIKEY_FUN_AFFILIATE_URL}
                 target="_blank"
                 rel="noreferrer"

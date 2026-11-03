@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { IconLoader2, IconPlus, IconRefreshCw } from '@/components/ui/icons';
 import styles from './ProviderHeaderCard.module.scss';
 
@@ -34,16 +35,11 @@ export function ProviderHeaderCard({
   onNew,
 }: ProviderHeaderCardProps) {
   const { t } = useTranslation();
-  const cardClassName = [styles.card, variant === 'quickStart' ? styles.quickStartCard : '']
-    .filter(Boolean)
-    .join(' ');
-
   return (
-    <section className={cardClassName}>
-      <div className={styles.row}>
-        <div className={styles.titleArea}>
-          <h1 className={styles.title}>{title ?? t('providersPage.header.title')}</h1>
-        </div>
+    <PageHeader
+      title={title ?? t('providersPage.header.title')}
+      className={variant === 'quickStart' ? styles.quickStartCard : undefined}
+      actions={
         <div className={styles.actions}>
           <button
             type="button"
@@ -73,24 +69,25 @@ export function ProviderHeaderCard({
             </button>
           ) : null}
         </div>
-      </div>
-
-      {showSummary ? (
-        <div className={styles.chips}>
-          <span className={`${styles.chip} ${styles.chipPrimary}`}>
-            {t('providersPage.header.activeResources', {
-              active: totalActive,
-              total: totalResources,
-            })}
-          </span>
-          <span className={styles.chip}>
-            {t('providersPage.header.providerFamilies', { count: providerFamilies })}
-          </span>
-          <span className={styles.chip}>
-            {t('providersPage.header.updatedAt', { time: updatedAtLabel })}
-          </span>
-        </div>
-      ) : null}
-    </section>
+      }
+      meta={
+        showSummary ? (
+          <div className={styles.chips}>
+            <span className={`${styles.chip} ${styles.chipPrimary}`}>
+              {t('providersPage.header.activeResources', {
+                active: totalActive,
+                total: totalResources,
+              })}
+            </span>
+            <span className={styles.chip}>
+              {t('providersPage.header.providerFamilies', { count: providerFamilies })}
+            </span>
+            <span className={styles.chip}>
+              {t('providersPage.header.updatedAt', { time: updatedAtLabel })}
+            </span>
+          </div>
+        ) : undefined
+      }
+    />
   );
 }

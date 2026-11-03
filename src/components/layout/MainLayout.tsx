@@ -12,6 +12,7 @@ import {
   type SyntheticEvent,
 } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { findActiveRoute } from './routeLabel';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { PageTransition } from '@/components/common/PageTransition';
@@ -414,7 +415,7 @@ export function MainLayout() {
   const isPluginResourcePage = location.pathname.startsWith('/plugin-pages');
   const showSidebarLabels = !sidebarCollapsed || sidebarOpen;
 
-  // Keep floating header height available to sticky mobile elements and overlays.
+  // Keep header height available to sticky mobile elements and overlays.
   useLayoutEffect(() => {
     const updateHeaderHeight = () => {
       const height = headerRef.current?.offsetHeight;
@@ -774,6 +775,9 @@ export function MainLayout() {
       : []),
   ];
   const navItems = navGroups.flatMap((group) => flattenNavItems(group.items));
+  const activeNavItem = findActiveRoute(navItems, location.pathname);
+  const currentRouteLabel =
+    activeNavItem?.label ?? (activeNavItem?.labelKey ? t(activeNavItem.labelKey) : fullBrandName);
   const navOrder = navItems.map((item) => item.path);
   const getRouteOrder = (pathname: string) => {
     const trimmedPath =
@@ -1152,12 +1156,21 @@ export function MainLayout() {
           </Button>
         </div>
 
-        <div className="header-actions floating-actions">
+        <div className="header-context">
+          <span className="header-brand">{abbrBrandName}</span>
+          <span className="header-separator" aria-hidden="true">
+            /
+          </span>
+          <span className="header-route">{currentRouteLabel}</span>
+        </div>
+
+        <div className="header-actions">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleRefreshAll}
             title={t('header.refresh_all')}
+            aria-label={t('header.refresh_all')}
           >
             {headerIcons.refresh}
           </Button>
@@ -1270,7 +1283,13 @@ export function MainLayout() {
               </div>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={logout} title={t('header.logout')}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            title={t('header.logout')}
+            aria-label={t('header.logout')}
+          >
             {headerIcons.logout}
           </Button>
         </div>

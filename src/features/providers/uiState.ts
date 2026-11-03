@@ -4,12 +4,13 @@ import {
   PROVIDER_SORT_BY_VALUES,
   SORT_DIR_VALUES,
   type ProviderBrand,
+  type ProviderGroup,
   type ProviderSortBy,
   type SortDir,
 } from './types';
 
 const PROVIDERS_UI_STATE_KEY = 'providersPage.uiState';
-const DEFAULT_ACTIVE_BRAND: ProviderBrand = 'gemini';
+const DEFAULT_ACTIVE_BRAND = null;
 const DEFAULT_PROVIDER_FILTER_STATE: ProviderFilterState = {
   filter: '',
   sortBy: 'name',
@@ -29,7 +30,7 @@ export interface ProviderFilterState {
 }
 
 export interface ProvidersWorkbenchUiState {
-  activeBrand: ProviderBrand;
+  activeBrand: ProviderBrand | null;
   filtersByBrand: Partial<Record<ProviderBrand, ProviderFilterState>>;
 }
 
@@ -68,6 +69,17 @@ const createDefaultProvidersWorkbenchUiState = (): ProvidersWorkbenchUiState => 
   activeBrand: DEFAULT_ACTIVE_BRAND,
   filtersByBrand: {},
 });
+
+export const resolveProviderBrand = (
+  groups: readonly ProviderGroup[],
+  preferredBrand: ProviderBrand | null,
+  fixedBrand?: ProviderBrand
+): ProviderBrand =>
+  fixedBrand ??
+  (groups.some((group) => group.id === preferredBrand) ? preferredBrand : null) ??
+  groups.find((group) => group.resources.length > 0)?.id ??
+  groups[0]?.id ??
+  'gemini';
 
 export const getProviderFilterState = (
   state: ProvidersWorkbenchUiState,

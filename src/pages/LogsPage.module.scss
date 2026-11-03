@@ -326,7 +326,7 @@
   resize: vertical;
   position: relative;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   overscroll-behavior: contain;
 
   @include tablet {
@@ -812,5 +812,168 @@
     min-height: 0;
     height: auto;
     max-height: none;
+  }
+}
+
+/* Keep the record pane dominant; advanced filters expand in place. */
+.container {
+  gap: 16px;
+}
+.tabBar {
+  margin-bottom: 0;
+}
+.tabItem {
+  padding: 10px 12px;
+}
+.tabItem:focus-visible,
+.logRow:focus-visible,
+.filterDisclosure summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.tabActive {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-color);
+}
+.logCard {
+  padding: 12px;
+}
+.filters {
+  gap: 10px 16px;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  flex: 0 0 auto;
+}
+.searchWrapper {
+  flex: 1 1 360px;
+  min-width: 0;
+  max-width: 520px;
+}
+.filterDisclosure {
+  flex: 0 1 auto;
+}
+.filterDisclosure[open] {
+  flex: 1 1 100%;
+}
+.filterPanelToggle {
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px;
+  color: var(--text-secondary);
+}
+.filterPanelCount {
+  margin-left: 8px;
+}
+.structuredFilters {
+  margin-top: 8px;
+}
+.logPanel {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 320px;
+}
+.logList {
+  min-width: 1050px;
+}
+.logRow,
+.columnHeader {
+  display: grid;
+  grid-template-columns: 170px 56px 48px 64px 64px minmax(200px, 1fr) 112px 160px;
+  gap: 4px 10px;
+  padding: 7px 10px;
+  font-family: $font-mono;
+  font-size: 12px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--border-color);
+}
+.columnHeader {
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+}
+.rowMain {
+  display: contents;
+}
+.timestamp {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: inherit;
+  white-space: nowrap;
+}
+.levelCell {
+  grid-column: 2;
+  grid-row: 1;
+}
+.statusBadge {
+  grid-column: 3;
+  grid-row: 1;
+}
+.latency {
+  grid-column: 4;
+  grid-row: 1;
+  font-variant-numeric: tabular-nums;
+}
+.methodBadge {
+  grid-column: 5;
+  grid-row: 1;
+}
+.path {
+  grid-column: 6;
+  grid-row: 1;
+  font-weight: 400;
+  max-width: none;
+}
+.client {
+  grid-column: 7;
+  grid-row: 1;
+  color: var(--text-secondary);
+}
+.source {
+  grid-column: 8;
+  grid-row: 1;
+  max-width: none;
+}
+.requestIdBadge {
+  grid-column: 2 / -1;
+  justify-self: start;
+}
+.message {
+  grid-column: 2 / -1;
+  color: var(--text-primary);
+}
+.logRow .badge {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  line-height: inherit;
+  border-radius: 0;
+  justify-content: start;
+}
+.logPanelFullscreen {
+  min-height: 0;
+  max-height: none;
+}
+@media (max-width: 768px) {
+  .filters {
+    align-items: center;
+  }
+  .searchWrapper {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .toolbar {
+    gap: 8px;
+  }
+  .logPanel {
+    min-height: 360px;
+  }
+  .logPanelFullscreen {
+    min-height: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabItem {
+    transition: none;
   }
 }

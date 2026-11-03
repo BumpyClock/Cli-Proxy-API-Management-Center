@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   createLatestUsageRequestGuard,
+  fetchUsagePageSources,
   runLatestUsageRequest,
 } from '../src/pages/usage-page-request-guard';
 
@@ -13,6 +14,59 @@ const deferred = <T>() => {
   });
   return { promise, resolve, reject };
 };
+
+describe('UsagePage request sources', () => {
+  test('fetches the separate flag endpoint instead of relying on a flag in the usage payload', async () => {
+    let flagCalls = 0;
+    let usageCalls = 0;
+    const result = await fetchUsagePageSources({
+      getStatisticsEnabled: async () => {
+        flagCalls += 1;
+        return false;
+      },
+      getUsage: async () => {
+        usageCalls += 1;
+        return { statistics_enabled: true, usage: { total_requests: 9 } };
+      },
+    });
+    expect(flagCalls).toBe(1);
+    expect(usageCalls).toBe(1);
+    expect(result.enabled).toEqual({ status: 'fulfilled', value: false });
+    expect(result.payload).toMatchObject({ status: 'fulfilled' });
+  });
+
+  test('preserves known disabled and unknown flags when the snapshot fetch fails', async () => {
+    for (const flag of [false, null]) {
+      const result = await fetchUsagePageSources({
+        getStatisticsEnabled: async () => flag,
+        getUsage: async () => {
+          throw new Error('snapshot failed');
+        },
+      });
+      expect(result.enabled).toEqual({ status: 'fulfilled', value: flag });
+      expect(result.payload.status).toBe('rejected');
+    }
+  });
+
+  test('treats a missing usage snapshot as a failed fetch, never an empty success', async () => {
+    const result = await fetchUsagePageSources({
+      getStatisticsEnabled: async () => true,
+      getUsage: async () => ({}),
+    });
+    expect(result.payload.status).toBe('rejected');
+  });
+
+  test('does not turn a flag request failure into unsupported status', async () => {
+    const result = await fetchUsagePageSources({
+      getStatisticsEnabled: async () => {
+        throw new Error('flag failed');
+      },
+      getUsage: async () => ({ usage: { total_requests: 10 } }),
+    });
+    expect(result.enabled.status).toBe('rejected');
+    expect(result.payload.status).toBe('fulfilled');
+  });
+});
 
 describe('UsagePage request ordering', () => {
   test('only the newest concurrent request may commit state or clear loading', () => {
@@ -72,6 +126,88 @@ describe('UsagePage request ordering', () => {
     expect(successes).toEqual(['latest']);
     expect(errors).toEqual([]);
     expect(finishes).toBe(1);
+  });
+
+  test('a changed backend, credential, authentication or connection invalidates both source results', async () => {
+    const initial = {
+      apiBase: 'https://old.invalid',
+      managementKey: 'fixture-old-key',
+      isAuthenticated: true,
+      connectionStatus: 'connected',
+    };
+    for (const changed of [
+      { apiBase: 'https://new.invalid' },
+      { managementKey: 'fixture-new-key' },
+      { isAuthenticated: false },
+      { connectionStatus: 'connecting' },
+    ]) {
+      let session = initial;
+      const guard = createLatestUsageRequestGuard(() => session);
+      const response = deferred<string>();
+      const committed: string[] = [];
+      const run = runLatestUsageRequest({
+        guard,
+        request: () => response.promise,
+        fallbackError: 'failed',
+        onStart: () => undefined,
+        onSuccess: (value) => committed.push(value),
+        onError: (message) => committed.push(message),
+        onFinish: () => committed.push('finished'),
+      });
+      session = { ...initial, ...changed };
+      response.resolve('old snapshot and flag');
+      await run;
+      expect(committed).toEqual([]);
+    }
+  });
+
+  test('invalidating the session suppresses an old failure without propagating it', async () => {
+    let session = {
+      apiBase: 'https://old.invalid',
+      managementKey: 'fixture-key',
+      isAuthenticated: true,
+      connectionStatus: 'connected',
+    };
+    const response = deferred<string>();
+    const errors: string[] = [];
+    const run = runLatestUsageRequest({
+      guard: createLatestUsageRequestGuard(() => session),
+      request: () => response.promise,
+      fallbackError: 'failed',
+      onStart: () => undefined,
+      onSuccess: () => errors.push('success'),
+      onError: (message) => errors.push(message),
+      onFinish: () => errors.push('finished'),
+    });
+    session = { ...session, isAuthenticated: false };
+    response.reject(new Error('old session failed'));
+    await expect(run).resolves.toBeUndefined();
+    expect(errors).toEqual([]);
+  });
+
+  test('partial source failures commit their known flag and reject the global refresh', async () => {
+    const events: string[] = [];
+    const run = runLatestUsageRequest({
+      guard: createLatestUsageRequestGuard(),
+      request: () =>
+        fetchUsagePageSources({
+          getStatisticsEnabled: async () => false,
+          getUsage: async () => {
+            throw new Error('failed');
+          },
+        }),
+      fallbackError: 'failed',
+      getResultError: (result) =>
+        result.payload.status === 'rejected' ? 'Snapshot fetch failed' : null,
+      onStart: () => undefined,
+      onSuccess: (result) => {
+        if (result.enabled.status === 'fulfilled') events.push(String(result.enabled.value));
+      },
+      onError: (message) => events.push(message),
+      onFinish: () => events.push('finished'),
+    });
+    await expect(run).rejects.toThrow('Snapshot fetch failed');
+    expect(events).toEqual(['false', 'Snapshot fetch failed', 'finished']);
   });
 
   test('current failure renders its message and rejects to the global refresh caller', async () => {

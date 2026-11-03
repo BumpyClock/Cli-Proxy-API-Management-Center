@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from '@/components/ui/icons';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useRevealGroup, useRevealOnScroll } from '@/hooks/motion';
@@ -24,7 +25,7 @@ import {
 } from './logic/attention';
 import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic/freshness';
 import { redactUrlCredentials } from './logic/redact';
-import { formatClock, formatInstant } from './logic/time';
+import { formatInstant } from './logic/time';
 import { summarizeUsage } from './logic/usage';
 import { useDashboardAnnouncer } from './hooks/useDashboardAnnouncer';
 import { useFocusRescue } from './hooks/useFocusRescue';
@@ -34,6 +35,7 @@ import { CredentialList } from './components/CredentialList';
 import { ProviderHealthList } from './components/ProviderHealthList';
 import { SourceStamp, type StampEntry } from './components/SourceStamp';
 import { ThroughputChart } from './components/ThroughputChart';
+import { QuotaSummaryChart } from './components/QuotaSummaryChart';
 import { UsagePanel } from './components/UsagePanel';
 import { VitalsStrip, type Vital } from './components/VitalsStrip';
 import { providerLabel, splitWindowMinutes, toneForSuccessRate } from './utils';
@@ -91,6 +93,8 @@ export function DashboardPage() {
     traffic,
     providers,
     credentials,
+    credentialFiles,
+    credentialFilesReady,
     usage,
     sources,
     refresh,
@@ -102,8 +106,7 @@ export function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [retryingCredentials, setRetryingCredentials] = useState(false);
 
-  /* Hero cascades as a group; the sections below reveal as whole blocks. */
-  const heroRef = useRevealGroup<HTMLElement>();
+  /* Sections reveal as whole blocks. */
   const trafficRef = useRevealOnScroll<HTMLElement>();
   const fleetRef = useRevealOnScroll<HTMLElement>();
   const credentialsRef = useRevealOnScroll<HTMLElement>();
@@ -207,6 +210,8 @@ export function DashboardPage() {
     otherScopeActivity: freshness.usage === 'live' && (usageSummary?.requests ?? 0) > 0,
   });
   const verdictTitle = useVerdictTitle(verdict);
+  const quiet =
+    verdict.kind === 'good' || verdict.kind === 'idle' || verdict.kind === 'idle_other_scope';
 
   /* ---------- Live announcements (screen readers) ---------- */
 
@@ -482,57 +487,63 @@ export function DashboardPage() {
       <div className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">
         {liveText}
       </div>
-      <div className={styles.ambient} aria-hidden="true">
-        <span className={styles.gridWash} />
-      </div>
-
-      {/* ---------- Verdict ---------- */}
-      <section className={styles.hero} ref={heroRef}>
-        <h1 className={styles.heroTitle} data-reveal>
-          {verdictTitle}
-          <span
-            className={`${styles.heroPeriod} ${heroAlive ? styles.heroPeriodLive : ''}`}
-            style={{ color: VERDICT_ACCENTS[verdict.tone] }}
-          >
-            {t('dashboard.hero_period')}
-          </span>
-        </h1>
-        <div className={styles.heroMeta} data-reveal>
-          <span className={styles.heroMetaText}>
-            {[versionLabel, connectionLabel].filter(Boolean).map((part, index) => (
-              <span key={index} className={styles.heroMetaPart}>
-                {part}
-              </span>
-            ))}
-            {connected && (
-              <span className={styles.heroMetaPart}>
-                <SourceStamp
-                  entries={stampEntries(['credentials', 'traffic'])}
-                  now={now}
-                  className={styles.heroStamp}
+      <section className={styles.hero}>
+        <PageHeader
+          titleId="dashboard-title"
+          variant={quiet ? 'default' : 'hero'}
+          title={
+            quiet ? (
+              t('nav.dashboard')
+            ) : (
+              <>
+                {verdictTitle}
+                <span
+                  className={`${styles.heroPeriod} ${heroAlive ? styles.heroPeriodLive : ''}`}
+                  style={{ color: VERDICT_ACCENTS[verdict.tone] }}
+                >
+                  {t('dashboard.hero_period')}
+                </span>
+              </>
+            )
+          }
+          meta={
+            <span className={styles.heroMetaText}>
+              {[versionLabel, connectionLabel].filter(Boolean).map((part, index) => (
+                <span key={index} className={styles.heroMetaPart}>
+                  {part}
+                </span>
+              ))}
+              {connected && (
+                <span className={styles.heroMetaPart}>
+                  <SourceStamp
+                    entries={stampEntries(['credentials', 'traffic'])}
+                    now={now}
+                    className={styles.heroStamp}
+                  />
+                </span>
+              )}
+            </span>
+          }
+          actions={
+            connected && (
+              <button
+                type="button"
+                className={styles.refreshButton}
+                onClick={() => void handleRefresh()}
+                aria-disabled={refreshing || undefined}
+                aria-label={refreshing ? undefined : t('dashboard.refresh_now')}
+                title={t('dashboard.refresh_now')}
+              >
+                <IconRefreshCw
+                  size={14}
+                  className={refreshing ? styles.spinning : undefined}
+                  aria-hidden="true"
                 />
-              </span>
-            )}
-          </span>
-          {connected && (
-            <button
-              type="button"
-              className={styles.refreshButton}
-              onClick={() => void handleRefresh()}
-              // aria-disabled (not disabled) keeps keyboard focus on the button while it works.
-              aria-disabled={refreshing || undefined}
-              aria-label={refreshing ? undefined : t('dashboard.refresh_now')}
-              title={t('dashboard.refresh_now')}
-            >
-              <IconRefreshCw
-                size={14}
-                className={refreshing ? styles.spinning : undefined}
-                aria-hidden="true"
-              />
-              <span>{refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}</span>
-            </button>
-          )}
-        </div>
+                <span>{refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}</span>
+              </button>
+            )
+          }
+        />
       </section>
 
       {/* ---------- Attention ---------- */}
@@ -558,31 +569,24 @@ export function DashboardPage() {
       <VitalsStrip items={vitals} ariaLabel={t('dashboard.stats_aria')} />
 
       {/* ---------- Traffic ---------- */}
-      <section className={styles.section} ref={trafficRef}>
+      <section className={`${styles.section} ${styles.panel}`} ref={trafficRef}>
         <header className={styles.sectionHead}>
-          <span className={styles.eyebrow}>{t('dashboard.traffic_eyebrow')}</span>
-          <h2 className={styles.sectionTitle}>{t('dashboard.traffic_title')}</h2>
+          <h2 className={styles.sectionTitle}>{t('redesign.dashboard.request_flow')}</h2>
           <p className={styles.sectionDescription}>
-            {traffic.startMs !== null
-              ? t('dashboard.traffic_description', {
-                  start: formatClock(traffic.startMs, i18n.language),
-                  zone: timeZoneLabel,
-                })
-              : t('dashboard.traffic_description_empty')}
+            {t('redesign.dashboard.traffic_interval', { zone: timeZoneLabel })}
           </p>
           {partialNote && <p className={styles.partialNote}>{partialNote}</p>}
           <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />
         </header>
-        <div className={styles.panel}>
-          <ThroughputChart traffic={traffic} />
-        </div>
+        <ThroughputChart traffic={traffic} />
       </section>
 
+      <QuotaSummaryChart files={credentialFiles} filesReady={credentialFilesReady} />
+
       {/* ---------- Providers ---------- */}
-      <section className={styles.section} ref={fleetRef}>
+      <section className={`${styles.section} ${styles.panel}`} ref={fleetRef}>
         <header className={styles.sectionHeadRow}>
           <div className={styles.sectionHead}>
-            <span className={styles.eyebrow}>{t('dashboard.fleet_eyebrow')}</span>
             <h2 className={styles.sectionTitle}>{t('dashboard.fleet_title')}</h2>
             <p className={styles.sectionDescription}>
               {t('dashboard.fleet_description', { window: windowLabel })}
@@ -594,20 +598,17 @@ export function DashboardPage() {
             {t('dashboard.cta_manage_providers')} <span aria-hidden="true">→</span>
           </Link>
         </header>
-        <div className={styles.panel}>
-          <ProviderHealthList providers={providers} />
-        </div>
+        <ProviderHealthList providers={providers} />
       </section>
 
       {/* ---------- Credentials ---------- */}
       <section
-        className={styles.section}
+        className={`${styles.section} ${styles.panel}`}
         ref={credentialsRef}
         data-focus-rescue="dashboard-credentials-title"
       >
         <header className={styles.sectionHeadRow}>
           <div className={styles.sectionHead}>
-            <span className={styles.eyebrow}>{t('dashboard.health_eyebrow')}</span>
             <h2 id="dashboard-credentials-title" className={styles.sectionTitle} tabIndex={-1}>
               {t('dashboard.health_title')}
             </h2>
@@ -617,22 +618,19 @@ export function DashboardPage() {
             {t('dashboard.action_add_oauth')} <span aria-hidden="true">→</span>
           </Link>
         </header>
-        <div className={styles.panel}>
-          <CredentialList
-            credentials={credentials}
-            loadError={sources.credentials.error}
-            now={now}
-            onRetry={retryCredentials}
-            retrying={retryingCredentials}
-          />
-        </div>
+        <CredentialList
+          credentials={credentials}
+          loadError={sources.credentials.error}
+          now={now}
+          onRetry={retryCredentials}
+          retrying={retryingCredentials}
+        />
       </section>
 
       {/* ---------- Usage + runtime ---------- */}
       <section className={styles.detailGrid} ref={detailRef}>
         <div className={styles.panel} data-reveal>
           <header className={styles.panelHead}>
-            <span className={styles.eyebrow}>{t('dashboard.usage_eyebrow')}</span>
             <h2 className={styles.panelTitle}>{t('dashboard.usage_title')}</h2>
             <SourceStamp entries={stampEntries(['usage'])} now={now} />
           </header>
@@ -647,7 +645,6 @@ export function DashboardPage() {
 
         <div className={styles.panel} data-reveal>
           <header className={styles.panelHead}>
-            <span className={styles.eyebrow}>{t('dashboard.runtime_eyebrow')}</span>
             <h2 className={styles.panelTitle}>{t('dashboard.runtime_title')}</h2>
             <SourceStamp entries={stampEntries(['config'])} now={now} />
           </header>

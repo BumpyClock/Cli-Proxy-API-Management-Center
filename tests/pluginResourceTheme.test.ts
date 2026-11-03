@@ -16,6 +16,14 @@ describe('plugin resource theme backgrounds', () => {
     });
   }
 
+  test('page and remaining frame fit below the fixed application header', () => {
+    const shell = page.match(/\.page\s*\{([^}]+)\}/)?.[1];
+    expect(shell).toContain('padding-top: var(--header-height);');
+    expect(shell).toContain('box-sizing: border-box;');
+    const frame = page.match(/\.frameShell\s*\{([^}]+)\}/)?.[1];
+    expect(frame).toContain('min-height: 0;');
+  });
+
   test('plugin shell and transition layers use the theme background', () => {
     const block = layout.match(/&\.main-content-plugin-resource\s*\{([\s\S]*?)\n {2}\}/)?.[1];
     expect(block).toBeDefined();

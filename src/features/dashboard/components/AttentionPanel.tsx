@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { IconAlertTriangle, IconCheckCircle2, IconRefreshCw } from '@/components/ui/icons';
+import { IconAlertTriangle, IconRefreshCw } from '@/components/ui/icons';
 import { resolveTimeZoneLabel } from '@/utils/time/timezone';
 import type { CredentialRow } from '../types';
 import type {
@@ -260,7 +260,7 @@ function SourceItem({
 
 /**
  * The first thing below the headline: every problem, its evidence, and the action that
- * resolves it. When nothing is wrong it says what was checked and when.
+ * resolves it. No panel is rendered when there is nothing to act on.
  */
 export function AttentionPanel({
   items,
@@ -320,43 +320,14 @@ export function AttentionPanel({
         </section>
       );
     }
-    return (
-      <section
-        className={styles.allClear}
-        aria-labelledby="dashboard-attention-title"
-        data-focus-rescue="dashboard-attention-title"
-      >
-        <span className={styles.allClearIcon} aria-hidden="true">
-          <IconCheckCircle2 size={18} />
-        </span>
-        <div className={styles.allClearCopy}>
-          <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.allClearTitle}>
-            {pending ? t('dashboard.attention_checking') : t('dashboard.attention_none')}
-          </h2>
-          {!pending && (
-            <p className={styles.allClearDetail}>
-              {t('dashboard.attention_none_detail', {
-                credentials: t('dashboard.attention_none_credentials', {
-                  count: checkedCredentials,
-                }),
-                providers: t('dashboard.attention_none_providers', { count: checkedProviders }),
-                age: formatAge(t, primaryReceivedAt as number, now),
-              })}
-            </p>
-          )}
-        </div>
-        <Link className={styles.headerLink} to="/logs">
-          {t('dashboard.cta_inspect_logs')} <span aria-hidden="true">→</span>
-        </Link>
-      </section>
-    );
+    return null;
   }
 
   return (
     <section
       className={styles.panel}
       aria-labelledby="dashboard-attention-title"
-      data-focus-rescue="dashboard-attention-title"
+      data-focus-rescue="dashboard-title"
     >
       <header className={styles.header}>
         <span className={styles.headerIcon} aria-hidden="true">

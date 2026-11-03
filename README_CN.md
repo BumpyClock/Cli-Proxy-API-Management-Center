@@ -95,8 +95,8 @@ bun run build
   - OpenAI 兼容提供商（多 Key、Header、自助从 `/v1/models` 拉取并导入模型别名、可选浏览器侧 `chat/completions` 测试）。
 - **认证文件**：上传/下载/删除 JSON 凭据，筛选/搜索/分页，标记 runtime-only；查看单个凭据可用模型（依赖后端支持）；管理 OAuth 排除模型（支持 `*` 通配符）；配置 OAuth 模型别名映射。
 - **OAuth**：对 Codex、Anthropic/Claude、Antigravity、Kimi、Qoder、xAI/Grok 发起 OAuth/设备码流程并轮询状态；支持提交回调 URL 或 xAI/Grok 页面显示的 code；包含 Vertex JSON 凭据导入与 iFlow Cookie 导入。
-- **配额管理**：管理 Claude、Antigravity、Codex、Kimi、Qoder、xAI/Grok 等提供商的配额上限与使用情况。
-- **使用统计**：查看来自 `/v0/management/usage` 的请求总量、Token 总量、小时趋势，以及 API/模型维度统计。
+- **配额管理**：在固定 0–100% 坐标中独立比较各账户的剩余额度，支持提供商筛选、搜索及每周/5 小时视图。进入页面时自动检查，重新进入时再次检查，不进行后台轮询；筛选、搜索、时间窗口与图例切换不会重新请求配额。刷新期间保留缓存，失败时标记过期，并显示检查时间与部分成功结果。虚线仅根据下一次已报告的重置时间投影，不虚构历史、消耗速率或可转移额度。账户详情保留单独刷新、受支持的重置操作与详细时间线；仪表盘也使用同一图表模型。
+- **使用统计**：查看来自 `/v0/management/usage` 的请求与 Token 总量、后端提供日期的每日趋势，以及已脱敏的 API/模型对比。明确区分采集关闭、状态未知、无数据、失败、缓存过期与正常状态；同一连接刷新失败时保留缓存。不会将只有小时编号的汇总数据虚构为日期历史。统计存于内存，后端重启后清空，启用采集不会补录此前数据。
 - **日志**：增量拉取日志、自动刷新、搜索、隐藏管理端流量、清空日志；下载请求错误日志文件。
 - **系统信息**：快捷链接、版本检查、请求日志开关、本地登录信息清理，以及拉取 `/v1/models` 并分组展示（需要至少一个代理 API Key 才能查询模型）。
 
@@ -108,6 +108,7 @@ bun run build
 - Axios（HTTP 客户端）
 - react-router-dom v7（HashRouter）
 - Motion（动效）
+- Recharts（共享 SVG 图表、键盘查看与无障碍数据表）
 - CodeMirror 6（YAML 编辑器）
 - SCSS Modules（样式）
 - i18next（国际化）

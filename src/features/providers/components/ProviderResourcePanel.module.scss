@@ -6,9 +6,9 @@
   scroll-margin-top: calc(var(--header-height, 80px) + 16px);
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: 20px;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 16px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -124,7 +124,7 @@
 }
 
 .title {
-  font-size: 22px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -177,47 +177,13 @@
   }
 }
 
-.sponsorLinkEmphasis {
-  color: var(--amber-text);
-  border-color: color-mix(in srgb, var(--amber-color) 48%, var(--border-color));
-  background: color-mix(in srgb, var(--amber-color) 14%, var(--bg-primary));
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--amber-color) 18%, transparent);
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--amber-color) 72%, var(--border-color));
-    background: color-mix(in srgb, var(--amber-color) 20%, var(--bg-primary));
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--amber-color) 18%, transparent);
-  }
-
-  &:focus-visible {
-    outline-color: var(--amber-color);
-  }
-}
-
-.sponsorLinkKimi {
-  color: color-mix(in srgb, #1783ff 82%, var(--text-primary));
-  border-color: color-mix(in srgb, #1783ff 48%, var(--border-color));
-  background: color-mix(in srgb, #1783ff 14%, var(--bg-primary));
-  box-shadow: 0 1px 0 color-mix(in srgb, #1783ff 18%, transparent);
-
-  &:hover {
-    border-color: color-mix(in srgb, #1783ff 72%, var(--border-color));
-    background: color-mix(in srgb, #1783ff 20%, var(--bg-primary));
-    box-shadow: 0 4px 12px color-mix(in srgb, #1783ff 18%, transparent);
-  }
-
-  &:focus-visible {
-    outline-color: #1783ff;
-  }
-}
-
 .kimiPromo {
   margin: 8px 0 0;
   max-width: 100%;
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.5;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .sponsorLinkText {
@@ -324,20 +290,10 @@
   }
 }
 
-.emptyActionButtonEmphasis {
-  color: var(--amber-text);
-  border-color: color-mix(in srgb, var(--amber-color) 48%, var(--border-color));
-  background: color-mix(in srgb, var(--amber-color) 14%, var(--bg-primary));
-  font-weight: 600;
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--amber-color) 18%, transparent);
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--amber-color) 72%, var(--border-color));
-    background: color-mix(in srgb, var(--amber-color) 20%, var(--bg-primary));
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--amber-color) 18%, transparent);
-  }
-
-  &:focus-visible {
-    outline-color: var(--amber-color);
+@media (prefers-reduced-motion: reduce) {
+  .panel *,
+  .panel *::before,
+  .panel *::after {
+    transition: none;
   }
 }

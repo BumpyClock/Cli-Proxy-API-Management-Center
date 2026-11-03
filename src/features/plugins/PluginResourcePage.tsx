@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Button } from '@/components/ui/Button';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +14,7 @@ import {
   collectPluginResourceEntries,
   PLUGIN_RESOURCES_REFRESH_EVENT,
   resolvePluginAssetURL,
+  resolvePluginResourceOpenURL,
 } from './pluginResources';
 import styles from './PluginResourcePage.module.scss';
 
@@ -38,6 +42,7 @@ export function PluginResourcePage() {
   const [data, setData] = useState<PluginListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [frameAttempt, setFrameAttempt] = useState(0);
 
   const connected = connectionStatus === 'connected';
   const pluginID = useMemo(() => safeDecodeURIComponent(params.pluginId), [params.pluginId]);
@@ -52,6 +57,7 @@ export function PluginResourcePage() {
 
     setLoading(true);
     setError('');
+    setFrameAttempt((attempt) => attempt + 1);
     try {
       const plugins = await pluginsApi.list();
       setData(plugins);
@@ -86,12 +92,37 @@ export function PluginResourcePage() {
   }, [data?.plugins, menuIndex, pluginID]);
 
   const iframeSrc = resource ? resolvePluginAssetURL(resource.menu.path, apiBase) : '';
+  const openHref = resolvePluginResourceOpenURL(iframeSrc, window.location.href);
 
   return (
     <div className={styles.page}>
+      <PageHeader
+        title={resource?.label || t('plugin_resource.unavailable')}
+        meta={resource ? `${resource.pluginTitle} · ${resource.menu.path}` : pluginID}
+        actions={
+          <>
+            <Link to="/plugins">{t('plugin_management.title')}</Link>
+            {openHref && (
+              <a href={openHref} target="_blank" rel="noopener noreferrer">
+                {t('plugin_resource.open_in_new_tab')}
+              </a>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void loadResource()}
+              disabled={loading}
+            >
+              {t('common.refresh')}
+            </Button>
+          </>
+        }
+      />
       {loading ? (
         <div className={styles.stateShell}>
-          <div className={styles.statusPanel}>{t('common.loading')}</div>
+          <div className={styles.statusPanel} role="status">
+            {t('common.loading')}
+          </div>
         </div>
       ) : error ? (
         <div className={styles.stateShell}>
@@ -112,13 +143,16 @@ export function PluginResourcePage() {
           />
         </div>
       ) : (
-        <iframe
-          className={styles.frame}
-          src={iframeSrc}
-          title={resource.label}
-          referrerPolicy="no-referrer"
-          allow="clipboard-read; clipboard-write"
-        />
+        <div className={styles.frameShell}>
+          <iframe
+            key={`${iframeSrc}:${frameAttempt}`}
+            className={styles.frame}
+            src={iframeSrc}
+            title={resource.label}
+            referrerPolicy="no-referrer"
+            allow="clipboard-read; clipboard-write"
+          />
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,3 @@
-@use 'sass:color';
 @use './variables.scss' as *;
 
 .btn {
@@ -7,8 +6,10 @@
   justify-content: center;
   gap: $spacing-sm;
   border: 1px solid transparent;
-  border-radius: $radius-md;
-  padding: 10px 14px;
+  min-height: 34px;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all $transition-fast;
@@ -49,12 +50,12 @@
   }
 
   &.btn-danger {
-    background-color: $error-color;
-    border-color: $error-color;
-    color: #fff;
+    background-color: var(--error-color);
+    border-color: var(--error-color);
+    color: var(--danger-contrast);
 
     &:hover {
-      background-color: color.adjust($error-color, $lightness: -5%);
+      background-color: color-mix(in srgb, var(--error-color) 90%, var(--text-primary));
     }
   }
 
@@ -63,8 +64,22 @@
   }
 
   &.btn-sm {
-    padding: 8px 10px;
-    font-size: 14px;
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (pointer: coarse) {
+    &,
+    &.btn-sm {
+      min-width: 44px;
+      min-height: 44px;
+    }
   }
 
   &:disabled {
@@ -73,24 +88,14 @@
   }
 }
 
-[data-theme='dark'] {
-  .btn {
-    color: #fff;
-  }
-
-  .btn.btn-secondary,
-  .btn.btn-ghost {
-    color: #fff;
-  }
-}
-
 .input,
 textarea {
   width: 100%;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
-  padding: 10px 12px;
-  background-color: var(--bg-secondary);
+  min-height: 36px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background-color: var(--bg-primary);
   color: var(--text-primary);
   transition:
     border-color $transition-fast,
@@ -98,8 +103,13 @@ textarea {
 
   &:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.18);
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring) 28%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
@@ -123,9 +133,9 @@ textarea {
 .card {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: $radius-lg;
+  border-radius: 8px;
   box-shadow: var(--shadow);
-  padding: $spacing-lg;
+  padding: 16px;
 }
 
 .card-header {
@@ -143,8 +153,8 @@ textarea {
   .title {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
   }
 }
@@ -165,21 +175,21 @@ textarea {
   }
 
   &.success {
-    color: $success-color;
-    border-color: rgba($success-color, 0.35);
-    background: rgba($success-color, 0.08);
+    color: var(--success-color);
+    border-color: color-mix(in srgb, var(--success-color) 35%, transparent);
+    background: color-mix(in srgb, var(--success-color) 8%, transparent);
   }
 
   &.warning {
-    color: $warning-color;
-    border-color: rgba($warning-color, 0.35);
-    background: rgba($warning-color, 0.08);
+    color: var(--warning-color);
+    border-color: color-mix(in srgb, var(--warning-color) 35%, transparent);
+    background: color-mix(in srgb, var(--warning-color) 8%, transparent);
   }
 
   &.error {
-    color: $error-color;
-    border-color: rgba($error-color, 0.35);
-    background: rgba($error-color, 0.08);
+    color: var(--error-color);
+    border-color: color-mix(in srgb, var(--error-color) 35%, transparent);
+    background: color-mix(in srgb, var(--error-color) 8%, transparent);
   }
 
   &.muted {
