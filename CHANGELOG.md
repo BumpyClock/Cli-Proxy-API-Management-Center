@@ -24,6 +24,9 @@
 
 ### Fixed
 
+- Bulk quota observations publish immutable provider snapshots in two phases rather than copying the entire cache for every account. Cached 403/404 failures retain translated remediation guidance.
+- Plugin resources clear the fixed application header and fit the remaining viewport. Active provider subtitles retain full contrast.
+
 - Paid xAI accounts without observable allowances are skipped rather than marked failed. Plugin frame state resets by resource identity, and Usage exits loading when a connection stops.
 - Restored responsive table headings, touch targets, sticky navigation clearance, translated log-copy controls, disabled input styling, and light-theme text contrast.
 

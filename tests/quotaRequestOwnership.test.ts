@@ -159,7 +159,7 @@ describe('shared quota request ownership', () => {
     }
   }
 
-  test('unrelated accounts commit independently, including during a file invalidation', async () => {
+  test('file invalidation does not discard unrelated outcomes in the same batch', async () => {
     const slow = deferred<unknown>();
     const fast = deferred<unknown>();
     adapter.fetchQuota = (target) => (target.name === file.name ? slow.promise : fast.promise);
@@ -168,13 +168,13 @@ describe('shared quota request ownership', () => {
     await started();
     useQuotaStore.getState().clearQuotaCache([file.name]);
     fast.resolve(data(45));
-    // Let the independent credential commit before the slow request finishes.
     await fast.promise;
     await started();
-    expect(useQuotaStore.getState().claudeQuota[other.name].windows[0].usedPercent).toBe(45);
+    expect(useQuotaStore.getState().claudeQuota[other.name].status).toBe('loading');
     expect(cached()).toBeUndefined();
     slow.resolve(data(5));
     await run;
+    expect(useQuotaStore.getState().claudeQuota[other.name].windows[0].usedPercent).toBe(45);
     expect(cached()).toBeUndefined();
   });
 
@@ -198,11 +198,7 @@ describe('shared quota request ownership', () => {
     fast.resolve({ windows: [], plan: 'second' });
     await fast.promise;
     await started();
-    expect(useQuotaStore.getState().devinQuota[getQuotaCacheKey(second)]).toMatchObject({
-      status: 'success',
-      plan: 'second',
-      checkedAt: 1000,
-    });
+    expect(useQuotaStore.getState().devinQuota[getQuotaCacheKey(second)].status).toBe('loading');
     expect(useQuotaStore.getState().devinQuota[getQuotaCacheKey(first)].status).toBe('loading');
     Date.now = () => 2000;
     slow.resolve({ windows: [], plan: 'first' });
@@ -214,6 +210,109 @@ describe('shared quota request ownership', () => {
       checkedAt: 1000,
     });
   });
+
+  test('500 cached accounts publish two immutable provider snapshots with linear copied entries', async () => {
+    const files = Array.from({ length: 500 }, (_, i) => ({
+      name: `account-${i}.json`,
+      provider: 'claude',
+    }));
+    const seed = Object.fromEntries(
+      files.map((item) => [
+        item.name,
+        {
+          status: 'success' as const,
+          ...data(10),
+          checkedAt: 1,
+        },
+      ])
+    );
+    useQuotaStore.getState().setClaudeQuota(seed);
+    const responses = files.map(() => deferred<unknown>());
+    let calls = 0;
+    adapter.fetchQuota = () => responses[calls++].promise;
+    const snapshots: Array<typeof seed> = [];
+    let copiedEntries = 0;
+    const unsubscribe = useQuotaStore.subscribe((state, previous) => {
+      if (state.claudeQuota === previous.claudeQuota) return;
+      copiedEntries += Object.keys(previous.claudeQuota).length;
+      snapshots.push(state.claudeQuota as typeof seed);
+    });
+    try {
+      const run = consumer().batch.loadQuota(files.map((item) => ({ type: 'claude', file: item })));
+      await started();
+      expect(calls).toBe(500);
+      expect(snapshots).toHaveLength(1);
+      expect(seed[files[0].name].windows[0].usedPercent).toBe(10);
+      for (let i = 499; i >= 0; i--) {
+        responses[i].resolve(data(i % 100));
+        await started();
+      }
+      const result = await run;
+      expect(result?.success).toBe(500);
+      expect(snapshots).toHaveLength(2);
+      expect(copiedEntries).toBe(1000);
+      expect(snapshots[0]).not.toBe(snapshots[1]);
+      expect(snapshots[0][files[1].name]).toMatchObject({ refreshing: true });
+      expect(snapshots[1][files[1].name].windows[0].usedPercent).toBe(1);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  test('provider groups settle independently and an unrelated row refresh stays prompt', async () => {
+    const slow = deferred<unknown>();
+    const fast = deferred<unknown>();
+    const row = deferred<unknown>();
+    const other = { name: 'other.json', provider: 'claude' };
+    const devin = { name: 'devin.json', provider: 'devin' };
+    adapter.fetchQuota = (target) => (target.name === file.name ? slow.promise : row.promise);
+    QUOTA_ADAPTERS.devin.fetchQuota = () => fast.promise;
+    const run = consumer().batch.loadQuota([...targets, { type: 'devin', file: devin }]);
+    await started();
+    const rowRun = consumer().actions.refreshQuota(other, adapter);
+    await started();
+    fast.resolve({ windows: [], plan: 'fast' });
+    row.resolve(data(70));
+    await rowRun;
+    await started();
+    expect(useQuotaStore.getState().devinQuota[getQuotaCacheKey(devin)]).toMatchObject({
+      plan: 'fast',
+    });
+    expect(useQuotaStore.getState().claudeQuota[other.name].windows[0].usedPercent).toBe(70);
+    expect(cached().status).toBe('loading');
+    slow.resolve(data(20));
+    await run;
+  });
+
+  for (const invalidation of ['file', 'session', 'new-owner'] as const) {
+    test(`queued batch outcome cannot publish after ${invalidation}`, async () => {
+      const first = deferred<unknown>();
+      const second = deferred<unknown>();
+      const newer = deferred<unknown>();
+      const other = { name: 'slow.json', provider: 'claude' };
+      adapter.fetchQuota = (target) => (target.name === file.name ? first.promise : second.promise);
+      adapter.healthTest = { run: () => newer.promise, labelKey: 'test', labelFallback: 'test' };
+      const run = consumer().batch.loadQuota([...targets, { type: 'claude', file: other }]);
+      await started();
+      first.resolve(data(10));
+      await first.promise;
+      await started();
+      let replacement: Promise<unknown> | undefined;
+      if (invalidation === 'new-owner') {
+        replacement = consumer().actions.testHealth(file, adapter);
+        await started();
+        newer.resolve(data(90));
+        await replacement;
+      } else {
+        useQuotaStore.getState().clearQuotaCache(invalidation === 'file' ? [file.name] : undefined);
+      }
+      const accepted = cached();
+      second.resolve(data(20));
+      await run;
+      expect(cached()).toBe(accepted);
+      if (invalidation === 'new-owner') expect(cached().windows[0].usedPercent).toBe(90);
+    });
+  }
 
   test('checking and failed reads keep the successful payload and successful observation time', async () => {
     useQuotaStore.getState().setClaudeQuota({

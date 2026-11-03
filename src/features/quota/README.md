@@ -4,6 +4,8 @@ Quota checks run once when the route receives its first accepted auth-file list 
 
 A shared per-credential request owner handles batch and individual observations. Concurrent consumers join in-flight reads; invalidated or superseded responses cannot overwrite accepted snapshots. Snapshot-backed account refreshes, including Qoder, reload auth files before reading usage. Failed list reads retain stale values without advancing successful timestamps.
 
+Bulk observations publish loading and settled snapshots once per provider. Each provider waits for its slowest newly owned read before publishing settled results; row actions that join those reads also wait. Other providers and unrelated single-account requests remain independent. Ownership and generation checks run again at publication, and cached successful values remain visible throughout.
+
 Automatic checks are non-generative. xAI billing observations never fall back to inference. A separate, explicitly labeled API health action warns that its inference request may incur charges.
 
 The provider adapters define read semantics; the batch loader only collects outcomes. Disabled, unsupported and ineligible credentials are skipped. The completion line reports the check time, successful checks, failures and skipped credentials. A failed auth-file list read does not start quota checks.

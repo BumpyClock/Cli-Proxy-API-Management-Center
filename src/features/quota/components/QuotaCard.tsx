@@ -97,7 +97,7 @@ export function QuotaCard(props: QuotaCardProps) {
 
       {quota?.stale && (
         <p className={styles.errorStrip} role="status">
-          {t('redesign.quota.stale')} · {quota.error}
+          {t('redesign.quota.stale')} · {errorMessage}
         </p>
       )}
       <div className={styles.body}>

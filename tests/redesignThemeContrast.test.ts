@@ -47,6 +47,9 @@ describe('redesign semantic color roles', () => {
         expect(contrast(tokens['--text-secondary'], tokens[surface])).toBeGreaterThanOrEqual(4.5);
         expect(contrast(tokens['--focus-ring'], tokens[surface])).toBeGreaterThanOrEqual(3);
       }
+      expect(contrast(tokens['--accent-color'], tokens['--bg-secondary'])).toBeGreaterThanOrEqual(
+        4.5
+      );
       for (const surface of ['--bg-primary', '--bg-tertiary']) {
         expect(contrast(tokens['--text-tertiary'], tokens[surface])).toBeGreaterThanOrEqual(4.5);
       }

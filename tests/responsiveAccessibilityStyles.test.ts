@@ -101,6 +101,13 @@ describe('responsive accessibility styles', () => {
     expect(declarations(page, '.tabsRow', '(max-width: 900px)')[0].position).toBe('static');
   });
 
+  test('active provider subtitles retain full foreground opacity', () => {
+    const css = moduleCss('src/features/providers/components/ProviderCategoryList.module.scss');
+    const active = declarations(css, '.active .itemSubtitle')[0];
+    expect(active.color).toBe('var(--accent-color)');
+    expect(Number(active.opacity ?? 1)).toBe(1);
+  });
+
   test('disabled inputs and textareas have a distinguishable state', () => {
     const css = compile('src/styles/components.scss').css;
     for (const selector of ['.input:disabled', 'textarea:disabled']) {

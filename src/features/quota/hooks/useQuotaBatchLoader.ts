@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { QuotaFileEntry } from '../logic';
-import { QUOTA_ADAPTERS } from '../providers';
-import { requestQuota } from './quotaRequests';
+import { requestQuotaBatch } from './quotaRequests';
 
 /** A batch collects shared observations; it never owns cache writes. */
 export function useQuotaBatchLoader() {
@@ -14,9 +13,7 @@ export function useQuotaBatchLoader() {
       if (targets.length === 0) return;
       setPendingBatches((count) => count + 1);
       try {
-        const results = await Promise.all(
-          targets.map(({ file, type }) => requestQuota(file, QUOTA_ADAPTERS[type], t))
-        );
+        const results = await requestQuotaBatch(targets, t);
         return {
           success: results.filter((result) => result.status === 'success').length,
           failed: results.filter((result) => result.status === 'error').length,
