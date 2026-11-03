@@ -12,6 +12,7 @@ import {
   type SyntheticEvent,
 } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { findActiveRoute } from './routeLabel';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { PageTransition } from '@/components/common/PageTransition';
@@ -774,11 +775,7 @@ export function MainLayout() {
       : []),
   ];
   const navItems = navGroups.flatMap((group) => flattenNavItems(group.items));
-  const activeNavItem = navItems.find(
-    (item) =>
-      location.pathname === item.path ||
-      (item.path !== '/' && location.pathname.startsWith(`${item.path}/`))
-  );
+  const activeNavItem = findActiveRoute(navItems, location.pathname);
   const currentRouteLabel =
     activeNavItem?.label ?? (activeNavItem?.labelKey ? t(activeNavItem.labelKey) : fullBrandName);
   const navOrder = navItems.map((item) => item.path);

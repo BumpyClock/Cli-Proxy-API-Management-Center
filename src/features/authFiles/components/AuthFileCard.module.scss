@@ -346,3 +346,11 @@
     min-height: 32px;
   }
 }
+
+@media (pointer: coarse) {
+  .actions :global(.btn),
+  .rowActions summary {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

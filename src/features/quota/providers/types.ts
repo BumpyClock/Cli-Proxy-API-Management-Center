@@ -71,6 +71,8 @@ export interface QuotaProviderData<TState extends QuotaCardState, TData> {
   filterFn: (file: AuthFileItem) => boolean;
   /** Explicit provider request. Some providers historically include inference here. */
   fetchQuota: (file: AuthFileItem, t: TFunction) => Promise<TData>;
+  /** Whether this credential exposes an allowance to ordinary observation. */
+  canObserve?: (file: AuthFileItem) => boolean;
   /** Override explicit requests with a non-generative read, or require a fresh auth-file list. */
   observation?:
     | { source: 'auth-files' }

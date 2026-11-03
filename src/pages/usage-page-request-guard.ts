@@ -7,6 +7,13 @@ interface UsagePageSession {
   connectionStatus: string;
 }
 
+export const usageSessionRequestState = (
+  session: Pick<UsagePageSession, 'isAuthenticated' | 'connectionStatus'>
+): 'connecting' | 'ready' | 'stopped' => {
+  if (session.connectionStatus === 'connecting') return 'connecting';
+  return session.isAuthenticated && session.connectionStatus === 'connected' ? 'ready' : 'stopped';
+};
+
 export const sameUsageSession = (a: UsagePageSession, b: UsagePageSession): boolean =>
   a.apiBase === b.apiBase &&
   a.managementKey === b.managementKey &&

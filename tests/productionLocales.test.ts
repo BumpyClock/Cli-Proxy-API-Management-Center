@@ -10,6 +10,7 @@ const sections = [
   'redesign.authFiles',
   'redesign.settings',
   'xai_quota.test_health',
+  'logs.copy_line_accessible',
 ];
 
 describe('production locale regression checks', () => {

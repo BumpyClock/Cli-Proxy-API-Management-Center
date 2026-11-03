@@ -20,6 +20,7 @@ export function useQuotaBatchLoader() {
         return {
           success: results.filter((result) => result.status === 'success').length,
           failed: results.filter((result) => result.status === 'error').length,
+          skipped: results.filter((result) => result.status === 'skipped').length,
           checkedAt: Date.now(),
         };
       } finally {

@@ -196,6 +196,48 @@ describe('dashboard quota summary rendering', () => {
     expect(markup).toContain('disabled=""');
   });
 
+  test('production locales interpolate eligible and skipped coverage counts', async () => {
+    for (const language of Object.keys(productionLocales) as Array<
+      keyof typeof productionLocales
+    >) {
+      const localized = await createTestI18n(language);
+      const coverage = localized.t('redesign.dashboardQuota.coverage', {
+        measured: 1,
+        eligible: 2,
+        unavailable: 3,
+        skipped: 4,
+      });
+      const checked = localized.t('redesign.quota.checked', {
+        time: '12:34',
+        success: 1,
+        failed: 2,
+        skipped: 3,
+      });
+      for (const value of ['1', '2', '3', '4']) expect(coverage).toContain(value);
+      for (const value of ['12:34', '1', '2', '3']) expect(checked).toContain(value);
+      const chargeLabels = {
+        en: /charges/i,
+        'zh-CN': /费用/,
+        'zh-TW': /費用/,
+        ru: /оплата/i,
+      };
+      expect(localized.t('xai_quota.test_health')).toMatch(chargeLabels[language]);
+    }
+  });
+
+  test('paid xAI without observable allowance is skipped, not eligible or failed', () => {
+    useQuotaStore.getState().setXaiQuota({
+      'paid.json': { status: 'error', billing: null, error: 'old failure' },
+    });
+    const markup = render([
+      { name: 'paid.json', provider: 'xai', using_api: true, prefix: 'paid' },
+      { name: 'free.json', provider: 'xai' },
+    ]);
+    expect(markup).toContain('0 of 1 eligible accounts measured');
+    expect(markup).toContain('1 skipped');
+    expect(markup).not.toContain('Quota checks failed');
+  });
+
   test('waiting and disconnected states do not advertise successful fresh checks', () => {
     const waiting = render([], false);
     expect(waiting).toContain('Waiting for credential files.');

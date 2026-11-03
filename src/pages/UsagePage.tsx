@@ -15,6 +15,7 @@ import {
   fetchUsagePageSources,
   runLatestUsageRequest,
   sameUsageSession,
+  usageSessionRequestState,
 } from './usage-page-request-guard';
 import styles from './UsagePage.module.scss';
 
@@ -374,8 +375,11 @@ export function UsagePage() {
 
   const loadUsage = useCallback(() => {
     const session = useAuthStore.getState();
-    if (!session.isAuthenticated || session.connectionStatus !== 'connected')
+    const requestState = usageSessionRequestState(session);
+    if (requestState !== 'ready') {
+      if (requestState === 'stopped') setLoading(false);
       return Promise.resolve();
+    }
     return runLatestUsageRequest({
       guard: requestGuard.current,
       request: () => fetchUsagePageSources(usageApi),
@@ -432,7 +436,7 @@ export function UsagePage() {
       setEnabled(null);
       setLastUpdated(null);
       setError(null);
-      setLoading(true);
+      setLoading(usageSessionRequestState(session) !== 'stopped');
     });
     void loadUsage().catch(() => undefined);
     return () => {

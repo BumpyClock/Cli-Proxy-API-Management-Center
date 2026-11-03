@@ -1,5 +1,10 @@
 import type { QuotaTabId } from './constants';
 import { canRefreshQuotaAfterList, filterEntriesByTab, type QuotaFileEntry } from './logic';
+import { getQuotaDataAdapter } from './providers/registry';
+
+export function observableQuotaEntries(entries: QuotaFileEntry[]): QuotaFileEntry[] {
+  return entries.filter(({ file, type }) => getQuotaDataAdapter(type).canObserve?.(file) ?? true);
+}
 
 export interface QuotaRefreshIntent {
   sessionGeneration: number;
@@ -30,7 +35,7 @@ export function resolveQuotaRefreshTargets(
   ) {
     return [];
   }
-  return filterEntriesByTab(pageItems, intent.scope);
+  return observableQuotaEntries(filterEntriesByTab(pageItems, intent.scope));
 }
 
 /** A route mount checks once per connection; view controls never enter this decision. */

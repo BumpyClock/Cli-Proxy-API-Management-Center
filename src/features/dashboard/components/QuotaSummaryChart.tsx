@@ -12,7 +12,11 @@ import { useQuotaBatchLoader } from '@/features/quota/hooks/useQuotaBatchLoader'
 import { classifyQuotaFiles } from '@/features/quota/logic';
 import { getQuotaDataAdapter } from '@/features/quota/providers/registry';
 import { buildAccountSeries } from '@/features/quota/quotaAccountSeries';
-import { resolveQuotaEntryCheck, resolveQuotaRefreshTargets } from '@/features/quota/refreshScope';
+import {
+  observableQuotaEntries,
+  resolveQuotaEntryCheck,
+  resolveQuotaRefreshTargets,
+} from '@/features/quota/refreshScope';
 import styles from './QuotaSummaryChart.module.scss';
 
 interface QuotaSummaryChartProps {
@@ -46,9 +50,10 @@ function QuotaSummaryChartContent({
     () => (connected ? classifyQuotaFiles([...files]) : []),
     [connected, files]
   );
+  const observableEntries = useMemo(() => observableQuotaEntries(entries), [entries]);
   const quotas = useQuotaStore(
     useShallow((state) =>
-      entries.map(
+      observableEntries.map(
         (entry) =>
           getQuotaDataAdapter(entry.type).storeSelector(state)[getQuotaCacheKey(entry.file)]
       )
@@ -88,16 +93,16 @@ function QuotaSummaryChartContent({
   }, [entries, seriesNumbers]);
   useEffect(() => setSeriesNumbers(numbers), [numbers]);
   const model = useMemo(() => {
-    const snapshots = new Map(entries.map((entry, index) => [entry, quotas[index]]));
+    const snapshots = new Map(observableEntries.map((entry, index) => [entry, quotas[index]]));
     return buildAccountSeries(
-      entries,
+      observableEntries,
       (entry) => snapshots.get(entry),
       'weekly',
       now,
       end,
       numbers
     );
-  }, [entries, quotas, now, end, numbers]);
+  }, [observableEntries, quotas, now, end, numbers]);
 
   const measured = model.accounts.filter((account) => account.remaining !== null);
   const series = model.series.map((item, index) => {
@@ -148,7 +153,7 @@ function QuotaSummaryChartContent({
           ? 'failed'
           : measured.length
             ? 'snapshots'
-            : entries.length
+            : observableEntries.length
               ? 'no_data'
               : 'no_eligible';
 
@@ -178,7 +183,7 @@ function QuotaSummaryChartContent({
           variant="secondary"
           size="sm"
           onClick={refresh}
-          disabled={!connected || !filesReady || entries.length === 0 || checking}
+          disabled={!connected || !filesReady || observableEntries.length === 0 || checking}
           loading={checking}
         >
           {t('redesign.dashboardQuota.refresh')}
@@ -192,9 +197,9 @@ function QuotaSummaryChartContent({
           <span>
             {t('redesign.dashboardQuota.coverage', {
               measured: measured.length,
-              eligible: entries.length,
-              unavailable: entries.length - measured.length,
-              skipped: files.length - entries.length,
+              eligible: observableEntries.length,
+              unavailable: observableEntries.length - measured.length,
+              skipped: files.length - observableEntries.length,
             })}
           </span>
         )}

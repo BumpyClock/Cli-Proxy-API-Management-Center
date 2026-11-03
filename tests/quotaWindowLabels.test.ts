@@ -10,6 +10,7 @@ import ru from '../src/i18n/locales/ru.json';
 import { QuotaOverview } from '../src/features/quota/components/QuotaOverview';
 import { classifyQuotaFiles } from '../src/features/quota/logic';
 import type { QuotaCardState } from '../src/features/quota/providers';
+import type { ClaudeQuotaState, CopilotQuotaState, MetaQuotaState } from '../src/types';
 
 const reset = Date.UTC(2100, 0, 2);
 const literalLabel = 'Provider allowance.reset <literal> & unchanged';
@@ -18,33 +19,43 @@ const entries = classifyQuotaFiles([
   { name: 'copilot-fixture', provider: 'github-copilot' },
   { name: 'literal-fixture', provider: 'claude' },
 ]);
-const snapshots: Record<string, QuotaCardState> = {
-  meta: {
-    status: 'success',
-    data: { windows: [{ id: 'weekly', usedPercent: 25, resetAt: reset / 1000 }] },
-  },
-  'github-copilot': {
-    status: 'success',
-    data: {
-      plan: 'individual',
-      resetAtMs: reset,
-      resources: [
-        {
-          id: 'premium_interactions',
-          remainingPercent: 60,
-          remaining: 60,
-          entitlement: 100,
-          unlimited: false,
-        },
-      ],
-    },
-  },
-  claude: {
-    status: 'success',
-    windows: [
-      { id: 'weekly', label: literalLabel, usedPercent: 50, resetAtMs: reset, periodHours: 168 },
+const metaSnapshot: MetaQuotaState = {
+  status: 'success',
+  data: { windows: [{ id: 'weekly', usedPercent: 25, resetAt: reset / 1000 }] },
+};
+const copilotSnapshot: CopilotQuotaState = {
+  status: 'success',
+  data: {
+    plan: 'individual',
+    resetAtMs: reset,
+    resources: [
+      {
+        id: 'premium_interactions',
+        remainingPercent: 60,
+        remaining: 60,
+        entitlement: 100,
+        unlimited: false,
+      },
     ],
   },
+};
+const claudeSnapshot: ClaudeQuotaState = {
+  status: 'success',
+  windows: [
+    {
+      id: 'weekly',
+      label: literalLabel,
+      usedPercent: 50,
+      resetLabel: '',
+      resetAtMs: reset,
+      periodHours: 168,
+    },
+  ],
+};
+const snapshots: Record<string, QuotaCardState> = {
+  meta: metaSnapshot,
+  'github-copilot': copilotSnapshot,
+  claude: claudeSnapshot,
 };
 const locales = [
   { language: 'en', bundle: en, meta: 'Weekly quota', copilot: 'Premium interactions' },

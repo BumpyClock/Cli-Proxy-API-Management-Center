@@ -1163,7 +1163,8 @@
     "search_empty_desc": "嘗試更換關鍵字或清空篩選條件。",
     "double_click_copy_hint": "雙擊複製記錄原文",
     "copy_success": "已複製記錄原文",
-    "copy_failed": "複製失敗"
+    "copy_failed": "複製失敗",
+    "copy_line_accessible": "複製日誌行：{{line}}"
   },
   "config_management": {
     "title": "設定面板",

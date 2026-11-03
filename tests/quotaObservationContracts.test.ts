@@ -71,17 +71,50 @@ describe('provider-owned non-generative observations', () => {
             },
             classifyQuotaFiles([file])
           );
-          expect(targets).toHaveLength(1);
+          expect(targets).toHaveLength(mode === 'paid' ? 0 : 1);
           const result = await consumer().batch.loadQuota(targets!);
-          expect(result?.failed).toBe(1);
+          if (mode !== 'paid') expect(result?.failed).toBe(1);
           expect(requests.every((request) => request.method === 'GET')).toBe(true);
           expect(requests.some((request) => request.url === XAI_API_CHAT_URL)).toBe(false);
-          expect(useQuotaStore.getState().xaiQuota[file.name].checkedAt).toBeUndefined();
+          expect(useQuotaStore.getState().xaiQuota[file.name]?.checkedAt).toBeUndefined();
         }
         expect(requests).toHaveLength(mode === 'paid' ? 0 : 4);
       });
     }
   }
+
+  test('mixed paid and observable xAI targets report skips separately from real failures', async () => {
+    apiCallApi.request = async () => response(403, { error: 'billing unavailable' });
+    const paid = {
+      name: 'paid.json',
+      provider: 'xai',
+      authIndex: 'paid',
+      using_api: true,
+      prefix: 'paid',
+    };
+    const free = { name: 'free.json', provider: 'xai', authIndex: 'free' };
+    const entries = classifyQuotaFiles([paid, free]);
+    const generation = useQuotaStore.getState().cacheGeneration;
+    const targets = resolveQuotaEntryCheck(
+      null,
+      false,
+      {
+        sessionGeneration: generation,
+        filesGeneration: generation,
+        hasError: false,
+        disabled: false,
+      },
+      entries
+    );
+    expect(targets?.map(({ file }) => file.name)).toEqual(['free.json']);
+    const result = await consumer().batch.loadQuota(entries);
+    expect(result).toMatchObject({ success: 0, failed: 1, skipped: 1 });
+    expect(useQuotaStore.getState().xaiQuota['paid.json']).toBeUndefined();
+    expect(useQuotaStore.getState().xaiQuota['free.json']).toMatchObject({
+      status: 'error',
+      errorStatus: 403,
+    });
+  });
 
   test('explicit health action still sends the deliberate one-token paid inference test', async () => {
     const requests: ApiCallRequest[] = [];
@@ -110,11 +143,30 @@ describe('provider-owned non-generative observations', () => {
       stream: false,
     });
     expect(QUOTA_ADAPTERS.xai.healthTest?.labelFallback).toContain('may incur charges');
-    expect(useQuotaStore.getState().xaiQuota[file.name]).toMatchObject({
+    const accepted = useQuotaStore.getState().xaiQuota[file.name];
+    expect(accepted).toMatchObject({
       status: 'success',
       checkedAt: 6000,
       billing: { mode: 'paid-health', userId: 'fixture' },
     });
+    const generation = useQuotaStore.getState().cacheGeneration;
+    const targets = resolveQuotaEntryCheck(
+      null,
+      false,
+      {
+        sessionGeneration: generation,
+        filesGeneration: generation,
+        hasError: false,
+        disabled: false,
+      },
+      classifyQuotaFiles([file])
+    );
+    expect(targets).toEqual([]);
+    const result = await consumer().batch.loadQuota(classifyQuotaFiles([file]));
+    expect(result).toMatchObject({ success: 0, failed: 0, skipped: 1 });
+    await consumer().actions.refreshQuota(file, QUOTA_ADAPTERS.xai);
+    expect(useQuotaStore.getState().xaiQuota[file.name]).toBe(accepted);
+    expect(requests).toHaveLength(2);
   });
 
   test('manual quota observation cannot enter the free-billing health fallback either', async () => {

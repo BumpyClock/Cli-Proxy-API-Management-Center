@@ -106,6 +106,11 @@ textarea {
     border-color: var(--focus-ring);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring) 28%, transparent);
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .form-group {

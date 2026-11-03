@@ -15,6 +15,7 @@ export type QuotaOperation = 'observe' | 'health-test' | 'reset';
 export type QuotaRequestResult =
   | { status: 'success'; checkedAt: number }
   | { status: 'error'; message: string }
+  | { status: 'skipped' }
   | { status: 'superseded' };
 
 type Generation = ReturnType<typeof captureQuotaCacheGeneration>;
@@ -63,6 +64,9 @@ export function requestQuota(
   t: TFunction,
   operation: QuotaOperation = 'observe'
 ): Promise<QuotaRequestResult> {
+  if (operation === 'observe' && adapter.canObserve?.(file) === false) {
+    return Promise.resolve({ status: 'skipped' });
+  }
   const cacheKey = getQuotaCacheKey(file);
   const key = `${adapter.type}:${cacheKey}`;
   const existing = pending.get(key);

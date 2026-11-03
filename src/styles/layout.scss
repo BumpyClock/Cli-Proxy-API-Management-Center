@@ -10,6 +10,12 @@
   --floating-control-size: 32px;
 }
 
+@media (pointer: coarse) {
+  :root {
+    --floating-control-size: 44px;
+  }
+}
+
 .app-shell {
   --sidebar-active-width: var(--sidebar-panel-width);
 
@@ -785,7 +791,7 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-lg;
-  overflow-x: hidden;
+  overflow-x: clip;
 
   &.main-content-logs {
     flex: 1 1 auto;

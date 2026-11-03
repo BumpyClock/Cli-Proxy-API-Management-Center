@@ -41,6 +41,7 @@ export function AuthFileQuotaSection({
   const runtimeOnly = isRuntimeOnlyAuthFile(file);
   const canRefreshQuota =
     !disableControls && !file.disabled && !runtimeOnly && !resettingQuota && !quota?.refreshing;
+  const canObserveQuota = adapter.canObserve?.(file) ?? true;
   const canUseResetQuota = canRefreshQuota && quotaStatus !== 'loading';
   const showResetQuotaAction = quota !== undefined && Boolean(adapter.canResetQuota?.(quota));
   const window = selectQuotaWindow(getQuotaObservations(quotaType, quota));
@@ -69,6 +70,8 @@ export function AuthFileQuotaSection({
       )}
       {quotaStatus === 'loading' ? (
         <div className={styles.quotaMessage}>{t(`${adapter.i18nPrefix}.loading`)}</div>
+      ) : quotaStatus === 'idle' && !canObserveQuota ? (
+        <div className={styles.quotaMessage}>{t(`${adapter.i18nPrefix}.empty_data`)}</div>
       ) : quotaStatus === 'idle' ? (
         <button
           type="button"
@@ -172,7 +175,7 @@ export function AuthFileQuotaSection({
         <span className={styles.summaryValue}>{summary}</span>
         {quota?.stale && <small>{t('redesign.quota.stale')}</small>}
         {quota?.refreshing && <small>{t('redesign.quota.checking')}</small>}
-        {window?.recovers && window.resetAtMs && !expired && (
+        {window?.recovers && window.resetAtMs !== null && !expired && (
           <small>
             {t('quota_management.pool_next_reset')}{' '}
             <time dateTime={new Date(window.resetAtMs).toISOString()}>

@@ -33,7 +33,7 @@
   font-size: 13px;
   font-weight: 550;
   color: var(--text-secondary);
-  white-space: nowrap;
+  white-space: normal;
   transition:
     color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
     background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
@@ -96,11 +96,14 @@
 }
 
 .tabLabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
   line-height: 1.4;
 }
 
 /* 校验错误徽章：mono 数字，失败色（数据墨水走 --viz-*） */
 .tabBadge {
+  flex-shrink: 0;
   font-family: $font-mono;
   font-size: 10.5px;
   font-weight: 650;

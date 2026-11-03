@@ -1051,8 +1051,17 @@ export function LogsPage() {
                           key={`${logState.visibleFrom + index}-${line.raw}`}
                           className={rowClassNames.join(' ')}
                           tabIndex={0}
+                          role="button"
+                          aria-label={t('logs.copy_line_accessible', { line: line.raw })}
                           onKeyDown={(event) => {
-                            if (event.key === 'Enter') void copyLogLine(line.raw);
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              void copyLogLine(line.raw);
+                            }
+                          }}
+                          onClick={(event) => {
+                            // Assistive technology activates button roles with synthesized clicks.
+                            if (event.detail === 0) void copyLogLine(line.raw);
                           }}
                           onDoubleClick={() => {
                             void copyLogLine(line.raw);

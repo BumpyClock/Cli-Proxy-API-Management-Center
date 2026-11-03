@@ -277,9 +277,9 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
       const generation = sessionGeneration;
       const result = targets.length
         ? await loadQuota(targets)
-        : { success: 0, failed: 0, checkedAt: Date.now() };
+        : { success: 0, failed: 0, skipped: 0, checkedAt: Date.now() };
       if (result && generation === useQuotaStore.getState().cacheGeneration) {
-        setCheckResult({ ...result, skipped: files.length - targets.length });
+        setCheckResult({ ...result, skipped: files.length - targets.length + result.skipped });
       }
     },
     [files.length, loadQuota, sessionGeneration]
@@ -507,7 +507,12 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
                       entry={entry}
                       quota={quota}
                       resolvedTheme={resolvedTheme}
-                      canRefresh={canUseActions && !batchLoading && !entry.file.disabled}
+                      canRefresh={
+                        canUseActions &&
+                        !batchLoading &&
+                        !entry.file.disabled &&
+                        (adapter.canObserve?.(entry.file) ?? true)
+                      }
                       resetting={resettingQuotaName === getQuotaCacheKey(entry.file)}
                       entranceDelayMs={cardEntranceDelay(index)}
                       onRefresh={() => void refreshQuota(entry.file, adapter)}

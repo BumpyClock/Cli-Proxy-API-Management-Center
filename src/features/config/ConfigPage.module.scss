@@ -29,7 +29,7 @@
   min-width: 0;
   align-self: start;
   position: sticky;
-  top: 16px;
+  top: calc(var(--header-height) + 16px);
 }
 
 .panel {

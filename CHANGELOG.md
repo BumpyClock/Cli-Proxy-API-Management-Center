@@ -24,6 +24,9 @@
 
 ### Fixed
 
+- Paid xAI accounts without observable allowances are skipped rather than marked failed. Plugin frame state resets by resource identity, and Usage exits loading when a connection stops.
+- Restored responsive table headings, touch targets, sticky navigation clearance, translated log-copy controls, disabled input styling, and light-theme text contrast.
+
 - Quota observations share per-credential request ownership across routes and account actions. Invalidated or superseded responses cannot replace newer snapshots.
 - Automatic xAI checks never send inference requests. Paid health testing requires a separate action labeled with its potential cost.
 - Snapshot-backed account refreshes reload authoritative auth-file usage before recording success. Quota projections stay sparse, evidence tables mount on demand, and account window labels use shipped translations.
