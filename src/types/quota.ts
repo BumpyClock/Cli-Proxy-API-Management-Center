@@ -352,9 +352,16 @@ export interface KimiLimitItem {
   ttl?: number | string;
 }
 
+export interface KimiUsageRatio {
+  used_ratio?: number | string;
+  reset_time?: string;
+}
+
 export interface KimiUsagePayload {
   usage?: KimiUsageDetail;
   limits?: KimiLimitItem[];
+  /** Monthly plans report a used fraction without a fixed window duration. */
+  usages?: { limit_month_total?: KimiUsageRatio };
 }
 
 export interface KimiQuotaRow {

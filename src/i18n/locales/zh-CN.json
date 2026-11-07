@@ -733,6 +733,9 @@
     "remaining": "剩余 {{percent}}%"
   },
   "kimi_quota": {
+    "stale_request": "连接或凭据已变更，请重试。",
+    "domain_unavailable": "无法读取 Kimi 凭据的域名，需要可下载且有效的认证文件。",
+    "monthly_limit": "月限额",
     "title": "Kimi 额度",
     "empty_title": "暂无 Kimi 认证",
     "empty_desc": "上传 Kimi 认证文件后即可查看额度。",

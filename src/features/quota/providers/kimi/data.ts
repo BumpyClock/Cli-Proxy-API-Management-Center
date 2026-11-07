@@ -5,8 +5,9 @@
 import type { TFunction } from 'i18next';
 import type { AuthFileItem, KimiQuotaRow, KimiQuotaState } from '@/types';
 import { apiCallApi, getApiCallErrorMessage } from '@/services/api';
+import { resolveKimiQuotaUrl } from '@/services/api/kimiQuota';
+import { captureQuotaCacheGeneration, commitIfQuotaCacheCurrent } from '@/stores/useQuotaStore';
 import {
-  KIMI_USAGE_URL,
   KIMI_REQUEST_HEADERS,
   parseKimiUsagePayload,
   buildKimiQuotaRows,
@@ -25,12 +26,29 @@ const fetchKimiQuota = async (file: AuthFileItem, t: TFunction): Promise<KimiQuo
     throw new Error(t('kimi_quota.missing_auth_index'));
   }
 
+  const generation = captureQuotaCacheGeneration(file.name);
+  const assertCurrent = () => {
+    if (!commitIfQuotaCacheCurrent(generation, () => {})) {
+      throw new Error(t('kimi_quota.stale_request'));
+    }
+  };
+  let url: string;
+  try {
+    url = await resolveKimiQuotaUrl(file);
+  } catch {
+    assertCurrent();
+    throw new Error(t('kimi_quota.domain_unavailable'));
+  }
+  assertCurrent();
+
   const result = await apiCallApi.request({
     authIndex,
     method: 'GET',
-    url: KIMI_USAGE_URL,
+    url,
     header: { ...KIMI_REQUEST_HEADERS },
   });
+
+  assertCurrent();
 
   if (result.statusCode < 200 || result.statusCode >= 300) {
     throw createStatusError(getApiCallErrorMessage(result), result.statusCode);
@@ -55,14 +73,15 @@ export const KIMI_CONFIG: QuotaProviderData<KimiQuotaState, KimiQuotaRow[]> = {
         .map((row, index) =>
           observeWindow({
             id: row.id || `row-${index}`,
-            label: row.label ?? '',
+            label: row.id === 'monthly' ? 'kimi_quota.monthly_limit' : (row.label ?? ''),
             remainingPercent:
               row.limit > 0 ? Math.round(((row.limit - row.used) / row.limit) * 100) : null,
             resetAtMs: row.resetAtMs ?? null,
             periodHours: row.periodHours ?? null,
+            preferredFor: row.id === 'monthly' ? 'weekly' : null,
           })
         )
-        .filter((window) => window.resetAtMs !== null)
+        .filter((window) => window.resetAtMs !== null || window.id === 'monthly')
     ),
   storeSelector: (state) => state.kimiQuota,
   storeSetter: 'setKimiQuota',
