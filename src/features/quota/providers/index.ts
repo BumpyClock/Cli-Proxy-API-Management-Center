@@ -11,6 +11,7 @@ import { DevinQuotaBody } from './devin/DevinQuotaBody';
 import { KimiQuotaBody } from './kimi/KimiQuotaBody';
 import { MetaQuotaBody } from './meta/MetaQuotaBody';
 import { QoderQuotaBody } from './qoder/QoderQuotaBody';
+import { PluginQuotaBody } from './plugin/PluginQuotaBody';
 import { XaiQuotaBody } from './xai/XaiQuotaBody';
 
 export type { QuotaCardState } from './types';
@@ -38,6 +39,7 @@ export const QUOTA_ADAPTERS: Record<QuotaProviderType, QuotaAdapter> = {
   meta: withBody(QUOTA_PROVIDER_DATA.meta, MetaQuotaBody),
   qoder: withBody(QUOTA_PROVIDER_DATA.qoder, QoderQuotaBody),
   xai: withBody(QUOTA_PROVIDER_DATA.xai, XaiQuotaBody),
+  plugin: withBody(QUOTA_PROVIDER_DATA.plugin, PluginQuotaBody),
 };
 
 export type QuotaMapUpdater = (

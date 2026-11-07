@@ -6,6 +6,7 @@ import { DEVIN_CONFIG } from './devin/data';
 import { KIMI_CONFIG } from './kimi/data';
 import { META_CONFIG } from './meta/data';
 import { QODER_CONFIG } from './qoder/data';
+import { PLUGIN_CONFIG } from './plugin/data';
 import { XAI_CONFIG } from './xai/data';
 import { observeQuota, type QuotaObservations } from './observations';
 import type { QuotaCardState, QuotaProviderData, QuotaProviderType } from './types';
@@ -21,6 +22,7 @@ export const QUOTA_PROVIDER_DATA = {
   meta: META_CONFIG,
   qoder: QODER_CONFIG,
   xai: XAI_CONFIG,
+  plugin: PLUGIN_CONFIG,
 } satisfies Record<QuotaProviderType, { type: QuotaProviderType }>;
 
 /** Erase state/data correlation only where a runtime provider selects its typed adapter. */

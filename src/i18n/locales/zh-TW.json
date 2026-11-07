@@ -560,7 +560,8 @@
     "oauth_rules_none": "未設定",
     "oauth_rules_providers_other": "{{count}} 個提供者",
     "warning_show_more": "展開",
-    "warning_show_less": "收合"
+    "warning_show_less": "收合",
+    "filter_plugin": "外掛配額"
   },
   "antigravity_subscription": {
     "plan_unknown": "未知",
@@ -2412,5 +2413,18 @@
       "daily_title": "每日請求與權杖",
       "no_dated_both": "後端未回報帶日期的請求或權杖合計。提供日期後才會顯示每日圖表；按小時合計不是帶日期的歷史，缺少的日期不會以零填補。"
     }
+  },
+  "plugin_quota": {
+    "title": "外掛配額",
+    "idle": "點擊載入配額",
+    "loading": "正在載入配額…",
+    "load_failed": "載入配額失敗：{{message}}",
+    "unavailable": "此憑證不支援外掛配額。",
+    "missing_auth_index": "驗證檔案缺少 auth_index",
+    "empty_data": "未回報配額資料",
+    "plan_label": "方案",
+    "remaining_percent": "剩餘 {{percent}}%",
+    "not_reported": "未回報",
+    "limit": "配額限制"
   }
 }

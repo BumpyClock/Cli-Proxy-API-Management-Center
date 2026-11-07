@@ -190,7 +190,7 @@ export function AuthFilesPage() {
     ? (normalizedFilter as QuotaProviderType)
     : null;
   const activeQuotaFilter: AuthFileQuotaFilter =
-    normalizedFilter === 'all' ? 'all' : quotaFilterType;
+    normalizedFilter === 'all' ? 'all' : quotaFilterType || normalizedFilter || null;
   const pageSize = compactMode ? pageSizeByMode.compact : pageSizeByMode.regular;
   const viewOptions = summarizeViewOptions({
     sortMode,

@@ -604,7 +604,8 @@
     "oauth_rules_providers_many": "{{count}} провайдеров",
     "oauth_rules_providers_other": "{{count}} провайдера",
     "warning_show_more": "Показать всё",
-    "warning_show_less": "Свернуть"
+    "warning_show_less": "Свернуть",
+    "filter_plugin": "Квоты плагинов"
   },
   "antigravity_subscription": {
     "plan_unknown": "Неизвестно",
@@ -2451,5 +2452,18 @@
     "empty_src_desc": "Этот пункт меню плагина не указывает встраиваемую страницу.",
     "open_in_new_tab": "Открыть ресурс в новой вкладке",
     "refresh": "Обновить страницу плагина"
+  },
+  "plugin_quota": {
+    "title": "Квоты плагинов",
+    "idle": "Нажмите, чтобы загрузить квоту",
+    "loading": "Загрузка квоты…",
+    "load_failed": "Не удалось загрузить квоту: {{message}}",
+    "unavailable": "Квоты плагина недоступны для этих учётных данных.",
+    "missing_auth_index": "В файле авторизации отсутствует auth_index",
+    "empty_data": "Данные о квоте не предоставлены",
+    "plan_label": "План",
+    "remaining_percent": "Осталось {{percent}}%",
+    "not_reported": "Не предоставлено",
+    "limit": "Лимит квоты"
   }
 }

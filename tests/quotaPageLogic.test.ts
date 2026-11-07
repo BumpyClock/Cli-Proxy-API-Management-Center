@@ -75,6 +75,7 @@ describe('buildTabCounts', () => {
       devin: 0,
       meta: 0,
       qoder: 0,
+      plugin: 0,
     });
   });
 });

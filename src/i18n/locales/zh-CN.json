@@ -560,7 +560,8 @@
     "oauth_rules_none": "未配置",
     "oauth_rules_providers_other": "{{count}} 个提供商",
     "warning_show_more": "展开",
-    "warning_show_less": "收起"
+    "warning_show_less": "收起",
+    "filter_plugin": "插件配额"
   },
   "antigravity_subscription": {
     "plan_unknown": "未知",
@@ -2386,5 +2387,18 @@
       "daily_title": "每日请求与令牌",
       "no_dated_both": "后端未报告带日期的请求或令牌合计。提供日期后才会显示每日图表；按小时合计不是带日期的历史，缺失日期不会以零填充。"
     }
+  },
+  "plugin_quota": {
+    "title": "插件配额",
+    "idle": "点击加载配额",
+    "loading": "正在加载配额…",
+    "load_failed": "加载配额失败：{{message}}",
+    "unavailable": "此凭据不支持插件配额。",
+    "missing_auth_index": "认证文件缺少 auth_index",
+    "empty_data": "未报告配额数据",
+    "plan_label": "套餐",
+    "remaining_percent": "剩余 {{percent}}%",
+    "not_reported": "未报告",
+    "limit": "配额限制"
   }
 }
