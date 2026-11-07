@@ -64,6 +64,7 @@ export interface QuotaTimelineProps {
   initialOffset?: number;
 }
 
+/** Render local calendar columns and quota windows on the same elapsed-time scale. */
 export function QuotaTimeline({
   entries,
   quotaFor,
@@ -334,6 +335,7 @@ interface LaneProps {
   resolvedTheme: ResolvedTheme;
 }
 
+/** Render reported usage only in its live window; projected windows remain unfilled. */
 function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneProps) {
   const { t, i18n } = useTranslation();
 
