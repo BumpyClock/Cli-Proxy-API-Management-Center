@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { parseLogLine } from '../src/pages/hooks/logParsing';
 
-// Exact lines served by design-review/council/capture.mjs for /logs.
+// Representative RFC3339 log records.
 const FIXTURE_LINES = [
   '2026-10-20T09:42:10Z INFO Management API ready',
   '2026-10-20T09:42:12Z INFO Provider pool synchronized',

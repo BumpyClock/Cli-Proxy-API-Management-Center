@@ -1,6 +1,6 @@
 # Management workspace
 
-The management frontend keeps the existing Management API, hash routes, provider controls, plugin trust gates and single-file deployment. These UI changes do not deploy the application or change backend configuration.
+The management frontend keeps the existing Management API, hash routes, provider controls, plugin trust gates and single-file deployment. The UI can be deployed independently by replacing the backend-hosted `management.html`. Backend configuration and provider credentials are unchanged.
 
 ## Operator experience
 
@@ -42,17 +42,9 @@ The census checks rendered selection styles, control targets, overflow and first
 
 Logs deliberately trades some initial reading space for a full-width mobile search field and the full Auto refresh label. Its final English first-row gate is 340px, compared with 270px in an earlier iteration. This is an explicit layout tradeoff, not an unchanged performance metric.
 
-## Design council and screenshots
-
-Six independent review rounds used the same 12-metric prompt, changing only the round and evidence path. GPT-6.1 Sol high, Muse Wonder Full 1.0 and Claude Opus 5.5 reviewed each round in parallel. New reviewer contexts received no previous scores. Five Opus-led implementation passes followed the first five rounds.
-
-The council assessed 34 viewport screenshots per round. Coverage includes login and 14 authenticated routes at 1440 × 1000 and 390 × 844, plus four desktop dark-theme routes. An initial invalid capture packet was excluded after route-content identity checks exposed repeated Dashboard content. The corrected harness reloads each route and validates its identity before capture.
-
-See [council results and before/after evidence](../design-review/council/README.md). All screenshots use local synthetic data. Intermediate captures remain local; the PR preserves the first valid and final captures.
-
 ## Limits
 
-No live backend integration, real account authorization, inference calls or deployment was performed. The authoritative sibling backend checkout was unavailable. Mobbin required authentication, so no Mobbin references were inspected.
+The UI checks did not exercise real account authorization or inference calls. The authoritative sibling backend checkout was unavailable. Mobbin required authentication, so no Mobbin references were inspected.
 
 Screenshot scores are subjective craft judgments, not usability studies or accessibility certification. Fixtures cover partial quota and plugin states. The static council did not exercise interactions, and its viewport captures do not establish full-page coverage. The implementation lead separately checked selected Chinese and Russian layouts. Full assistive-technology, real-device, translated-layout and live-data coverage remain incomplete.
 
