@@ -1,0 +1,67 @@
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+
+  label {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.wrap {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+
+  select {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 36px 8px 12px;
+    border: 1px solid var(--control-outline, var(--border-color));
+    border-radius: $radius-md;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  select:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--primary-color));
+    outline-offset: 2px;
+  }
+
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wrap select:hover:not(:disabled) {
+    border-color: var(--border-hover);
+  }
+}
+
+.chevron {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}

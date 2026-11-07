@@ -35,24 +35,14 @@
 
 // ─── Alert Boxes ────────────────────────────────────────
 
-.errorBox,
-.warningBox {
+.errorBox {
   padding: $spacing-md;
   border-radius: $radius-md;
   font-size: 14px;
   line-height: 1.5;
-}
-
-.errorBox {
   border: 1px solid var(--danger-color);
   background: rgba($error-color, 0.1);
   color: var(--danger-color);
-}
-
-.warningBox {
-  border: 1px solid color-mix(in srgb, var(--warning-color, #c65746) 42%, var(--border-color));
-  background: color-mix(in srgb, var(--warning-color, #c65746) 9%, var(--bg-secondary));
-  color: var(--text-primary);
 }
 
 // ─── Status Bar ─────────────────────────────────────────
@@ -60,26 +50,19 @@
 .statusBar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
   flex-wrap: wrap;
+  gap: 4px 8px;
 }
 
+/* Labels and states are sans prose; only the directory path is a literal in mono. */
 .statusPill {
   display: inline-flex;
   min-width: 0;
   max-width: 100%;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
-  border-radius: 5px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
-  background: color-mix(in srgb, var(--bg-primary) 56%, transparent);
   font-size: 12px;
-  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -95,21 +78,18 @@
   box-shadow: none;
 }
 
-.statusDotOff {
-  background: var(--text-tertiary);
-}
-
 .statusLabel {
   color: var(--text-secondary);
 }
 
 .statusValue {
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .statusPathValue {
   display: block;
+  font-family: $font-mono;
   min-width: 0;
   max-width: min(360px, 58vw);
   overflow: hidden;
@@ -117,15 +97,12 @@
   white-space: nowrap;
 }
 
+/* Metadata items are separated by a middle dot, like the other page metadata rows. */
 .statusDivider {
-  width: 1px;
-  height: 20px;
-  background: color-mix(in srgb, var(--border-color) 60%, transparent);
   flex-shrink: 0;
-
-  @include mobile {
-    display: none;
-  }
+  color: var(--text-tertiary);
+  font-size: 12px;
+  user-select: none;
 }
 
 // ─── Toolbar ────────────────────────────────────────────
@@ -143,12 +120,6 @@
 
   :global(.input) {
     padding-right: 36px;
-  }
-
-  :global(.btn > span) {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
   }
 
   @include mobile {
@@ -308,7 +279,7 @@
   align-items: center;
   border-radius: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -348,12 +319,6 @@
   justify-content: flex-end;
   gap: $spacing-sm;
   flex-shrink: 0;
-
-  :global(.btn > span) {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
 
   @include mobile {
     grid-column: 1 / -1;
@@ -587,19 +552,6 @@
 
 .page {
   min-width: 0;
-}
-.statusBar {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  gap: 8px 16px;
-}
-.statusPill {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-family: $font-mono;
-  font-weight: 400;
 }
 .page :focus-visible {
   outline: 2px solid var(--focus-ring);

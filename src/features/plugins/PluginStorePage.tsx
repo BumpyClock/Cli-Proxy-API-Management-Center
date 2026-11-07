@@ -1,9 +1,12 @@
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { RefreshButton } from '@/components/ui/RefreshButton';
+import { NativeSelect } from '@/components/ui/NativeSelect';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
@@ -16,7 +19,6 @@ import {
   IconRefreshCw,
   IconSearch,
   IconSettings,
-  IconShield,
 } from '@/components/ui/icons';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { pluginStoreApi } from '@/services/api';
@@ -31,6 +33,13 @@ import {
   resolvePluginAssetURL,
 } from './pluginResources';
 import { PluginInstallGateModal } from './components/PluginInstallGateModal';
+import {
+  PLUGIN_STORE_SOURCES_CONFIG_PATH,
+  PluginNotice,
+  PluginNoticeGroup,
+  PluginsDisabledNotice,
+  PluginTrustNotice,
+} from './components/PluginNotices';
 import {
   buildGitHubReleasesPageURL,
   fetchPluginReleaseVersions,
@@ -989,16 +998,24 @@ export function PluginStorePage() {
   return (
     <div className={styles.page}>
       {/* ── Page Header ── */}
-      <PageHeader title={t('plugin_store.title')} description={t('plugin_store.description')} />
+      <PageHeader
+        title={t('plugin_store.title')}
+        description={t('plugin_store.description')}
+        actions={
+          <RefreshButton
+            onClick={() => void loadStore()}
+            label={t('plugin_store.refresh_registry')}
+            refreshing={loading}
+            disabled={!connected}
+          />
+        }
+      />
 
-      {/* ── Security Banner ── */}
-      <div className={styles.securityBanner} role="note">
-        <IconShield size={20} />
-        <div className={styles.securityBannerText}>
-          <strong>{t('plugin_store.security_banner_title')}</strong>
-          <p>{t('plugin_store.security_banner_text')}</p>
-        </div>
-      </div>
+      {/* ── Blocking condition first, with its fix; the trust advisory always follows ── */}
+      {data && !data.pluginsEnabled ? (
+        <PluginsDisabledNotice message={t('plugin_store.global_disabled_hint')} />
+      ) : null}
+      <PluginTrustNotice />
 
       {/* ── Alerts ── */}
       {error ? (
@@ -1030,34 +1047,31 @@ export function PluginStorePage() {
         </div>
       ) : null}
 
-      {data && !data.pluginsEnabled ? (
-        <div className={styles.warningBox}>{t('plugin_store.global_disabled_hint')}</div>
-      ) : null}
-
       {restartNames.length > 0 ? (
-        <div className={styles.warningBox}>
-          {t('plugin_store.restart_required_banner', { plugins: restartNames.join(', ') })}
-        </div>
+        <PluginNoticeGroup>
+          <PluginNotice>
+            {t('plugin_store.restart_required_banner', { plugins: restartNames.join(', ') })}
+          </PluginNotice>
+        </PluginNoticeGroup>
       ) : null}
 
       {/* ── Status Bar ── */}
       {data ? (
         <div className={styles.statusBar}>
-          <div className={styles.statusPill}>
-            <span
-              className={`${styles.statusDot} ${
-                data.pluginsEnabled ? styles.statusDotOn : styles.statusDotOff
-              }`}
-            />
-            <span className={styles.statusLabel}>{t('plugin_store.global_status')}</span>
-            <span className={styles.statusValue}>
-              {data.pluginsEnabled
-                ? t('plugin_store.global_enabled')
-                : t('plugin_store.global_disabled')}
-            </span>
-          </div>
+          {/* When plugins are off, the disabled notice above already says so. */}
+          {data.pluginsEnabled ? (
+            <>
+              <div className={styles.statusPill}>
+                <span className={`${styles.statusDot} ${styles.statusDotOn}`} />
+                <span className={styles.statusLabel}>{t('plugin_store.global_status')}</span>
+                <span className={styles.statusValue}>{t('plugin_store.global_enabled')}</span>
+              </div>
 
-          <span className={styles.statusDivider} />
+              <span className={styles.statusDivider} aria-hidden="true">
+                ·
+              </span>
+            </>
+          ) : null}
 
           <div className={styles.statusPill}>
             <span className={styles.statusLabel}>{t('plugin_store.plugins_dir')}</span>
@@ -1069,7 +1083,9 @@ export function PluginStorePage() {
             </span>
           </div>
 
-          <span className={styles.statusDivider} />
+          <span className={styles.statusDivider} aria-hidden="true">
+            ·
+          </span>
 
           <div className={styles.statusPill}>
             <span className={styles.statusLabel}>{t('plugin_store.stat_available')}</span>
@@ -1088,35 +1104,29 @@ export function PluginStorePage() {
           aria-label={t('plugin_store.search_label')}
           rightElement={<IconSearch size={16} />}
         />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={loadStore}
-          disabled={!connected || loading}
-          loading={loading}
-        >
-          <IconRefreshCw size={16} />
-          {t('plugin_store.refresh')}
-        </Button>
       </div>
 
-      {/* ── Status Filter Chips ── */}
-      <div className={styles.filterChips} role="group" aria-label={t('plugin_store.filter_label')}>
-        {statusFilters.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            className={`${styles.filterChip} ${
-              statusFilter === item.key ? styles.filterChipActive : ''
-            }`}
-            onClick={() => setStatusFilter(item.key)}
-            aria-pressed={statusFilter === item.key}
-          >
-            {item.label}
-            <span className={styles.filterChipCount}>{item.count}</span>
-          </button>
-        ))}
-      </div>
+      <SegmentedControl<StoreStatusFilter>
+        className={styles.statusFilter}
+        ariaLabel={t('plugin_store.filter_label')}
+        options={statusFilters.map((item) => ({
+          value: item.key,
+          label: item.label,
+          count: item.count,
+        }))}
+        value={statusFilter}
+        onChange={setStatusFilter}
+      />
+      <NativeSelect
+        className={styles.statusFilterPicker}
+        label={t('plugin_store.filter_select_label')}
+        value={statusFilter}
+        onChange={(value) => setStatusFilter(value as StoreStatusFilter)}
+        options={statusFilters.map((item) => ({
+          value: item.key,
+          label: `${item.label} (${item.count})`,
+        }))}
+      />
 
       {/* ── Plugin Cards ── */}
       {loading ? (
@@ -1141,10 +1151,12 @@ export function PluginStorePage() {
               title={t('plugin_store.no_plugins')}
               description={t('plugin_store.no_plugins_desc')}
               action={
-                <Button variant="secondary" size="sm" onClick={loadStore} disabled={!connected}>
-                  <IconRefreshCw size={16} />
-                  {t('plugin_store.refresh')}
-                </Button>
+                <Link className="btn btn-secondary btn-sm" to={PLUGIN_STORE_SOURCES_CONFIG_PATH}>
+                  <span>
+                    <IconSettings size={16} aria-hidden="true" />
+                    {t('plugin_store.review_sources')}
+                  </span>
+                </Link>
               }
             />
           ) : (

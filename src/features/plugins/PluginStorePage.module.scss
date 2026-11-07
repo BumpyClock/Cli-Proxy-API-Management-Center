@@ -100,68 +100,24 @@
   }
 }
 
-// ─── Security Banner (third-party plugin risk) ──────────
-
-.securityBanner {
-  display: flex;
-  align-items: flex-start;
-  gap: $spacing-sm;
-  padding: 12px 14px;
-  border-radius: $radius-md;
-  border: 1px solid color-mix(in srgb, var(--quota-medium-color, #e0aa14) 45%, var(--border-color));
-  background: color-mix(in srgb, var(--quota-medium-color, #e0aa14) 14%, var(--bg-secondary));
-  color: var(--text-primary);
-
-  > svg {
-    flex-shrink: 0;
-    margin-top: 1px;
-    color: var(--quota-medium-color, #e0aa14);
-  }
-}
-
-.securityBannerText {
-  min-width: 0;
-
-  strong {
-    display: block;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.4;
-  }
-
-  p {
-    margin: 2px 0 0;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-secondary);
-  }
-}
-
 // ─── Status Bar ─────────────────────────────────────────
 
 .statusBar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
   flex-wrap: wrap;
+  gap: 4px 8px;
 }
 
+/* Labels and states are sans prose; only the directory path is a literal in mono. */
 .statusPill {
   display: inline-flex;
   min-width: 0;
   max-width: 100%;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
-  border-radius: 5px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
-  background: color-mix(in srgb, var(--bg-primary) 56%, transparent);
   font-size: 12px;
-  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -177,21 +133,18 @@
   box-shadow: none;
 }
 
-.statusDotOff {
-  background: var(--text-tertiary);
-}
-
 .statusLabel {
   color: var(--text-secondary);
 }
 
 .statusValue {
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .statusPathValue {
   display: block;
+  font-family: $font-mono;
   min-width: 0;
   max-width: min(360px, 58vw);
   overflow: hidden;
@@ -199,15 +152,12 @@
   white-space: nowrap;
 }
 
+/* Metadata items are separated by a middle dot, like the other page metadata rows. */
 .statusDivider {
-  width: 1px;
-  height: 20px;
-  background: color-mix(in srgb, var(--border-color) 60%, transparent);
   flex-shrink: 0;
-
-  @include mobile {
-    display: none;
-  }
+  color: var(--text-tertiary);
+  font-size: 12px;
+  user-select: none;
 }
 
 // ─── Toolbar ────────────────────────────────────────────
@@ -227,12 +177,6 @@
     padding-right: 36px;
   }
 
-  :global(.btn > span) {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   @include mobile {
     flex-direction: column;
     align-items: stretch;
@@ -243,56 +187,25 @@
   }
 }
 
-// ─── Status Filter Chips ────────────────────────────────
+// ─── Install Status Filter ──────────────────────────────
 
-.filterChips {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
+.statusFilter {
+  align-self: flex-start;
 }
 
-.filterChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: 5px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  cursor: pointer;
-  transition:
-    border-color $transition-fast,
-    background-color $transition-fast,
-    color $transition-fast;
+.statusFilterPicker {
+  display: none;
+}
 
-  &:hover {
-    border-color: var(--primary-color);
-    color: var(--text-primary);
+/* Phones: four counted options would wrap the segmented track, so a labelled select replaces it. */
+@include mobile {
+  .statusFilter {
+    display: none;
   }
-}
 
-.filterChipActive {
-  border-color: var(--primary-color);
-  background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-primary));
-  color: var(--text-primary);
-}
-
-.filterChipCount {
-  display: inline-flex;
-  min-width: 18px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--border-color) 45%, transparent);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 700;
+  .statusFilterPicker {
+    display: flex;
+  }
 }
 
 // ─── Card Grid ──────────────────────────────────────────
@@ -406,7 +319,7 @@
   align-items: center;
   border-radius: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -533,7 +446,7 @@
   background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
   border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -552,12 +465,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: $spacing-sm;
-
-  :global(.btn > span) {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
 }
 
 .cardLinks {
@@ -677,7 +584,7 @@
 
   small {
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
@@ -859,19 +766,6 @@
 .page {
   min-width: 0;
 }
-.statusBar {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  gap: 8px 16px;
-}
-.statusPill {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-family: $font-mono;
-  font-weight: 400;
-}
 .page :focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
@@ -920,7 +814,7 @@
   align-items: center;
   border-radius: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--info-color);
   border: 1px solid var(--border-color);
 }

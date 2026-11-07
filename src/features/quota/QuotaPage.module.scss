@@ -45,20 +45,20 @@
   min-width: 0;
 }
 
-.search {
+.searchField {
   position: relative;
   display: flex;
   align-items: center;
   flex: 0 1 340px;
   min-width: 0;
   height: 36px;
-  border: 1px solid transparent;
   border-radius: 10px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
 
+  /* An inset ring instead of a border keeps the input the full control height. */
   &:focus-within {
-    border-color: var(--border-hover);
+    box-shadow: inset 0 0 0 1px var(--border-hover);
     outline: 2px solid var(--focus-ring, var(--accent-color));
     outline-offset: 2px;
   }
@@ -156,19 +156,20 @@
   }
 }
 
-@include mobile {
-  .search {
+@media (max-width: 768px), (pointer: coarse) {
+  .searchField {
     flex: 1 1 220px;
-    height: 40px;
+    height: 44px;
   }
 
   .clearSearch {
-    width: 36px;
-    height: 36px;
+    right: 0;
+    width: 44px;
+    height: 44px;
   }
 
   .sort button[aria-haspopup='listbox'] {
-    height: 40px;
+    height: 44px;
   }
 }
 
@@ -233,15 +234,13 @@
   min-width: 0;
 }
 .filters summary {
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 12px;
-  padding: 4px 0;
-  margin-bottom: 12px;
+  @include disclosure-summary;
+  margin-bottom: 8px;
 }
-.filters summary:focus-visible {
-  outline: 2px solid var(--focus-ring, var(--accent-color));
-  outline-offset: 2px;
+@media (max-width: 768px), (pointer: coarse) {
+  .filters summary {
+    margin-bottom: 0;
+  }
 }
 .filters[open] {
   display: grid;

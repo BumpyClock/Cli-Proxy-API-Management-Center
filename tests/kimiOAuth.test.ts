@@ -46,7 +46,7 @@ describe('Kimi regional login', () => {
     expect(source).toContain("id: 'kimi-ai'");
     expect(source).toContain("id: 'kimi'");
     expect(source).toMatch(
-      /provider.id === 'kimi-ai'\s*\? KIMI_INTERNATIONAL_AFFILIATE_URL\s*: KIMI_CHINESE_AFFILIATE_URL/
+      /kimi: KIMI_CHINESE_AFFILIATE_URL,\s*'kimi-ai': KIMI_INTERNATIONAL_AFFILIATE_URL,/
     );
     expect(new URL(KIMI_CHINESE_AFFILIATE_URL).hostname).toBe('platform.kimi.com');
     expect(new URL(KIMI_INTERNATIONAL_AFFILIATE_URL).hostname).toBe('platform.kimi.ai');

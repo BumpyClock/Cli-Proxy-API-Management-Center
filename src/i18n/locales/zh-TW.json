@@ -55,25 +55,23 @@
     "invalid_provider_index": "無效的供應商索引。",
     "unsaved_changes_title": "未儲存的變更",
     "unsaved_changes_message": "你有未儲存的變更，離開後將遺失這些變更。確定要離開嗎？",
-    "skip_to_content": "跳至主要內容"
+    "skip_to_content": "跳至主要內容",
+    "refreshing": "正在重新整理…"
   },
   "title": {
     "login": "CLI Proxy API Management Center",
     "abbr": "CPAMC"
   },
-  "splash": {
-    "title": "CLI Proxy API",
-    "subtitle": "管理中心"
-  },
   "login": {
     "subtitle": "請輸入連線資訊以存取管理介面",
+    "card_title": "連線",
     "connection_current": "目前位址",
     "connection_auto_hint": "系統將自動使用目前存取位址進行連線",
-    "custom_connection_label": "自訂連線位址:",
+    "custom_connection_label": "自訂連線位址",
     "custom_connection_placeholder": "例如: https://example.com:8317",
     "custom_connection_hint": "預設使用目前存取位址，若需要可手動輸入其他位址。",
-    "remember_password_label": "記住密碼",
-    "management_key_label": "管理金鑰:",
+    "remember_password_label": "記住管理金鑰",
+    "management_key_label": "管理金鑰",
     "management_key_placeholder": "請輸入管理金鑰",
     "submit_button": "登入",
     "submitting": "連線中...",
@@ -92,11 +90,15 @@
     "hide_key": "隱藏管理金鑰"
   },
   "header": {
-    "refresh_all": "全部重新整理",
-    "logout": "登出"
+    "refresh_config_page": "重新整理設定與頁面",
+    "utilities": "工具",
+    "language_current": "語言：{{language}}",
+    "theme_current": "主題：{{theme}}",
+    "logout": "登出",
+    "back_to": "返回{{page}}"
   },
   "connection": {
-    "status": "連線狀態:"
+    "status": "連線狀態"
   },
   "nav": {
     "dashboard": "儀表板",
@@ -109,7 +111,7 @@
     "plugin_store": "插件商店",
     "config_management": "設定面板",
     "logs": "記錄檢視",
-    "system_info": "中心資訊",
+    "system_info": "系統",
     "usage_statistics": "使用統計"
   },
   "nav_groups": {
@@ -161,7 +163,7 @@
     "attention_last_traffic": "最後流量 {{range}}",
     "attention_more_credentials": "另有 {{count}} 個",
     "attention_no_working_credential": "沒有可用憑證",
-    "attention_no_working_credential_keys_unknown": "沒有可用的憑證檔案；API 金鑰狀況需待 API 金鑰流量載入後才能確定",
+    "attention_no_working_credential_keys_unknown": "沒有可用的憑證檔案；供應商金鑰狀況需待供應商金鑰用量載入後才能確定",
     "attention_none": "目前沒有需要處理的問題",
     "attention_none_credentials": "{{count}} 個憑證",
     "attention_none_detail": "{{age}}檢查：{{credentials}}，{{providers}}",
@@ -227,9 +229,12 @@
     "hero_verdict_down_one": "{{provider}} 無法使用",
     "hero_verdict_down_stale_many": "{{count}} 個供應商最後回報為無法使用",
     "hero_verdict_down_stale_one": "{{provider}} 最後回報為無法使用",
-    "hero_verdict_good": "運行平穩",
-    "hero_verdict_idle": "靜候流量",
-    "hero_verdict_idle_other_scope": "目前憑證沒有流量",
+    "hero_verdict_good": "未發現憑證或供應商問題",
+    "hero_verdict_idle": "最近 {{window}}內沒有請求",
+    "hero_verdict_idle_other_scope": "最近 {{window}}內沒有經過目前憑證的請求",
+    "status_checked_at": "{{time}} 已檢查 {{credentials}}、{{providers}}",
+    "status_credential_files": "{{count}} 個憑證檔案",
+    "status_no_credential_problems": "未發現憑證問題",
     "hero_verdict_offline": "等待連接",
     "hero_verdict_unknown": "狀態未知",
     "list_colon": "：",
@@ -247,7 +252,7 @@
     "provider_status_unknown": "未知",
     "provider_unknown": "未歸類",
     "refresh": "重新整理",
-    "refresh_now": "重新整理儀表板資料",
+    "refresh_now": "重新整理儀表板",
     "refreshing": "正在重新整理…",
     "runtime_build": "建置日期",
     "runtime_client_keys": "用戶端 API 金鑰",
@@ -272,7 +277,7 @@
     "source_config": "設定",
     "source_credentials": "憑證",
     "source_models": "模型列表",
-    "source_traffic": "API 金鑰流量",
+    "source_traffic": "供應商金鑰用量",
     "source_usage": "使用統計",
     "stamp_every": "每 {{seconds}} 秒",
     "stamp_failed": "更新失敗 · 資料來自 {{age}}",
@@ -292,8 +297,8 @@
     "traffic_table_window": "時間區間",
     "traffic_time_zone": "時間為 {{zone}}",
     "traffic_title": "以 10 分鐘為粒度的吞吐",
+    "traffic_all_zero": "每個 10 分鐘區間皆為 0",
     "traffic_unavailable": "尚無流量資料",
-    "traffic_unavailable_hint": "代理處理第一個請求後便會出現計數。",
     "updated": "{{age}}更新",
     "usage_caption": "{{window}} 的熱門模型（來自使用統計）",
     "usage_col_failed": "失敗",
@@ -320,20 +325,30 @@
     "vitals_credentials_disabled": "{{count}} 個已停用",
     "vitals_credentials_limited": "含 {{count}} 個受限",
     "vitals_credentials_none": "尚無憑證",
-    "vitals_credentials_ok": "所有已啟用憑證皆可用",
     "vitals_credentials_problems": "{{count}} 個需處理",
     "vitals_models": "模型",
-    "vitals_no_requests": "目前憑證沒有請求",
     "vitals_of": "{{serving}} / {{total}}",
     "vitals_requests": "請求",
     "vitals_serving_unit": "可用",
     "vitals_split": "成功 {{success}} · 失敗 {{failed}}",
     "vitals_success": "成功率",
-    "vitals_usage_differs": "使用統計在此時段記錄了 {{count}} 次請求，可能包含已移除的憑證",
-    "vitals_window": "最近 {{window}} · 目前憑證",
+    "vitals_usage_differs": "這是另一個資料來源。使用統計記錄所有用戶端 API 金鑰的請求，包括已不在清單中的憑證；上方數字僅彙總目前的憑證檔案與供應商金鑰。",
     "window_h": "{{hours}} 小時",
     "window_hm": "{{hours}} 小時 {{minutes}} 分",
-    "window_m": "{{minutes}} 分鐘"
+    "window_m": "{{minutes}} 分鐘",
+    "vitals_usage_differs_short": "使用統計：同一時段內 {{count}} 次",
+    "vitals_scope": "最近 {{window}} · {{scope}}",
+    "vitals_scope_partial": "最近 {{window}} · {{scope}}；{{missing}}",
+    "vitals_rate_scope": "統計範圍：{{scope}}",
+    "vitals_success_unmeasured": "沒有可計算的請求",
+    "vitals_unavailable": "無法取得",
+    "scope_all": "目前憑證",
+    "scope_credential_files_only": "僅憑證檔案",
+    "scope_provider_keys_only": "僅供應商金鑰",
+    "scope_missing_provider_keys_failed": "供應商金鑰用量無法取得",
+    "scope_missing_provider_keys_loading": "供應商金鑰用量載入中",
+    "scope_missing_credential_files_failed": "憑證檔案無法取得",
+    "scope_missing_credential_files_loading": "憑證檔案載入中"
   },
   "basic_settings": {
     "debug_enable": "啟用除錯模式",
@@ -349,8 +364,7 @@
     "routing_strategy_fill_first": "fill-first（優先填充）"
   },
   "auth_files": {
-    "title": "驗證檔案管理",
-    "meta_total": "{{count}} 個憑證",
+    "title": "驗證檔案",
     "meta_active": "{{count}} 個啟用",
     "meta_problem": "{{count}} 個異常",
     "empty_title": "還沒有憑證",
@@ -359,6 +373,7 @@
     "no_results_clear": "清除篩選",
     "title_section": "驗證檔案",
     "upload_button": "上傳檔案",
+    "refresh_credentials": "重新整理憑證",
     "delete_all_button": "刪除全部",
     "search_empty_title": "沒有符合的設定檔",
     "search_empty_desc": "請調整篩選條件或清空搜尋關鍵字再試一次。",
@@ -433,16 +448,16 @@
     "pagination_prev": "上一頁",
     "pagination_next": "下一頁",
     "pagination_info": "第 {{current}} / {{total}} 頁 · 共 {{count}} 個檔案",
-    "search_label": "搜尋設定檔",
-    "search_placeholder": "輸入名稱、帳號、類型或供應方關鍵字，支援 * 萬用字元",
+    "search_label": "篩選憑證",
+    "search_placeholder": "篩選憑證",
     "problem_filter_label": "狀態篩選",
     "problem_filter_all": "全部",
     "problem_filter_enabled": "啟用",
     "problem_filter_problem": "問題",
     "problem_filter_disabled": "停用",
-    "display_options_label": "顯示選項",
+    "display_options_label": "檢視選項",
     "compact_mode_label": "簡略模式",
-    "sort_label": "排序",
+    "sort_label": "排序方式",
     "sort_default": "預設",
     "sort_az": "A-Z 名稱",
     "sort_priority": "優先順序",
@@ -533,7 +548,19 @@
     "quota_refresh_single": "重新整理配額",
     "quota_refresh_hint": "僅重新整理該驗證檔案的配額",
     "quota_refresh_success": "已重新整理「{{name}}」的配額",
-    "quota_refresh_failed": "重新整理「{{name}}」的配額失敗：{{message}}"
+    "quota_refresh_failed": "重新整理「{{name}}」的配額失敗：{{message}}",
+    "search_hint": "比對名稱、帳號、類型或供應方。可用 * 作為萬用字元，例如 claude-*。",
+    "provider_filter_label": "依供應方篩選",
+    "provider_select_label": "提供者",
+    "view_options_changed_other": "已變更 {{count}} 項預設設定",
+    "meta_total_other": "{{count}} 個憑證",
+    "oauth_rules_title": "OAuth 模型規則",
+    "oauth_rules_show": "顯示提供者規則詳情",
+    "oauth_rules_hide": "隱藏提供者規則詳情",
+    "oauth_rules_none": "未設定",
+    "oauth_rules_providers_other": "{{count}} 個提供者",
+    "warning_show_more": "展開",
+    "warning_show_less": "收合"
   },
   "antigravity_subscription": {
     "plan_unknown": "未知",
@@ -790,13 +817,10 @@
     "title": "OAuth 模型停用",
     "description": "按供應商分列展示，點擊卡片編輯或刪除；支援 * 萬用字元，範圍跟隨上方的設定檔篩選標籤。",
     "add": "新增停用",
-    "add_title": "新增供應商模型停用",
-    "edit_title": "編輯 {{provider}} 的模型停用",
     "provider_label": "供應商",
     "provider_placeholder": "例如 codex / openai",
-    "provider_hint": "預設選取目前篩選的供應商，也可直接輸入或選擇其他名稱。",
     "models_label": "停用的模型",
-    "save": "儲存/更新",
+    "save": "儲存",
     "save_success": "模型停用已更新",
     "save_failed": "更新模型停用失敗",
     "delete": "刪除供應商",
@@ -804,12 +828,14 @@
     "delete_success": "已刪除該供應商的模型停用",
     "delete_failed": "刪除模型停用失敗",
     "no_models": "未設定停用模型",
-    "model_count": "停用 {{count}} 個模型",
     "list_empty_all": "暫無任何供應商的模型停用，點擊「新增停用」建立。",
     "provider_required": "請先填寫供應商名稱",
     "upgrade_required": "目前 CPA 版本不支援 OAuth 模型停用，請升級 CPA 版本",
     "upgrade_required_title": "需要升級 CPA 版本",
-    "upgrade_required_desc": "目前伺服器版本不支援取得 OAuth 模型停用功能，請升級到最新版本的 CPA（CLI Proxy API）後重試。"
+    "upgrade_required_desc": "目前伺服器版本不支援取得 OAuth 模型停用功能，請升級到最新版本的 CPA（CLI Proxy API）後重試。",
+    "meta_editing": "正在編輯 {{provider}} 的現有規則",
+    "meta_new": "為 {{provider}} 新建規則",
+    "model_count_other": "停用 {{count}} 個模型"
   },
   "excluded_models": {
     "trigger_summary": "已排除 {{excluded}} · {{available}} 可用",
@@ -845,16 +871,13 @@
   },
   "oauth_model_alias": {
     "editor_description": "為供應商的模型設定呼叫別名，統一用戶端使用的模型名稱。",
-    "edit_title": "編輯 {{provider}} 的模型別名",
     "mapping_hint": "選取原模型，並填寫用戶端使用的別名。",
     "mapping_row": "別名對應 {{number}}",
     "remove_mapping": "刪除第 {{number}} 條別名對應",
     "title": "OAuth 模型別名",
     "add": "新增別名",
-    "add_title": "新增供應商模型別名",
     "provider_label": "供應商",
     "provider_placeholder": "例如 codex / vertex",
-    "provider_hint": "預設選取目前篩選的供應商，也可直接輸入或選擇其他名稱。",
     "model_source_loading": "正在載入模型清單...",
     "model_source_unsupported": "目前 CPA 版本不支援取得模型清單（仍可手動輸入）。",
     "model_source_loaded": "已載入 {{count}} 個模型，可在「原模型名稱」中下拉選擇；也可手動輸入。留空儲存將刪除該供應商記錄；開啟「保留原名」會在保留原模型名的同時新增別名。",
@@ -864,7 +887,7 @@
     "duplicate_alias": "同一供應商下的別名不能重複。",
     "alias_fork_label": "保留原名",
     "add_alias": "新增別名",
-    "save": "儲存/更新",
+    "save": "儲存",
     "save_success": "模型別名已更新",
     "save_failed": "更新模型別名失敗",
     "delete": "刪除供應商",
@@ -876,7 +899,6 @@
     "delete_success": "已刪除該供應商的模型別名",
     "delete_failed": "刪除模型別名失敗",
     "no_models": "未設定模型別名",
-    "model_count": "{{count}} 條別名",
     "list_empty_all": "暫無任何供應商的模型別名，點擊「新增別名」建立。",
     "chart_title": "全部映射概覽",
     "diagram_providers": "供應商",
@@ -908,7 +930,13 @@
     "provider_required": "請先填寫供應商名稱",
     "upgrade_required": "目前 CPA 版本不支援模型別名功能，請升級 CPA 版本",
     "upgrade_required_title": "需要升級 CPA 版本",
-    "upgrade_required_desc": "目前伺服器版本不支援 OAuth 模型別名功能，請升級到最新版本的 CPA（CLI Proxy API）後重試。"
+    "upgrade_required_desc": "目前伺服器版本不支援 OAuth 模型別名功能，請升級到最新版本的 CPA（CLI Proxy API）後重試。",
+    "source_model_input_placeholder": "選擇或輸入模型 ID",
+    "alias_input_placeholder": "客戶端請求時使用的名稱",
+    "meta_editing": "正在編輯 {{provider}} 的現有別名",
+    "meta_new": "為 {{provider}} 新建別名",
+    "view_mode_label": "別名檢視",
+    "model_count_other": "{{count}} 條別名"
   },
   "auth_login": {
     "devin_oauth_cancel": "取消 Devin 登入",
@@ -916,7 +944,7 @@
     "devin_oauth_cancel_error": "取消 Devin 登入失敗：",
     "devin_oauth_retry_hint": "伺服器可能仍在等待授權。請先取消本次登入，再重新開始。",
     "devin_oauth_title": "Devin OAuth",
-    "devin_oauth_button": "開始 Devin 登入",
+    "devin_oauth_button": "使用 Devin 登入",
     "devin_oauth_hint": "透過瀏覽器 OAuth 登入 Devin / Cognition，自動儲存認證檔案。需要 CLI Proxy API v7.3.1 或更新版本，請在五分鐘內完成授權。",
     "devin_oauth_url_label": "授權連結：",
     "devin_copy_link": "複製連結",
@@ -934,7 +962,7 @@
     "other_oauth_providers": "其他 OAuth 提供商",
     "other_login_methods": "其他登入方式",
     "codex_oauth_title": "Codex OAuth",
-    "codex_oauth_button": "開始 Codex 登入",
+    "codex_oauth_button": "使用 Codex 登入",
     "codex_oauth_hint": "透過 OAuth 流程登入 Codex 服務，自動取得並儲存驗證檔案。",
     "codex_oauth_url_label": "授權連結:",
     "codex_open_link": "開啟連結",
@@ -944,19 +972,19 @@
     "codex_oauth_status_error": "驗證失敗:",
     "codex_oauth_start_error": "啟動 Codex OAuth 失敗:",
     "codex_oauth_polling_error": "檢查驗證狀態失敗:",
-    "anthropic_oauth_title": "Anthropic OAuth",
-    "anthropic_oauth_button": "開始 Anthropic 登入",
-    "anthropic_oauth_hint": "透過 OAuth 流程登入 Anthropic（Claude）服務，自動取得並儲存驗證檔案。",
+    "anthropic_oauth_title": "Claude OAuth",
+    "anthropic_oauth_button": "使用 Claude 登入",
+    "anthropic_oauth_hint": "透過 OAuth 流程登入 Claude（Anthropic 帳號）服務，自動取得並儲存驗證檔案。",
     "anthropic_oauth_url_label": "授權連結:",
     "anthropic_open_link": "開啟連結",
     "anthropic_copy_link": "複製連結",
     "anthropic_oauth_status_waiting": "等待驗證中...",
     "anthropic_oauth_status_success": "驗證成功！",
     "anthropic_oauth_status_error": "驗證失敗:",
-    "anthropic_oauth_start_error": "啟動 Anthropic OAuth 失敗:",
+    "anthropic_oauth_start_error": "啟動 Claude OAuth 失敗:",
     "anthropic_oauth_polling_error": "檢查驗證狀態失敗:",
     "antigravity_oauth_title": "Antigravity OAuth",
-    "antigravity_oauth_button": "開始 Antigravity 登入",
+    "antigravity_oauth_button": "使用 Antigravity 登入",
     "antigravity_oauth_hint": "透過 OAuth 流程登入 Antigravity（Google 帳號）服務，自動取得並儲存驗證檔案。",
     "antigravity_oauth_url_label": "授權連結:",
     "antigravity_open_link": "開啟連結",
@@ -980,7 +1008,7 @@
     "device_code_label": "裝置碼:",
     "device_code_copy": "複製裝置碼",
     "kimi_ai_oauth_title": "Kimi 國際站（kimi.ai）",
-    "kimi_ai_oauth_button": "登入 Kimi 國際站",
+    "kimi_ai_oauth_button": "使用 Kimi 國際站登入",
     "kimi_ai_oauth_hint": "透過裝置授權登入 kimi.ai 國際站，自動儲存獨立的 kimi-ai 驗證檔案。中國站與國際站帳號不互通。",
     "kimi_ai_oauth_url_label": "授權連結:",
     "kimi_ai_open_link": "開啟連結",
@@ -991,8 +1019,8 @@
     "kimi_ai_oauth_start_error": "啟動 Kimi 國際站登入失敗:",
     "kimi_ai_oauth_polling_error": "檢查驗證狀態失敗:",
     "kimi_oauth_title": "Kimi 中國站（kimi.com）",
-    "kimi_oauth_button": "登入 Kimi 中國站",
-    "kimi_sign_up_button": "立即註冊",
+    "kimi_oauth_button": "使用 Kimi 中國站登入",
+    "kimi_sign_up_button": "註冊帳號",
     "kimi_oauth_hint": "透過裝置授權登入 kimi.com 中國站，自動取得並儲存驗證檔案。國際站帳號請使用獨立的 kimi.ai 登入入口。",
     "kimi_oauth_url_label": "授權連結:",
     "kimi_open_link": "開啟連結",
@@ -1003,7 +1031,7 @@
     "kimi_oauth_start_error": "啟動 Kimi OAuth 失敗:",
     "kimi_oauth_polling_error": "檢查驗證狀態失敗:",
     "xai_oauth_title": "xAI OAuth",
-    "xai_oauth_button": "開始 xAI 登入",
+    "xai_oauth_button": "使用 xAI 登入",
     "xai_oauth_hint": "透過 OAuth 流程登入 xAI Grok 服務，自動取得並儲存驗證檔案。",
     "xai_oauth_url_label": "授權連結:",
     "xai_open_link": "開啟連結",
@@ -1014,7 +1042,7 @@
     "xai_oauth_start_error": "啟動 xAI OAuth 失敗:",
     "xai_oauth_polling_error": "檢查驗證狀態失敗:",
     "plugin_oauth_title": "{{name}} OAuth",
-    "plugin_oauth_button": "開始 {{name}} 登入",
+    "plugin_oauth_button": "使用 {{name}} 登入",
     "plugin_oauth_hint": "透過插件提供的 OAuth 流程登入 {{name}}，自動取得並儲存驗證檔案。",
     "plugin_oauth_url_label": "授權連結:",
     "plugin_open_link": "開啟連結",
@@ -1080,7 +1108,7 @@
     "iflow_cookie_result_type": "類型",
     "remote_access_disabled": "遠端存取不支援此登入方式，請從本地（localhost）存取",
     "qoder_oauth_title": "Qoder OAuth",
-    "qoder_oauth_button": "開始 Qoder 登入",
+    "qoder_oauth_button": "使用 Qoder 登入",
     "qoder_oauth_hint": "透過裝置授權流程登入 Qoder，自動取得並儲存驗證檔案。",
     "qoder_oauth_url_label": "授權連結:",
     "qoder_open_link": "開啟連結",
@@ -1088,7 +1116,17 @@
     "qoder_oauth_status_waiting": "等待驗證中...",
     "qoder_oauth_status_success": "驗證成功！",
     "qoder_oauth_status_error": "驗證失敗:",
-    "qoder_oauth_start_error": "啟動 Qoder OAuth 失敗:"
+    "qoder_oauth_start_error": "啟動 Qoder OAuth 失敗:",
+    "kimi_sign_up_label": "註冊帳號：Kimi 中國站（在新分頁中開啟）",
+    "kimi_ai_sign_up_label": "註冊帳號：Kimi 國際站（在新分頁中開啟）",
+    "family_kimi": "Kimi",
+    "kimi_region": "中國站 · kimi.com",
+    "kimi_ai_region": "國際站 · kimi.ai",
+    "provider_search_label": "尋找登入方式",
+    "provider_search_placeholder": "依提供者、地區或網域尋找",
+    "provider_search_clear": "清除搜尋",
+    "provider_search_count": "顯示 {{count}} / {{total}} 項",
+    "provider_search_empty": "沒有符合「{{query}}」的登入方式。"
   },
   "stats": {
     "success": "成功",
@@ -1103,9 +1141,9 @@
     "title": "記錄檢視",
     "refresh_button": "重新整理記錄",
     "clear_button": "清空記錄",
-    "fullscreen_button": "全螢幕顯示",
+    "fullscreen_button": "全螢幕",
     "exit_fullscreen_button": "退出全螢幕",
-    "download_button": "下載記錄",
+    "download_button": "下載",
     "error_logs_modal_title": "錯誤請求記錄",
     "error_logs_description": "請選擇要開啟或下載的錯誤請求記錄檔案（僅在關閉請求記錄時產生）。",
     "error_logs_request_log_enabled": "目前已開啟請求記錄，按介面約定錯誤請求記錄清單會始終為空。關閉請求記錄後再重新整理即可查看。",
@@ -1134,7 +1172,7 @@
     "log_content": "記錄內容",
     "loading": "正在載入記錄...",
     "load_error": "載入記錄失敗",
-    "clear_confirm": "確定要清空所有記錄嗎？此操作無法還原！",
+    "clear_confirm": "這將刪除伺服器上所有已輪替的主記錄檔，並清空目前的 main.log。請求錯誤記錄會保留。此操作無法復原。",
     "clear_success": "記錄已清空",
     "download_success": "記錄下載成功",
     "auto_refresh": "自動重新整理",
@@ -1145,7 +1183,7 @@
     "hide_management_logs": "隱藏 {{prefix}} 記錄",
     "show_raw_logs": "顯示原始記錄",
     "show_raw_logs_hint": "直接顯示原始記錄文字，方便多行複製",
-    "search_placeholder": "搜尋記錄內容或關鍵字",
+    "search_placeholder": "搜尋記錄",
     "filter_panel_title": "結構化篩選",
     "filter_panel_expand": "展開結構化篩選",
     "filter_panel_collapse": "收起結構化篩選",
@@ -1164,7 +1202,20 @@
     "double_click_copy_hint": "雙擊複製記錄原文",
     "copy_success": "已複製記錄原文",
     "copy_failed": "複製失敗",
-    "copy_line_accessible": "複製日誌行：{{line}}"
+    "copy_line_accessible": "複製日誌行：{{line}}",
+    "display_options_group": "日誌顯示選項",
+    "actions_group": "日誌操作",
+    "search_label": "依內容或關鍵字搜尋記錄",
+    "filter_panel_short": "篩選",
+    "download_hint": "將已載入的記錄行下載為文字檔",
+    "clear_confirm_title": "清空伺服器記錄？",
+    "refresh_error_logs": "重新整理錯誤記錄",
+    "options_button": "選項",
+    "options_changed_count_other": "已變更 {{count}} 項設定",
+    "tabs_label": "日誌檢視",
+    "active_filters_label": "已啟用的篩選",
+    "active_filters_count_other": "{{count}} 個篩選",
+    "remove_filter": "移除篩選 {{filter}}"
   },
   "config_management": {
     "title": "設定面板",
@@ -1173,6 +1224,7 @@
     "meta_dirty_source": "原始碼有未儲存修改",
     "meta_errors": "{{count}} 項驗證錯誤",
     "meta_synced": "已同步",
+    "meta_save_hint": "修改儲存後生效",
     "actions": {
       "discard": "放棄變更",
       "save": "儲存變更"
@@ -1244,7 +1296,8 @@
         },
         "server": {
           "host": "主機位址",
-          "port": "連接埠"
+          "port": "連接埠",
+          "host_placeholder": "留空則使用後端預設值"
         },
         "tls": {
           "title": "TLS/SSL 設定",
@@ -1268,7 +1321,7 @@
           "panel_repo": "面板儲存庫"
         },
         "auth": {
-          "auth_dir": "驗證檔案目錄（auth-dir）",
+          "auth_dir": "驗證檔案目錄",
           "auth_dir_hint": "存放驗證檔案的目錄路徑（支援 ~）"
         },
         "system": {
@@ -1351,7 +1404,6 @@
           "title": "網路設定",
           "description": "代理、重試和路由設定",
           "proxy_url": "代理 URL",
-          "proxy_url_sponsor_hint": "沒有合適的代理？",
           "request_retry": "請求重試次數",
           "max_retry_credentials": "最大重試憑證數",
           "max_retry_credentials_hint": "留空表示不設定；設為 0 或負整數表示嘗試所有可用憑證。",
@@ -1419,11 +1471,11 @@
         }
       },
       "api_keys": {
-        "label": "API 金鑰清單（api-keys）",
+        "label": "API 金鑰",
         "add": "新增 API 金鑰",
         "generate": "產生",
         "empty": "暫無 API 金鑰",
-        "hint": "每個條目代表一個 API 金鑰（與「API 金鑰管理」頁面樣式一致）",
+        "hint": "用戶端應用程式和工具需攜帶其中一把金鑰才能使用此代理。建議為每個用戶端單獨配發金鑰，刪除時不影響其他用戶端。",
         "edit_title": "編輯 API 金鑰",
         "add_title": "新增 API 金鑰",
         "input_label": "API 金鑰",
@@ -1465,15 +1517,15 @@
         "provider_antigravity": "Antigravity",
         "advanced": "進階",
         "hide_advanced": "收起進階",
-        "from_protocol": "來源協議（from-protocol）",
+        "from_protocol": "來源協議",
         "headers": "請求 Header 匹配",
         "header_name": "Header 名稱",
         "header_value": "Header 值",
         "add_header": "新增 Header",
-        "match": "必須匹配（match）",
-        "notMatch": "不得匹配（not-match）",
-        "exist": "必須存在（exist）",
-        "notExist": "不得存在（not-exist）",
+        "match": "必須匹配",
+        "notMatch": "不得匹配",
+        "exist": "必須存在",
+        "notExist": "不得存在",
         "condition_path": "匹配路徑",
         "condition_value": "匹配值",
         "add_condition": "新增條件",
@@ -1507,7 +1559,9 @@
         "update": "更新",
         "add": "新增"
       }
-    }
+    },
+    "reload_config": "重新載入設定",
+    "reloading_config": "正在重新載入設定…"
   },
   "quota_management": {
     "pool_view": "配額檢視",
@@ -1543,7 +1597,7 @@
     "search_clear": "清除搜尋",
     "title": "配額管理",
     "description": "集中查看 OAuth 配額與剩餘情況",
-    "refresh_all_credentials": "重新整理全部憑證",
+    "refresh_all_credentials": "重新整理全部配額",
     "sort_label": "排序",
     "sort_default": "預設",
     "sort_soonest": "最快恢復優先",
@@ -1580,20 +1634,19 @@
     "weekday_wed": "三",
     "weekday_thu": "四",
     "weekday_fri": "五",
-    "weekday_sat": "六"
+    "weekday_sat": "六",
+    "refresh_all_short": "重新整理配額"
   },
   "plugin_management": {
     "title": "插件管理",
     "description": "查看已發現和已註冊的插件，管理實例開關、設定欄位和資源入口。",
-    "refresh": "重新整理",
     "load_failed": "載入插件失敗",
     "config_load_failed": "讀取插件設定失敗",
     "config_not_found": "無法讀取插件設定，後端未找到該插件。",
     "unsupported_backend": "目前後端未暴露插件管理 API。請使用包含插件管理介面的新版後端建置，並重新啟動服務。",
     "global_status": "全域狀態",
     "global_enabled": "已啟用",
-    "global_disabled": "已停用",
-    "global_disabled_hint": "目前 plugins.enabled 為 false，插件實例即使啟用也不會生效。",
+    "global_disabled_hint": "插件已在設定中停用，所有插件均不會生效。",
     "plugins_dir": "插件目錄",
     "discovered": "發現插件",
     "effective": "生效插件",
@@ -1639,7 +1692,13 @@
     "invalid_json": "請輸入有效 JSON",
     "expected_array": "請輸入 JSON 陣列",
     "expected_object": "請輸入 JSON 物件",
-    "invalid_enum": "請選擇宣告的枚舉值"
+    "invalid_enum": "請選擇宣告的枚舉值",
+    "refresh_plugins": "重新整理插件",
+    "open_plugins_setting": "在設定面板中啟用",
+    "browse_store": "瀏覽插件商店",
+    "no_matches": "沒有符合的插件",
+    "no_matches_desc": "目前搜尋條件下沒有插件。",
+    "clear_search": "清除搜尋"
   },
   "plugin_store": {
     "title": "插件商店",
@@ -1648,15 +1707,13 @@
     "description_show_less": "收起描述",
     "source_name": "來源：{{source}}",
     "cli_proxy_api_source": "CLIProxyAPI來源",
-    "refresh": "重新整理",
     "retry": "重試",
     "load_failed": "插件商店載入失敗",
     "unsupported_backend": "目前後端未提供插件商店 API。請使用包含插件商店介面的新後端建置,並重新啟動服務。",
     "registry_failed": "插件註冊表請求失敗",
     "global_status": "全域狀態",
     "global_enabled": "已啟用",
-    "global_disabled": "已停用",
-    "global_disabled_hint": "目前 plugins.enabled 為 false,已安裝的插件不會生效。",
+    "global_disabled_hint": "插件已在設定中停用，已安裝的插件不會生效。",
     "plugins_dir": "插件目錄",
     "stat_available": "可用插件",
     "search_placeholder": "搜尋插件 ID、名稱、作者或標籤...",
@@ -1720,8 +1777,9 @@
     "no_matches": "沒有符合的插件",
     "no_matches_desc": "目前搜尋或篩選條件下沒有插件。",
     "clear_filters": "清除篩選",
-    "security_banner_title": "第三方插件以後端完整權限執行",
-    "security_banner_text": "插件會在代理服務內部執行程式碼，可讀取你的憑證與流量。請僅安裝你信任的插件——尤其要警惕任何並非由官方組織 router-for-me 發布的插件。",
+    "security_banner_title": "插件以後端完整權限執行，可讀取你的憑證與流量。",
+    "security_banner_text": "請僅安裝你信任其發布者的插件。",
+    "review_sources": "檢查插件商店來源",
     "badge_untrusted": "第三方",
     "gate_title": "安裝 {{name}}",
     "gate_title_update": "更新 {{name}}",
@@ -1736,7 +1794,9 @@
     "gate_step2_action": "我已閱讀並理解上述風險",
     "gate_step3_prompt": "如需確認，請在下方輸入框中鍵入 “{{token}}”",
     "gate_step3_action": "安裝此插件",
-    "gate_step3_hint": "請輸入上方顯示的完整識別碼以啟用安裝。"
+    "gate_step3_hint": "請輸入上方顯示的完整識別碼以啟用安裝。",
+    "refresh_registry": "重新整理註冊表",
+    "filter_select_label": "安裝狀態"
   },
   "plugin_resource": {
     "page_count": "{{count}} 個頁面",
@@ -1746,17 +1806,16 @@
     "not_found_desc": "目前後端插件清單未宣告此插件頁面。",
     "empty_src": "插件頁面位址為空",
     "empty_src_desc": "此插件選單未提供可嵌入的頁面位址。",
-    "open_in_new_tab": "在新分頁開啟資源"
+    "open_in_new_tab": "在新分頁開啟資源",
+    "refresh": "重新整理插件頁面"
   },
   "system_info": {
-    "title": "管理中心資訊",
-    "about_title": "CLI Proxy API Management Center",
+    "title": "系統",
     "models_title": "可用模型清單",
     "models_desc": "展示 /models 回傳的模型，並自動使用伺服器儲存的 API Key 進行驗證。",
     "models_loading": "正在載入可用模型...",
     "models_empty": "未從 /models 取得到模型資料",
     "models_error": "取得模型清單失敗",
-    "models_count": "可用模型 {{count}} 個",
     "version_check_button": "檢查更新",
     "version_update_available": "有新版本可用：{{version}}",
     "version_is_latest": "目前已是最新版本",
@@ -1774,7 +1833,17 @@
     "clear_login_title": "本地登入資訊",
     "clear_login_desc": "清理本地儲存的登入資訊並登出。",
     "clear_login_button": "清理登入資訊",
-    "clear_login_confirm": "確認清理本地登入資訊並登出？"
+    "clear_login_confirm": "確認清理本地登入資訊並登出？",
+    "models_count_other": "可用模型 {{count}} 個",
+    "models_refresh": "重新整理模型",
+    "copy_details": "複製版本資訊",
+    "request_log_open": "設定請求記錄…",
+    "resources_title": "選用資源",
+    "resources_desc": "第三方服務，執行 CLI Proxy API 不需要它們。",
+    "resources_sponsored": "贊助",
+    "resource_proxy_desc": "可用於「代理 URL」設定的代理伺服器",
+    "resource_api_desc": "提供 Anthropic、OpenAI 與 Codex 端點的 API 服務",
+    "resource_new_tab": "（在新分頁中開啟）"
   },
   "notification": {
     "region_label": "通知",
@@ -1799,10 +1868,10 @@
   },
   "language": {
     "switch": "語言",
-    "chinese": "簡體中文",
+    "chinese": "简体中文",
     "chinese_tw": "繁體中文（台灣）",
-    "english": "英文",
-    "russian": "俄文"
+    "english": "English",
+    "russian": "Русский"
   },
   "theme": {
     "switch": "主題",
@@ -1814,9 +1883,6 @@
   "sidebar": {
     "toggle_expand": "展開側邊欄",
     "toggle_collapse": "收起側邊欄",
-    "expand": "展開",
-    "collapse": "收起",
-    "subtitle": "CLI Proxy API 管理控制台",
     "auth_files_count": "驗證檔案：{{count}} 個",
     "navigation": "導覽",
     "close_navigation": "關閉導覽"
@@ -1829,14 +1895,11 @@
   "providersPage": {
     "header": {
       "title": "AI 提供商",
-      "activeResources": "{{active}}/{{total}} 個活躍資源",
-      "providerFamilies": "{{count}} 個提供商家族",
-      "updatedAt": "更新於 {{time}}"
+      "refresh": "重新整理提供商",
+      "updatedAt": "更新於 {{time}}",
+      "summary_other": "{{active}}/{{total}} 個已啟用，共 {{count}} 個提供者"
     },
     "actions": {
-      "refresh": "重新整理",
-      "syncing": "同步中",
-      "new": "新增",
       "edit": "編輯",
       "view": "檢視",
       "delete": "刪除",
@@ -1849,7 +1912,8 @@
     "categories": {
       "title": "提供商",
       "quickFill": "快速接入",
-      "activeCount": "{{active}}/{{total}} 活躍"
+      "activeCount": "{{active}}/{{total}} 活躍",
+      "pickerLabel": "提供商"
     },
     "providerNames": {
       "meta": "Muse (Meta)",
@@ -1880,9 +1944,11 @@
       "websocketsTag": "WebSockets",
       "cloakTag": "Cloak",
       "cliProfileTag": "CLI 指紋",
-      "empty": "尚未新增設定,點擊右上角新增。",
+      "empty": "此供應商尚未新增任何設定。",
       "filterPlaceholder": "搜尋金鑰、位址、前綴…",
-      "description": "在 {{route}} 下管理資源"
+      "description": "在 {{route}} 下管理資源",
+      "requestSummary": "成功 {{success}} · 失敗 {{failure}}",
+      "noRecentRequests": "近期無請求"
     },
     "sponsor": {
       "protocolSummary": "Anthropic / OpenAI / Gemini / Codex API (Responses)",
@@ -1891,7 +1957,6 @@
       "registerNow": "立即註冊",
       "kimiPromo": "新用戶首次成功儲值，贈送儲值金額 10% 的 API 額度，最高贈送 ¥1000，優惠截至 9 月 30 日",
       "dashboardLink": "控制面板",
-      "emptyRegisterHint": "尚未新增設定",
       "apiKeyHint": "此金鑰只會寫入目前選擇的分組/協議設定。",
       "usageCheck": "查詢額度",
       "usageChecking": "查詢中",
@@ -1954,7 +2019,8 @@
         "openai": "OpenAI 相容",
         "gemini": "Gemini",
         "codexResponses": "Codex API (Responses)"
-      }
+      },
+      "sponsoredLabel": "贊助"
     },
     "status": {
       "active": "活躍",
@@ -1962,7 +2028,8 @@
       "notSet": "未設定",
       "none": "無",
       "notConfigured": "未設定",
-      "defaultSuffix": "(預設)"
+      "defaultSuffix": "(預設)",
+      "failing": "失敗較多"
     },
     "detail": {
       "title": "詳情",
@@ -2101,7 +2168,12 @@
         "priority": "優先級",
         "recentSuccess": "近期成功數",
         "directionAsc": "升序",
-        "directionDesc": "降序"
+        "directionDesc": "降序",
+        "dirAlphaAsc": "A–Z",
+        "dirAlphaDesc": "Z–A",
+        "dirValueAsc": "低→高",
+        "dirValueDesc": "高→低",
+        "directionButton": "{{field}}排序方向：{{direction}}"
       },
       "filter": {
         "allModels": "全部模型",
@@ -2109,16 +2181,24 @@
         "selectAll": "全選",
         "clear": "清空",
         "empty": "尚無已設定模型"
-      }
+      },
+      "controls": "搜尋與排序",
+      "controlsNarrowed": "搜尋與排序（已篩選）"
     },
     "modelCatalog": {
       "notLoaded": "未載入"
+    },
+    "quickStart": {
+      "optionalKeyTitle": "{{provider}} 金鑰（選用）",
+      "optionalKeyHint": "如果你已在使用 {{provider}}，可在此新增其金鑰；否則可略過。",
+      "getKey": "取得金鑰",
+      "newTab": "（在新分頁中開啟）"
     }
   },
   "usage_stats": {
     "title": "使用統計",
     "subtitle": "來自代理執行階段的請求與 Token 使用情況。",
-    "refresh": "重新整理",
+    "refresh": "重新整理使用統計",
     "last_updated": "最後更新",
     "load_failed": "無法載入使用統計",
     "total_requests": "總請求數",
@@ -2156,12 +2236,27 @@
       "shown": "顯示 {{count}} 筆，共 {{total}} 筆",
       "quotaRemaining": "剩餘 {{value}}",
       "quotaUnlimited": "無上限",
-      "quotaDetails": "{{name}} 的額度詳情"
+      "quotaDetails": "{{name}} 的額度詳情",
+      "details": "詳情",
+      "detailsFor": "{{name}} 的詳情",
+      "recentRate": "成功率 · 最近 {{minutes}} 分鐘",
+      "recentNone": "最近 {{minutes}} 分鐘無請求",
+      "quotaNotChecked": "未檢查",
+      "quotaCheckFailed": "檢查失敗",
+      "requestsNone": "近期無請求",
+      "requestsOk": "{{count}} 成功",
+      "requestsFailed": "{{count}} 失敗",
+      "requestsTotal": "請求總計：{{success}} 成功，{{failure}} 失敗",
+      "section": "分區",
+      "providerShortcuts": "常用提供商",
+      "editorActions": "規則操作",
+      "selectedProvider": "已選提供商",
+      "status_ok": "無問題"
     },
     "dashboardQuota": {
       "title": "剩餘額度",
-      "subtitle": "目前快照 · 未來 7 天",
-      "refresh": "檢查額度",
+      "subtitle": "未來 7 天 · 回報快照，非即時用量",
+      "refresh": "重新整理額度",
       "open_quota": "開啟額度管理",
       "disconnected": "連線後可檢查額度。",
       "waiting": "正在等候憑證檔案。",
@@ -2171,13 +2266,17 @@
       "no_data": "未回報剩餘百分比。缺少或失敗的資料不視為零。",
       "no_eligible": "沒有符合條件的帳戶。已停用和不支援的憑證會被略過。",
       "coverage": "{{eligible}} 個符合條件的帳戶中，{{measured}} 個有測量值 · {{unavailable}} 個無百分比 · {{skipped}} 個已略過",
-      "stale": "已過期",
-      "chart_label": "各帳戶從現在到未來 7 天的剩餘額度。縱軸固定為 0 到 100%。虛線僅預測下一次重設，並非歷史用量。",
-      "evidence": "圓點表示回報的快照。虛線階梯僅預測下一次已回報的重設，並假設不再使用額度。每個帳戶使用供應商選定的一個視窗；額度彼此獨立。不提供歷史用量。過期快照不預測重設。",
+      "chart_label": "各帳戶剩餘配額，從現在到未來 7 天。固定 0 到 100% 刻度。虛線為下一次重設的預測，不是用量歷史。",
+      "show_projection": "顯示 7 天預測",
+      "lowest_shown": "顯示剩餘最低的 {{shown}} 個帳戶（共 {{total}} 個）",
+      "evidence": "圓點為回報快照。虛線預測僅在下一次回報的重設時跳變，並假設不再使用。每個帳戶僅一個由供應商選定的視窗，額度彼此獨立。沒有用量歷史。過期快照不預測重設。",
       "oldest_snapshot": "最早的顯示快照 ·",
       "unknown_time": "快照時間不可用。",
       "no_snapshot": "目前沒有測量快照。",
-      "refresh_policy": "每次進入頁面檢查一次。不自動輪詢額度。"
+      "refresh_policy": "每次進入頁面檢查一次。不自動輪詢額度。",
+      "measured": "已測量 {{measured}}/{{eligible}} 個符合條件的帳戶",
+      "unmeasured": "{{count}} 個無百分比",
+      "skipped": "已略過 {{count}} 個"
     },
     "chart": {
       "series": "圖表資料系列",
@@ -2185,7 +2284,13 @@
       "keyboard": "使用方向鍵查看資料點。Home 和 End 鍵跳至首尾資料點。",
       "choose_series": "選擇資料系列以顯示資料。",
       "table": "查看資料表",
-      "time": "時間"
+      "time": "時間",
+      "shared": "{{numbers}} 重疊，合併為一條灰線",
+      "isolate_hint": "選擇一個系列以僅顯示它",
+      "show_all": "顯示全部系列",
+      "guide": "圖表說明",
+      "key_snapshot": "圓點：已回報的快照",
+      "key_projection": "虛線：預測，假設不再繼續使用"
     },
     "dashboard": {
       "request_flow": "請求趨勢",
@@ -2197,7 +2302,14 @@
       "setupProvider": "連線至上游供應商",
       "setupOAuth": "如果供應商使用 OAuth，請新增 OAuth 憑證",
       "setupClient": "在設定面板中建立用戶端 API 金鑰",
-      "setupUsage": "從用戶端傳送請求，然後查看使用統計"
+      "setupUsage": "從用戶端傳送請求，然後查看使用統計",
+      "addKey": "新增 {{provider}} 金鑰",
+      "addCompatibleProvider": "新增 OpenAI 相容供應商",
+      "rowEnable": "啟用 {{name}}",
+      "rowDisable": "停用 {{name}}",
+      "rowActions": "{{name}} 的操作",
+      "menuViewDetails": "檢視詳細資料",
+      "notConfiguredHint": "選擇一個提供商以新增它的第一個金鑰。"
     },
     "quota": {
       "checking": "正在檢查額度…",
@@ -2210,14 +2322,25 @@
       "assumption": "虛線僅表示下次重設的預測，假設不再使用。",
       "series": "帳戶曲線",
       "stale": "過期快照",
-      "evidence": "快照為已回報的數值。虛線階梯僅預測下次重設，假設不再使用。無歷史消耗資料。各帳戶與方案的額度相互獨立。過期快照不預測重設。",
-      "breakdown": "帳戶明細",
-      "independent": "獨立額度",
-      "account": "帳戶",
+      "evidence": "快照為回報值。虛線預測僅在下一次重設時跳變，並假設不再使用。沒有歷史消耗資料。帳戶與方案額度彼此獨立。過期快照不預測重設。",
       "snapshot": "快照",
       "failed": "檢查失敗",
       "refreshAccount": "重新整理 {{name}}",
-      "method": "圖表說明"
+      "projected_from_snapshot": "根據最新快照預測，假設不再使用",
+      "show_in_chart": "在圖表中顯示 {{name}}",
+      "checked_at": "檢查於 {{time}}",
+      "not_checked": "尚未檢查",
+      "low": "偏低",
+      "isolate_hint": "在清單中選擇帳戶，圖表只顯示該帳戶的線。",
+      "reset_at": "重設 {{time}}",
+      "reset_some": "重設 {{numbers}} · {{time}}",
+      "view_label": "檢視",
+      "window_label": "視窗",
+      "glance_label": "各帳號剩餘額度",
+      "resets": "{{time}} 重設",
+      "no_reset": "未回報重設時間",
+      "times_in": "時間均為 {{zone}}",
+      "group_label": "{{numbers}} · {{count}} 個帳戶"
     },
     "settings": {
       "section": "區段",
@@ -2228,11 +2351,12 @@
         "time": "時間",
         "level": "等級",
         "status": "狀態",
-        "latency": "延遲",
+        "latency": "延遲 (ms)",
         "method": "方法",
         "path": "路徑",
         "client": "用戶端",
-        "source": "來源"
+        "source": "來源",
+        "message": "訊息"
       },
       "official": "官方"
     },
@@ -2249,9 +2373,9 @@
       "off_detail": "此後端未記錄使用情況。總數與圖表已隱藏，因為零會被誤解為沒有流量，實際上是未記錄。開啟收集後僅記錄後續請求，不會補錄先前的流量。",
       "open_config": "前往設定開啟",
       "unknown_title": "此後端未回報統計收集狀態",
-      "unknown_detail": "無法取得 usage-statistics-enabled 旗標，無法確認是否正在收集統計，因此隱藏總數與圖表。請在管理中心資訊中檢查後端版本。",
-      "open_system": "開啟管理中心資訊",
-      "coverage": "使用統計儲存在後端記憶體中，重新啟動後清空。收集關閉期間的流量不會補錄。後端未回報統計收集的開始時間。",
+      "unknown_detail": "無法取得 usage-statistics-enabled 旗標，無法確認是否正在收集統計，因此隱藏總數與圖表。請在「系統」頁面檢查後端版本。",
+      "open_system": "開啟系統頁面",
+      "coverage": "合計涵蓋後端上次重新啟動以來的所有用戶端 API 金鑰。使用統計儲存在後端記憶體中；收集關閉期間的流量不會補錄，後端也不回報收集開始時間。",
       "empty_detail": "統計收集已開啟，但尚未記錄任何請求。請透過代理傳送請求，然後重新整理。",
       "no_cached_data": "沒有先前已確認的使用統計快照。請重試以載入使用統計。",
       "stale_error": "重新整理失敗，正在顯示上次已確認的快照。",
@@ -2267,7 +2391,11 @@
       "unreported": "未回報",
       "p50": "p50 延遲",
       "p95": "p95 延遲",
-      "milliseconds": "{{value}} 毫秒"
+      "milliseconds": "{{value}} 毫秒",
+      "total_requests": "重新啟動以來的請求",
+      "total_tokens": "重新啟動以來的權杖",
+      "daily_title": "每日請求與權杖",
+      "no_dated_both": "後端未回報帶日期的請求或權杖合計。提供日期後才會顯示每日圖表；按小時合計不是帶日期的歷史，缺少的日期不會以零填補。"
     }
   }
 }

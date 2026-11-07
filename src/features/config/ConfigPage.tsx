@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useRevealGroup } from '@/hooks/motion';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
@@ -35,7 +36,6 @@ import { ConfigSearch } from './components/ConfigSearch';
 import { ConfigTabs } from './components/ConfigTabs';
 import { DiffModal } from './components/DiffModal';
 import { FloatingSaveBar } from './components/FloatingSaveBar';
-import { ModeSwitch } from './components/ModeSwitch';
 import { SourcePanel, SourceSearchBar } from './components/SourcePanel';
 import { SectionAdvanced } from './components/sections/SectionAdvanced';
 import { SectionCommon } from './components/sections/SectionCommon';
@@ -317,7 +317,16 @@ export function ConfigPage() {
         ) : (
           <SourceSearchBar search={sourceSearch} disabled={disableControls || doc.loading} />
         )}
-        <ModeSwitch mode={mode} disabled={doc.saving || doc.loading} onChange={handleModeChange} />
+        <SegmentedControl<ConfigEditorMode>
+          ariaLabel={t('config_management.mode.label')}
+          options={[
+            { value: 'visual', label: t('config_management.mode.visual') },
+            { value: 'source', label: t('config_management.mode.source') },
+          ]}
+          value={mode}
+          disabled={doc.saving || doc.loading}
+          onChange={handleModeChange}
+        />
       </div>
 
       {mode === 'visual' ? (

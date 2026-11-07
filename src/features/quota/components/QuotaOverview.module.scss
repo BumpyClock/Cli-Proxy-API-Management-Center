@@ -1,3 +1,5 @@
+@use '@/styles/mixins' as *;
+
 .overview {
   display: flex;
   flex-direction: column;
@@ -7,44 +9,21 @@
 .controls {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+/* Each mode switch keeps its visible group name at every width. */
+.control {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
 }
-.viewGroup {
-  display: flex;
-  padding: 3px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-secondary);
-}
-.overview button {
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
+.groupLabel {
   color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 7px 10px;
-  min-height: 34px;
+  font-size: 12px;
+  font-weight: 500;
 }
-.overview button:focus-visible,
-.tableScroll:focus-visible,
-.details summary:focus-visible {
-  outline: 2px solid var(--focus-ring, var(--accent-color));
-  outline-offset: 2px;
-}
-.overview button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.viewGroup button {
-  border-color: transparent;
-}
-.viewGroup button[aria-pressed='true'] {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--border-color);
-}
+
 .panel {
   min-width: 0;
   background: var(--bg-primary);
@@ -66,98 +45,48 @@
   font-size: 14px;
   font-weight: 600;
 }
-.panelHeader p,
 .panelHeader > span {
   margin: 4px 0 0;
   color: var(--text-secondary);
   font-size: 12px;
 }
-.chart {
+/* Desktop: the account list sits beside the chart. Narrow: it leads, the chart follows. */
+.glance {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
   padding: 16px;
 }
-.notes {
-  padding: 0 16px 12px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
+.chart {
+  min-width: 0;
 }
-.notes summary {
-  min-height: 36px;
-  padding: 8px 0;
-  cursor: pointer;
-}
-.notes summary:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-.number {
-  display: inline-block;
-  padding: 0 4px;
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-.legend {
-  padding: 12px 16px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  border-top: 1px solid var(--border-color);
-}
-.tableScroll {
-  overflow: auto;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.table caption {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-.table th,
-.table td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
-  text-align: left;
-  vertical-align: top;
-}
-.table thead th {
-  color: var(--text-secondary);
-  font-weight: 400;
-  font-size: 12px;
-}
-.table tbody th {
-  font-weight: 500;
-  overflow-wrap: anywhere;
-  min-width: 190px;
-}
-.table small {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-.table td {
-  font-variant-numeric: tabular-nums;
-  min-width: 110px;
-}
-.warning {
-  color: var(--warning-color);
+@media (max-width: 1024px) {
+  .glance {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
 }
 .details summary {
-  cursor: pointer;
-  color: var(--text-secondary);
+  @include disclosure-summary;
   margin-bottom: 16px;
-  font-size: 13px;
 }
+/* Phones: View and Window share one row, each name above its switch, so accounts come sooner. */
 @media (max-width: 600px) {
-  .panelHeader {
-    padding: 16px;
+  .overview {
+    gap: 16px;
+  }
+  .controls {
+    align-items: flex-end;
+    gap: 8px 12px;
+  }
+  .control {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .panelHeader,
+  .glance {
+    padding: 12px;
   }
 }

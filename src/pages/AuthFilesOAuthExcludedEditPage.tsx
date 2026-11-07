@@ -1,23 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { IconNetwork } from '@/components/ui/icons';
 import { OAuthEditorProviderCard } from '@/features/authFiles/components/OAuthEditorProviderCard';
 import {
   ExcludedModelsPicker,
   normalizeExcludedRules,
   type ExcludedModelsCatalogState,
 } from '@/components/excludedModels';
+import { OAuthEditorActions } from '@/features/authFiles/components/OAuthEditorActions';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { authFilesApi } from '@/services/api';
-import { buildOAuthProviderOptions, normalizeProviderKey } from '@/features/authFiles/constants';
+import {
+  buildOAuthProviderOptions,
+  getTypeLabel,
+  normalizeProviderKey,
+} from '@/features/authFiles/constants';
 import { getStringSetSignature, isOAuthEditorDirty } from '@/features/authFiles/oauthEditorState';
 import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import { getErrorMessage } from '@/utils/helpers';
@@ -55,6 +59,8 @@ export function AuthFilesOAuthExcludedEditPage() {
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState<'unsupported' | null>(null);
   const [saving, setSaving] = useState(false);
+  const providerRequirementId = useId();
+  const saveReasonId = useId();
 
   useEffect(() => {
     setProvider(providerFromParams);
@@ -77,6 +83,8 @@ export function AuthFilesOAuthExcludedEditPage() {
   }, [excluded, files, modelAlias]);
 
   const resolvedProviderKey = useMemo(() => normalizeProviderKey(provider), [provider]);
+  /** One predicate gates Save, the requirement under the Provider field and the models body. */
+  const providerMissing = !resolvedProviderKey;
   const isEditing = useMemo(() => {
     if (!resolvedProviderKey) return false;
     return Object.prototype.hasOwnProperty.call(excluded, resolvedProviderKey);
@@ -121,12 +129,13 @@ export function AuthFilesOAuthExcludedEditPage() {
     dialog: unsavedChangesDialog,
   });
 
-  const title = useMemo(() => {
-    if (isEditing) {
-      return t('oauth_excluded.edit_title', { provider: provider.trim() || resolvedProviderKey });
-    }
-    return t('oauth_excluded.add_title');
-  }, [isEditing, provider, resolvedProviderKey, t]);
+  // The h1 names the destination (matches breadcrumb and section tab); the provider goes in meta.
+  const providerName = getTypeLabel(t, provider.trim() || resolvedProviderKey);
+  const headerMeta = providerMissing
+    ? undefined
+    : t(isEditing ? 'oauth_excluded.meta_editing' : 'oauth_excluded.meta_new', {
+        provider: providerName,
+      });
 
   const handleBack = useCallback(() => {
     const state = location.state as LocationState;
@@ -301,19 +310,15 @@ export function AuthFilesOAuthExcludedEditPage() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    const normalizedProvider = normalizeProviderKey(provider);
-    if (!normalizedProvider) {
-      showNotification(t('oauth_excluded.provider_required'), 'error');
-      return;
-    }
+    if (providerMissing) return;
 
     const models = effectiveRules;
     setSaving(true);
     try {
       if (models.length) {
-        await authFilesApi.saveOauthExcludedModels(normalizedProvider, models);
+        await authFilesApi.saveOauthExcludedModels(resolvedProviderKey, models);
       } else if (isEditing) {
-        await authFilesApi.deleteOauthExcludedEntry(normalizedProvider);
+        await authFilesApi.deleteOauthExcludedEntry(resolvedProviderKey);
       }
       showNotification(t('oauth_excluded.save_success'), 'success');
       allowNextNavigation();
@@ -324,9 +329,21 @@ export function AuthFilesOAuthExcludedEditPage() {
     } finally {
       setSaving(false);
     }
-  }, [allowNextNavigation, effectiveRules, handleBack, isEditing, provider, showNotification, t]);
+  }, [
+    allowNextNavigation,
+    effectiveRules,
+    handleBack,
+    isEditing,
+    providerMissing,
+    resolvedProviderKey,
+    showNotification,
+    t,
+  ]);
 
+  const editorReady = !initialLoading && !excludedUnsupported && initialLoadError === null;
+  const showProviderRequirement = editorReady && providerMissing;
   const canSave =
+    !providerMissing &&
     !disableControls &&
     !saving &&
     baselineReady &&
@@ -336,18 +353,9 @@ export function AuthFilesOAuthExcludedEditPage() {
   return (
     <div ref={swipeRef} className={styles.pageContent}>
       <PageHeader
-        title={title}
+        title={t('oauth_excluded.title')}
         description={t('oauth_excluded.editor_description')}
-        actions={
-          <>
-            <Button variant="secondary" size="sm" onClick={handleBack}>
-              {t('common.back')}
-            </Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!canSave}>
-              {t('oauth_excluded.save')}
-            </Button>
-          </>
-        }
+        meta={headerMeta && <p className={styles.headerMeta}>{headerMeta}</p>}
       />
       {initialLoading ? (
         <div className={styles.loading} role="status">
@@ -381,12 +389,13 @@ export function AuthFilesOAuthExcludedEditPage() {
             onChange={updateProvider}
             disabled={disableControls || saving}
             translationPrefix="oauth_excluded"
+            requirementId={showProviderRequirement ? providerRequirementId : undefined}
           />
 
           <Card className={styles.settingsCard}>
             <div className={styles.editorHeader}>
               <div className={styles.sectionHeading}>
-                <span className={styles.editorStepNumber} aria-hidden="true">
+                <span className={styles.stepNumber} aria-hidden="true">
                   02
                 </span>
                 <div className={styles.headingCopy}>
@@ -396,14 +405,17 @@ export function AuthFilesOAuthExcludedEditPage() {
                   <p className={styles.editorDescription}>{t('oauth_excluded.models_hint')}</p>
                 </div>
               </div>
-              {resolvedProviderKey && (
-                <span className={bodyStyles.countBadge}>
-                  {t('excluded_models.trigger_summary_rules', { n: effectiveRules.length })}
-                </span>
+              {!providerMissing && (
+                <div className={styles.editorHeaderMeta}>
+                  <span className={bodyStyles.countBadge}>
+                    {t('excluded_models.trigger_summary_rules', { n: effectiveRules.length })}
+                  </span>
+                </div>
               )}
             </div>
-            <div className={bodyStyles.editorBody}>
-              {resolvedProviderKey ? (
+            {/* Without a provider the step stays a heading; the requirement lives in step 01. */}
+            {!providerMissing && (
+              <div className={bodyStyles.editorBody}>
                 <ExcludedModelsPicker
                   value={effectiveRules}
                   onChange={handleRulesChange}
@@ -412,16 +424,31 @@ export function AuthFilesOAuthExcludedEditPage() {
                   disabled={disableControls || saving}
                   labelledBy="oauth-excluded-models-label"
                 />
-              ) : (
-                <div className={bodyStyles.emptyModels}>
-                  <IconNetwork size={24} aria-hidden="true" />
-                  {t('oauth_excluded.provider_required')}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </Card>
         </>
       )}
+      <OAuthEditorActions
+        reason={
+          showProviderRequirement
+            ? { id: saveReasonId, text: t('oauth_excluded.provider_required') }
+            : undefined
+        }
+      >
+        <Button variant="secondary" className={styles.pageBack} onClick={handleBack}>
+          {t('common.back')}
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          loading={saving}
+          disabled={!canSave}
+          aria-describedby={showProviderRequirement ? saveReasonId : undefined}
+        >
+          {t('oauth_excluded.save')}
+        </Button>
+      </OAuthEditorActions>
     </div>
   );
 }

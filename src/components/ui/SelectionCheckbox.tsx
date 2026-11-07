@@ -43,8 +43,10 @@ export function SelectionCheckbox({
         aria-label={ariaLabel}
         disabled={disabled}
       />
-      <span className={boxClassName}>{checked ? <IconCheck size={12} /> : null}</span>
-      {label ? <div className={textClassName}>{label}</div> : null}
+      <span className={boxClassName}>
+        {checked ? <IconCheck size={12} aria-hidden="true" /> : null}
+      </span>
+      {label ? <span className={textClassName}>{label}</span> : null}
     </label>
   );
 }

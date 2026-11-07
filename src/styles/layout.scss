@@ -115,12 +115,33 @@
     color: var(--text-tertiary);
   }
 
+  .header-route-parent {
+    flex: 0 0 auto;
+    color: var(--text-secondary);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+  }
+
   .header-route {
     min-width: 0;
     overflow: hidden;
     color: var(--text-primary);
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .header-route-short {
+    display: none;
   }
 
   .mobile-sidebar-actions,
@@ -169,20 +190,39 @@
     }
   }
 
+  /* Utilities with a visible name: icon plus text, same height as the icon-only buttons. */
+  .header-actions .btn.header-utility-labelled {
+    width: auto;
+    padding: 0 10px;
+
+    > span {
+      gap: 6px;
+      line-height: 1;
+    }
+  }
+
+  .header-utility-label {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
   .mobile-menu-btn {
     display: none;
     flex-shrink: 0;
   }
 
   .language-menu,
-  .theme-menu {
+  .theme-menu,
+  .utilities-menu {
     position: relative;
     display: inline-flex;
     align-items: center;
   }
 
   .language-menu-popover,
-  .theme-menu-popover {
+  .theme-menu-popover,
+  .utilities-menu-popover {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
@@ -240,6 +280,91 @@
   }
 
   .language-menu-check {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  /* Phone Utilities menu: one list of named 44px rows, grouped Language and Theme radios. */
+  .utilities-menu-popover {
+    top: calc(100% + 6px);
+    width: min(300px, calc(100vw - 16px));
+    max-height: calc(100vh - var(--header-height) - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Opaque: this menu covers page text, which must not show through its rows. */
+    background: var(--bg-primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: $spacing-xs;
+    display: flex;
+    flex-direction: column;
+
+    @supports (height: 100dvh) {
+      max-height: calc(100dvh - var(--header-height) - 16px);
+    }
+  }
+
+  .utilities-menu-heading {
+    padding: 8px 12px 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .utilities-menu-separator {
+    height: 1px;
+    margin: 4px 8px;
+    background: var(--border-color);
+  }
+
+  .utilities-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+
+    svg {
+      flex: 0 0 auto;
+      color: var(--text-secondary);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--text-primary);
+      outline-offset: -2px;
+      background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+    }
+
+    &[aria-checked='true'] {
+      font-weight: 600;
+    }
+  }
+
+  .utilities-menu-swatch {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    border: 1px solid;
+    border-radius: 50%;
+  }
+
+  .utilities-menu-check {
+    margin-left: auto;
     font-size: 13px;
     line-height: 1;
   }
@@ -324,7 +449,7 @@
   }
 
   .theme-card-label {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-primary);
     font-weight: 500;
     white-space: nowrap;
@@ -419,11 +544,11 @@
       top: 1px;
       right: 1px;
       margin-left: 0;
-      min-width: 15px;
-      height: 15px;
+      min-width: 18px;
+      height: 18px;
       padding: 0 4px;
       border-radius: $radius-full;
-      font-size: 9px;
+      font-size: 12px;
       color: var(--bg-primary);
       background: var(--text-primary);
       box-shadow: 0 0 0 2px var(--bg-primary);
@@ -495,14 +620,15 @@
     white-space: nowrap;
   }
 
+  /* The full product name wraps under the short form instead of truncating. */
   .sidebar-brand-subtitle {
-    margin-top: 1px;
-    overflow: hidden;
-    font-size: 10.5px;
+    margin-top: 2px;
+    font-size: 12px;
     font-weight: 500;
+    line-height: 1.25;
     color: var(--text-secondary);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
   }
 
   .nav-section {
@@ -520,7 +646,7 @@
 
   .nav-group-label {
     padding: 0 10px 2px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -639,7 +765,7 @@
       border-radius: $radius-full;
       background: color-mix(in srgb, var(--text-primary) 9%, transparent);
       color: var(--text-primary);
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 700;
       line-height: 1;
     }
@@ -741,7 +867,7 @@
   .nav-tooltip-meta {
     max-width: 100%;
     overflow-wrap: anywhere;
-    font-size: 11.5px;
+    font-size: 12px;
     color: rgb(246 244 241 / 0.6);
     white-space: normal;
   }
@@ -869,8 +995,14 @@
 
     .sidebar-toggle-floating,
     .header-brand,
-    .header-separator {
+    .header-route-parent,
+    .header-separator,
+    .header-route-full {
       display: none;
+    }
+
+    .header-route-short {
+      display: inline;
     }
 
     .header-context {
@@ -966,7 +1098,7 @@
         height: 18px;
         margin-left: auto;
         padding: 0 5px;
-        font-size: 10.5px;
+        font-size: 12px;
         color: var(--text-primary);
         background: color-mix(in srgb, var(--text-primary) 9%, transparent);
         box-shadow: none;
@@ -1034,12 +1166,14 @@ html {
   font-weight: 600;
   text-decoration: none;
   pointer-events: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  /* At rest the link sits off-screen; a resting shadow would bleed into the top-left corner. */
+  box-shadow: none;
   transform: translateY(calc(-100% - 24px));
 
   &:focus,
   &:focus-visible {
     transform: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
   }

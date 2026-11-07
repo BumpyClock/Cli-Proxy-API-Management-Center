@@ -142,13 +142,14 @@ describe('independent quota chart scaling', () => {
     const largeOverview = renderOverview(500);
     expect(Buffer.byteLength(largeOverview)).toBeLessThan(Buffer.byteLength(smallOverview) * 2.1);
     expect(Buffer.byteLength(largeOverview)).toBeLessThan(500 * 2000);
-    // Exactly one authoritative account/reset breakdown, not a second projection table.
-    expect(occurrences(largeOverview, /<table\b/g)).toBe(1);
-    expect(occurrences(largeOverview, /<tr>/g)).toBe(501);
-    expect(occurrences(largeOverview, /<td>/g)).toBe(2000);
-    expect(largeOverview).toContain('aria-details="quota-accounts-breakdown"');
-    expect(largeOverview).toContain('id="quota-accounts-breakdown"');
-    expect(largeOverview).not.toContain('View data table');
+    // Exactly one authoritative account list; the chart's data table mounts only on demand.
+    expect(occurrences(largeOverview, /<ul\b/g)).toBe(1);
+    expect(occurrences(largeOverview, /<li>/g)).toBe(500);
+    expect(occurrences(largeOverview, /aria-pressed="true"/g)).toBe(500 + 2);
+    expect(largeOverview).not.toContain('<table');
+    expect(largeOverview).toContain('aria-details="quota-accounts-list"');
+    expect(largeOverview).toContain('id="quota-accounts-list"');
+    expect(largeOverview).toContain('View data table');
   });
 
   test('expanded generic sparse evidence also stays linear and respects visible series', () => {

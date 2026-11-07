@@ -45,7 +45,7 @@
   border-radius: $radius-full;
   color: var(--text-secondary);
   font-family: $font-mono;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   background: color-mix(in srgb, var(--text-primary) 6%, transparent);
@@ -58,8 +58,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  position: relative;
+  width: 32px;
+  height: 32px;
   border-radius: $radius-full;
   border: 1px solid var(--text-primary);
   background: var(--text-primary);
@@ -77,6 +78,15 @@
   &:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+  }
+
+  /* Touch: extend the hit area to 44px without growing the glyph inside the field. */
+  @media (max-width: 768px), (pointer: coarse) {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+    }
   }
 }
 

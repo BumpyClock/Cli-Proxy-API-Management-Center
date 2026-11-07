@@ -1,0 +1,58 @@
+/* The status answer under the page header; same frame and weight as the attention panel. */
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+/* Text carries the state; the icon reinforces it, centred on the first line. */
+.icon {
+  flex: none;
+  display: inline-flex;
+  margin-top: calc((20px - 18px) / 2);
+}
+
+.icon_clear {
+  color: var(--viz-success);
+}
+
+.icon_idle {
+  color: var(--info-color);
+}
+
+.icon_checking {
+  color: var(--text-tertiary);
+}
+
+.copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-width: 0;
+}
+
+.lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+.detail {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}

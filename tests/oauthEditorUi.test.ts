@@ -93,9 +93,10 @@ describe('OAuth editor UI', () => {
     expect(markup).toContain('checked=""');
   });
 
-  test('preserves the last-row delete guard and disabled editing state', () => {
+  test('hides the non-actionable last-row delete and preserves disabled editing state', () => {
     const lastRow = renderMapping({ canRemove: false });
-    expect(lastRow.match(/disabled=""/g)).toHaveLength(1);
+    expect(lastRow).not.toContain('Delete alias mapping');
+    expect(lastRow.match(/disabled=""/g)).toBeNull();
     const disabledRow = renderMapping({ disabled: true });
     expect(disabledRow.match(/disabled=""/g)).toHaveLength(4);
   });
@@ -106,7 +107,8 @@ describe('OAuth editor UI', () => {
       expect(locale.oauth_excluded.models_hint.length).toBeGreaterThan(0);
       expect(locale.oauth_model_alias.editor_description.length).toBeGreaterThan(0);
       expect(locale.oauth_model_alias.mapping_hint.length).toBeGreaterThan(0);
-      expect(locale.oauth_model_alias.edit_title).toContain('{{provider}}');
+      expect(locale.oauth_model_alias.meta_editing).toContain('{{provider}}');
+      expect(locale.oauth_excluded.meta_new).toContain('{{provider}}');
       expect(locale.oauth_model_alias.mapping_row).toContain('{{number}}');
       expect(locale.oauth_model_alias.remove_mapping).toContain('{{number}}');
     }

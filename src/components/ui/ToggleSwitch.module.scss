@@ -23,10 +23,12 @@
   position: absolute;
 }
 
+/* Off: a bounded track (inset --border-primary, >=3:1 on page surfaces) so it never vanishes in dark. */
 .track {
   width: 44px;
   height: 24px;
-  background: var(--border-color);
+  background: var(--bg-tertiary);
+  box-shadow: inset 0 0 0 1px var(--border-primary);
   border-radius: $radius-full;
   position: relative;
   transition: background $transition-fast;
@@ -46,6 +48,7 @@
 
 .root input:checked + .track {
   background: var(--primary-color);
+  box-shadow: none;
 }
 
 .root input:checked + .track .thumb {
@@ -71,4 +74,10 @@
 .label {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.fieldLabel .label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }

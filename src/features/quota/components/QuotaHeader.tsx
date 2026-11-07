@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { IconRefreshCw } from '@/components/ui/icons';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import styles from './QuotaHeader.module.scss';
 
 export type QuotaHeaderProps = {
@@ -44,25 +44,13 @@ export function QuotaHeader(props: QuotaHeaderProps) {
         </p>
       }
       actions={
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.primaryAction}
-            onClick={onRefreshAll}
-            disabled={disableControls || refreshing}
-            aria-label={t('quota_management.refresh_all_credentials')}
-            title={t('quota_management.refresh_all_credentials')}
-          >
-            <IconRefreshCw
-              size={16}
-              aria-hidden="true"
-              className={refreshing ? styles.spinning : undefined}
-            />
-            <span className={styles.refreshLabel}>
-              {t('quota_management.refresh_all_credentials')}
-            </span>
-          </button>
-        </div>
+        <RefreshButton
+          onClick={onRefreshAll}
+          label={t('quota_management.refresh_all_credentials')}
+          compactLabel={t('quota_management.refresh_all_short')}
+          refreshing={refreshing}
+          disabled={disableControls}
+        />
       }
     />
   );

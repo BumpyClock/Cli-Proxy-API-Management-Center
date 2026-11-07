@@ -32,10 +32,8 @@ export function SectionCard({
           {indexLabel ? <span className={styles.indexBadge}>{indexLabel}</span> : null}
           {icon ? <span className={styles.iconBadge}>{icon}</span> : null}
         </div>
-        <div className={styles.heading}>
-          <h2 className={styles.title}>{title}</h2>
-          {description ? <p className={styles.description}>{description}</p> : null}
-        </div>
+        <h2 className={styles.title}>{title}</h2>
+        {description ? <p className={styles.description}>{description}</p> : null}
       </header>
       <div className={`${styles.content} ${FIELDS_ROOT_CLASS}`}>{children}</div>
     </section>

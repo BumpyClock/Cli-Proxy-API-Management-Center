@@ -18,6 +18,7 @@ import iconVertex from '@/assets/icons/vertex.svg';
 import type { AuthFileItem, ResolvedTheme, ThemeColors } from '@/types';
 import type { QuotaProviderType } from '@/features/quota/providers/types';
 import { normalizeOAuthProviderKey } from '@/utils/providerKeys';
+import { formatDateTimeValue, isoTitle } from '@/utils/format';
 import { parseTimestamp } from '@/utils/timestamp';
 import { TYPE_COLORS } from '@/utils/quota';
 
@@ -257,15 +258,26 @@ export function isRuntimeOnlyAuthFile(file: AuthFileItem): boolean {
   return false;
 }
 
-export const formatModified = (item: AuthFileItem): string => {
+export type ModifiedTimeParts = {
+  /** ISO 8601 value for `<time dateTime>` and its `title`. */
+  iso: string;
+  /** The app's one-line metadata format, e.g. "Nov 6, 2026, 8:27 PM". */
+  label: string;
+};
+
+export const getModifiedTimeParts = (
+  item: AuthFileItem,
+  locale?: string
+): ModifiedTimeParts | null => {
   const raw = item['modtime'] ?? item.modified;
-  if (!raw) return '-';
+  if (!raw) return null;
   const asNumber = Number(raw);
   const date =
     Number.isFinite(asNumber) && !Number.isNaN(asNumber)
       ? new Date(asNumber < 1e12 ? asNumber * 1000 : asNumber)
       : (parseTimestamp(raw) ?? new Date(String(raw)));
-  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
+  if (Number.isNaN(date.getTime())) return null;
+  return { iso: isoTitle(date), label: formatDateTimeValue(date, locale) };
 };
 
 // 检查模型是否被 OAuth 排除

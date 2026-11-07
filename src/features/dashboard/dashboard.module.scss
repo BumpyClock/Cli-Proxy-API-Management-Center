@@ -24,15 +24,6 @@
   letter-spacing: 0;
 }
 
-/* 有活流量时状态灯极缓呼吸（仅 opacity，inline 元素安全） */
-.heroPeriodLive {
-  animation: periodBreath 3.2s ease-in-out 1.8s infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
 .heroMetaText {
   display: inline-flex;
   flex-wrap: wrap;
@@ -40,79 +31,10 @@
   row-gap: 4px;
 }
 
-.heroStamp {
-  font-size: inherit;
-  letter-spacing: inherit;
-}
-
 .heroMetaPart + .heroMetaPart::before {
   content: '·';
   margin: 0 8px;
   color: var(--text-tertiary);
-}
-
-/* Refresh sits beside the age it resets: control next to what it affects. */
-.refreshButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  min-height: 32px;
-
-  @media (pointer: coarse) {
-    min-height: 44px;
-    padding: 6px 16px;
-  }
-
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  transition:
-    background-color var(--dur-hover) var(--ease-out-strong),
-    border-color var(--dur-hover) var(--ease-out-strong),
-    transform var(--dur-press) var(--ease-out-strong);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover:not(:disabled) {
-      background: var(--bg-tertiary);
-      border-color: var(--border-hover);
-    }
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
-  }
-
-  &:disabled,
-  &[aria-disabled='true'] {
-    cursor: progress;
-    color: var(--text-secondary);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-
-    &:active:not(:disabled) {
-      transform: none;
-    }
-  }
-}
-
-.spinning {
-  animation: dashboardSpin 0.9s linear infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 }
 
 /* Partial or failed source notes beside the numbers they qualify. */
@@ -125,6 +47,37 @@
 
 .vitalLine {
   display: block;
+}
+
+/* A labelled alternate source under the headline number; the explanation opens on demand. */
+.vitalCaveat {
+  font-size: 13px;
+  line-height: 1.45;
+  /* A different scope, not a warning: neutral, with the explanation one click away. */
+  color: var(--text-secondary);
+
+  summary {
+    @include disclosure-summary;
+  }
+
+  .vitalLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    min-height: 32px;
+    color: var(--accent-color);
+    white-space: nowrap;
+
+    @media (max-width: 768px), (pointer: coarse) {
+      min-height: 44px;
+    }
+  }
+
+  > span {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-secondary);
+  }
 }
 
 .failedNote {
@@ -187,6 +140,12 @@
   }
 }
 
+/* An all-zero Request flow: one row plus the data-table disclosure. */
+.panelCompact {
+  gap: 4px;
+  padding: 10px 16px 6px;
+}
+
 .panelHead {
   display: flex;
   flex-direction: column;
@@ -202,9 +161,12 @@
 }
 
 .panelLink {
-  @media (pointer: coarse) {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  min-height: 32px;
+
+  @media (max-width: 768px), (pointer: coarse) {
     min-height: 44px;
   }
 
@@ -251,9 +213,12 @@
 }
 
 .sectionLink {
-  @media (pointer: coarse) {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  min-height: 32px;
+
+  @media (max-width: 768px), (pointer: coarse) {
     min-height: 44px;
   }
 
@@ -341,22 +306,6 @@
   font-family: $font-mono;
   font-weight: 500;
   font-size: 12px;
-}
-
-@keyframes periodBreath {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-
-@keyframes dashboardSpin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Screen-reader-only live region for verdict changes and refresh results. */

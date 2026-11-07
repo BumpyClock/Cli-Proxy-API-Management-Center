@@ -1,0 +1,280 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  /* Hidden from the chart: the row stays readable, only its line key fades. */
+  &[data-hidden='true'] .swatch {
+    opacity: 0.35;
+  }
+}
+
+/* Wide dashboards: two columns, each row separated by a rule above it. */
+@media (min-width: 1100px) {
+  .list[data-layout='columns'] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 32px;
+
+    .row {
+      padding: 10px 0;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 0;
+    }
+
+    .row:nth-child(-n + 2) {
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Identity: number, drawn stroke and the full account name, which wraps instead of truncating. */
+.toggle {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+}
+
+button.toggle {
+  min-height: 32px;
+  margin: -6px 0 -6px -6px;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--bg-tertiary);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 0;
+  }
+
+  /* Not shown in the chart: muted name and a dashed badge, as the chart legend did. */
+  &[aria-pressed='false'] {
+    color: var(--text-secondary);
+
+    .number {
+      border-style: dashed;
+    }
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+    padding-block: 12px;
+    margin-top: -12px;
+    margin-bottom: -6px;
+  }
+}
+
+.number {
+  flex: 0 0 auto;
+  min-width: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  font-family: $font-mono;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+.swatch {
+  margin-top: 5px;
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.value {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  line-height: 20px;
+
+  strong {
+    font-size: 15px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Attention states: icon, words and a tint, so colour is never the only signal. */
+.states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+
+  &[data-state='problem'] {
+    color: var(--error-color);
+    background: color-mix(in srgb, var(--error-color) 11%, transparent);
+  }
+
+  &[data-state='stale'] {
+    color: var(--warning-text);
+    background: var(--warning-bg);
+  }
+
+  &[data-state='unknown'] {
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+  }
+}
+
+.bar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  overflow: hidden;
+}
+
+/* Neutral by default; only the labelled low state carries a colour. */
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text-secondary);
+
+  &[data-tone='low'] {
+    background: var(--error-color);
+  }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Reset and check times are what an operator acts on: one step above the 12px floor. */
+.meta {
+  font-size: 13px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.error {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Lines wrap between parts, never inside a time such as "Nov 10, 12:00 AM". */
+.part {
+  white-space: nowrap;
+}
+
+.meta,
+.error {
+  color: var(--text-secondary);
+}
+
+.error {
+  overflow-wrap: anywhere;
+}
+
+.refresh {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--control-outline);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background: var(--bg-tertiary);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    width: 44px;
+    height: 44px;
+  }
+}

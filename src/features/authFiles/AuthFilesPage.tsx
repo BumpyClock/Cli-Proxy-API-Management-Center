@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInterval } from '@/hooks/useInterval';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useRevealOnScroll } from '@/hooks/motion';
@@ -25,10 +25,12 @@ import {
 import { AuthFileCard } from '@/features/authFiles/components/AuthFileCard';
 import { AuthFileDetailsSheet } from '@/features/authFiles/components/AuthFileDetailsSheet';
 import { AuthFileModelsModal } from '@/features/authFiles/components/AuthFileModelsModal';
+import { AuthFilesSectionNav } from '@/features/authFiles/components/AuthFilesSectionNav';
 import { AuthFilesToolbar } from '@/features/authFiles/components/AuthFilesToolbar';
 import { BatchActionBar } from '@/features/authFiles/components/BatchActionBar';
 import { OAuthExcludedCard } from '@/features/authFiles/components/OAuthExcludedCard';
 import { OAuthModelAliasCard } from '@/features/authFiles/components/OAuthModelAliasCard';
+import { OAuthRulesSummary } from '@/features/authFiles/components/OAuthRulesSummary';
 import { ProviderTabs } from '@/features/authFiles/components/ProviderTabs';
 import { VaultHeader } from '@/features/authFiles/components/VaultHeader';
 import { invalidateAuthFileDerivedCaches } from '@/features/authFiles/cacheInvalidation';
@@ -37,6 +39,7 @@ import {
   buildWildcardSearch,
   matchesAuthFileSearch,
   sortAuthFiles,
+  summarizeViewOptions,
 } from '@/features/authFiles/logic';
 import { useAuthFilesData } from '@/features/authFiles/hooks/useAuthFilesData';
 import { useAuthFilesModels } from '@/features/authFiles/hooks/useAuthFilesModels';
@@ -97,6 +100,7 @@ export function AuthFilesPage() {
   const [pageSizeInput, setPageSizeInput] = useState('9');
   const [viewMode, setViewMode] = useState<'diagram' | 'list'>('list');
   const [sortMode, setSortMode] = useState<AuthFilesSortMode>('default');
+  const [oauthRulesExpanded, setOauthRulesExpanded] = useState(false);
   const [uiStateHydrated, setUiStateHydrated] = useState(false);
 
   const {
@@ -187,6 +191,11 @@ export function AuthFilesPage() {
   const activeQuotaFilter: AuthFileQuotaFilter =
     normalizedFilter === 'all' ? 'all' : quotaFilterType;
   const pageSize = compactMode ? pageSizeByMode.compact : pageSizeByMode.regular;
+  const viewOptions = summarizeViewOptions({
+    sortMode,
+    pageSize,
+    defaultPageSize: compactMode ? DEFAULT_COMPACT_PAGE_SIZE : DEFAULT_REGULAR_PAGE_SIZE,
+  });
   const problemOnly = statusFilterMode === 'problem';
   const disabledOnly = statusFilterMode === 'disabled';
   const enabledOnly = statusFilterMode === 'enabled';
@@ -563,48 +572,43 @@ export function AuthFilesPage() {
         onChange={handleFileChange}
       />
 
-      <nav className={styles.subnav} aria-label={t('redesign.authFiles.sections')}>
-        {[
-          ['/auth-files', 'credentials'],
-          ['/auth-files/oauth-excluded', 'disablement'],
-          ['/auth-files/oauth-model-alias', 'aliases'],
-        ].map(([to, key]) => (
-          <NavLink key={to} to={to} end>
-            {t(`redesign.authFiles.${key}`)}
-          </NavLink>
-        ))}
-      </nav>
-
       <section className={styles.workbench} aria-label={t('auth_files.title_section')}>
-        <ProviderTabs
-          types={existingTypes}
-          counts={typeCounts}
-          active={normalizedFilter}
-          resolvedTheme={resolvedTheme}
-          onChange={(type) => {
-            setFilter(type);
-            setPage(1);
-          }}
-        />
+        <div className={styles.filters}>
+          {/* Phones put the section and provider selects on one row; desktop keeps two strips. */}
+          <div className={styles.pickers}>
+            <AuthFilesSectionNav />
+            <ProviderTabs
+              types={existingTypes}
+              counts={typeCounts}
+              active={normalizedFilter}
+              resolvedTheme={resolvedTheme}
+              onChange={(type) => {
+                setFilter(type);
+                setPage(1);
+              }}
+            />
+          </div>
 
-        <AuthFilesToolbar
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-          statusFilterMode={statusFilterMode}
-          statusFilterOptions={statusFilterOptions}
-          onStatusFilterChange={handleStatusFilterModeChange}
-          sortMode={sortMode}
-          sortOptions={sortOptions}
-          onSortModeChange={handleSortModeChange}
-          pageSizeInput={pageSizeInput}
-          onPageSizeInputChange={handlePageSizeChange}
-          onPageSizeCommit={commitPageSizeInput}
-          compactMode={compactMode}
-          onCompactModeChange={setCompactMode}
-        />
+          <AuthFilesToolbar
+            search={search}
+            onSearchChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            statusFilterMode={statusFilterMode}
+            statusFilterOptions={statusFilterOptions}
+            onStatusFilterChange={handleStatusFilterModeChange}
+            sortMode={sortMode}
+            sortOptions={sortOptions}
+            onSortModeChange={handleSortModeChange}
+            pageSizeInput={pageSizeInput}
+            onPageSizeInputChange={handlePageSizeChange}
+            onPageSizeCommit={commitPageSizeInput}
+            compactMode={compactMode}
+            onCompactModeChange={setCompactMode}
+            viewOptions={viewOptions}
+          />
+        </div>
 
         {error && (
           <div className={styles.errorBanner} role="alert">
@@ -739,34 +743,41 @@ export function AuthFilesPage() {
         )}
       </section>
 
-      <div className={styles.configGrid} ref={oauthSectionRef}>
-        <OAuthExcludedCard
-          disableControls={disableControls}
-          excludedError={excludedError}
-          excluded={excluded}
-          onRetry={loadExcluded}
-          onAdd={() => openExcludedEditor()}
-          onEdit={openExcludedEditor}
-          onDelete={deleteExcluded}
-        />
+      <div className={styles.oauthRules} ref={oauthSectionRef}>
+        <OAuthRulesSummary
+          excluded={{ error: excludedError, rules: excluded }}
+          aliases={{ error: modelAliasError, rules: modelAlias }}
+          expanded={oauthRulesExpanded}
+          onExpandedChange={setOauthRulesExpanded}
+        >
+          <OAuthExcludedCard
+            disableControls={disableControls}
+            excludedError={excludedError}
+            excluded={excluded}
+            onRetry={loadExcluded}
+            onAdd={() => openExcludedEditor()}
+            onEdit={openExcludedEditor}
+            onDelete={deleteExcluded}
+          />
 
-        <OAuthModelAliasCard
-          disableControls={disableControls}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onRetry={loadModelAlias}
-          onAdd={() => openModelAliasEditor()}
-          onEditProvider={openModelAliasEditor}
-          onDeleteProvider={deleteModelAlias}
-          modelAliasError={modelAliasError}
-          modelAlias={modelAlias}
-          allProviderModels={allProviderModels}
-          onUpdate={handleMappingUpdate}
-          onDeleteLink={handleDeleteLink}
-          onToggleFork={handleToggleFork}
-          onRenameAlias={handleRenameAlias}
-          onDeleteAlias={handleDeleteAlias}
-        />
+          <OAuthModelAliasCard
+            disableControls={disableControls}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onRetry={loadModelAlias}
+            onAdd={() => openModelAliasEditor()}
+            onEditProvider={openModelAliasEditor}
+            onDeleteProvider={deleteModelAlias}
+            modelAliasError={modelAliasError}
+            modelAlias={modelAlias}
+            allProviderModels={allProviderModels}
+            onUpdate={handleMappingUpdate}
+            onDeleteLink={handleDeleteLink}
+            onToggleFork={handleToggleFork}
+            onRenameAlias={handleRenameAlias}
+            onDeleteAlias={handleDeleteAlias}
+          />
+        </OAuthRulesSummary>
       </div>
 
       <AuthFileModelsModal

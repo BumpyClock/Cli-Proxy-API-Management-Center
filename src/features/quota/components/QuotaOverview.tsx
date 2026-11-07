@@ -1,13 +1,25 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { TimeSeriesChart } from '@/components/ui/TimeSeriesChart';
 import { useNow } from '@/hooks/useNow';
 import type { ResolvedTheme } from '@/types';
-import { getTypeLabel } from '@/features/authFiles/constants';
 import type { QuotaFileEntry } from '../logic';
 import type { QuotaCardState } from '../providers';
 import { DAY_MS, HOUR_MS, type TimelineMode } from '../quotaTimelineModel';
-import { buildAccountSeries } from '../quotaAccountSeries';
+import { buildAccountSeries, buildGlanceRows, resetMarkers } from '../quotaAccountSeries';
+import {
+  quotaAccountLabel,
+  quotaTickFormat,
+  quotaTimeFormat,
+  quotaTimeZoneLabel,
+} from '../quotaChartFormat';
+import {
+  formatSeriesNumbers,
+  nextHiddenSeries,
+  resolveSeriesStrokes,
+} from '@/components/ui/TimeSeriesChart.model';
+import { QuotaGlanceList } from './QuotaGlanceList';
 import styles from './QuotaOverview.module.scss';
 
 interface QuotaOverviewProps {
@@ -21,6 +33,8 @@ interface QuotaOverviewProps {
   children: ReactNode;
 }
 
+type QuotaView = 'remaining' | 'accounts';
+
 export function QuotaOverview({
   entries,
   quotaFor,
@@ -32,179 +46,141 @@ export function QuotaOverview({
 }: QuotaOverviewProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
-  const [accounts, setAccounts] = useState(false);
+  const [view, setView] = useState<QuotaView>('remaining');
+  const accounts = view === 'accounts';
   const [mode, setMode] = useState<TimelineMode>('weekly');
+  const [selection, setHidden] = useState<ReadonlySet<string>>(() => new Set());
   const end = now + (mode === 'weekly' ? 7 * DAY_MS : 5 * HOUR_MS);
   const model = buildAccountSeries(entries, quotaFor, mode, now, end, seriesNumbers);
   const measured = model.accounts.filter((account) => account.remaining !== null);
-  const formatTime = (timestamp: number) =>
-    new Date(timestamp).toLocaleString(i18n.language, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const timeFormat = useMemo(() => quotaTimeFormat(i18n.language), [i18n.language]);
+  const formatTime = (timestamp: number) => timeFormat.format(timestamp);
+  const formatTick = useMemo(() => quotaTickFormat(i18n.language), [i18n.language]);
   const percent = (value: number) =>
     `${new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 }).format(value)}%`;
-  const resetTimes = model.accounts.flatMap(({ window, quota }) =>
-    window?.recovers && !quota?.stale && window.resetAtMs !== null && window.resetAtMs > now
-      ? [window.resetAtMs]
-      : []
-  );
+  const resets = resetMarkers(model.accounts, now, end, (end - now) * 0.03);
+  const glanceRows = buildGlanceRows(model.accounts, now);
+  const series = model.series.map((item, index) => ({
+    ...item,
+    label: quotaAccountLabel(measured[index], t),
+  }));
+  const xDomain = [now, end] as const;
+  const yDomain = [0, 100] as const;
+  const forecast = measured.length
+    ? { from: now, label: t('redesign.quota.projected_from_snapshot') }
+    : undefined;
+  const seriesIds = series.map((item) => item.id);
+  // A selection made in the other window keeps only accounts plotted here, and never hides all.
+  const kept = seriesIds.filter((id) => selection.has(id));
+  const hidden: ReadonlySet<string> = kept.length < seriesIds.length ? new Set(kept) : new Set();
+  // The list and the chart share one stroke decision, so the list's key matches each line.
+  const { strokes } = resolveSeriesStrokes(series, model.data, {
+    hidden,
+    xDomain,
+    yDomain,
+    forecast: forecast !== undefined,
+  });
   return (
     <div className={styles.overview}>
       <div className={styles.controls}>
-        <div className={styles.viewGroup} role="group" aria-label={t('quota_management.pool_view')}>
-          <button type="button" aria-pressed={!accounts} onClick={() => setAccounts(false)}>
-            {t('quota_management.pool_remaining')}
-          </button>
-          <button type="button" aria-pressed={accounts} onClick={() => setAccounts(true)}>
-            {t('quota_management.pool_accounts')}
-          </button>
+        <div className={styles.control}>
+          <span id="quota-view-label" className={styles.groupLabel}>
+            {t('redesign.quota.view_label')}
+          </span>
+          <SegmentedControl<QuotaView>
+            ariaLabelledBy="quota-view-label"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'remaining', label: t('quota_management.pool_remaining') },
+              { value: 'accounts', label: t('quota_management.pool_accounts') },
+            ]}
+          />
         </div>
-        <div
-          className={styles.viewGroup}
-          role="group"
-          aria-label={t('quota_management.pool_window')}
-        >
-          {(['weekly', 'session'] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={mode === value}
-              onClick={() => setMode(value)}
-            >
-              {t(`quota_management.windows_mode_${value}`)}
-            </button>
-          ))}
+        <div className={styles.control}>
+          <span id="quota-window-label" className={styles.groupLabel}>
+            {t('redesign.quota.window_label')}
+          </span>
+          <SegmentedControl<TimelineMode>
+            ariaLabelledBy="quota-window-label"
+            value={mode}
+            onChange={setMode}
+            options={(['weekly', 'session'] as const).map((value) => ({
+              value,
+              label: t(`quota_management.windows_mode_${value}`),
+            }))}
+          />
         </div>
       </div>
-      {!accounts && (
-        <section className={styles.panel}>
-          <header className={styles.panelHeader}>
-            <div>
-              <h2>{t('redesign.quota.remaining')}</h2>
-              <p>{t('redesign.quota.assumption')}</p>
+      {accounts ? (
+        children
+      ) : (
+        <>
+          <section className={styles.panel} aria-labelledby="quota-remaining-title">
+            <header className={styles.panelHeader}>
+              <h2 id="quota-remaining-title">{t('redesign.quota.remaining')}</h2>
+              <span>{t('redesign.quota.times_in', { zone: quotaTimeZoneLabel(now) })}</span>
+            </header>
+            <div className={styles.glance}>
+              <QuotaGlanceList
+                id="quota-accounts-list"
+                rows={glanceRows}
+                strokes={strokes}
+                formatTime={formatTime}
+                formatPercent={percent}
+                controls={{
+                  hidden,
+                  onToggle: (id) => setHidden(nextHiddenSeries(hidden, seriesIds, id)),
+                  canRefresh: (account) => !disabled && canObserve(account.entry),
+                  onRefresh: (account) => onRefresh([account.entry]),
+                }}
+              />
+              <TimeSeriesChart
+                id="quota-accounts"
+                data={model.data}
+                series={series}
+                xDomain={xDomain}
+                yDomain={yDomain}
+                forecast={forecast}
+                annotations={resets.map((reset) => ({
+                  x: reset.atMs,
+                  label: reset.all
+                    ? t('redesign.quota.reset_at', { time: formatTime(reset.atMs) })
+                    : t('redesign.quota.reset_some', {
+                        numbers: formatSeriesNumbers(reset.numbers),
+                        time: formatTime(reset.atMs),
+                      }),
+                }))}
+                evidenceId="quota-accounts-list"
+                formatX={formatTime}
+                formatXTick={formatTick}
+                formatMarkerGroup={(numbers, count) =>
+                  t('redesign.quota.group_label', { numbers, count })
+                }
+                formatY={percent}
+                ariaLabel={t('redesign.quota.remaining')}
+                emptyText={t('quota_management.pool_no_window')}
+                height={280}
+                compactHeight={180}
+                legendPlacement="none"
+                hiddenSeries={hidden}
+                onHiddenSeriesChange={setHidden}
+                guide={
+                  <>
+                    <p>{t('redesign.quota.evidence')}</p>
+                    {series.length > 1 && <p>{t('redesign.quota.isolate_hint')}</p>}
+                  </>
+                }
+                className={styles.chart}
+              />
             </div>
-            <span>
-              {t('quota_management.pool_next_reset')} ·{' '}
-              {resetTimes.length
-                ? formatTime(Math.min(...resetTimes))
-                : t('quota_management.pool_unknown')}
-            </span>
-          </header>
-          <TimeSeriesChart
-            id="quota-accounts"
-            data={model.data}
-            series={model.series.map((series, index) => {
-              const account = measured[index];
-              return {
-                ...series,
-                label: `${getTypeLabel(t, account.entry.type)} · ${series.label}${account.quota?.stale ? ` · ${t('redesign.quota.stale')}` : ''}`,
-              };
-            })}
-            xDomain={[now, end]}
-            yDomain={[0, 100]}
-            dataTable={false}
-            evidenceId="quota-accounts-breakdown"
-            formatX={formatTime}
-            formatY={percent}
-            ariaLabel={t('redesign.quota.remaining')}
-            emptyText={t('quota_management.pool_no_window')}
-            height={300}
-            className={styles.chart}
-          />
-          <details className={styles.notes}>
-            <summary>{t('redesign.quota.method')}</summary>
-            <p>{t('redesign.quota.evidence')}</p>
+          </section>
+          <details className={styles.details}>
+            <summary>{t('quota_management.pool_account_details')}</summary>
+            {children}
           </details>
-        </section>
+        </>
       )}
-      <section
-        id="quota-accounts-breakdown"
-        className={styles.panel}
-        aria-labelledby="quota-accounts-breakdown-title"
-      >
-        <header className={styles.panelHeader}>
-          <h2 id="quota-accounts-breakdown-title">{t('redesign.quota.breakdown')}</h2>
-          <span>{t('redesign.quota.independent')}</span>
-        </header>
-        <div className={styles.tableScroll} tabIndex={0}>
-          <table className={styles.table}>
-            <caption>{t('redesign.quota.breakdown')}</caption>
-            <thead>
-              <tr>
-                <th scope="col">{t('redesign.quota.account')}</th>
-                <th scope="col">{t('redesign.quota.remaining')}</th>
-                <th scope="col">{t('quota_management.pool_next_reset')}</th>
-                <th scope="col">{t('redesign.quota.snapshot')}</th>
-                <th scope="col">{t('auth_files.quota_refresh_single')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {model.accounts.map(({ id, label, entry, quota, number, window, remaining }) => (
-                <tr key={id}>
-                  <th scope="row">
-                    <span className={styles.number}>{number}</span> {label}
-                    <small>
-                      {getTypeLabel(t, entry.type)} · {entry.file.name}
-                    </small>
-                  </th>
-                  <td>
-                    {remaining === null ? t('quota_management.pool_unknown') : percent(remaining)}
-                    <small>{window ? t(window.label, { defaultValue: window.label }) : null}</small>
-                  </td>
-                  <td>
-                    {window?.resetAtMs
-                      ? formatTime(window.resetAtMs)
-                      : t('quota_management.pool_unknown')}
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        quota?.stale || quota?.status === 'error' ? styles.warning : undefined
-                      }
-                    >
-                      {quota?.stale
-                        ? t('redesign.quota.stale')
-                        : quota?.status === 'error'
-                          ? t('redesign.quota.failed')
-                          : quota?.refreshing || quota?.status === 'loading'
-                            ? t('redesign.quota.checking')
-                            : quota?.checkedAt
-                              ? formatTime(quota.checkedAt)
-                              : t('quota_management.pool_unknown')}
-                    </span>
-                    {quota?.stale && quota.checkedAt && (
-                      <small>{formatTime(quota.checkedAt)}</small>
-                    )}
-                    {quota?.error && <small>{quota.error}</small>}
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      disabled={
-                        disabled ||
-                        !canObserve(entry) ||
-                        quota?.refreshing ||
-                        quota?.status === 'loading'
-                      }
-                      onClick={() => onRefresh([entry])}
-                      aria-label={t('redesign.quota.refreshAccount', { name: label })}
-                    >
-                      ↻
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <details className={styles.details} open={accounts}>
-        <summary>{t('quota_management.pool_account_details')}</summary>
-        {children}
-      </details>
     </div>
   );
 }

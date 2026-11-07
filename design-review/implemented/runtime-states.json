@@ -1,7 +1,0 @@
-{
-  "native_chart_keyboard": true,
-  "filters_windows_series_search_no_refetch": true,
-  "cached_refresh_and_partial_failure": true,
-  "route_reentry_checks_again": true,
-  "usage_live_off_unknown_error_retained_stale": true
-}

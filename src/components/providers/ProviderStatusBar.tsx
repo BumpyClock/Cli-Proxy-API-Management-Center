@@ -1,30 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StatusBarData, StatusBlockDetail } from '@/utils/recentRequests';
+import { getStatusRateTone, statusRateColor, type StatusRateTone } from './utils';
 
 const defaultStyles: Record<string, string> = {};
-
-/**
- * 根据成功率 (0–1) 在三个色标之间做 RGB 线性插值
- * 0 → 红 (#ef4444)  →  0.5 → 金黄 (#facc15)  →  1 → 绿 (#22c55e)
- */
-const COLOR_STOPS = [
-  { r: 239, g: 68, b: 68 }, // #ef4444
-  { r: 250, g: 204, b: 21 }, // #facc15
-  { r: 34, g: 197, b: 94 }, // #22c55e
-] as const;
-
-function rateToColor(rate: number): string {
-  const t = Math.max(0, Math.min(1, rate));
-  const segment = t < 0.5 ? 0 : 1;
-  const localT = segment === 0 ? t * 2 : (t - 0.5) * 2;
-  const from = COLOR_STOPS[segment];
-  const to = COLOR_STOPS[segment + 1];
-  const r = Math.round(from.r + (to.r - from.r) * localT);
-  const g = Math.round(from.g + (to.g - from.g) * localT);
-  const b = Math.round(from.b + (to.b - from.b) * localT);
-  return `rgb(${r}, ${g}, ${b})`;
-}
 
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp);
@@ -40,6 +19,12 @@ function formatSuccessRate(rate: number): string {
 
 type StylesModule = Record<string, string>;
 
+const RATE_TONE_CLASS: Record<StatusRateTone, string> = {
+  high: 'statusRateHigh',
+  medium: 'statusRateMedium',
+  low: 'statusRateLow',
+};
+
 interface ProviderStatusBarProps {
   statusData: StatusBarData;
   styles?: StylesModule;
@@ -51,14 +36,8 @@ export function ProviderStatusBar({ statusData, styles: stylesProp }: ProviderSt
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
   const blocksRef = useRef<HTMLDivElement>(null);
 
-  const hasData = statusData.totalSuccess + statusData.totalFailure > 0;
-  const rateClass = !hasData
-    ? ''
-    : statusData.successRate >= 90
-      ? s.statusRateHigh
-      : statusData.successRate >= 50
-        ? s.statusRateMedium
-        : s.statusRateLow;
+  const rateTone = getStatusRateTone(statusData);
+  const rateClass = rateTone ? s[RATE_TONE_CLASS[rateTone]] : '';
 
   // 点击外部关闭 tooltip（移动端）
   useEffect(() => {
@@ -127,7 +106,7 @@ export function ProviderStatusBar({ statusData, styles: stylesProp }: ProviderSt
       <div className={s.statusBlocks} ref={blocksRef}>
         {statusData.blockDetails.map((detail, idx) => {
           const isIdle = detail.rate === -1;
-          const blockStyle = isIdle ? undefined : { backgroundColor: rateToColor(detail.rate) };
+          const blockStyle = isIdle ? undefined : { backgroundColor: statusRateColor(detail.rate) };
           const isActive = activeTooltip === idx;
 
           return (
@@ -147,9 +126,12 @@ export function ProviderStatusBar({ statusData, styles: stylesProp }: ProviderSt
           );
         })}
       </div>
-      <span className={`${s.statusRate} ${rateClass}`}>
-        {hasData ? formatSuccessRate(statusData.successRate) : '--'}
-      </span>
+      {/* No requests means no rate: show nothing rather than an unexplained placeholder. */}
+      {rateTone && (
+        <span className={`${s.statusRate} ${rateClass}`} data-rate-tone={rateTone}>
+          {formatSuccessRate(statusData.successRate)}
+        </span>
+      )}
     </div>
   );
 }

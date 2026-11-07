@@ -20,6 +20,13 @@
     letter-spacing: -0.025em;
   }
 
+  /* Desktop: the title line matches the 36px action height so actions center on it. */
+  @media (min-width: 769px) {
+    h1:not(.hero) {
+      line-height: 36px;
+    }
+  }
+
   .hero {
     font-size: 30px;
     line-height: 36px;
@@ -41,8 +48,9 @@
   gap: 6px 12px;
   margin-top: 6px;
   color: var(--text-secondary);
-  font-family: $font-mono;
+  /* Status prose is sans; callers wrap literal values (paths, versions) in their own mono span. */
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
 }
 
@@ -52,6 +60,13 @@
   flex-wrap: wrap;
   flex: 0 0 auto;
   gap: 8px;
+
+  /* One header-action size on every page: small variants never shrink in this slot. */
+  :global(.btn.btn-sm) {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
 }
 
 .detail {
@@ -62,6 +77,49 @@
 @media (max-width: 768px) {
   .header {
     gap: 12px;
+  }
+
+  /* Phones: the title and a single action share the first row; metadata and description take
+     the full width beneath. Two or more actions drop to their own row, and so does a single
+     action that would squeeze the title below its longest word (long translated titles). */
+  .header {
+    align-items: center;
+    gap: 6px 12px;
+  }
+
+  .heading {
+    display: contents;
+  }
+
+  .heading h1 {
+    flex: 1 1 auto;
+    order: 0;
+  }
+
+  .actions {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .description,
+  .meta,
+  .detail {
+    flex: 1 1 100%;
+    order: 2;
+    margin-top: 0;
+  }
+
+  /* Two or more actions, or a page that opts in (stackActionsOnPhone), use their own row
+     after the description and metadata. */
+  .header:has(.actions > :nth-child(2), .actions :is(button, a):nth-of-type(2)) .actions,
+  .stackActions .actions {
+    flex: 1 1 100%;
+    order: 3;
+    margin-left: 0;
+  }
+
+  .actions :global(.btn.btn-sm) {
+    min-height: 44px;
   }
 
   .heading .hero {

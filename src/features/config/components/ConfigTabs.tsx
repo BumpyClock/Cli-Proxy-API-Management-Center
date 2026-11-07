@@ -1,5 +1,6 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { IconChevronDown } from '@/components/ui/icons';
 import { prefersReducedMotion } from '@/hooks/motion';
 import {
   CONFIG_TAB_ICONS,
@@ -69,21 +70,24 @@ export function ConfigTabs({
     <>
       <label className={styles.mobilePicker}>
         <span>{t('redesign.settings.section')}</span>
-        <select
-          value={active}
-          disabled={disabled}
-          onChange={(event) => onChange(event.target.value as ConfigTabId)}
-        >
-          {CONFIG_TAB_IDS.map((id) => (
-            <option key={id} value={id}>
-              {t(`config_management.visual.sections.${id}.title`)}
-              {dirtyTabs.has(id) ? ` · ${t('config_management.status_dirty_short')}` : ''}
-              {(errorCounts[id] ?? 0) > 0
-                ? ` · ${t('config_management.meta_errors', { count: errorCounts[id] })}`
-                : ''}
-            </option>
-          ))}
-        </select>
+        <span className={styles.mobileSelectWrap}>
+          <select
+            value={active}
+            disabled={disabled}
+            onChange={(event) => onChange(event.target.value as ConfigTabId)}
+          >
+            {CONFIG_TAB_IDS.map((id) => (
+              <option key={id} value={id}>
+                {t(`config_management.visual.sections.${id}.title`)}
+                {dirtyTabs.has(id) ? ` · ${t('config_management.status_dirty_short')}` : ''}
+                {(errorCounts[id] ?? 0) > 0
+                  ? ` · ${t('config_management.meta_errors', { count: errorCounts[id] })}`
+                  : ''}
+              </option>
+            ))}
+          </select>
+          <IconChevronDown size={16} className={styles.mobileSelectChevron} aria-hidden="true" />
+        </span>
       </label>
       <div
         className={styles.tabs}

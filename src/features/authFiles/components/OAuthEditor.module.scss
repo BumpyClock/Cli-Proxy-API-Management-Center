@@ -4,19 +4,39 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 32px;
   min-width: 0;
   width: 100%;
-  box-sizing: border-box;
+  /* Room for the floating Back/Save bar (OAuthEditorActions): height, 12px offset, clearance. */
+  --oauth-editor-bar-room: calc(
+    var(--oauth-editor-actions-height, 0px) + 28px + env(safe-area-inset-bottom, 0px)
+  );
+  padding-bottom: var(--oauth-editor-bar-room);
 
   > :global(.card) {
     box-shadow: none;
     border-radius: 8px;
   }
+}
 
-  @media (max-width: 768px) {
-    padding: 16px;
-  }
+/*
+ * The page transition layer clips an open model list, so the list never extends the scroll range
+ * itself; reserve its 200px + 4px offset (+ 12px) while open so it can scroll above the bar.
+ */
+.pageContent:has(:global(.autocomplete-dropdown)) {
+  padding-bottom: calc(var(--oauth-editor-bar-room) + 216px);
+}
+
+.headerMeta {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.editorHeaderMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
 }
 
 .loading {
@@ -36,32 +56,11 @@
   overflow-wrap: anywhere;
 }
 
-.editorStepNumber {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font: 12px $font-mono;
-}
-
 .editorSectionTitle {
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.description {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.65;
-  color: var(--text-secondary);
-  overflow-wrap: anywhere;
 }
 
 .settingsCard {
@@ -71,27 +70,56 @@
   box-shadow: none;
 }
 
+/* Step 01: the heading, then one bounded field group (field, requirement, shortcuts). */
 .providerSection {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
-  padding: $spacing-lg;
+  gap: $spacing-sm;
+  /* Matches .editorHeader so the 01 and 02 step badges share one x offset. */
+  padding: $spacing-md;
+}
 
-  @include mobile {
-    padding: $spacing-md;
+.providerHeading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  min-width: 0;
+
+  .sectionTitle {
+    margin: 0;
   }
 }
 
-.providerRow {
+/* Indented to the step title (28px badge + 8px gap), like the step 02 description. */
+.providerFields {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-lg;
+  flex-direction: column;
+  gap: $spacing-sm;
+  width: 100%;
+  max-width: 680px;
+  min-width: 0;
+  padding-left: 36px;
 
   @include mobile {
-    flex-direction: column;
-    align-items: stretch;
-    gap: $spacing-md;
+    max-width: none;
+    padding-left: 0;
+  }
+}
+
+/* The Save prerequisite, anchored to the field that resolves it. */
+.providerRequirement {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
   }
 }
 
@@ -111,9 +139,9 @@
   height: 28px;
   border: 1px solid var(--border-color);
   border-radius: $radius-sm;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-family: $font-mono;
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -123,20 +151,68 @@
 
 .sectionTitle {
   display: block;
-  margin: 2px 0 4px;
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1.5;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
   color: var(--text-primary);
 }
 
 .providerControl {
-  flex: 0 0 280px;
+  width: 100%;
   min-width: 0;
   margin-bottom: 0;
+}
 
-  @include mobile {
-    flex-basis: auto;
+/* The chosen provider stays visible next to the chooser and the model section heading. */
+.providerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: $radius-full;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+
+  img {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  > span:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Provider shortcuts are optional: the shared disclosure under the chooser, collapsed on phones. */
+.shortcuts {
+  > summary {
+    @include disclosure-summary;
+  }
+
+  &[open] > summary {
+    margin-bottom: $spacing-sm;
   }
 }
 
@@ -181,6 +257,10 @@
     min-width: 0;
   }
 
+  @include mobile {
+    min-height: 44px;
+  }
+
   &:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: 3px;
@@ -208,6 +288,8 @@
   border-color: var(--primary-color);
   background: var(--primary-10);
   color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--primary-color);
 
   .providerCheck {
     visibility: visible;
@@ -222,6 +304,11 @@
   gap: 12px;
   padding: 16px;
   border-bottom: 1px solid var(--border-color);
+
+  /* A step without a body (no provider yet) closes at the card edge. */
+  &:last-child {
+    border-bottom: 0;
+  }
 }
 
 .mappingRow {
@@ -234,16 +321,17 @@
   border-radius: $radius-md;
   background: var(--bg-secondary);
 
+  /* Phones: the number becomes a caption above the fields so inputs get the full row width. */
   @include mobile {
-    grid-template-columns: 20px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: $spacing-sm;
   }
 }
 
 .mappingNumber {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-family: $font-mono;
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -270,7 +358,7 @@
     display: block;
     margin-bottom: 6px;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
   }
 }
@@ -280,6 +368,18 @@
   min-width: 0;
   font-family: $font-mono;
   font-size: 13px;
+
+  /* The typed value is a literal model ID; the hint is prose. */
+  &::placeholder {
+    font-family: $font-family;
+  }
+}
+
+/* Phones: the top bar's labelled "Auth Files" link is the way back. */
+@media (max-width: 768px) {
+  .pageBack {
+    display: none;
+  }
 }
 
 .mappingSeparator {
@@ -302,7 +402,6 @@
   min-height: 38px;
 
   @include mobile {
-    grid-column: 2;
     justify-content: space-between;
     padding-top: $spacing-xs;
     border-top: 1px solid var(--border-color);
@@ -314,7 +413,7 @@
   width: 34px;
   height: 34px;
   padding: 0;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled) {
