@@ -20,7 +20,7 @@ await i18n.changeLanguage('en');
 const t = i18n.t.bind(i18n);
 const hour = 3_600_000;
 const day = 24 * hour;
-const now = Date.UTC(2026, 10, 6, 21, 50);
+const now = Date.now();
 
 describe('measured and projected segments', () => {
   test('a snapshot-then-forecast series is entirely projected after its measured point', () => {
