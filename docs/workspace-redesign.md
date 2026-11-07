@@ -42,6 +42,8 @@ Kimi China and International accounts share quota presentation but use separate 
 
 Quota requests identify Antigravity as Hub 2.23.0 and Grok as client 1.0.70. Grok client-version headers and both user-agent segments derive from one version constant.
 
+Claude account details show read-only extra usage and independent dollar balances. Extra-usage amounts are minor currency units; dollar-window amounts are already dollars. Balance resets contribute to recovery ordering without becoming account percentages or recurring quota windows. Existing snapshot freshness and retained-refresh-failure states remain authoritative.
+
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification

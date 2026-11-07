@@ -7,12 +7,14 @@ import type { TFunction } from 'i18next';
 import type {
   AuthFileItem,
   ClaudeExtraUsage,
+  ClaudeDollarWindow,
   ClaudeProfileResponse,
   ClaudeQuotaState,
   ClaudeQuotaWindow,
   ClaudeUsagePayload,
 } from '@/types';
 import { apiCallApi, getApiCallErrorMessage } from '@/services/api';
+import { normalizeClaudeUsageSnapshot } from '@/services/api/claudeUsage';
 import {
   CLAUDE_PROFILE_URL,
   CLAUDE_USAGE_URL,
@@ -36,6 +38,7 @@ export type ClaudeQuotaData = {
   windows: ClaudeQuotaWindow[];
   extraUsage?: ClaudeExtraUsage | null;
   planType?: string | null;
+  dollarWindows: ClaudeDollarWindow[];
 };
 
 const findFableUsageLimit = (payload: ClaudeUsagePayload) => {
@@ -55,13 +58,18 @@ const findFableUsageLimit = (payload: ClaudeUsagePayload) => {
 
 export const buildClaudeQuotaWindows = (
   payload: ClaudeUsagePayload,
-  t: TFunction
+  t: TFunction,
+  dollarWindows: readonly ClaudeDollarWindow[] = []
 ): ClaudeQuotaWindow[] => {
   const windows: ClaudeQuotaWindow[] = [];
   const fableLimit = findFableUsageLimit(payload);
 
   for (const { key, id, labelKey } of CLAUDE_USAGE_WINDOW_KEYS) {
-    if (key === 'iguana_necktie' && fableLimit) continue;
+    if (
+      (key === 'iguana_necktie' && fableLimit) ||
+      dollarWindows.some((balance) => balance.key === key)
+    )
+      continue;
     const window = payload[key as keyof ClaudeUsagePayload];
     if (!window || typeof window !== 'object' || !('utilization' in window)) continue;
     const typedWindow = window as { utilization: number; resets_at: string | null };
@@ -167,7 +175,7 @@ const fetchClaudeQuota = async (file: AuthFileItem, t: TFunction): Promise<Claud
       authIndex,
       method: 'GET',
       url: CLAUDE_USAGE_URL,
-      header: { ...CLAUDE_REQUEST_HEADERS },
+      header: { ...CLAUDE_REQUEST_HEADERS, Accept: 'application/json' },
     }),
     apiCallApi.request({
       authIndex,
@@ -192,7 +200,9 @@ const fetchClaudeQuota = async (file: AuthFileItem, t: TFunction): Promise<Claud
     throw new Error(t('claude_quota.empty_windows'));
   }
 
-  const windows = buildClaudeQuotaWindows(payload, t);
+  const snapshot = normalizeClaudeUsageSnapshot(payload);
+  if (!snapshot) throw new Error(t('claude_quota.empty_windows'));
+  const windows = buildClaudeQuotaWindows(payload, t, snapshot.dollarWindows);
   const planType =
     profileResult.status === 'fulfilled' &&
     profileResult.value.statusCode >= 200 &&
@@ -202,7 +212,12 @@ const fetchClaudeQuota = async (file: AuthFileItem, t: TFunction): Promise<Claud
         )
       : null;
 
-  return { windows, extraUsage: payload.extra_usage, planType };
+  return {
+    windows,
+    extraUsage: snapshot.extraUsage,
+    dollarWindows: snapshot.dollarWindows,
+    planType,
+  };
 };
 
 const ACCOUNT_WINDOW_PREFERENCES: Partial<Record<string, 'session' | 'weekly'>> = {
@@ -216,8 +231,8 @@ export const CLAUDE_CONFIG: QuotaProviderData<ClaudeQuotaState, ClaudeQuotaData>
   filterFn: (file) => isClaudeFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchClaudeQuota,
   getObservations: (state) =>
-    observeQuota(
-      (state.windows ?? [])
+    observeQuota([
+      ...(state.windows ?? [])
         .map((window, index) =>
           observeWindow({
             id: window.id || `window-${index}`,
@@ -231,8 +246,17 @@ export const CLAUDE_CONFIG: QuotaProviderData<ClaudeQuotaState, ClaudeQuotaData>
                 : null,
           })
         )
-        .filter((window) => window.resetAtMs !== null)
-    ),
+        .filter((window) => window.resetAtMs !== null),
+      ...(state.dollarWindows ?? []).map((balance) =>
+        observeWindow({
+          id: `dollar:${balance.key}`,
+          label: balance.key,
+          remainingPercent: null,
+          resetAtMs: resolveResetMs([balance.resetsAt]),
+          periodHours: null,
+        })
+      ),
+    ]),
   storeSelector: (state) => state.claudeQuota,
   storeSetter: 'setClaudeQuota',
   buildLoadingState: () => ({ status: 'loading', windows: [] }),
@@ -240,6 +264,7 @@ export const CLAUDE_CONFIG: QuotaProviderData<ClaudeQuotaState, ClaudeQuotaData>
     status: 'success',
     windows: data.windows,
     extraUsage: data.extraUsage,
+    dollarWindows: data.dollarWindows,
     planType: data.planType,
   }),
   buildErrorState: (message, status) => ({
