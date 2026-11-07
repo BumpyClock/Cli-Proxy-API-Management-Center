@@ -10,7 +10,7 @@ This page is for the engineer who changes how the app looks or moves.
 - `src/design-system/index.ts` adapts the registry for TS/TSX. It provides motion seconds, JS easing functions, `matchMedia` strings, `px()`, `cssVar()`, provider badge colours and the shared action-bar choreography.
 - `src/design-system/generated/_tokens.scss` holds generated Sass variables. Vite injects them into every SCSS module through `src/styles/variables.scss`, and this partial emits no CSS.
 - `src/design-system/generated/_themes.scss` holds generated theme custom properties: `:root` (the default paper theme, `light`), `[data-theme='white']`, `[data-theme='dark']`, and the opaque-glass override for phones, reduced motion and reduced transparency. `src/styles/themes.scss` includes it once.
-- `scripts/design-tokens/` holds the generator, the drift guard, the shared SCSS scanner and classifier, and the SCSS migration codemod.
+- `scripts/design-tokens/` holds the generator, drift guard, shared source-file listing, SCSS scanner/classifier, migration codemod and Vite/Bun boundary adapter.
 
 Generated files are checked in, excluded from Prettier, and never edited by hand.
 
@@ -19,7 +19,7 @@ Generated files are checked in, excluded from Prettier, and never edited by hand
 - `bun run tokens` regenerates the Sass adapters. It writes only files whose content changed.
 - `bun run tokens:check` exits 1 when the checked-in output is stale.
 - `bun run tokens:migrate` rewrites raw literals in `src/**/*.scss` that already have a registry value. It is idempotent and reports any literal without a token.
-- `bun run dev` regenerates on start and after every save of `tokens.ts`. `bun run build` regenerates at build start. Neither adds a build artifact, and the single-file `dist/index.html` is unchanged in shape.
+- `bun run dev` regenerates on start and after every save of `tokens.ts`. `bun run build` regenerates at build start. Vite invokes the generator through Bun, so Node hosts do not need native TypeScript loading. A registry syntax error is logged during dev and leaves the last generated output intact; a subsequent valid save recovers. Startup/build errors still fail. Neither adds a build artifact, and the single-file `dist/index.html` is unchanged in shape.
 - CI runs `bun run verify`. Its tests fail on stale generated output (`tests/designTokens.test.ts`) and on any raw design value in `src/` (`tests/designTokenGuard.test.ts`).
 
 ## Changing tokens

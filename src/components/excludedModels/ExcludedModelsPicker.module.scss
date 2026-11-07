@@ -20,9 +20,6 @@
   padding: 0 $space-12;
   overflow: hidden;
 
-  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
-    min-height: $size-touch-target;
-  }
   border: $border-width-1 solid var(--border-color);
   border-radius: $radius-8;
   background: var(--bg-primary);
@@ -34,6 +31,10 @@
     border-color var(--dur-hover) var(--ease-out-strong),
     background-color var(--dur-hover) var(--ease-out-strong),
     transform var(--dur-press) var(--ease-out-strong);
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+  }
 
   /* 整条 40px 宽元素上 0.97 太橡皮；0.99 足够被感知又不显廉价。 */
   &:active:not(:disabled) {
@@ -279,7 +280,8 @@
 .badge {
   flex-shrink: 0;
   padding: $space-2 $space-6;
-  border: $border-width-1 dashed color-mix(in srgb, var(--primary-color) $tint-0-38, var(--border-color));
+  border: $border-width-1 dashed
+    color-mix(in srgb, var(--primary-color) $tint-0-38, var(--border-color));
   border-radius: $radius-9999;
   color: var(--text-secondary);
   font-size: $font-size-12;

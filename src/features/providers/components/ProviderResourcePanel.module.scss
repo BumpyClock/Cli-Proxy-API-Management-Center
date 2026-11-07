@@ -12,12 +12,12 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: $space-16;
 
   &:focus-visible {
     outline: $border-width-2 solid var(--primary-color);
     outline-offset: $space-3;
   }
-  gap: $space-16;
 }
 
 /* Desktop: title left, search right, sort and filter on the row beneath. `.controls` only

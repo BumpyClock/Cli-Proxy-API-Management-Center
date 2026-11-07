@@ -10,9 +10,9 @@ import { iconSize, media } from '@/design-system';
 
 const PHONE_QUERY = media.mobile;
 const subscribePhone = (onChange: () => void) => {
-  const media = window.matchMedia(PHONE_QUERY);
-  media.addEventListener('change', onChange);
-  return () => media.removeEventListener('change', onChange);
+  const query = window.matchMedia(PHONE_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
 };
 const readPhone = () => window.matchMedia(PHONE_QUERY).matches;
 const readPhoneOnServer = () => false;

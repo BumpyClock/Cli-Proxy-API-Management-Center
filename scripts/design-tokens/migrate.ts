@@ -11,7 +11,7 @@
  * reported with file:line and left untouched, so the guard test keeps failing until the
  * registry gains the token.
  */
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tokens } from '../../src/design-system/tokens.ts';
@@ -19,6 +19,7 @@ import { scanScss, insideKeyframes } from './scss-scanner.ts';
 import { classifyValue, type LiteralHit, type TokenCategory } from './classify.ts';
 import { canonicalColor, normalizeCss } from './css-normalize.ts';
 import { tintSteps } from './generate.ts';
+import { listSourceFiles } from './source-files.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dry = process.argv.includes('--dry');
@@ -274,12 +275,7 @@ export function migrateScss(file: string, text: string): string {
 }
 
 export const listScssFiles = (): string[] =>
-  readdirSync(path.join(root, 'src'), { recursive: true })
-    .map(String)
-    .filter((f) => f.endsWith('.scss'))
-    .map((f) => `src/${f}`)
-    .filter((f) => !EXCLUDED_SCSS.has(f))
-    .sort();
+  listSourceFiles(root).filter((file) => file.endsWith('.scss') && !EXCLUDED_SCSS.has(file));
 
 if (import.meta.main) {
   let changedFiles = 0;

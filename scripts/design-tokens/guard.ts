@@ -8,10 +8,11 @@
  * Allowed structural values and the narrow exemptions are documented in docs/design-tokens.md.
  */
 import ts from 'typescript';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { scanScss, insideKeyframes } from './scss-scanner.ts';
 import { classifyValue } from './classify.ts';
+import { listSourceFiles as sourceFiles } from './source-files.ts';
 
 export interface Violation {
   file: string;
@@ -810,11 +811,7 @@ export function scanTsText(file: string, text: string): Violation[] {
 }
 
 export function listSourceFiles(root: string): string[] {
-  return readdirSync(path.join(root, 'src'), { recursive: true })
-    .map(String)
-    .map((f) => `src/${f.split(path.sep).join('/')}`)
-    .filter((f) => /\.(scss|ts|tsx)$/.test(f) && !f.endsWith('.d.ts') && !REGISTRY_FILES.has(f))
-    .sort();
+  return sourceFiles(root).filter((file) => !REGISTRY_FILES.has(file));
 }
 
 export function scanRepository(root: string): Violation[] {

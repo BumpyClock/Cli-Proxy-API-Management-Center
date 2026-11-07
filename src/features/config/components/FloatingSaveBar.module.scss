@@ -13,6 +13,7 @@
 }
 
 .bar {
+  --glass-blur: #{$blur-14};
   pointer-events: auto;
   display: flex;
   align-items: center;
@@ -21,7 +22,6 @@
   gap: $space-8 $space-16;
   padding: $space-10 $space-14;
   border-radius: $radius-16;
-  --glass-blur: #{$blur-14};
   border: $border-width-1 solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop-filter);

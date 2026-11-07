@@ -1,11 +1,10 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import path from 'path';
 import { execSync } from 'child_process';
 import fs from 'fs';
-import { pathToFileURL } from 'url';
-import { writeGeneratedFiles } from './scripts/design-tokens/generate';
+import { designTokens } from './scripts/design-tokens/vite';
 
 // Get version from environment, git tag, or package.json
 function getVersion(): string {
@@ -37,38 +36,10 @@ function getVersion(): string {
   return 'dev';
 }
 
-const TOKENS_SOURCE = path.resolve(__dirname, 'src/design-system/tokens.ts');
-
-/**
- * Regenerates the Sass adapters from src/design-system/tokens.ts at dev-server start, build
- * start and on every registry edit in dev, so Sass never compiles against a stale registry.
- */
-function designTokens(): Plugin {
-  const regenerate = async () => {
-    // A cache-busting query re-evaluates the registry after edits during dev.
-    const { tokens } = await import(`${pathToFileURL(TOKENS_SOURCE).href}?t=${Date.now()}`);
-    return writeGeneratedFiles(__dirname, tokens);
-  };
-  return {
-    name: 'design-tokens',
-    async buildStart() {
-      await regenerate();
-    },
-    configureServer(server) {
-      server.watcher.add(TOKENS_SOURCE);
-      server.watcher.on('change', async (file) => {
-        if (path.resolve(file) !== TOKENS_SOURCE) return;
-        const written = await regenerate();
-        if (written.length) server.config.logger.info(`design tokens: regenerated ${written.join(', ')}`);
-      });
-    },
-  };
-}
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    designTokens(),
+    designTokens(__dirname),
     react(),
     viteSingleFile({
       removeViteModuleLoader: true

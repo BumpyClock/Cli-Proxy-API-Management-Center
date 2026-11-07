@@ -171,6 +171,7 @@
   height: $size-4;
   border-radius: $radius-9999;
   overflow: hidden;
+
   // 轨道 = 填充色的淡化步阶，未点亮的段也带着当前状态
   background: color-mix(in srgb, var(--strength-color) $tint-0-16, transparent);
   transition: background-color var(--dur-hover) var(--ease-out-strong);

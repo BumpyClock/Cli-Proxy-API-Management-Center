@@ -46,7 +46,7 @@ async function open(options, overrides = {}) {
   await login(page, origin);
   return { context, page, writes };
 }
-const focusedIs = (page, locator) =>
+const focusedIs = (locator) =>
   locator.evaluate((element) => element === document.activeElement).catch(() => false);
 
 // Logs: Options disclosure keyboard behaviour and the guarded Clear logs action.
@@ -59,7 +59,7 @@ const focusedIs = (page, locator) =>
   check('logs: Enter opens Options', (await trigger.getAttribute('aria-expanded')) === 'true');
   await page.keyboard.press('Escape');
   check('logs: Escape closes Options', (await trigger.getAttribute('aria-expanded')) === 'false');
-  check('logs: Escape restores focus to Options', await focusedIs(page, trigger));
+  check('logs: Escape restores focus to Options', await focusedIs(trigger));
   await trigger.click();
   await page.getByRole('button', { name: 'Clear logs' }).click();
   const dialog = page.getByRole('dialog');
@@ -67,6 +67,31 @@ const focusedIs = (page, locator) =>
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await dialog.waitFor({ state: 'detached' });
   check('logs: cancelled Clear logs sends no write', writes.length === 0, writes.join(', '));
+  // Capture only this isolated browser context's writes, never the user's OS clipboard.
+  await page.evaluate(() => {
+    window.__copiedLogLines = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: async (text) => {
+          window.__copiedLogLines.push(text);
+        },
+      },
+    });
+  });
+  const row = page.getByRole('button', { name: /^Copy log line:.*status=200/ }).first();
+  const label = await row.getAttribute('aria-label');
+  await row.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  const copied = await page.evaluate(() => window.__copiedLogLines);
+  check(
+    'logs: Enter and Space copy the same raw record',
+    copied.length === 2 && copied[0] === copied[1]
+  );
+  check(
+    'logs: accessible copy label includes the complete raw record',
+    copied[0]?.length > 0 && label?.includes(copied[0])
+  );
   await context.close();
 }
 
@@ -101,7 +126,7 @@ const focusedIs = (page, locator) =>
     (await trigger.getAttribute('aria-expanded')) === 'true'
   );
   await page.keyboard.press('Escape');
-  check('auth-files: Escape restores focus', await focusedIs(page, trigger));
+  check('auth-files: Escape restores focus', await focusedIs(trigger));
   const status = page.getByRole('group', { name: 'Status Filter' });
   await status.getByRole('button', { name: 'Enabled' }).click();
   check(
@@ -151,7 +176,7 @@ for (const [name, options] of [
   await menu.waitFor();
   await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menuitem');
   const last = menu.getByRole('menuitem').last();
-  check(`auth-files ${name}: ArrowUp focuses last action`, await focusedIs(page, last));
+  check(`auth-files ${name}: ArrowUp focuses last action`, await focusedIs(last));
   check(
     `auth-files ${name}: entire menu is inside viewport and outside clipped ancestors`,
     await menu.evaluate((element) => {
@@ -177,7 +202,7 @@ for (const [name, options] of [
   const first = menu.getByRole('menuitem').first();
   check(
     `auth-files ${name}: Home reveals and focuses the first action above the fixed header`,
-    (await focusedIs(page, first)) &&
+    (await focusedIs(first)) &&
       (await first.evaluate((element) => {
         const r = element.getBoundingClientRect();
         return element.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
@@ -194,7 +219,7 @@ for (const [name, options] of [
     );
   }
   await page.keyboard.press('Escape');
-  check(`auth-files ${name}: Escape restores trigger`, await focusedIs(page, trigger));
+  check(`auth-files ${name}: Escape restores trigger`, await focusedIs(trigger));
   await trigger.click();
   await menu.waitFor();
   await page.keyboard.press('Tab');
@@ -267,7 +292,7 @@ for (const width of [1024, 1366]) {
   await page.keyboard.press('Escape');
   check(
     'providers: Escape closes and restores focus',
-    (await menu.count()) === 0 && (await focusedIs(page, trigger))
+    (await menu.count()) === 0 && (await focusedIs(trigger))
   );
   await trigger.click();
   await page.getByRole('menuitem', { name: /Delete/ }).click();
@@ -441,7 +466,7 @@ for (const options of [desktop, phone]) {
   await page.keyboard.press('Enter');
   const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
   check('header 390: selecting Dark switches the theme', theme === 'dark', String(theme));
-  check('header 390: focus returns to Utilities', await focusedIs(page, trigger));
+  check('header 390: focus returns to Utilities', await focusedIs(trigger));
   await trigger.click();
   await page.keyboard.press('Escape');
   check('header 390: Escape closes the menu', !(await menu.isVisible()));

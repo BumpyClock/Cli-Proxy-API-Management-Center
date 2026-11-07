@@ -4,8 +4,8 @@
  *   bun run tokens         write src/design-system/generated/* when they differ
  *   bun run tokens:check   exit 1 when the checked-in output is stale
  *
- * The Vite plugin in vite.config.ts calls `writeGeneratedFiles` on dev-server start, on every
- * registry edit in dev, and at build start. tests/designTokens.test.ts compares the
+ * The Vite adapter runs this CLI through Bun on startup, registry saves and builds, without
+ * relying on native Node TypeScript loading. tests/designTokens.test.ts compares the
  * checked-in files with `renderGeneratedFiles` in memory.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
