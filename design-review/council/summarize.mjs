@@ -3,9 +3,12 @@ import fs from 'node:fs/promises';
 const round = Number(process.argv[2]);
 if (!Number.isInteger(round) || round < 1 || round > 6) throw new Error('Round must be 1-6');
 const metrics = ['design_coherence', 'typography', 'cleanliness', 'visual_design', 'ease_of_use', 'information_hierarchy', 'spacing_alignment', 'navigation_wayfinding', 'responsive_mobile', 'accessibility_visible', 'data_visualization', 'interaction_affordance'];
+let bundle;
+try { bundle = JSON.parse(await fs.readFile(`design-review/council/round-${round}/reviews.json`, 'utf8')); } catch (cause) { throw new Error('Cannot read raw council reviews', { cause }); }
 const reviews = [];
 for (const model of ['sol', 'muse', 'opus']) {
-  const raw = await fs.readFile(`design-review/council/round-${round}/${model}-review.txt`, 'utf8');
+  const raw = bundle[model];
+  if (typeof raw !== 'string') throw new Error(`Missing raw transcript for ${model}`);
   const start = raw.indexOf('{');
   let review;
   for (let end = raw.lastIndexOf('}'); end > start; end--) {

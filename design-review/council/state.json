@@ -2,7 +2,7 @@
   "target": 9,
   "maxRounds": 6,
   "completedRound": 6,
-  "phase": "pr-preparation",
+  "phase": "pr-open",
   "rounds": [
     {
       "round": 1,
@@ -49,5 +49,7 @@
   ],
   "note": "Initial invalid capture packet excluded. Identical council prompt frozen in review-prompt.txt. Only round placeholder changes.",
   "targetReached": false,
-  "stopReason": "Maximum six valid council rounds completed"
+  "stopReason": "Maximum six valid council rounds completed",
+  "pullRequest": "https://github.com/BumpyClock/Cli-Proxy-API-Management-Center/pull/5",
+  "automatedReview": "Raw transcripts bundled to keep non-image changed files below CodeRabbit 300-file review cap."
 }
