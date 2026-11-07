@@ -14,6 +14,7 @@ import type { ApiKeyEntryInput } from '../../types';
 import type { ConnectivityState, ConnectivityStatus } from './useConnectivityTest';
 import { ConnectivityStatusIcon } from './ConnectivityStatusIcon';
 import styles from './sharedForm.module.scss';
+import { iconSize } from '@/design-system';
 
 const COLLAPSED_LIMIT = 10;
 
@@ -100,7 +101,7 @@ export function ApiKeyEntriesEditor({
     <div className={styles.entriesList}>
       <div className={`${styles.entriesToolbar} ${styles.entriesToolbarSplit}`}>
         <button type="button" className={styles.addBtn} disabled={mutating} onClick={handleAdd}>
-          <IconPlus size={12} />
+          <IconPlus size={iconSize['12']} />
           <span>{t('providersPage.form.addApiKeyEntry')}</span>
         </button>
         <button
@@ -111,7 +112,7 @@ export function ApiKeyEntriesEditor({
         >
           {isTestingAny ? (
             <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-              <IconLoader2 size={14} />
+              <IconLoader2 size={iconSize['14']} />
             </span>
           ) : null}
           <span>{t('providersPage.connectivity.testAll')}</span>
@@ -152,7 +153,7 @@ export function ApiKeyEntriesEditor({
                 >
                   {status.state === 'loading' ? (
                     <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-                      <IconLoader2 size={14} />
+                      <IconLoader2 size={iconSize['14']} />
                     </span>
                   ) : null}
                   <span>{t('providersPage.connectivity.test')}</span>
@@ -171,7 +172,7 @@ export function ApiKeyEntriesEditor({
                     ]
                       .filter(Boolean)
                       .join(' ')}
-                    size={14}
+                    size={iconSize['14']}
                   />
                 </button>
                 <button
@@ -180,7 +181,7 @@ export function ApiKeyEntriesEditor({
                   disabled={mutating || removeDisabled}
                   onClick={() => handleRemove(idx)}
                 >
-                  <IconX size={12} />
+                  <IconX size={iconSize['12']} />
                 </button>
               </div>
             </div>
@@ -224,7 +225,11 @@ export function ApiKeyEntriesEditor({
                           : t('providersPage.form.showApiKey')
                       }
                     >
-                      {showPasswords.has(idx) ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                      {showPasswords.has(idx) ? (
+                        <IconEyeOff size={iconSize['16']} />
+                      ) : (
+                        <IconEye size={iconSize['16']} />
+                      )}
                     </button>
                   </div>
                 </div>

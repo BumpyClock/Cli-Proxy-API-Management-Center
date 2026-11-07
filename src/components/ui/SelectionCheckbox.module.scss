@@ -6,15 +6,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $spacing-sm;
-  min-width: 32px;
-  min-height: 32px;
+  gap: $space-8;
+  min-width: $size-32;
+  min-height: $size-32;
   cursor: pointer;
   user-select: none;
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-width: 44px;
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-width: $size-touch-target;
+    min-height: $size-touch-target;
   }
 }
 
@@ -25,14 +25,14 @@
 
 .disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: $opacity-0-6;
 }
 
 .input {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
+  width: $size-1;
+  height: $size-1;
+  margin: (-$space-1);
   padding: 0;
   border: 0;
   overflow: hidden;
@@ -43,13 +43,13 @@
 
 /* --border-primary keeps the unchecked outline at 3:1 non-text contrast. */
 .box {
-  width: 18px;
-  height: 18px;
+  width: $size-18;
+  height: $size-18;
   flex-shrink: 0;
-  border-radius: 5px;
-  border: 1.5px solid var(--border-primary);
+  border-radius: $radius-5;
+  border: $border-width-1-5 solid var(--border-primary);
   background: var(--bg-primary);
-  color: var(--primary-contrast, #fff);
+  color: var(--primary-contrast);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -62,11 +62,11 @@
 
 .root:hover .box {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 16%, transparent);
+  box-shadow: $shadow-checkbox-focus;
 }
 
 .root:active .box {
-  transform: scale(0.95);
+  transform: scale($motion-scale-0-95);
 }
 
 .disabled:hover .box {
@@ -79,8 +79,8 @@
 }
 
 .input:focus-visible + .box {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: $space-2;
 }
 
 .boxChecked {
@@ -95,8 +95,8 @@
 
 .label {
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: $font-size-14;
+  font-weight: $font-weight-500;
 }
 
 @media (prefers-reduced-motion: reduce) {

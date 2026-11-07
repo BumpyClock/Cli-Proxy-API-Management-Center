@@ -12,6 +12,7 @@ import {
 } from '../sponsorDefinitions';
 import type { ProviderResource, SponsorProviderRaw } from '../types';
 import styles from './forms/sharedForm.module.scss';
+import { iconSize, space } from '@/design-system';
 
 interface ResourceDetailViewProps {
   resource: ProviderResource;
@@ -79,7 +80,7 @@ export function ResourceDetailView({ resource, usageByProvider }: ResourceDetail
           ))}
         </div>
 
-        <dl className={styles.dl} style={{ marginTop: 16 }}>
+        <dl className={styles.dl} style={{ marginTop: space['16'] }}>
           <div>
             <dt className={styles.dt}>{t('providersPage.detail.fields.identifier')}</dt>
             <dd className={styles.dd}>{firstKey ? maskApiKey(firstKey) : resource.identifier}</dd>
@@ -159,10 +160,10 @@ export function ResourceDetailView({ resource, usageByProvider }: ResourceDetail
                   ) : null}
                   <div className={styles.apiKeyEntryStats}>
                     <span className={`${styles.apiKeyEntryStat} ${styles.apiKeyEntryStatSuccess}`}>
-                      <IconCheck size={12} /> {entryStats.success}
+                      <IconCheck size={iconSize['12']} /> {entryStats.success}
                     </span>
                     <span className={`${styles.apiKeyEntryStat} ${styles.apiKeyEntryStatFailure}`}>
-                      <IconX size={12} /> {entryStats.failure}
+                      <IconX size={iconSize['12']} /> {entryStats.failure}
                     </span>
                   </div>
                 </div>
@@ -172,7 +173,7 @@ export function ResourceDetailView({ resource, usageByProvider }: ResourceDetail
         </div>
       ) : null}
 
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: space['16'] }}>
         <Collapsible label={t('providersPage.detail.metadataTitle')}>
           <dl className={styles.dl}>
             {metadata.map(([key, value]) => (

@@ -49,6 +49,7 @@ import {
 } from './pluginReleaseVersions';
 import { waitForPluginStoreState } from './pluginPolling';
 import styles from './PluginStorePage.module.scss';
+import { iconSize } from '@/design-system';
 
 type StoreStatusFilter = 'all' | 'installed' | 'notInstalled' | 'updates';
 type InstallVersionMode = 'latest' | 'release' | 'manual';
@@ -107,7 +108,7 @@ function StoreCardLogo({ src }: { src: string }) {
   return showImage ? (
     <img src={src} alt="" onError={() => setFailed(true)} />
   ) : (
-    <IconPlug size={18} />
+    <IconPlug size={iconSize['18']} />
   );
 }
 
@@ -447,7 +448,7 @@ function PluginInstallOptionsModal({
               rel="noreferrer"
             >
               {t('plugin_store.install_version_releases_link')}
-              <IconExternalLink size={12} />
+              <IconExternalLink size={iconSize['12']} />
             </a>
           ) : null}
         </div>
@@ -852,7 +853,7 @@ export function PluginStorePage() {
           <div className={styles.cardBadges}>
             {!isOfficial ? (
               <span className={styles.badgeUntrusted}>
-                <IconAlertTriangle size={11} />
+                <IconAlertTriangle size={iconSize['11']} />
                 {t('plugin_store.badge_untrusted')}
               </span>
             ) : (
@@ -940,7 +941,7 @@ export function PluginStorePage() {
                 loading={isInstalling}
                 title={actionTitle}
               >
-                <IconDownload size={14} />
+                <IconDownload size={iconSize['14']} />
                 {t('plugin_store.install')}
               </Button>
             ) : (
@@ -953,12 +954,12 @@ export function PluginStorePage() {
                     loading={isInstalling}
                     title={actionTitle}
                   >
-                    <IconRefreshCw size={14} />
+                    <IconRefreshCw size={iconSize['14']} />
                     {t('plugin_store.update')}
                   </Button>
                 ) : null}
                 <Button variant="secondary" size="sm" onClick={() => navigate('/plugins')}>
-                  <IconSettings size={14} />
+                  <IconSettings size={iconSize['14']} />
                   {t('plugin_store.manage')}
                 </Button>
               </>
@@ -974,7 +975,7 @@ export function PluginStorePage() {
                 title={t('plugin_store.open_repository')}
                 aria-label={t('plugin_store.open_repository')}
               >
-                <IconGithub size={14} />
+                <IconGithub size={iconSize['14']} />
               </a>
             ) : null}
             {homepageURL ? (
@@ -986,7 +987,7 @@ export function PluginStorePage() {
                 title={t('plugin_store.open_homepage')}
                 aria-label={t('plugin_store.open_homepage')}
               >
-                <IconExternalLink size={14} />
+                <IconExternalLink size={iconSize['14']} />
               </a>
             ) : null}
           </div>
@@ -1102,7 +1103,7 @@ export function PluginStorePage() {
           onChange={(event) => setFilter(event.target.value)}
           placeholder={t('plugin_store.search_placeholder')}
           aria-label={t('plugin_store.search_label')}
-          rightElement={<IconSearch size={16} />}
+          rightElement={<IconSearch size={iconSize['16']} />}
         />
       </div>
 
@@ -1153,7 +1154,7 @@ export function PluginStorePage() {
               action={
                 <Link className="btn btn-secondary btn-sm" to={PLUGIN_STORE_SOURCES_CONFIG_PATH}>
                   <span>
-                    <IconSettings size={16} aria-hidden="true" />
+                    <IconSettings size={iconSize['16']} aria-hidden="true" />
                     {t('plugin_store.review_sources')}
                   </span>
                 </Link>

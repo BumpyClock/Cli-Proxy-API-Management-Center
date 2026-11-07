@@ -7,7 +7,9 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { useFloatingMenuPosition, UNPOSITIONED_MENU_STYLE } from '@/hooks/useFloatingMenuPosition';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
@@ -48,6 +50,7 @@ import { AuthFileQuotaSection } from '@/features/authFiles/components/AuthFileQu
 import { AuthFileCooldownSection } from './AuthFileCooldownSection';
 import styles from './AuthFileCard.module.scss';
 import { menuFocusTarget } from '@/utils/menuFocus';
+import { iconSize } from '@/design-system';
 
 export type AuthFileCardProps = {
   file: AuthFileItem;
@@ -173,11 +176,12 @@ export function AuthFileCard(props: AuthFileCardProps) {
   }, [rawStatusMessage, showWarning, warningExpanded]);
 
   const [actionsOpen, setActionsOpen] = useState(false);
-  const actionsRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   // Which item receives focus when the menu opens: first for click/Enter/ArrowDown, last for ArrowUp.
   const openFocusRef = useRef<'first' | 'last'>('first');
+  const pendingFocusRef = useRef(false);
+  const menuStyle = useFloatingMenuPosition(actionsOpen, triggerRef, menuRef);
 
   const menuItems = () =>
     Array.from(
@@ -185,6 +189,7 @@ export function AuthFileCard(props: AuthFileCardProps) {
     );
   const openActions = (focus: 'first' | 'last') => {
     openFocusRef.current = focus;
+    pendingFocusRef.current = true;
     setActionsOpen(true);
   };
   const closeActions = (restoreFocus: boolean) => {
@@ -193,11 +198,18 @@ export function AuthFileCard(props: AuthFileCardProps) {
   };
 
   useEffect(() => {
-    if (!actionsOpen) return;
+    if (!menuStyle || !pendingFocusRef.current) return;
+    pendingFocusRef.current = false;
     const items = menuItems();
     (openFocusRef.current === 'last' ? items[items.length - 1] : items[0])?.focus();
+  }, [menuStyle]);
+
+  useEffect(() => {
+    if (!actionsOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
-      if (!actionsRef.current?.contains(event.target as Node)) setActionsOpen(false);
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setActionsOpen(false);
     };
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
@@ -217,7 +229,7 @@ export function AuthFileCard(props: AuthFileCardProps) {
       return;
     }
     if (event.key === 'Tab') {
-      setActionsOpen(false);
+      closeActions(true);
       return;
     }
     const items = menuItems();
@@ -235,6 +247,94 @@ export function AuthFileCard(props: AuthFileCardProps) {
   const handleActionsClick = (event: MouseEvent<HTMLElement>) => {
     if ((event.target as HTMLElement).closest('button')) closeActions(true);
   };
+
+  const actionsMenu = (
+    <div
+      ref={menuRef}
+      id={actionsMenuId}
+      className={styles.actions}
+      role="menu"
+      aria-label={t('redesign.authFiles.actionsFor', { name: identity.primary })}
+      hidden={!actionsOpen}
+      style={menuStyle ?? UNPOSITIONED_MENU_STYLE}
+      onClick={handleActionsClick}
+      onKeyDown={handleMenuKeyDown}
+    >
+      {showModelsButton && (
+        <Button
+          variant="ghost"
+          role="menuitem"
+          tabIndex={-1}
+          onClick={() => onShowModels(file)}
+          disabled={disableControls}
+        >
+          <IconModelCluster size={iconSize['15']} />
+          {t('auth_files.models_button')}
+        </Button>
+      )}
+      {!isRuntimeOnly && showManualRefreshButton && (
+        <Button
+          variant="ghost"
+          role="menuitem"
+          tabIndex={-1}
+          onClick={() => onManualRefresh(file)}
+          disabled={
+            disableControls ||
+            file.disabled ||
+            statusUpdating[file.name] === true ||
+            isManualRefreshing
+          }
+        >
+          {isManualRefreshing ? (
+            <LoadingSpinner size={iconSize['14']} />
+          ) : (
+            <IconRefreshCw size={iconSize['15']} />
+          )}
+          {t('auth_files.manual_refresh_button')}
+        </Button>
+      )}
+      {!isRuntimeOnly && (
+        <>
+          <Button
+            variant="ghost"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={() => onDownload(file.name)}
+            disabled={disableControls}
+          >
+            <IconDownload size={iconSize['15']} />
+            {t('auth_files.download_button')}
+          </Button>
+          <Button
+            variant="ghost"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={() => onOpenPrefixProxyEditor(file)}
+            disabled={disableControls || isManualRefreshing}
+          >
+            <IconSettings size={iconSize['15']} />
+            {t('auth_files.prefix_proxy_button')}
+          </Button>
+          <span className={styles.menuSeparator} role="separator" />
+          <Button
+            variant="ghost"
+            role="menuitem"
+            tabIndex={-1}
+            className={styles.menuDanger}
+            onClick={() => onDelete(file.name)}
+            disabled={disableControls || deleting === file.name || isManualRefreshing}
+          >
+            {deleting === file.name ? (
+              <LoadingSpinner size={iconSize['14']} />
+            ) : (
+              <IconTrash2 size={iconSize['15']} />
+            )}
+            {t('auth_files.delete_button')}
+          </Button>
+        </>
+      )}
+    </div>
+  );
 
   const requestSummary =
     activity.kind === 'idle' ? (
@@ -333,18 +433,22 @@ export function AuthFileCard(props: AuthFileCardProps) {
           <span
             className={`${styles.state} ${file.disabled ? styles.stateDisabled : styles.stateProblem}`}
           >
-            {file.disabled ? <IconX size={13} /> : <IconAlertTriangle size={13} />}
+            {file.disabled ? (
+              <IconX size={iconSize['13']} />
+            ) : (
+              <IconAlertTriangle size={iconSize['13']} />
+            )}
             {t(statusChipKey)}
           </span>
         ) : (
           <span className={styles.stateQuiet}>
-            <IconCheckCircle2 size={14} className={styles.stateQuietIcon} />
+            <IconCheckCircle2 size={iconSize['14']} className={styles.stateQuietIcon} />
             {t('redesign.authFiles.status_ok')}
           </span>
         )}
         {showWarning && (
           <div className={styles.warning} title={rawStatusMessage}>
-            <IconInfo className={styles.warningIcon} size={14} />
+            <IconInfo className={styles.warningIcon} size={iconSize['14']} />
             <span
               ref={warningTextRef}
               id={warningId}
@@ -449,7 +553,7 @@ export function AuthFileCard(props: AuthFileCardProps) {
         )}
       </td>
       <td className={styles.actionsCell} data-label={t('redesign.authFiles.actions')}>
-        <div ref={actionsRef} className={styles.rowActions}>
+        <div className={styles.rowActions}>
           <button
             ref={triggerRef}
             type="button"
@@ -462,84 +566,11 @@ export function AuthFileCard(props: AuthFileCardProps) {
             onKeyDown={handleTriggerKeyDown}
           >
             <span>{t('redesign.authFiles.actions')}</span>
-            <IconChevronDown className={styles.disclosureChevron} size={14} />
+            <IconChevronDown className={styles.disclosureChevron} size={iconSize['14']} />
           </button>
-          <div
-            ref={menuRef}
-            id={actionsMenuId}
-            className={styles.actions}
-            role="menu"
-            aria-label={t('redesign.authFiles.actionsFor', { name: identity.primary })}
-            hidden={!actionsOpen}
-            onClick={handleActionsClick}
-            onKeyDown={handleMenuKeyDown}
-          >
-            {showModelsButton && (
-              <Button
-                variant="ghost"
-                role="menuitem"
-                tabIndex={-1}
-                onClick={() => onShowModels(file)}
-                disabled={disableControls}
-              >
-                <IconModelCluster size={15} />
-                {t('auth_files.models_button')}
-              </Button>
-            )}
-            {!isRuntimeOnly && showManualRefreshButton && (
-              <Button
-                variant="ghost"
-                role="menuitem"
-                tabIndex={-1}
-                onClick={() => onManualRefresh(file)}
-                disabled={
-                  disableControls ||
-                  file.disabled ||
-                  statusUpdating[file.name] === true ||
-                  isManualRefreshing
-                }
-              >
-                {isManualRefreshing ? <LoadingSpinner size={14} /> : <IconRefreshCw size={15} />}
-                {t('auth_files.manual_refresh_button')}
-              </Button>
-            )}
-            {!isRuntimeOnly && (
-              <>
-                <Button
-                  variant="ghost"
-                  role="menuitem"
-                  tabIndex={-1}
-                  onClick={() => onDownload(file.name)}
-                  disabled={disableControls}
-                >
-                  <IconDownload size={15} />
-                  {t('auth_files.download_button')}
-                </Button>
-                <Button
-                  variant="ghost"
-                  role="menuitem"
-                  tabIndex={-1}
-                  onClick={() => onOpenPrefixProxyEditor(file)}
-                  disabled={disableControls || isManualRefreshing}
-                >
-                  <IconSettings size={15} />
-                  {t('auth_files.prefix_proxy_button')}
-                </Button>
-                <span className={styles.menuSeparator} role="separator" />
-                <Button
-                  variant="ghost"
-                  role="menuitem"
-                  tabIndex={-1}
-                  className={styles.menuDanger}
-                  onClick={() => onDelete(file.name)}
-                  disabled={disableControls || deleting === file.name || isManualRefreshing}
-                >
-                  {deleting === file.name ? <LoadingSpinner size={14} /> : <IconTrash2 size={15} />}
-                  {t('auth_files.delete_button')}
-                </Button>
-              </>
-            )}
-          </div>
+          {actionsOpen && typeof document !== 'undefined'
+            ? createPortal(actionsMenu, document.body)
+            : actionsMenu}
         </div>
         <button
           type="button"
@@ -550,7 +581,7 @@ export function AuthFileCard(props: AuthFileCardProps) {
           onClick={() => setDetailsOpen((open) => !open)}
         >
           <span>{t('redesign.authFiles.details')}</span>
-          <IconChevronDown className={styles.disclosureChevron} size={14} />
+          <IconChevronDown className={styles.disclosureChevron} size={iconSize['14']} />
         </button>
       </td>
     </tr>

@@ -16,6 +16,7 @@ import { ProviderResourceTable } from './ProviderResourceTable';
 import { ProviderResourceToolbar } from './ProviderResourceToolbar';
 import type { ProviderSortBy, SortDir } from '../types';
 import styles from './ProviderResourcePanel.module.scss';
+import { iconSize } from '@/design-system';
 
 export interface ProviderPanelControls {
   sortBy: ProviderSortBy;
@@ -119,7 +120,7 @@ export function ProviderResourcePanel({
               data-narrowed={narrowed || undefined}
               onClick={() => setControlsOpen((open) => !open)}
             >
-              <IconSlidersHorizontal size={16} aria-hidden="true" />
+              <IconSlidersHorizontal size={iconSize['16']} aria-hidden="true" />
               <span>{controlsLabel}</span>
             </button>
           </div>
@@ -132,7 +133,7 @@ export function ProviderResourcePanel({
                 rel="noreferrer"
               >
                 <span className={styles.sponsorLinkText}>{registrationLabel}</span>
-                <IconExternalLink className={styles.sponsorLinkIcon} size={14} />
+                <IconExternalLink className={styles.sponsorLinkIcon} size={iconSize['14']} />
               </a>
               {group.id === 'kimi' ? (
                 <p className={styles.kimiPromo}>{t('providersPage.sponsor.kimiPromo')}</p>
@@ -143,7 +144,7 @@ export function ProviderResourcePanel({
         <div id={controlsId} className={styles.controls} data-open={controlsOpen}>
           <div className={styles.searchWrap}>
             <span className={styles.searchIcon} aria-hidden="true">
-              <IconSearch size={16} />
+              <IconSearch size={iconSize['16']} />
             </span>
             <input
               type="search"
@@ -176,7 +177,7 @@ export function ProviderResourcePanel({
           <div>{t('providersPage.table.empty')}</div>
           <div className={styles.emptyAction}>
             <button type="button" className={styles.emptyActionButton} onClick={onCreate}>
-              <IconPlus size={16} />
+              <IconPlus size={iconSize['16']} />
               <span>{getProviderCreateLabel(t, group.id)}</span>
             </button>
           </div>

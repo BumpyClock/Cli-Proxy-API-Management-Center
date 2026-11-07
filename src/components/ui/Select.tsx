@@ -11,6 +11,7 @@ import {
 import { createPortal } from 'react-dom';
 import { IconChevronDown } from './icons';
 import styles from './Select.module.scss';
+import { iconSize, size, space, z } from '@/design-system';
 
 export interface SelectOption {
   value: string;
@@ -32,10 +33,10 @@ interface SelectProps {
   id?: string;
 }
 
-const VIEWPORT_MARGIN = 8;
-const DROPDOWN_OFFSET = 6;
-const DROPDOWN_MAX_HEIGHT = 240;
-const DROPDOWN_Z_INDEX = 2010;
+const VIEWPORT_MARGIN = space['8'];
+const DROPDOWN_OFFSET = space['6'];
+const DROPDOWN_MAX_HEIGHT = size['240'];
+const DROPDOWN_Z_INDEX = z['select-menu'];
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -331,7 +332,7 @@ export function Select({
             {displayText}
           </span>
           <span className={styles.triggerIcon} aria-hidden="true">
-            <IconChevronDown size={14} />
+            <IconChevronDown size={iconSize['14']} />
           </span>
         </button>
       </div>

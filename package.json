@@ -6,13 +6,16 @@
   "packageManager": "bun@1.3.14",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "bun run type-check && vite build",
     "preview": "vite preview",
     "test": "bun test",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
     "verify": "bun run test && bun run lint && bun run build",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,scss}\"",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+    "tokens": "bun scripts/design-tokens/generate.ts",
+    "tokens:check": "bun scripts/design-tokens/generate.ts --check",
+    "tokens:migrate": "bun scripts/design-tokens/migrate.ts"
   },
   "dependencies": {
     "@codemirror/lang-yaml": "^6.1.3",
@@ -32,6 +35,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/node": "^24",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.63.0",

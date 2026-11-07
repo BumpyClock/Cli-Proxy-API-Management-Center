@@ -5,6 +5,7 @@ import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
 import { THINKING_LEVELS, type ThinkingLevel } from '../../thinkingLevels';
 import type { ModelEntryInput } from '../../types';
 import styles from './sharedForm.module.scss';
+import { iconSize } from '@/design-system';
 
 const COLLAPSED_LIMIT = 10;
 
@@ -112,7 +113,7 @@ export function ModelEntriesEditor({
                       ]
                         .filter(Boolean)
                         .join(' ')}
-                      size={14}
+                      size={iconSize['14']}
                     />
                   </button>
                 ) : null}
@@ -122,7 +123,7 @@ export function ModelEntriesEditor({
                   disabled={mutating || removeDisabled}
                   onClick={() => handleRemove(idx)}
                 >
-                  <IconX size={12} />
+                  <IconX size={iconSize['12']} />
                 </button>
               </div>
             </div>
@@ -188,7 +189,7 @@ export function ModelEntriesEditor({
         </button>
       ) : null}
       <button type="button" className={styles.addBtn} disabled={mutating} onClick={handleAdd}>
-        <IconPlus size={12} />
+        <IconPlus size={iconSize['12']} />
         <span>{t('providersPage.form.addModel')}</span>
       </button>
     </>

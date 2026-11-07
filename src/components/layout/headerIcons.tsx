@@ -1,13 +1,14 @@
 import type { SVGProps } from 'react';
+import { iconSize, iconStroke } from '@/design-system';
 
 // Header action icons: 16px strokes sized for the top bar.
 const headerIconProps: SVGProps<SVGSVGElement> = {
-  width: 16,
-  height: 16,
+  width: iconSize['16'],
+  height: iconSize['16'],
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 2,
+  strokeWidth: iconStroke.default,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
   'aria-hidden': 'true',

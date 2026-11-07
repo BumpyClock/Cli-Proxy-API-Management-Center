@@ -11,7 +11,7 @@ describe('quota toolbar presentation contracts', () => {
     expect(source).toContain('{search && (');
     expect(source).toContain("aria-label={t('quota_management.search_clear')}");
     expect(source).toMatch(/handleSearchChange\(''\);\s+searchInputRef\.current\?\.focus\(\);/);
-    expect(source).toContain('<IconX size={14} aria-hidden="true" />');
+    expect(source).toContain("<IconX size={iconSize['14']} aria-hidden=\"true\" />");
     expect(styles).toMatch(/&::-webkit-search-cancel-button,[\s\S]*?appearance: none;/);
   });
 

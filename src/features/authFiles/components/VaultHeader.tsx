@@ -6,8 +6,9 @@ import { IconUpload } from '@/components/ui/icons';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RefreshButton } from '@/components/ui/RefreshButton';
 import styles from './VaultHeader.module.scss';
+import { iconSize, media } from '@/design-system';
 
-const PHONE_QUERY = '(max-width: 768px)';
+const PHONE_QUERY = media.mobile;
 const subscribePhone = (onChange: () => void) => {
   const media = window.matchMedia(PHONE_QUERY);
   media.addEventListener('change', onChange);
@@ -82,7 +83,11 @@ export function VaultHeader(props: VaultHeaderProps) {
             />
           )}
           <Button onClick={onUpload} disabled={disableControls || uploading}>
-            {uploading ? <LoadingSpinner size={14} /> : <IconUpload size={15} />}
+            {uploading ? (
+              <LoadingSpinner size={iconSize['14']} />
+            ) : (
+              <IconUpload size={iconSize['15']} />
+            )}
             {t('auth_files.upload_button')}
           </Button>
         </div>

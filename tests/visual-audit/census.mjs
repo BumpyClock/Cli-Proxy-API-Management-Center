@@ -5,11 +5,12 @@
 // Optional: CHROME_EXECUTABLE, ORIGIN (default http://127.0.0.1:5173), SCREENSHOTS=1.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { installFixtures, login, gotoRoute } from './fixtures.mjs';
 
 const outDir = path.resolve(
-  process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '/tmp/cpamc-census'
+  process.argv.slice(2).find((a) => !a.startsWith('--')) ?? path.join(tmpdir(), 'cpamc-census')
 );
 await fs.mkdir(outDir, { recursive: true });
 const playwrightPath = process.env.PLAYWRIGHT_MODULE;

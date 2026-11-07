@@ -5,77 +5,77 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: min(52dvh, 480px);
+  gap: $space-4;
+  max-height: min(52dvh, $size-480);
   overflow-y: auto;
-  padding-right: 2px;
+  padding-right: $space-2;
 }
 
 .item {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: $space-8;
   flex-wrap: wrap;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  padding: $space-8 $space-10;
+  border-radius: $radius-8;
+  border: $border-width-1 solid transparent;
   cursor: pointer;
   transition:
     background-color $transition-fast,
     border-color $transition-fast,
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    transform var(--dur-press) var(--ease-out-strong);
 
   &:active {
-    transform: scale(0.99);
+    transform: scale($motion-scale-0-99);
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .item:hover {
     background: var(--bg-tertiary);
-    border-color: color-mix(in srgb, var(--border-color) 70%, transparent);
+    border-color: color-mix(in srgb, var(--border-color) $tint-0-7, transparent);
   }
 }
 
 .itemExcluded {
-  opacity: 0.55;
+  opacity: $opacity-0-55;
 }
 
 .modelId {
-  font-family: $font-mono;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-family: $font-family-mono;
+  font-size: $font-size-12-5;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
   overflow-wrap: anywhere;
 }
 
 .modelDisplayName {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-tertiary);
   @include text-ellipsis;
 }
 
 .modelType {
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.05em;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
+  letter-spacing: $letter-spacing-0-05;
   text-transform: uppercase;
   color: var(--text-tertiary);
-  padding: 1px 6px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
+  padding: $space-1 $space-6;
+  border-radius: $radius-9999;
+  border: $border-width-1 solid var(--border-color);
 }
 
 .excludedBadge {
   margin-left: auto;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
   color: var(--failure-badge-text);
   background: var(--failure-badge-bg);
-  border: 1px solid var(--failure-badge-border);
-  border-radius: $radius-full;
-  padding: 1px 7px;
+  border: $border-width-1 solid var(--failure-badge-border);
+  border-radius: $radius-9999;
+  padding: $space-1 $space-7;
   white-space: nowrap;
 }
 

@@ -48,6 +48,7 @@ import { useQuotaActions } from './hooks/useQuotaActions';
 import { useQuotaBatchLoader } from './hooks/useQuotaBatchLoader';
 import { readQuotaUiState, writeQuotaUiState } from './uiState';
 import styles from './QuotaPage.module.scss';
+import { iconSize, radius, size } from '@/design-system';
 
 const TAB_IDS: string[] = ['all', ...QUOTA_TAB_ORDER];
 const SKELETON_CARD_COUNT = 6;
@@ -411,7 +412,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
 
           <div className={styles.toolbar}>
             <div className={styles.searchField}>
-              <IconSearch size={16} className={styles.searchIcon} aria-hidden="true" />
+              <IconSearch size={iconSize['16']} className={styles.searchIcon} aria-hidden="true" />
               <input
                 ref={searchInputRef}
                 className={styles.searchInput}
@@ -432,7 +433,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
                     searchInputRef.current?.focus();
                   }}
                 >
-                  <IconX size={14} aria-hidden="true" />
+                  <IconX size={iconSize['14']} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -457,7 +458,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
         {loading && entries.length === 0 ? (
           <div className={styles.grid} aria-hidden="true">
             {Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => (
-              <Skeleton key={index} height={168} rounded={14} />
+              <Skeleton key={index} height={size['168']} rounded={radius['14']} />
             ))}
           </div>
         ) : isEmpty ? (

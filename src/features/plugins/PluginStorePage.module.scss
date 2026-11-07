@@ -6,7 +6,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   width: 100%;
 }
 
@@ -15,41 +15,41 @@
 .pageHeader {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: $font-size-22;
+  font-weight: $font-weight-700;
+  line-height: $line-height-1-2;
 }
 
 .description {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: $font-size-14;
+  line-height: $line-height-1-5;
 }
 
 // ─── Alert Boxes ────────────────────────────────────────
 
 .errorBox,
 .warningBox {
-  padding: $spacing-md;
-  border-radius: $radius-md;
-  font-size: 14px;
-  line-height: 1.5;
+  padding: $space-16;
+  border-radius: $radius-8;
+  font-size: $font-size-14;
+  line-height: $line-height-1-5;
 }
 
 .errorBox {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-md;
-  border: 1px solid var(--danger-color);
-  background: rgba($error-color, 0.1);
+  gap: $space-16;
+  border: $border-width-1 solid var(--danger-color);
+  background: rgba($color-legacy-error, $opacity-0-1);
   color: var(--danger-color);
 
   span {
@@ -68,34 +68,34 @@
 }
 
 .warningBox {
-  border: 1px solid color-mix(in srgb, var(--warning-color, #c65746) 42%, var(--border-color));
-  background: color-mix(in srgb, var(--warning-color, #c65746) 9%, var(--bg-secondary));
+  border: $border-width-1 solid color-mix(in srgb, var(--warning-color) $tint-0-42, var(--border-color));
+  background: color-mix(in srgb, var(--warning-color) $tint-0-09, var(--bg-secondary));
   color: var(--text-primary);
 }
 
 .sourceErrorList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin: 8px 0 0;
+  gap: $space-6;
+  margin: $space-8 0 0;
   padding: 0;
   list-style: none;
 
   li {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: $space-2;
     min-width: 0;
   }
 
   span {
-    font-weight: 700;
+    font-weight: $font-weight-700;
     overflow-wrap: anywhere;
   }
 
   small {
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: $font-size-12;
     overflow-wrap: anywhere;
   }
 }
@@ -106,7 +106,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: $space-4 $space-8;
 }
 
 /* Labels and states are sans prose; only the directory path is a literal in mono. */
@@ -115,21 +115,21 @@
   min-width: 0;
   max-width: 100%;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: $space-6;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .statusDot {
-  width: 7px;
-  height: 7px;
+  width: $size-7;
+  height: $size-7;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .statusDotOn {
-  background: $success-color;
+  background: $color-legacy-success;
   box-shadow: none;
 }
 
@@ -139,14 +139,14 @@
 
 .statusValue {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: $font-weight-600;
 }
 
 .statusPathValue {
   display: block;
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   min-width: 0;
-  max-width: min(360px, 58vw);
+  max-width: min($size-360, 58vw);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -156,7 +156,7 @@
 .statusDivider {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: $font-size-12;
   user-select: none;
 }
 
@@ -165,16 +165,16 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
 
   :global(.form-group) {
     flex: 1;
-    max-width: 480px;
+    max-width: $size-480;
     margin: 0;
   }
 
   :global(.input) {
-    padding-right: 36px;
+    padding-right: $space-36;
   }
 
   @include mobile {
@@ -212,8 +212,8 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: $spacing-md;
+  grid-template-columns: repeat(auto-fill, minmax($size-280, 1fr));
+  gap: $space-16;
 
   @include mobile {
     grid-template-columns: 1fr;
@@ -225,41 +225,41 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
-  padding: $spacing-md;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: 8px;
+  gap: $space-8;
+  padding: $space-16;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-7, transparent);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   transition:
     border-color $transition-fast,
     background-color $transition-fast;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
+    border-color: color-mix(in srgb, var(--primary-color) $tint-0-45, var(--border-color));
     background: var(--bg-hover);
   }
 }
 
 .cardHeader {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: $size-40 minmax(0, 1fr);
   align-items: flex-start;
-  column-gap: $spacing-sm;
-  row-gap: 6px;
+  column-gap: $space-8;
+  row-gap: $space-6;
 }
 
 .logoBox {
   display: inline-flex;
   grid-column: 1;
   grid-row: 1;
-  width: 40px;
-  height: 40px;
+  width: $size-40;
+  height: $size-40;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
-  background: color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
+  border-radius: $radius-10;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-5, transparent);
+  background: color-mix(in srgb, var(--bg-tertiary) $tint-0-6, transparent);
   color: var(--text-secondary);
   flex-shrink: 0;
 
@@ -275,24 +275,24 @@
   grid-column: 2;
   grid-row: 1;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
   min-width: 0;
 }
 
 .cardTitle {
   margin: 0;
   color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1.3;
+  font-size: $font-size-15;
+  font-weight: $font-weight-650;
+  line-height: $line-height-1-3;
   overflow-wrap: anywhere;
   @include text-ellipsis-multiline(2);
 }
 
 .cardId {
   color: var(--text-tertiary);
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   @include text-ellipsis;
 }
 
@@ -302,7 +302,7 @@
   grid-row: 2;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: 5px;
+  gap: $space-5;
   min-width: 0;
 
   &:empty {
@@ -315,37 +315,37 @@
 .badgeWarning,
 .badgeUntrusted {
   display: inline-flex;
-  min-height: 22px;
+  min-height: $size-22;
   align-items: center;
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.25;
+  border-radius: $radius-6;
+  padding: $space-2 $space-8;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-1-25;
 }
 
 .badge {
-  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-82, transparent);
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-5, transparent);
   color: var(--text-secondary);
 }
 
 .badgeSuccess {
-  background: rgba($success-color, 0.1);
-  border: 1px solid rgba($success-color, 0.2);
+  background: rgba($color-legacy-success, $opacity-0-1);
+  border: $border-width-1 solid rgba($color-legacy-success, $opacity-0-2);
   color: var(--success-color);
 }
 
 .badgeWarning {
-  background: rgba($warning-color, 0.1);
-  border: 1px solid rgba($warning-color, 0.2);
+  background: rgba($color-legacy-warning, $opacity-0-1);
+  border: $border-width-1 solid rgba($color-legacy-warning, $opacity-0-2);
   color: var(--warning-color);
 }
 
 .badgeUntrusted {
-  gap: 4px;
-  background: rgba($warning-color, 0.12);
-  border: 1px solid rgba($warning-color, 0.4);
+  gap: $space-4;
+  background: rgba($color-legacy-warning, $opacity-0-12);
+  border: $border-width-1 solid rgba($color-legacy-warning, $opacity-0-4);
   color: var(--danger-color);
 
   svg {
@@ -357,8 +357,8 @@
   display: -webkit-box;
   margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -368,7 +368,7 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
 }
 
 .cardDescExpanded {
@@ -385,9 +385,9 @@
   color: var(--primary-color);
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
+  line-height: $line-height-1-4;
 
   &:hover {
     color: var(--primary-hover);
@@ -395,16 +395,16 @@
   }
 
   &:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--primary-color) 45%, transparent);
-    outline-offset: 3px;
-    border-radius: 4px;
+    outline: $border-width-2 solid color-mix(in srgb, var(--primary-color) $tint-0-45, transparent);
+    outline-offset: $space-3;
+    border-radius: $radius-4;
   }
 }
 
 .cardMeta {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   flex-wrap: wrap;
 }
 
@@ -413,76 +413,76 @@
   min-width: 0;
   max-width: 100%;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: $font-size-12;
   white-space: nowrap;
 
   strong {
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: $font-weight-600;
   }
 }
 
 .metaDot {
-  width: 3px;
-  height: 3px;
+  width: $size-3;
+  height: $size-3;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  background: color-mix(in srgb, var(--text-tertiary) $tint-0-5, transparent);
   flex-shrink: 0;
 }
 
 .tagRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: $space-5;
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
+  padding: $space-2 $space-8;
+  border-radius: $radius-5;
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-82, transparent);
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-4, transparent);
   color: var(--text-tertiary);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-1-4;
 }
 
 .cardFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
+  gap: $space-8;
   margin-top: auto;
-  padding-top: $spacing-sm;
+  padding-top: $space-8;
 }
 
 .cardActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .cardLinks {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   flex-shrink: 0;
 }
 
 .iconLink {
   display: inline-flex;
-  width: 30px;
-  min-height: 30px;
+  width: $size-30;
+  min-height: $size-30;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   color: var(--text-primary);
   text-decoration: none;
@@ -503,32 +503,32 @@
 .installOptions {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $space-16;
 }
 
 .installMessage {
   margin: 0;
   color: var(--text-primary);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: $font-size-14;
+  line-height: $line-height-1-55;
 }
 
 .installVersionField {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: $space-10;
 }
 
 .installVersionLabel {
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
 }
 
 .installVersionModes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: $space-8;
 
   @include mobile {
     grid-template-columns: 1fr;
@@ -538,10 +538,10 @@
 .installVersionMode {
   display: flex;
   min-width: 0;
-  gap: 8px;
-  padding: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: $radius-md;
+  gap: $space-8;
+  padding: $space-10;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-7, transparent);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   cursor: pointer;
   transition:
@@ -549,43 +549,43 @@
     background-color $transition-fast;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
+    border-color: color-mix(in srgb, var(--primary-color) $tint-0-45, var(--border-color));
     background: var(--bg-hover);
   }
 
   input {
-    margin-top: 2px;
+    margin-top: $space-2;
     flex: 0 0 auto;
   }
 }
 
 .installVersionModeActive {
   border-color: var(--primary-color);
-  background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary));
+  background: color-mix(in srgb, var(--primary-color) $tint-0-1, var(--bg-primary));
 }
 
 .installVersionModeDisabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: $opacity-0-7;
 }
 
 .installVersionModeText {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
 
   strong {
     color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.3;
+    font-size: $font-size-13;
+    font-weight: $font-weight-700;
+    line-height: $line-height-1-3;
   }
 
   small {
     color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 1.4;
+    font-size: $font-size-12;
+    line-height: $line-height-1-4;
     overflow-wrap: anywhere;
   }
 }
@@ -593,11 +593,11 @@
 .installVersionPanel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-radius: $radius-md;
-  border: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 65%, transparent);
+  gap: $space-8;
+  padding: $space-10;
+  border-radius: $radius-8;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-6, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-65, transparent);
 
   :global(.form-group) {
     margin: 0;
@@ -607,15 +607,15 @@
 .installVersionHint {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: $font-size-12;
+  line-height: $line-height-1-45;
 }
 
 .installVersionWarning {
   margin: 0;
   color: var(--warning-color);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: $font-size-12;
+  line-height: $line-height-1-45;
   overflow-wrap: anywhere;
 }
 
@@ -624,11 +624,11 @@
   width: fit-content;
   max-width: 100%;
   align-items: center;
-  gap: 7px;
+  gap: $space-7;
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-1-4;
   cursor: pointer;
 
   input {
@@ -641,11 +641,11 @@
   width: fit-content;
   max-width: 100%;
   align-items: center;
-  gap: 5px;
+  gap: $space-5;
   color: var(--primary-color);
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
+  line-height: $line-height-1-4;
   text-decoration: none;
 
   &:hover {
@@ -661,8 +661,8 @@
 .installDialogActions {
   display: flex;
   justify-content: flex-end;
-  gap: $spacing-sm;
-  margin-top: $spacing-sm;
+  gap: $space-8;
+  margin-top: $space-8;
 
   @include mobile {
     flex-direction: column-reverse;
@@ -674,52 +674,52 @@
 .skeletonCard {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  padding: $spacing-md;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: 8px;
+  gap: $space-16;
+  padding: $space-16;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-7, transparent);
+  border-radius: $radius-8;
   background: var(--bg-primary);
 }
 
 .skeletonHeader {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
+  gap: $space-16;
 }
 
 .skeletonAvatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: $size-40;
+  height: $size-40;
+  border-radius: $radius-10;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 25%,
-    color-mix(in srgb, var(--bg-hover) 70%, transparent) 37%,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 63%
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 25%,
+    color-mix(in srgb, var(--bg-hover) $tint-0-7, transparent) 37%,
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 63%
   );
   background-size: 400% 100%;
-  animation: skeletonPulse 1.35s ease-in-out infinite;
+  animation: skeletonPulse $duration-1350 $ease-in-out infinite;
   flex-shrink: 0;
 }
 
 .skeletonText {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
   flex: 1;
 }
 
 .skeletonLine {
-  height: 14px;
-  border-radius: 4px;
+  height: $size-14;
+  border-radius: $radius-4;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 25%,
-    color-mix(in srgb, var(--bg-hover) 70%, transparent) 37%,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 63%
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 25%,
+    color-mix(in srgb, var(--bg-hover) $tint-0-7, transparent) 37%,
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 63%
   );
   background-size: 400% 100%;
-  animation: skeletonPulse 1.35s ease-in-out infinite;
+  animation: skeletonPulse $duration-1350 $ease-in-out infinite;
 
   &:first-child {
     width: 45%;
@@ -727,21 +727,21 @@
 
   &:last-child {
     width: 70%;
-    height: 10px;
+    height: $size-10;
   }
 }
 
 .skeletonBody {
-  height: 56px;
-  border-radius: $radius-md;
+  height: $size-56;
+  border-radius: $radius-8;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 25%,
-    color-mix(in srgb, var(--bg-hover) 70%, transparent) 37%,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 63%
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 25%,
+    color-mix(in srgb, var(--bg-hover) $tint-0-7, transparent) 37%,
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 63%
   );
   background-size: 400% 100%;
-  animation: skeletonPulse 1.35s ease-in-out infinite;
+  animation: skeletonPulse $duration-1350 $ease-in-out infinite;
 }
 
 // ─── Animation ──────────────────────────────────────────
@@ -759,7 +759,7 @@
 
 @include mobile {
   .page {
-    gap: $spacing-md;
+    gap: $space-16;
   }
 }
 
@@ -767,8 +767,8 @@
   min-width: 0;
 }
 .page :focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: $space-2;
 }
 @media (prefers-reduced-motion: reduce) {
   .page *,
@@ -780,24 +780,24 @@
 }
 
 .cardGrid {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, $size-300), 1fr));
+  gap: $space-12;
 }
 .card {
   background: var(--bg-secondary);
   border-color: var(--border-color);
-  padding: 14px;
+  padding: $space-14;
 }
 .logoBox {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: $size-28;
+  height: $size-28;
+  border-radius: $radius-6;
 }
 .cardHeader {
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: $size-28 minmax(0, 1fr);
 }
 .cardTitle {
-  font-size: 14px;
+  font-size: $font-size-14;
 }
 .metaItem {
   white-space: normal;
@@ -812,9 +812,9 @@
 .badgeOfficial {
   display: inline-flex;
   align-items: center;
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 12px;
+  border-radius: $radius-6;
+  padding: $space-2 $space-8;
+  font-size: $font-size-12;
   color: var(--info-color);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
 }

@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { RefreshButton } from '@/components/ui/RefreshButton';
 import { IconPlus } from '@/components/ui/icons';
 import styles from './ProviderHeaderCard.module.scss';
+import { iconSize } from '@/design-system';
 
 interface ProviderHeaderCardProps {
   title?: string;
@@ -77,7 +78,7 @@ export function ProviderHeaderCard({
               disabled={isNewDisabled}
             >
               <span>
-                <IconPlus size={16} aria-hidden="true" />
+                <IconPlus size={iconSize['16']} aria-hidden="true" />
                 {newLabel}
               </span>
             </button>

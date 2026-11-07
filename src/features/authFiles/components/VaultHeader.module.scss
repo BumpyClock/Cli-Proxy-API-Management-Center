@@ -5,9 +5,9 @@
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 4px 8px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: $space-4 $space-8;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
 }
@@ -36,6 +36,6 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
   flex-wrap: wrap;
 }

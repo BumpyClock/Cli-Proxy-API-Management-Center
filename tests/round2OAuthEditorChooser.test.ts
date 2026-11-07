@@ -4,6 +4,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider } from 'react-i18next';
 import { compileString } from 'sass';
+import { media } from '@/design-system';
 import { OAuthEditorProviderCard } from '@/features/authFiles/components/OAuthEditorProviderCard';
 import { createTestI18n, productionLocales } from './helpers/locales';
 
@@ -53,7 +54,8 @@ describe('provider chooser', () => {
       'src/features/authFiles/components/OAuthEditorProviderCard.tsx',
       'utf8'
     );
-    expect(source).toContain("const SHORTCUTS_OPEN_QUERY = '(min-width: 769px)';");
+    expect(source).toContain('const SHORTCUTS_OPEN_QUERY = media.aboveMobile;');
+    expect(media.aboveMobile).toBe('(min-width: 769px)');
   });
 
   test('a selected provider stays visible in the step heading with an accessible prefix', () => {

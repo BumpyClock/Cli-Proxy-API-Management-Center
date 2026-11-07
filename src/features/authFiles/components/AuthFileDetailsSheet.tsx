@@ -19,6 +19,7 @@ import {
 import { MAX_CREDENTIAL_WEIGHT } from '@/utils/credentialWeight';
 import { AuthFileExcludedModelsField } from './AuthFileExcludedModelsField';
 import styles from './AuthFileDetailsSheet.module.scss';
+import { iconSize } from '@/design-system';
 
 /** API 边界归一化补写的派生字段——INFO 视图里只展示后端原始形状，避免重复噪音。 */
 const DERIVED_INFO_KEYS = [
@@ -165,7 +166,7 @@ export function AuthFileDetailsSheet(props: AuthFileDetailsSheetProps) {
         <div className={styles.editor}>
           {editor.loading ? (
             <div className={styles.loading}>
-              <LoadingSpinner size={14} />
+              <LoadingSpinner size={iconSize['14']} />
               <span>{t('auth_files.prefix_proxy_loading')}</span>
             </div>
           ) : (

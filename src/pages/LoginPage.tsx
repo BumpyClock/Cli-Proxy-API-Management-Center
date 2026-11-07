@@ -14,6 +14,11 @@ import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
 import type { ApiError } from '@/types';
 import styles from './LoginPage.module.scss';
 import { redirectTargetFrom } from '@/router/redirectTarget';
+import { iconSize } from '@/design-system';
+
+/** Dwell on the auto-login success state before redirecting (flow timing, not a token). */
+// design-tokens: allow flow dwell before navigation, not an animation
+const SUCCESS_REDIRECT_DELAY_MS = 1500;
 
 /**
  * 将 API 错误转换为本地化的用户友好消息
@@ -134,7 +139,7 @@ export function LoginPage() {
           setTimeout(() => {
             const redirect = redirectTargetFrom(location.state);
             navigate(redirect, { replace: true });
-          }, 1500);
+          }, SUCCESS_REDIRECT_DELAY_MS);
         } else {
           setApiBase(storedBase || detectedBase);
           setManagementKey(storedKey || '');
@@ -292,7 +297,11 @@ export function LoginPage() {
                         : t('login.show_key', { defaultValue: '显示密钥' })
                     }
                   >
-                    {showKey ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                    {showKey ? (
+                      <IconEyeOff size={iconSize['16']} />
+                    ) : (
+                      <IconEye size={iconSize['16']} />
+                    )}
                   </button>
                 }
               />

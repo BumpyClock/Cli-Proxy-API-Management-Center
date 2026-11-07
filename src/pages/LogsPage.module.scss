@@ -6,36 +6,36 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $space-16;
   min-height: 0;
 
   // Phones size the page to its rows; it still reaches the viewport bottom, because the page
   // transition wrapper clips overflow and would cut off the Options overlay under a short log.
   @include mobile {
-    min-height: calc(100dvh - var(--header-height) - #{$spacing-md + $spacing-lg});
+    min-height: calc(100dvh - var(--header-height) - #{$space-16 + $space-24});
     overflow: visible;
   }
 }
 
 .tabBar {
   display: flex;
-  gap: $spacing-xs;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-4;
+  border-bottom: $border-width-1 solid var(--border-color);
 }
 
 .tabItem {
   @include button-reset;
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: $space-10 $space-12;
+  font-size: $font-size-14;
+  font-weight: $font-weight-500;
   color: var(--text-secondary);
   background: transparent;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border-bottom: $border-width-2 solid transparent;
+  margin-bottom: (-$space-1);
   cursor: pointer;
   transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
+    color $duration-150 $ease-default,
+    border-color $duration-150 $ease-default;
 
   &:hover {
     color: var(--text-primary);
@@ -47,12 +47,12 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: -2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 }
 
@@ -64,12 +64,12 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: $space-24;
   flex: 1;
   min-height: 0;
 
   @include mobile {
-    gap: $spacing-md;
+    gap: $space-16;
     min-height: auto;
   }
 }
@@ -80,7 +80,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 12px;
+  padding: $space-12;
 
   // Phones drop the card chrome: the log panel keeps its own frame and the toolbar gains width.
   @include mobile {
@@ -98,7 +98,7 @@
 // Load errors and the file-logging notice sit above the toolbar with the same spacing.
 .logCard > :global(.error-box),
 .logCard > :global(.status-badge) {
-  margin-bottom: $spacing-sm;
+  margin-bottom: $space-8;
 }
 
 /* Toolbar: search, structured filters and Options (phones: search takes its own full-width row).
@@ -107,23 +107,23 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px 12px;
+  gap: $space-10 $space-12;
   flex: 0 0 auto;
-  margin-bottom: 12px;
+  margin-bottom: $space-12;
 
   :global(.form-group) {
     margin: 0;
   }
 
   @include mobile {
-    gap: $spacing-sm;
+    gap: $space-8;
   }
 }
 
 .searchWrapper {
-  flex: 1 1 320px;
+  flex: 1 1 $size-320;
   min-width: 0;
-  max-width: 520px;
+  max-width: $size-520;
 
   @include mobile {
     flex: 1 1 100%;
@@ -133,20 +133,20 @@
 
 // Same height as the toolbar buttons: 36px on desktop, the 44px touch height on phones.
 .searchInput {
-  height: 36px;
-  min-height: 36px;
+  height: $size-36;
+  min-height: $size-36;
   padding-top: 0;
   padding-bottom: 0;
-  padding-right: 44px !important;
+  padding-right: $space-44 !important;
 
   @include mobile {
-    height: 44px;
-    min-height: 44px;
+    height: $size-touch-target;
+    min-height: $size-touch-target;
   }
 
   @media (pointer: coarse) {
-    height: 44px;
-    min-height: 44px;
+    height: $size-touch-target;
+    min-height: $size-touch-target;
   }
 }
 
@@ -161,16 +161,16 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  width: 28px;
-  height: 28px;
-  border-radius: $radius-full;
+  width: $size-28;
+  height: $size-28;
+  border-radius: $radius-9999;
   color: var(--text-secondary);
 
   /* Invisible extension: 44px touch target without enlarging the glyph inside the input. */
   &::after {
     content: '';
     position: absolute;
-    inset: -8px;
+    inset: (-$space-8);
   }
 
   &:hover {
@@ -178,8 +178,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-1;
   }
 }
 
@@ -215,10 +215,10 @@
 @include mobile {
   .labelFull {
     position: absolute;
-    width: 1px;
-    height: 1px;
+    width: $size-1;
+    height: $size-1;
     padding: 0;
-    margin: -1px;
+    margin: (-$space-1);
     overflow: hidden;
     clip: rect(0 0 0 0);
     white-space: nowrap;
@@ -232,10 +232,10 @@
 
 .visuallyHidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
-  margin: -1px;
+  margin: (-$space-1);
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
@@ -258,14 +258,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: $radius-full;
+  min-width: $size-20;
+  height: $size-20;
+  padding: 0 $space-6;
+  border-radius: $radius-9999;
   background: var(--primary-color);
-  color: var(--primary-contrast, #fff);
-  font-size: 12px;
-  font-weight: 700;
+  color: var(--primary-contrast);
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -273,13 +273,13 @@
 .structuredFilters {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
   flex: 1 1 100%;
   min-width: 0;
-  padding: 8px 10px;
+  padding: $space-8 $space-10;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
 }
 
 .structuredFilters > :global(.btn) {
@@ -293,32 +293,32 @@
 .filterChipGroup {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: $space-8;
   flex-wrap: wrap;
 
   @include mobile {
     flex-direction: column;
-    gap: 6px;
+    gap: $space-6;
   }
 }
 
 .filterChipLabel {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-secondary);
-  font-weight: 700;
-  line-height: 32px;
-  min-width: 68px;
+  font-weight: $font-weight-700;
+  line-height: $line-height-32px;
+  min-width: $size-68;
 
   @include mobile {
     min-width: 0;
-    line-height: 1.2;
+    line-height: $line-height-1-2;
   }
 }
 
 .filterChipList {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   flex-wrap: wrap;
   flex: 1;
 }
@@ -328,22 +328,22 @@
   @include button-reset;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-height: 32px;
-  padding: 4px 10px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
+  gap: $space-4;
+  min-height: $size-32;
+  padding: $space-4 $space-10;
+  border-radius: $radius-9999;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.3;
+  font-size: $font-size-12;
+  line-height: $line-height-1-3;
   cursor: pointer;
-  max-width: 280px;
+  max-width: $size-280;
   white-space: nowrap;
   transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
+    border-color $duration-150 $ease-default,
+    color $duration-150 $ease-default,
+    background-color $duration-150 $ease-default;
 
   svg {
     flex: 0 0 auto;
@@ -356,22 +356,22 @@
 
   &[aria-pressed='true'] {
     color: var(--primary-color);
-    border-color: rgba($primary-color, 0.45);
-    background: rgba($primary-color, 0.14);
+    border-color: rgba($color-legacy-primary, $opacity-0-45);
+    background: rgba($color-legacy-primary, $opacity-0-14);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-1;
   }
 
   &:disabled {
-    opacity: 0.55;
+    opacity: $opacity-0-55;
     cursor: not-allowed;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -386,7 +386,7 @@
 }
 
 .filterChipHint {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-tertiary);
 }
 
@@ -396,30 +396,30 @@
   align-items: center;
   flex-wrap: wrap;
   flex: 1 1 100%;
-  gap: 6px 8px;
+  gap: $space-6 $space-8;
   min-width: 0;
 }
 
 .activeFiltersCount {
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
 }
 
 .activeFilterChip {
   @include button-reset;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-height: 32px;
-  max-width: 240px;
-  padding: 4px 8px 4px 10px;
-  border: 1px solid rgba($primary-color, 0.45);
-  border-radius: $radius-full;
-  background: rgba($primary-color, 0.14);
+  gap: $space-4;
+  min-height: $size-32;
+  max-width: $size-240;
+  padding: $space-4 $space-8 $space-4 $space-10;
+  border: $border-width-1 solid rgba($color-legacy-primary, $opacity-0-45);
+  border-radius: $radius-9999;
+  background: rgba($color-legacy-primary, $opacity-0-14);
   color: var(--primary-color);
-  font-size: 12px;
-  line-height: 1.3;
+  font-size: $font-size-12;
+  line-height: $line-height-1-3;
   cursor: pointer;
 
   svg {
@@ -431,12 +431,12 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-1;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 }
 
@@ -459,17 +459,17 @@
 
 .optionsPanel {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + $space-6);
   right: 0;
-  z-index: 20;
+  z-index: $z-stack-20;
   display: flex;
   flex-direction: column;
-  width: 320px;
-  max-width: calc(100vw - 32px);
-  padding: 4px 0;
+  width: $size-320;
+  max-width: calc(100vw - $size-32);
+  padding: $space-4 0;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   box-shadow: $shadow-lg;
 
   &[hidden] {
@@ -481,25 +481,25 @@
 .optionsDanger {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: $space-6;
+  padding: $space-8 $space-12;
 }
 
 .optionsSection + .optionsSection,
 .optionsDanger {
-  border-top: 1px solid var(--border-color);
+  border-top: $border-width-1 solid var(--border-color);
 }
 
 /* Switch rows span the panel: label left, switch right, the whole row is the hit area. */
 .optionsSection > label {
   justify-content: space-between;
   width: 100%;
-  min-height: 36px;
-  gap: 12px;
-  font-size: 13px;
+  min-height: $size-36;
+  gap: $space-12;
+  font-size: $font-size-13;
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 }
 
@@ -514,7 +514,7 @@
 .fullscreenBar {
   display: flex;
   align-items: center;
-  gap: 8px 12px;
+  gap: $space-8 $space-12;
   margin-left: auto;
 
   @include mobile {
@@ -534,31 +534,31 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: $space-8 $space-12;
 
   @include mobile {
-    column-gap: 8px;
+    column-gap: $space-8;
   }
 }
 
 .refreshGroup > label {
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 }
 
 .switchLabel {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
 
   svg {
     flex: 0 0 auto;
   }
 
   @include mobile {
-    font-size: 14px;
-    line-height: 1.25;
+    font-size: $font-size-14;
+    line-height: $line-height-1-25;
 
     svg {
       display: none;
@@ -569,7 +569,7 @@
 .buttonContent {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
 
   svg {
     flex: 0 0 auto;
@@ -580,13 +580,13 @@
 .logPanel {
   position: relative;
   flex: 1 1 auto;
-  min-height: 320px;
+  min-height: $size-320;
   height: auto;
   overflow: auto;
   resize: vertical;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
   overscroll-behavior: contain;
@@ -594,9 +594,9 @@
   /* Phones: a short log sizes to its rows; a long one scrolls inside a bounded panel. */
   @include mobile {
     flex: 0 0 auto;
-    min-height: 160px;
+    min-height: $size-160;
     height: auto;
-    max-height: 480px;
+    max-height: $size-480;
   }
 }
 
@@ -623,18 +623,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-8;
+  padding: $space-8 $space-12;
+  border-bottom: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
 
   @include mobile {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    gap: $spacing-xs;
+    gap: $space-4;
 
     > span {
       width: 100%;
@@ -650,12 +650,12 @@
 .loadMoreStats {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
+  gap: $space-16;
 
   @include mobile {
     width: 100%;
     flex-wrap: wrap;
-    gap: $spacing-sm;
+    gap: $space-8;
 
     > span {
       white-space: nowrap;
@@ -665,18 +665,18 @@
 
 .rawLog {
   margin: 0;
-  padding: 10px 12px;
+  padding: $space-10 $space-12;
   cursor: text;
   user-select: text;
   white-space: pre;
   color: var(--text-primary);
-  font-family: $font-mono;
-  font-size: 12.5px;
-  line-height: 1.45;
+  font-family: $font-family-mono;
+  font-size: $font-size-12-5;
+  line-height: $line-height-1-45;
 
   @include mobile {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: $space-8 $space-10;
+    font-size: $font-size-12;
   }
 }
 
@@ -687,8 +687,8 @@
   flex-direction: column;
   // Same font as the rows so the `ch` part of the computed minimum width matches.
   min-width: var(--log-grid-min-width, 0);
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
 }
 
 .logRow,
@@ -696,19 +696,19 @@
   display: grid;
   grid-template-columns: var(--log-grid-columns);
   align-items: baseline;
-  gap: 4px 16px;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--border-color);
-  border-left: 3px solid transparent;
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
+  gap: $space-4 $space-16;
+  padding: $space-7 $space-10;
+  border-bottom: $border-width-1 solid var(--border-color);
+  border-left: $border-width-3 solid transparent;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
 }
 
 .columnHeader {
   color: var(--text-secondary);
   background: var(--bg-secondary);
-  font-weight: 600;
+  font-weight: $font-weight-600;
 }
 
 .logRow {
@@ -716,12 +716,12 @@
   cursor: copy;
 
   &:hover {
-    background: rgba($primary-color, 0.06);
+    background: rgba($color-legacy-primary, $opacity-0-06);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: -2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
   }
 }
 
@@ -743,7 +743,7 @@
 }
 
 .levelCell {
-  font-weight: 700;
+  font-weight: $font-weight-700;
   color: var(--text-secondary);
 }
 
@@ -765,7 +765,7 @@
 }
 
 .statusCell {
-  font-weight: 700;
+  font-weight: $font-weight-700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -798,7 +798,7 @@
 }
 
 .methodCell {
-  font-weight: 700;
+  font-weight: $font-weight-700;
 }
 
 .path,
@@ -817,18 +817,19 @@
   overflow-wrap: break-word;
   word-break: normal;
   white-space: pre-wrap;
-  line-height: 1.55;
+  line-height: $line-height-1-55;
 }
 
 .requestIdBadge {
   display: inline-block;
-  margin-right: 8px;
-  padding: 0 6px;
-  border-radius: $radius-full;
-  font-size: 12px;
-  color: #0891b2;
-  background: rgba(8, 145, 178, 0.1);
-  border: 1px solid rgba(8, 145, 178, 0.25);
+  margin-right: $space-8;
+  padding: 0 $space-6;
+  border-radius: $radius-9999;
+  font-size: $font-size-12;
+  // Semantic info tone: follows each theme instead of a fixed cyan.
+  color: var(--info-color);
+  background: color-mix(in srgb, var(--info-color) $tint-0-1, transparent);
+  border: $border-width-1 solid color-mix(in srgb, var(--info-color) $tint-0-25, transparent);
 }
 
 // Phones stack each record: time, level, status, latency and method on one line, then the
@@ -847,9 +848,9 @@
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 2px 10px;
-    padding: 8px 10px;
-    font-size: 12px;
+    gap: $space-2 $space-10;
+    padding: $space-8 $space-10;
+    font-size: $font-size-12;
   }
 
   .cell:empty {
@@ -884,13 +885,13 @@
 
 /* Error request logs */
 .errorPanel {
-  height: 480px;
+  height: $size-480;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 
   :global(.item-meta) {
-    flex: 1 1 260px;
+    flex: 1 1 $size-260;
     min-width: 0;
   }
 
@@ -907,88 +908,88 @@
 .errorLogViewer {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $space-16;
   min-height: 0;
 }
 
 .errorLogViewerMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: $spacing-sm $spacing-md;
+  gap: $space-8 $space-16;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
 }
 
 .errorLogContent {
   margin: 0;
-  padding: 12px;
-  max-height: min(58vh, 640px);
+  padding: $space-12;
+  max-height: min(58vh, $size-640);
   overflow: auto;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   white-space: pre;
   -webkit-overflow-scrolling: touch;
 }
 
 /* Short viewports */
-@media (max-height: 820px) {
+@media (max-height: #{$breakpoint-height-820}) {
   .tabItem {
-    padding: 8px 12px;
+    padding: $space-8 $space-12;
   }
 
   .content {
-    gap: $spacing-md;
+    gap: $space-16;
   }
 
   .logCard {
-    padding: 10px;
+    padding: $space-10;
   }
 
   .errorPanel {
-    height: 360px;
+    height: $size-360;
   }
 
-  @media (min-width: 769px) {
+  @media (min-width: #{$breakpoint-mobile + 1px}) {
     .filters {
-      gap: $spacing-sm 12px;
-      margin-bottom: $spacing-sm;
+      gap: $space-8 $space-12;
+      margin-bottom: $space-8;
     }
 
     .logPanel {
-      min-height: 160px;
+      min-height: $size-160;
     }
   }
 }
 
-@media (max-height: 600px) {
+@media (max-height: #{$breakpoint-height-600}) {
   .tabItem {
-    font-size: 13px;
+    font-size: $font-size-13;
   }
 
   .content {
-    gap: $spacing-sm;
+    gap: $space-8;
   }
 
   .logCard {
-    padding: $spacing-sm;
+    padding: $space-8;
   }
 
   .logRow,
   .columnHeader {
-    padding: 5px 8px;
-    font-size: 12px;
+    padding: $space-5 $space-8;
+    font-size: $font-size-12;
   }
 
   .errorPanel {
-    height: 280px;
+    height: $size-280;
   }
 
-  @media (min-width: 769px) {
+  @media (min-width: #{$breakpoint-mobile + 1px}) {
     .logPanel {
       min-height: 0;
     }
@@ -1003,14 +1004,14 @@
   min-height: 0;
   width: 100vw;
   height: 100vh;
-  padding: $spacing-lg;
+  padding: $space-24;
   border-radius: 0;
   border: none;
   overflow: hidden;
   background: var(--bg-primary);
 
   @include mobile {
-    padding: $spacing-md;
+    padding: $space-16;
     min-height: 0;
     overflow: hidden;
   }

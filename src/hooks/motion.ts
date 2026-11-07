@@ -1,18 +1,29 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { animate } from 'motion/mini';
+import {
+  distance,
+  duration,
+  easingFunction,
+  motion,
+  motionScale,
+  motionSeconds,
+} from '@/design-system';
 
 /**
- * Premium 动效档位：入场 0.45s、减速曲线、无回弹。
+ * Premium 动效档位：入场、减速曲线、无回弹，取值见 design-system 的 motion.reveal。
  * 与 PageTransition 保持同一套自定义 easing 写法。
  */
-const REVEAL_DISTANCE = 24;
-const REVEAL_DURATION = 0.45;
-const COUNT_UP_DURATION = 900;
-/** 分组入场的级差与总预算：级差再大也不许整组拖过 360ms */
-const GROUP_STAGGER = 0.07;
-const GROUP_MAX_TOTAL = 0.36;
+const { reveal, countUp } = motion;
+const REVEAL_DISTANCE = distance[reveal.distance];
+const REVEAL_DURATION = motionSeconds(reveal.duration);
+const REVEAL_GROUP_SCALE = motionScale[reveal.groupScale];
+const COUNT_UP_DURATION = duration[countUp.duration];
+/** 分组入场的级差与总预算：级差再大也不许整组拖过 groupMaxTotal */
+const GROUP_STAGGER = reveal.groupStagger / 1000;
+const GROUP_MAX_TOTAL = reveal.groupMaxTotal / 1000;
 
-const easeOutQuart = (progress: number) => 1 - (1 - progress) ** 4;
+const easeOutQuart = easingFunction(reveal.easing);
+const countUpEase = easingFunction(countUp.easing);
 
 export const prefersReducedMotion = (): boolean =>
   typeof window !== 'undefined' &&
@@ -64,7 +75,7 @@ export function useRevealOnScroll<T extends HTMLElement>(delaySeconds = 0) {
           void animation.finished.then(clearInlineState).catch(() => undefined);
         });
       },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.05 }
+      { rootMargin: reveal.rootMargin, threshold: 0.05 }
     );
 
     observer.observe(element);
@@ -82,8 +93,8 @@ export function useRevealOnScroll<T extends HTMLElement>(delaySeconds = 0) {
 /**
  * 容器进入视口时，其内 `[data-reveal]` 子元素按 DOM 顺序级联上浮淡入。
  *
- * 级差 70ms、整组封顶 360ms（子项多时自动压缩级差），符合 micro-cascade 预算；
- * `data-reveal="scale"` 的子项额外从 0.97 缩放入场（用于玻璃面板的 materialize）。
+ * 级差与整组封顶取自 motion.reveal（子项多时自动压缩级差），符合 micro-cascade 预算；
+ * `data-reveal="scale"` 的子项额外从 groupScale 缩放入场（用于玻璃面板的 materialize）。
  * 初始态同样在绘制前写入行内样式，脚本缺席时内容始终可见。
  */
 export function useRevealGroup<T extends HTMLElement>(baseDelaySeconds = 0) {
@@ -98,7 +109,7 @@ export function useRevealGroup<T extends HTMLElement>(baseDelaySeconds = 0) {
 
     const hiddenTransform = (element: HTMLElement) =>
       element.dataset.reveal === 'scale'
-        ? `translate3d(0, ${REVEAL_DISTANCE}px, 0) scale(0.97)`
+        ? `translate3d(0, ${REVEAL_DISTANCE}px, 0) scale(${REVEAL_GROUP_SCALE})`
         : `translate3d(0, ${REVEAL_DISTANCE}px, 0)`;
     const settledTransform = (element: HTMLElement) =>
       element.dataset.reveal === 'scale' ? 'translate3d(0, 0, 0) scale(1)' : 'translate3d(0, 0, 0)';
@@ -150,7 +161,7 @@ export function useRevealGroup<T extends HTMLElement>(baseDelaySeconds = 0) {
           });
         });
       },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.05 }
+      { rootMargin: reveal.rootMargin, threshold: 0.05 }
     );
 
     observer.observe(container);
@@ -189,7 +200,7 @@ export function useCountUp(target: number, enabled = true): number {
         startTimestamp = timestamp;
       }
       const progress = Math.min(1, (timestamp - startTimestamp) / COUNT_UP_DURATION);
-      const eased = easeOutQuart(progress);
+      const eased = countUpEase(progress);
       setDisplayValue(Math.round(from + (target - from) * eased));
 
       if (progress < 1) {

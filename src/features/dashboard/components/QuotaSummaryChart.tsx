@@ -30,6 +30,7 @@ import {
   resolveQuotaRefreshTargets,
 } from '@/features/quota/refreshScope';
 import styles from './QuotaSummaryChart.module.scss';
+import { chart } from '@/design-system';
 
 /** Rows shown on the dashboard; Quota Management lists every account. */
 const DASHBOARD_ROW_LIMIT = 6;
@@ -278,7 +279,7 @@ function QuotaSummaryChartContent({
               formatY={(value) => percentFormat.format(value / 100)}
               ariaLabel={t('redesign.dashboardQuota.chart_label')}
               emptyText={t(`redesign.dashboardQuota.${status}`, { count: failed })}
-              height={224}
+              height={chart.height.quotaSummary}
               compactHeight={200}
               legendPlacement="none"
               guide={

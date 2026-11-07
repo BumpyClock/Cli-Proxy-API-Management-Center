@@ -8,6 +8,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import type { OAuthModelAliasEntry } from '@/types';
 import type { AuthFileModelItem, OAuthConfigLoadError } from '@/features/authFiles/constants';
 import styles from './OAuthConfigPanels.module.scss';
+import { iconSize } from '@/design-system';
 
 type ViewMode = 'diagram' | 'list';
 
@@ -106,7 +107,7 @@ export function OAuthModelAliasCard(props: OAuthModelAliasCardProps) {
                   title={t('oauth_model_alias.diagram_collapse')}
                   aria-label={t('oauth_model_alias.diagram_collapse')}
                 >
-                  <IconChevronUp size={16} />
+                  <IconChevronUp size={iconSize['16']} />
                 </Button>
               </div>
               <ModelMappingDiagram

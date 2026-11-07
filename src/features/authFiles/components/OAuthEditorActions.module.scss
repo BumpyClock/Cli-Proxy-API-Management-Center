@@ -3,11 +3,11 @@
 /* Floating bar centred on the content column (--content-center-x), like the batch bar. */
 .container {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  bottom: calc($space-12 + env(safe-area-inset-bottom, 0px));
   left: var(--content-center-x, 50%);
   transform: translateX(-50%);
   width: max-content;
-  max-width: calc(100vw - 24px);
+  max-width: calc(100vw - $size-24);
   z-index: $z-dropdown;
   pointer-events: none;
 }
@@ -19,7 +19,7 @@
 :global(html):has(.container),
 :global(html):has(.container) :global(.content) {
   scroll-padding-bottom: calc(
-    var(--oauth-editor-actions-height, 0px) + 28px + env(safe-area-inset-bottom, 0px)
+    var(--oauth-editor-actions-height, 0px) + $space-28 + env(safe-area-inset-bottom, 0px)
   );
 }
 
@@ -28,11 +28,11 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 12px;
-  --glass-blur: 14px;
-  border: 1px solid var(--glass-border);
+  gap: $space-8;
+  padding: $space-8;
+  border-radius: $radius-12;
+  --glass-blur: #{$blur-14};
+  border: $border-width-1 solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop-filter);
   box-shadow: var(--shadow-lg);
@@ -41,23 +41,23 @@
 .reason {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  max-width: 320px;
-  margin: 0 4px 0 6px;
+  gap: $space-6;
+  max-width: $size-320;
+  margin: 0 $space-4 0 $space-6;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: $font-size-13;
+  line-height: $line-height-1-45;
 
   svg {
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: $space-2;
   }
 }
 
 /* Phones: a full-width bar; Save takes the row (the top bar link is the way back). */
 @include mobile {
   .container {
-    width: calc(100vw - 16px);
+    width: calc(100vw - $size-16);
     max-width: none;
   }
 
@@ -68,7 +68,7 @@
   .reason {
     flex-basis: 100%;
     max-width: none;
-    margin: 0 4px;
+    margin: 0 $space-4;
   }
 
   .bar > :global(.btn) {

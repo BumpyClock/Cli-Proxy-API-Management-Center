@@ -5,6 +5,7 @@ import { PROVIDER_LOGOS } from '../brandLogos';
 import type { ProviderBrand, ProviderGroup } from '../types';
 import { shouldExpandUnconfigured } from '../workbenchLayout';
 import styles from './ProviderCategoryList.module.scss';
+import { iconSize } from '@/design-system';
 
 interface ProviderCategoryListProps {
   groups: ProviderGroup[];
@@ -158,7 +159,11 @@ export function ProviderCategoryList({
               </optgroup>
             ) : null}
           </select>
-          <IconChevronDown size={16} aria-hidden="true" className={styles.pickerChevron} />
+          <IconChevronDown
+            size={iconSize['16']}
+            aria-hidden="true"
+            className={styles.pickerChevron}
+          />
         </span>
       </div>
       {detail ? <div className={styles.detailArea}>{detail}</div> : null}

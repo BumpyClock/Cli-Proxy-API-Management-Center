@@ -48,6 +48,7 @@ import iconGrokDark from '@/assets/icons/grok-dark.svg';
 import iconDeepseek from '@/assets/icons/deepseek.svg';
 import iconMinimax from '@/assets/icons/minimax.svg';
 import styles from './SystemPage.module.scss';
+import { iconSize } from '@/design-system';
 
 const MODEL_CATEGORY_ICONS: Record<string, string | { light: string; dark: string }> = {
   devin: { light: iconDevinLight, dark: iconDevinDark },
@@ -75,6 +76,9 @@ const parseVersionSegments = (version?: string | null) => {
     .filter(Number.isFinite);
   return parts.length ? parts : null;
 };
+
+/** Window for the repeated version taps that open the request log (interaction timing). */
+const VERSION_TAP_WINDOW_MS = 1500;
 
 const compareVersions = (latest?: string | null, current?: string | null) => {
   const latestParts = parseVersionSegments(latest);
@@ -130,7 +134,7 @@ export function OptionalResources() {
               <span className={styles.resourceText}>
                 <span className={styles.resourceName}>
                   {resource.name}
-                  <IconExternalLink size={13} aria-hidden="true" />
+                  <IconExternalLink size={iconSize['13']} aria-hidden="true" />
                   <span className={styles.visuallyHidden}>{t('system_info.resource_new_tab')}</span>
                 </span>
                 <span className={styles.resourceDesc}>{t(resource.descriptionKey)}</span>
@@ -292,7 +296,7 @@ export function SystemPage() {
     versionTapTimer.current = setTimeout(() => {
       versionTapCount.current = 0;
       versionTapTimer.current = null;
-    }, 1500);
+    }, VERSION_TAP_WINDOW_MS);
   }, [openRequestLogModal]);
 
   const handleRequestLogClose = useCallback(() => {
@@ -398,7 +402,7 @@ export function SystemPage() {
             loading={checkingVersion}
           >
             {/* Header actions carry an icon; while checking, the spinner takes its place. */}
-            {!checkingVersion && <IconDownload size={16} aria-hidden="true" />}
+            {!checkingVersion && <IconDownload size={iconSize['16']} aria-hidden="true" />}
             {t('system_info.version_check_button')}
           </Button>
         }
@@ -477,12 +481,12 @@ export function SystemPage() {
               className={styles.linkCard}
             >
               <div className={`${styles.linkIcon} ${styles.github}`}>
-                <IconGithub size={22} />
+                <IconGithub size={iconSize['22']} />
               </div>
               <div className={styles.linkContent}>
                 <div className={styles.linkTitle}>
                   {t('system_info.link_main_repo')}
-                  <IconExternalLink size={14} />
+                  <IconExternalLink size={iconSize['14']} />
                 </div>
                 <div className={styles.linkDesc}>{t('system_info.link_main_repo_desc')}</div>
               </div>
@@ -495,12 +499,12 @@ export function SystemPage() {
               className={styles.linkCard}
             >
               <div className={`${styles.linkIcon} ${styles.github}`}>
-                <IconCode size={22} />
+                <IconCode size={iconSize['22']} />
               </div>
               <div className={styles.linkContent}>
                 <div className={styles.linkTitle}>
                   {t('system_info.link_webui_repo')}
-                  <IconExternalLink size={14} />
+                  <IconExternalLink size={iconSize['14']} />
                 </div>
                 <div className={styles.linkDesc}>{t('system_info.link_webui_repo_desc')}</div>
               </div>
@@ -513,12 +517,12 @@ export function SystemPage() {
               className={styles.linkCard}
             >
               <div className={`${styles.linkIcon} ${styles.docs}`}>
-                <IconBookOpen size={22} />
+                <IconBookOpen size={iconSize['22']} />
               </div>
               <div className={styles.linkContent}>
                 <div className={styles.linkTitle}>
                   {t('system_info.link_docs')}
-                  <IconExternalLink size={14} />
+                  <IconExternalLink size={iconSize['14']} />
                 </div>
                 <div className={styles.linkDesc}>{t('system_info.link_docs_desc')}</div>
               </div>

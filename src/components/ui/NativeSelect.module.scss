@@ -1,21 +1,21 @@
 .field {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: $space-10;
   min-width: 0;
 
   label {
     flex-shrink: 0;
     color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: $font-size-13;
+    font-weight: $font-weight-500;
   }
 }
 
 .stacked {
   flex-direction: column;
   align-items: stretch;
-  gap: 2px;
+  gap: $space-2;
 }
 
 .wrap {
@@ -26,28 +26,28 @@
 
   select {
     width: 100%;
-    min-height: 44px;
-    padding: 8px 36px 8px 12px;
-    border: 1px solid var(--control-outline, var(--border-color));
-    border-radius: $radius-md;
+    min-height: $size-touch-target;
+    padding: $space-8 $space-36 $space-8 $space-12;
+    border: $border-width-1 solid var(--control-outline);
+    border-radius: $radius-8;
     background: var(--bg-primary);
     color: var(--text-primary);
     font: inherit;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: $font-size-14;
+    font-weight: $font-weight-500;
     text-overflow: ellipsis;
     appearance: none;
     cursor: pointer;
   }
 
   select:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
   select:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: $opacity-0-55;
   }
 }
 
@@ -60,7 +60,7 @@
 .chevron {
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: $space-12;
   transform: translateY(-50%);
   color: var(--text-secondary);
   pointer-events: none;

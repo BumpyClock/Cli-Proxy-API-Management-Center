@@ -3,18 +3,18 @@
 .pageContent {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   min-width: 0;
   width: 100%;
   /* Room for the floating Back/Save bar (OAuthEditorActions): height, 12px offset, clearance. */
   --oauth-editor-bar-room: calc(
-    var(--oauth-editor-actions-height, 0px) + 28px + env(safe-area-inset-bottom, 0px)
+    var(--oauth-editor-actions-height, 0px) + #{$space-28} + env(safe-area-inset-bottom, 0px)
   );
   padding-bottom: var(--oauth-editor-bar-room);
 
   > :global(.card) {
     box-shadow: none;
-    border-radius: 8px;
+    border-radius: $radius-8;
   }
 }
 
@@ -23,43 +23,43 @@
  * itself; reserve its 200px + 4px offset (+ 12px) while open so it can scroll above the bar.
  */
 .pageContent:has(:global(.autocomplete-dropdown)) {
-  padding-bottom: calc(var(--oauth-editor-bar-room) + 216px);
+  padding-bottom: calc(var(--oauth-editor-bar-room) + $space-216);
 }
 
 .headerMeta {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: $font-size-13;
 }
 
 .editorHeaderMeta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 32px;
+  gap: $space-8;
+  padding: $space-32;
   color: var(--text-secondary);
 }
 
 .editorDescription {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   overflow-wrap: anywhere;
 }
 
 .editorSectionTitle {
-  margin: 0 0 4px;
-  font-size: 14px;
-  font-weight: 600;
+  margin: 0 0 $space-4;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
 }
 
@@ -74,16 +74,16 @@
 .providerSection {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
   /* Matches .editorHeader so the 01 and 02 step badges share one x offset. */
-  padding: $spacing-md;
+  padding: $space-16;
 }
 
 .providerHeading {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: $spacing-sm;
+  gap: $space-8;
   min-width: 0;
 
   .sectionTitle {
@@ -95,11 +95,11 @@
 .providerFields {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
   width: 100%;
-  max-width: 680px;
+  max-width: $size-680;
   min-width: 0;
-  padding-left: 36px;
+  padding-left: $space-36;
 
   @include mobile {
     max-width: none;
@@ -111,22 +111,22 @@
 .providerRequirement {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: $space-6;
   margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: $font-size-13;
+  line-height: $line-height-1-45;
 
   svg {
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: $space-2;
   }
 }
 
 .sectionHeading {
   display: flex;
   align-items: flex-start;
-  gap: $spacing-sm;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -135,13 +135,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-sm;
+  width: $size-28;
+  height: $size-28;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-4;
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
 }
 
@@ -151,9 +151,9 @@
 
 .sectionTitle {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
+  line-height: $line-height-1-4;
   color: var(--text-primary);
 }
 
@@ -167,20 +167,20 @@
 .providerChip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   max-width: 100%;
-  min-height: 28px;
-  padding: 3px 10px 3px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-full;
+  min-height: $size-28;
+  padding: $space-3 $space-10 $space-3 $space-8;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-9999;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
 
   img {
-    width: 16px;
-    height: 16px;
+    width: $size-16;
+    height: $size-16;
     flex-shrink: 0;
     object-fit: contain;
   }
@@ -197,8 +197,8 @@
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
@@ -212,38 +212,38 @@
   }
 
   &[open] > summary {
-    margin-bottom: $spacing-sm;
+    margin-bottom: $space-8;
   }
 }
 
 .providerOptions {
   display: flex;
   flex-wrap: wrap;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .providerOption {
   display: inline-flex;
   align-items: center;
-  gap: $spacing-sm;
-  min-height: 38px;
+  gap: $space-8;
+  min-height: $size-38;
   max-width: 100%;
-  padding: 7px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  padding: $space-7 $space-10;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+    border-color $duration-160 $ease-default,
+    background-color $duration-160 $ease-default,
+    color $duration-160 $ease-default;
 
   img {
-    width: 18px;
-    height: 18px;
+    width: $size-18;
+    height: $size-18;
     object-fit: contain;
   }
 
@@ -258,16 +258,16 @@
   }
 
   @include mobile {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 3px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-3;
   }
 
   &:disabled {
-    opacity: 0.55;
+    opacity: $opacity-0-55;
     cursor: not-allowed;
   }
 
@@ -288,8 +288,8 @@
   border-color: var(--primary-color);
   background: var(--primary-10);
   color: var(--text-primary);
-  font-weight: 600;
-  box-shadow: inset 0 0 0 1px var(--primary-color);
+  font-weight: $font-weight-600;
+  box-shadow: $shadow-inset-primary;
 
   .providerCheck {
     visibility: visible;
@@ -301,9 +301,9 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-12;
+  padding: $space-16;
+  border-bottom: $border-width-1 solid var(--border-color);
 
   /* A step without a body (no provider yet) closes at the card edge. */
   &:last-child {
@@ -313,36 +313,36 @@
 
 .mappingRow {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-columns: $size-24 minmax(0, 1fr) auto;
   align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-md;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  gap: $space-16;
+  padding: $space-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
 
   /* Phones: the number becomes a caption above the fields so inputs get the full row width. */
   @include mobile {
     grid-template-columns: minmax(0, 1fr);
-    gap: $spacing-sm;
+    gap: $space-8;
   }
 }
 
 .mappingNumber {
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
 }
 
 .mappingFields {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) $size-20 minmax(0, 1fr);
   align-items: end;
-  gap: $spacing-sm;
+  gap: $space-8;
   min-width: 0;
 
-  @media (max-width: 540px) {
+  @media (max-width: #{$breakpoint-540}) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -356,27 +356,27 @@
 
   label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: $space-6;
     color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: $font-size-13;
+    font-weight: $font-weight-500;
   }
 }
 
 .modelInput {
   width: 100%;
   min-width: 0;
-  font-family: $font-mono;
-  font-size: 13px;
+  font-family: $font-family-mono;
+  font-size: $font-size-13;
 
   /* The typed value is a literal model ID; the hint is prose. */
   &::placeholder {
-    font-family: $font-family;
+    font-family: $font-family-sans;
   }
 }
 
 /* Phones: the top bar's labelled "Auth Files" link is the way back. */
-@media (max-width: 768px) {
+@media (max-width: #{$breakpoint-mobile}) {
   .pageBack {
     display: none;
   }
@@ -386,10 +386,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 38px;
+  height: $size-38;
   color: var(--text-tertiary);
 
-  @media (max-width: 540px) {
+  @media (max-width: #{$breakpoint-540}) {
     display: none;
   }
 }
@@ -397,21 +397,21 @@
 .mappingFooter {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   align-self: end;
-  min-height: 38px;
+  min-height: $size-38;
 
   @include mobile {
     justify-content: space-between;
-    padding-top: $spacing-xs;
-    border-top: 1px solid var(--border-color);
+    padding-top: $space-4;
+    border-top: $border-width-1 solid var(--border-color);
   }
 }
 
 .removeMapping {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: $size-34;
+  height: $size-34;
   padding: 0;
   color: var(--text-secondary);
 

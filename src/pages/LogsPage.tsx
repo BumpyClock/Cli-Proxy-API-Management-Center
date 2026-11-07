@@ -56,6 +56,7 @@ import { useLogFilters } from './hooks/useLogFilters';
 import { isNearBottom, useLogScroller } from './hooks/useLogScroller';
 import { LogRowCells } from './LogRowCells';
 import styles from './LogsPage.module.scss';
+import { iconSize, size } from '@/design-system';
 
 // 初始只渲染最近 100 行，滚动到顶部再逐步加载更多（避免一次性渲染过多导致卡顿）
 const INITIAL_DISPLAY_LINES = 100;
@@ -228,7 +229,7 @@ export function ActiveLogFilters({
             title={filter.kind === 'path' ? filter.value : undefined}
           >
             <span className={styles.activeFilterText}>{label}</span>
-            <IconX size={14} aria-hidden="true" />
+            <IconX size={iconSize['14']} aria-hidden="true" />
           </button>
         );
       })}
@@ -336,7 +337,7 @@ export function LogsOptions({
               </span>
             </>
           )}
-          <IconChevronDown size={16} className={styles.filterPanelChevron} />
+          <IconChevronDown size={iconSize['16']} className={styles.filterPanelChevron} />
         </span>
       </button>
 
@@ -373,7 +374,7 @@ export function LogsOptions({
             className={styles.optionsAction}
             title={t('logs.download_hint')}
           >
-            <IconDownload size={16} />
+            <IconDownload size={iconSize['16']} />
             {t('logs.download_button')}
           </Button>
           {!fullscreen && (
@@ -382,7 +383,7 @@ export function LogsOptions({
               onClick={runAndClose(onEnterFullscreen)}
               className={styles.optionsAction}
             >
-              <IconMaximize2 size={16} />
+              <IconMaximize2 size={iconSize['16']} />
               {t('logs.fullscreen_button')}
             </Button>
           )}
@@ -395,7 +396,7 @@ export function LogsOptions({
             disabled={clearDisabled}
             className={styles.optionsAction}
           >
-            <IconTrash2 size={16} />
+            <IconTrash2 size={iconSize['16']} />
             {t('logs.clear_button')}
           </Button>
         </div>
@@ -1050,7 +1051,7 @@ export function LogsPage() {
         disabled={autoRefreshDisabled}
         label={
           <span className={styles.switchLabel}>
-            <IconTimer size={16} />
+            <IconTimer size={iconSize['16']} />
             {/* One unabbreviated name at every width: a bare "Auto" beside a switch is ambiguous. */}
             <span>{t('logs.auto_refresh')}</span>
           </span>
@@ -1157,10 +1158,10 @@ export function LogsPage() {
                         title={t('common.clear')}
                         aria-label={t('common.clear')}
                       >
-                        <IconX size={16} />
+                        <IconX size={iconSize['16']} />
                       </button>
                     ) : (
-                      <IconSearch size={16} className={styles.searchIcon} />
+                      <IconSearch size={iconSize['16']} className={styles.searchIcon} />
                     )
                   }
                 />
@@ -1175,7 +1176,7 @@ export function LogsPage() {
                   aria-controls={structuredFiltersPanelId}
                   onClick={() => setStructuredFiltersExpanded((open) => !open)}
                 >
-                  <IconSlidersHorizontal size={16} />
+                  <IconSlidersHorizontal size={iconSize['16']} />
                   <span className={styles.labelFull}>{t('logs.filter_panel_title')}</span>
                   <span className={styles.labelShort} aria-hidden="true">
                     {t('logs.filter_panel_short')}
@@ -1190,7 +1191,7 @@ export function LogsPage() {
                       </span>
                     </>
                   )}
-                  <IconChevronDown size={16} className={styles.filterPanelChevron} />
+                  <IconChevronDown size={iconSize['16']} className={styles.filterPanelChevron} />
                 </Button>
               )}
 
@@ -1219,7 +1220,7 @@ export function LogsPage() {
                     className={styles.exitFullscreen}
                     title={t('logs.exit_fullscreen_button')}
                   >
-                    <IconMinimize2 size={16} />
+                    <IconMinimize2 size={iconSize['16']} />
                     <span className={styles.labelFull}>{t('logs.exit_fullscreen_button')}</span>
                   </Button>
                 </div>
@@ -1246,7 +1247,7 @@ export function LogsPage() {
                             disabled={count === 0 && !active}
                             aria-pressed={active}
                           >
-                            {active && <IconCheck size={14} aria-hidden="true" />}
+                            {active && <IconCheck size={iconSize['14']} aria-hidden="true" />}
                             {method} ({count})
                           </button>
                         );
@@ -1269,7 +1270,7 @@ export function LogsPage() {
                             disabled={count === 0 && !active}
                             aria-pressed={active}
                           >
-                            {active && <IconCheck size={14} aria-hidden="true" />}
+                            {active && <IconCheck size={iconSize['14']} aria-hidden="true" />}
                             {t(`logs.filter_status_${statusGroup}`)} ({count})
                           </button>
                         );
@@ -1294,7 +1295,7 @@ export function LogsPage() {
                               aria-pressed={active}
                               title={path}
                             >
-                              {active && <IconCheck size={14} aria-hidden="true" />}
+                              {active && <IconCheck size={iconSize['14']} aria-hidden="true" />}
                               <span className={styles.filterChipText}>
                                 {path} ({count})
                               </span>
@@ -1491,7 +1492,7 @@ export function LogsPage() {
                             disabled={disableControls}
                           >
                             <span className={styles.buttonContent}>
-                              <IconEye size={16} />
+                              <IconEye size={iconSize['16']} />
                               {t('logs.error_logs_open')}
                             </span>
                           </Button>
@@ -1518,7 +1519,7 @@ export function LogsPage() {
         open={errorLogViewer.status !== 'closed'}
         onClose={closeErrorLogViewer}
         title={selectedErrorLog?.name ?? t('logs.error_log_view_title')}
-        width={960}
+        width={size['960']}
         footer={
           <>
             <Button variant="secondary" onClick={closeErrorLogViewer}>

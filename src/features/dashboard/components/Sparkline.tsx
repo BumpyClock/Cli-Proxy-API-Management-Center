@@ -1,10 +1,14 @@
 import { useId, useMemo } from 'react';
 import { buildSmoothLinePath } from './curve';
 import styles from './Sparkline.module.scss';
+import { chart } from '@/design-system';
 
+// design-tokens: allow viewBox coordinate system, scaled to the element by CSS
 const VIEW_WIDTH = 100;
+// design-tokens: allow viewBox coordinate system, scaled to the element by CSS
 const VIEW_HEIGHT = 32;
 /** 顶部留白，避免峰值贴边被裁切 */
+// design-tokens: allow viewBox units, not rendered px
 const TOP_PADDING = 3;
 
 interface SparklineProps {
@@ -77,7 +81,7 @@ export function Sparkline({ points, color, ariaLabel, className }: SparklineProp
         d={geometry.line}
         fill="none"
         stroke={strokeColor}
-        strokeWidth={2}
+        strokeWidth={chart.sparklineStroke}
         strokeLinecap="round"
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"

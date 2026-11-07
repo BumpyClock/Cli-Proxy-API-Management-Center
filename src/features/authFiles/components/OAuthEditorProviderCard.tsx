@@ -6,6 +6,7 @@ import { IconCheck, IconInfo, IconNetwork } from '@/components/ui/icons';
 import { useThemeStore } from '@/stores';
 import { getAuthFileIcon, getTypeLabel, normalizeProviderKey } from '../constants';
 import styles from './OAuthEditor.module.scss';
+import { iconSize, media } from '@/design-system';
 
 interface OAuthEditorProviderCardProps {
   provider: string;
@@ -21,7 +22,7 @@ interface OAuthEditorProviderCardProps {
 }
 
 /** Phones start with the shortcut list collapsed so the model editor stays near the top. */
-const SHORTCUTS_OPEN_QUERY = '(min-width: 769px)';
+const SHORTCUTS_OPEN_QUERY = media.aboveMobile;
 const shortcutsOpenByDefault = () =>
   typeof window !== 'undefined' && window.matchMedia?.(SHORTCUTS_OPEN_QUERY).matches === true;
 
@@ -35,7 +36,7 @@ export function OAuthProviderChip({ provider }: { provider: string }) {
   return (
     <span className={styles.providerChip}>
       <span className={styles.srOnly}>{t('redesign.authFiles.selectedProvider')}: </span>
-      {icon ? <img src={icon} alt="" /> : <IconNetwork size={14} aria-hidden="true" />}
+      {icon ? <img src={icon} alt="" /> : <IconNetwork size={iconSize['14']} aria-hidden="true" />}
       <span>{getTypeLabel(t, provider.trim())}</span>
     </span>
   );
@@ -80,7 +81,7 @@ export function OAuthEditorProviderCard({
           />
           {requirementId && (
             <p id={requirementId} className={styles.providerRequirement}>
-              <IconInfo size={14} aria-hidden="true" />
+              <IconInfo size={iconSize['14']} aria-hidden="true" />
               <span>{t(`${translationPrefix}.provider_required`)}</span>
             </p>
           )}
@@ -115,10 +116,14 @@ export function OAuthEditorProviderCard({
                       {icon ? (
                         <img src={icon} alt="" />
                       ) : (
-                        <IconNetwork size={16} aria-hidden="true" />
+                        <IconNetwork size={iconSize['16']} aria-hidden="true" />
                       )}
                       <span>{getTypeLabel(t, option)}</span>
-                      <IconCheck size={14} className={styles.providerCheck} aria-hidden="true" />
+                      <IconCheck
+                        size={iconSize['14']}
+                        className={styles.providerCheck}
+                        aria-hidden="true"
+                      />
                     </button>
                   );
                 })}

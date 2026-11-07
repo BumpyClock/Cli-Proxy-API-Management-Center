@@ -6,7 +6,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   width: 100%;
 }
 
@@ -15,33 +15,33 @@
 .pageHeader {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .title {
   margin: 0;
   color: var(--text-primary);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: $font-size-22;
+  font-weight: $font-weight-700;
+  line-height: $line-height-1-2;
 }
 
 .description {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: $font-size-14;
+  line-height: $line-height-1-5;
 }
 
 // ─── Alert Boxes ────────────────────────────────────────
 
 .errorBox {
-  padding: $spacing-md;
-  border-radius: $radius-md;
-  font-size: 14px;
-  line-height: 1.5;
-  border: 1px solid var(--danger-color);
-  background: rgba($error-color, 0.1);
+  padding: $space-16;
+  border-radius: $radius-8;
+  font-size: $font-size-14;
+  line-height: $line-height-1-5;
+  border: $border-width-1 solid var(--danger-color);
+  background: rgba($color-legacy-error, $opacity-0-1);
   color: var(--danger-color);
 }
 
@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: $space-4 $space-8;
 }
 
 /* Labels and states are sans prose; only the directory path is a literal in mono. */
@@ -60,21 +60,21 @@
   min-width: 0;
   max-width: 100%;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: $space-6;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .statusDot {
-  width: 7px;
-  height: 7px;
+  width: $size-7;
+  height: $size-7;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .statusDotOn {
-  background: $success-color;
+  background: $color-legacy-success;
   box-shadow: none;
 }
 
@@ -84,14 +84,14 @@
 
 .statusValue {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: $font-weight-600;
 }
 
 .statusPathValue {
   display: block;
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   min-width: 0;
-  max-width: min(360px, 58vw);
+  max-width: min($size-360, 58vw);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -101,7 +101,7 @@
 .statusDivider {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: $font-size-12;
   user-select: none;
 }
 
@@ -110,16 +110,16 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
 
   :global(.form-group) {
     flex: 1;
-    max-width: 480px;
+    max-width: $size-480;
     margin: 0;
   }
 
   :global(.input) {
-    padding-right: 36px;
+    padding-right: $space-36;
   }
 
   @include mobile {
@@ -137,21 +137,21 @@
 .pluginList {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  border-radius: 8px;
+  gap: $space-1;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-7, transparent);
+  border-radius: $radius-8;
   overflow: hidden;
-  background: color-mix(in srgb, var(--border-color) 30%, transparent);
+  background: color-mix(in srgb, var(--border-color) $tint-0-3, transparent);
 }
 
 // ─── Plugin Row ─────────────────────────────────────────
 
 .pluginRow {
   display: grid;
-  grid-template-columns: 40px 1fr auto;
+  grid-template-columns: $size-40 1fr auto;
   align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-md $spacing-lg;
+  gap: $space-16;
+  padding: $space-16 $space-24;
   background: var(--bg-primary);
   transition: background-color $transition-fast;
 
@@ -160,23 +160,23 @@
   }
 
   @include mobile {
-    grid-template-columns: 36px 1fr;
+    grid-template-columns: $size-36 1fr;
     grid-template-rows: auto auto;
-    gap: $spacing-sm;
-    padding: $spacing-md;
+    gap: $space-8;
+    padding: $space-16;
   }
 }
 
 .logoBox {
   display: inline-flex;
-  width: 40px;
-  height: 40px;
+  width: $size-40;
+  height: $size-40;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
-  background: color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
+  border-radius: $radius-10;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-5, transparent);
+  background: color-mix(in srgb, var(--bg-tertiary) $tint-0-6, transparent);
   color: var(--text-secondary);
   flex-shrink: 0;
 
@@ -187,49 +187,49 @@
   }
 
   @include mobile {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: $size-36;
+    height: $size-36;
+    border-radius: $radius-8;
   }
 }
 
 .pluginInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
   min-width: 0;
 }
 
 .pluginName {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   min-width: 0;
 
   h2 {
     min-width: 0;
     margin: 0;
     color: var(--text-primary);
-    font-size: 15px;
-    font-weight: 650;
-    line-height: 1.3;
+    font-size: $font-size-15;
+    font-weight: $font-weight-650;
+    line-height: $line-height-1-3;
     @include text-ellipsis;
   }
 }
 
 .pluginId {
   color: var(--text-tertiary);
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   @include text-ellipsis;
 }
 
 .pluginMeta {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   flex-wrap: wrap;
-  margin-top: 2px;
+  margin-top: $space-2;
 }
 
 .metaItem {
@@ -237,14 +237,14 @@
   min-width: 0;
   max-width: 100%;
   align-items: center;
-  gap: 4px;
+  gap: $space-4;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: $font-size-12;
   white-space: nowrap;
 
   strong {
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: $font-weight-600;
   }
 }
 
@@ -255,10 +255,10 @@
 }
 
 .metaDot {
-  width: 3px;
-  height: 3px;
+  width: $size-3;
+  height: $size-3;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  background: color-mix(in srgb, var(--text-tertiary) $tint-0-5, transparent);
   flex-shrink: 0;
 }
 
@@ -267,7 +267,7 @@
 .badgeRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: $space-5;
 }
 
 .badge,
@@ -275,36 +275,36 @@
 .badgeWarning,
 .badgeMuted {
   display: inline-flex;
-  min-height: 22px;
+  min-height: $size-22;
   align-items: center;
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.25;
+  border-radius: $radius-6;
+  padding: $space-2 $space-8;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-1-25;
 }
 
 .badge {
-  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-82, transparent);
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-5, transparent);
   color: var(--text-secondary);
 }
 
 .badgeSuccess {
-  background: rgba($success-color, 0.1);
-  border: 1px solid rgba($success-color, 0.2);
+  background: rgba($color-legacy-success, $opacity-0-1);
+  border: $border-width-1 solid rgba($color-legacy-success, $opacity-0-2);
   color: var(--success-color);
 }
 
 .badgeWarning {
-  background: rgba($warning-color, 0.1);
-  border: 1px solid rgba($warning-color, 0.2);
+  background: rgba($color-legacy-warning, $opacity-0-1);
+  border: $border-width-1 solid rgba($color-legacy-warning, $opacity-0-2);
   color: var(--warning-color);
 }
 
 .badgeMuted {
-  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-82, transparent);
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-4, transparent);
   color: var(--text-tertiary);
 }
 
@@ -313,11 +313,11 @@
 .rowActions {
   display: flex;
   min-width: 0;
-  max-width: min(560px, 48vw);
+  max-width: min($size-560, 48vw);
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: $spacing-sm;
+  gap: $space-8;
   flex-shrink: 0;
 
   @include mobile {
@@ -329,15 +329,15 @@
 
 .iconLink {
   display: inline-flex;
-  min-height: 30px;
+  min-height: $size-30;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
   text-decoration: none;
   transition:
     border-color $transition-fast,
@@ -352,7 +352,7 @@
 }
 
 .iconLink {
-  width: 30px;
+  width: $size-30;
   flex: 0 0 auto;
 }
 
@@ -361,44 +361,44 @@
 .skeletonRow {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
-  padding: $spacing-md $spacing-lg;
+  gap: $space-16;
+  padding: $space-16 $space-24;
   background: var(--bg-primary);
 }
 
 .skeletonAvatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: $size-40;
+  height: $size-40;
+  border-radius: $radius-10;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 25%,
-    color-mix(in srgb, var(--bg-hover) 70%, transparent) 37%,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 63%
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 25%,
+    color-mix(in srgb, var(--bg-hover) $tint-0-7, transparent) 37%,
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 63%
   );
   background-size: 400% 100%;
-  animation: skeletonPulse 1.35s ease-in-out infinite;
+  animation: skeletonPulse $duration-1350 $ease-in-out infinite;
   flex-shrink: 0;
 }
 
 .skeletonText {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
   flex: 1;
 }
 
 .skeletonLine {
-  height: 14px;
-  border-radius: 4px;
+  height: $size-14;
+  border-radius: $radius-4;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 25%,
-    color-mix(in srgb, var(--bg-hover) 70%, transparent) 37%,
-    color-mix(in srgb, var(--bg-secondary) 86%, transparent) 63%
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 25%,
+    color-mix(in srgb, var(--bg-hover) $tint-0-7, transparent) 37%,
+    color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent) 63%
   );
   background-size: 400% 100%;
-  animation: skeletonPulse 1.35s ease-in-out infinite;
+  animation: skeletonPulse $duration-1350 $ease-in-out infinite;
 
   &:first-child {
     width: 45%;
@@ -406,7 +406,7 @@
 
   &:last-child {
     width: 70%;
-    height: 10px;
+    height: $size-10;
   }
 }
 
@@ -415,25 +415,25 @@
 .sheetFooter {
   display: flex;
   justify-content: flex-end;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .configForm {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
 }
 
 .formSection {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $space-16;
 
   h3 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 16px;
-    font-weight: 700;
+    font-size: $font-size-16;
+    font-weight: $font-weight-700;
   }
 
   :global(.form-group) {
@@ -445,12 +445,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-md;
-  min-height: 52px;
-  padding: $spacing-md;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
-  background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+  gap: $space-16;
+  min-height: $size-52;
+  padding: $space-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-72, transparent);
 }
 
 .fieldText {
@@ -459,68 +459,68 @@
 
 .fieldLabel {
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 650;
+  font-size: $font-size-14;
+  font-weight: $font-weight-650;
   overflow-wrap: anywhere;
 }
 
 .fieldDescription,
 .fieldHint {
-  margin-top: 4px;
+  margin-top: $space-4;
   color: var(--text-tertiary);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: $font-size-12;
+  line-height: $line-height-1-45;
   overflow-wrap: anywhere;
 }
 
 .formField {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 
   label {
     color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: $font-size-14;
+    font-weight: $font-weight-600;
     overflow-wrap: anywhere;
   }
 }
 
 .textarea {
-  min-height: 148px;
+  min-height: $size-148;
   resize: vertical;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
-  padding: 10px 12px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  padding: $space-10 $space-12;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: $font-mono;
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
 
   &:focus {
     border-color: var(--primary-color);
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
+    box-shadow: $shadow-plugin-focus;
   }
 }
 
 .fieldError {
-  padding: 8px 10px;
-  border-radius: $radius-sm;
-  background: rgba($error-color, 0.1);
+  padding: $space-8 $space-10;
+  border-radius: $radius-4;
+  background: rgba($color-legacy-error, $opacity-0-1);
   color: var(--danger-color);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
 }
 
 .emptyConfig {
-  padding: $spacing-md;
-  border: 1px dashed var(--border-color);
-  border-radius: $radius-md;
-  background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+  padding: $space-16;
+  border: $border-width-1 dashed var(--border-color);
+  border-radius: $radius-8;
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-7, transparent);
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: $font-size-14;
 }
 
 // ─── Animation ──────────────────────────────────────────
@@ -538,7 +538,7 @@
 
 @include mobile {
   .page {
-    gap: $spacing-md;
+    gap: $space-16;
   }
 
   .sheetFooter {
@@ -554,8 +554,8 @@
   min-width: 0;
 }
 .page :focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: $space-2;
 }
 @media (prefers-reduced-motion: reduce) {
   .page *,
@@ -568,22 +568,22 @@
 
 .pluginList {
   gap: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   overflow: hidden;
 }
 .pluginRow {
   border: 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: $border-width-1 solid var(--border-color);
   border-radius: 0;
-  padding: 14px;
+  padding: $space-14;
   background: var(--bg-secondary);
 }
 .pluginRow:last-child {
   border-bottom: 0;
 }
 .logoBox {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+  width: $size-30;
+  height: $size-30;
+  border-radius: $radius-6;
 }

@@ -5,9 +5,10 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { LANGUAGE_LABEL_KEYS, LANGUAGE_ORDER } from '@/utils/constants';
 import type { Language, Theme } from '@/types';
 import { headerIcons } from './headerIcons';
+import { borderWidth, media, themePreview } from '@/design-system';
 
 /** Desktop widths that have room for text beside each header utility icon. */
-const LABELLED_UTILITIES_QUERY = '(min-width: 1280px)';
+const LABELLED_UTILITIES_QUERY = media.wide;
 
 type MenuInitialFocus = 'checked' | 'first';
 
@@ -100,55 +101,16 @@ function useMenu(
   }, [open, menuRef, onClose]);
 }
 
+// Swatch colours live in the registry (themePreview); keys and labels are UI wiring.
 const THEME_CARDS: Array<{
   key: Theme;
   labelKey: string;
-  colors: { bg: string; card: string; border: string; text: string; textMuted: string };
+  colors: (typeof themePreview)[keyof typeof themePreview];
 }> = [
-  {
-    key: 'auto',
-    labelKey: 'theme.auto',
-    colors: {
-      bg: 'linear-gradient(135deg, #ffffff 0 50%, #111111 50% 100%)',
-      card: 'linear-gradient(135deg, #ffffff 0 50%, #1a1a1a 50% 100%)',
-      border: '#bdbdbd',
-      text: '#2d2a26',
-      textMuted: 'linear-gradient(135deg, #c9c9c9 0 50%, #5a5a5a 50% 100%)',
-    },
-  },
-  {
-    key: 'white',
-    labelKey: 'theme.white',
-    colors: {
-      bg: '#ffffff',
-      card: '#ffffff',
-      border: '#e5e5e5',
-      text: '#2d2a26',
-      textMuted: '#a29c95',
-    },
-  },
-  {
-    key: 'light',
-    labelKey: 'theme.light',
-    colors: {
-      bg: '#faf9f5',
-      card: '#f0eee8',
-      border: '#e3e1db',
-      text: '#2d2a26',
-      textMuted: '#a29c95',
-    },
-  },
-  {
-    key: 'dark',
-    labelKey: 'theme.dark',
-    colors: {
-      bg: '#151412',
-      card: '#1d1b18',
-      border: '#3a3530',
-      text: '#f6f4f1',
-      textMuted: '#9c958d',
-    },
-  },
+  { key: 'auto', labelKey: 'theme.auto', colors: themePreview.auto },
+  { key: 'white', labelKey: 'theme.white', colors: themePreview.white },
+  { key: 'light', labelKey: 'theme.light', colors: themePreview.light },
+  { key: 'dark', labelKey: 'theme.dark', colors: themePreview.dark },
 ];
 
 const themeLabelKey = (theme: Theme) =>
@@ -453,14 +415,14 @@ function DesktopUtilities({
                   className="theme-card-preview"
                   style={{
                     background: tc.colors.bg,
-                    border: `1px solid ${tc.colors.border}`,
+                    border: `${borderWidth['1']}px solid ${tc.colors.border}`,
                   }}
                 >
                   <div
                     className="theme-card-header"
                     style={{
                       background: tc.colors.card,
-                      borderBottom: `1px solid ${tc.colors.border}`,
+                      borderBottom: `${borderWidth['1']}px solid ${tc.colors.border}`,
                     }}
                   />
                   <div className="theme-card-body">
@@ -468,7 +430,7 @@ function DesktopUtilities({
                       className="theme-card-sidebar"
                       style={{
                         background: tc.colors.card,
-                        borderRight: `1px solid ${tc.colors.border}`,
+                        borderRight: `${borderWidth['1']}px solid ${tc.colors.border}`,
                       }}
                     />
                     <div className="theme-card-content" style={{ background: tc.colors.bg }}>

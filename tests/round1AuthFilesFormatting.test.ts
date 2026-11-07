@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
+import { compileString } from 'sass';
 import i18n from '@/i18n';
 import type { AuthFileItem } from '@/types';
 import { getModifiedTimeParts } from '@/features/authFiles/constants';
@@ -82,10 +83,13 @@ describe('credential filter search', () => {
   });
 
   test('reserves input space for the search icon', () => {
-    const css = readFileSync(
-      'src/features/authFiles/components/AuthFilesToolbar.module.scss',
-      'utf8'
-    );
+    const css = compileString(
+      `@use 'src/styles/variables' as *;\n${readFileSync(
+        'src/features/authFiles/components/AuthFilesToolbar.module.scss',
+        'utf8'
+      )}`,
+      { url: new URL('../src/features/authFiles/components/AuthFilesToolbar.module.scss', import.meta.url), loadPaths: [process.cwd()] }
+    ).css;
     expect(css).toMatch(/:global\(\.input\) \{[^}]*padding-right: 34px;/);
     expect(css).toMatch(/\.searchField:focus-within \.searchHint \{/);
   });

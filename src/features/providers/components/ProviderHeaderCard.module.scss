@@ -7,7 +7,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 /* Status prose, so sans; numerals stay tabular. */
 .meta {
@@ -15,9 +15,9 @@
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 2px 8px;
-  font-size: 13px;
-  line-height: 1.5;
+  gap: $space-2 $space-8;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
 }
@@ -25,7 +25,7 @@
 .metaItem {
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
+  gap: $space-8;
   white-space: nowrap;
 }
 
@@ -36,11 +36,11 @@
 
 .metaStrong {
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: $font-weight-500;
 }
 
 /* Phones: the summary and the fetch time get a line each, so no line ends on a separator. */
-@media (max-width: 768px) {
+@media (max-width: #{$breakpoint-mobile}) {
   .meta {
     flex-direction: column;
     align-items: flex-start;

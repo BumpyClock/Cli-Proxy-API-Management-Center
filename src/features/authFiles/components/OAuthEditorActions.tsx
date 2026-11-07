@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { IconInfo } from '@/components/ui/icons';
 import { useActionBarHeightVar } from '@/hooks/useActionBarHeightVar';
 import styles from './OAuthEditorActions.module.scss';
+import { iconSize } from '@/design-system';
 
 /** Page bottom padding and scroll padding read this, so no field or focus hides under the bar. */
 export const OAUTH_EDITOR_ACTIONS_HEIGHT_VAR = '--oauth-editor-actions-height';
@@ -31,7 +32,7 @@ export function OAuthEditorActions({ children, reason }: OAuthEditorActionsProps
       <div className={styles.bar} role="group" aria-label={t('redesign.authFiles.editorActions')}>
         {reason && (
           <p id={reason.id} className={styles.reason}>
-            <IconInfo size={14} aria-hidden="true" />
+            <IconInfo size={iconSize['14']} aria-hidden="true" />
             <span>{reason.text}</span>
           </p>
         )}

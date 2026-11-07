@@ -2,7 +2,7 @@
 @use '../../../styles/variables' as *;
 
 .root {
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
   overflow: hidden;
@@ -11,14 +11,14 @@
 .summary {
   list-style: none;
   cursor: pointer;
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: $space-10 $space-14;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: $space-12;
   user-select: none;
 
   &::-webkit-details-marker {
@@ -26,38 +26,38 @@
   }
 
   @media (pointer: coarse) {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 
   &:hover {
-    background: color-mix(in srgb, var(--accent-bg) 35%, transparent);
+    background: color-mix(in srgb, var(--accent-bg) $tint-0-35, transparent);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: (-$space-2);
   }
 }
 
 .summaryLabel {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: $space-10;
   flex: 1;
   min-width: 0;
 }
 
 .summaryHint {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  font-weight: 400;
+  font-weight: $font-weight-400;
 }
 
 .chevron {
-  width: 16px;
-  height: 16px;
+  width: $size-16;
+  height: $size-16;
   color: var(--muted-foreground);
-  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  transition: transform var(--dur-hover) var(--ease-out-strong);
   flex-shrink: 0;
 
   .root[open] & {
@@ -66,20 +66,20 @@
 }
 
 .content {
-  padding: 14px;
-  border-top: 1px solid var(--border-color);
+  padding: $space-14;
+  border-top: $border-width-1 solid var(--border-color);
 }
 
 .contentFlush {
   padding: 0;
-  border-top: 1px solid var(--border-color);
+  border-top: $border-width-1 solid var(--border-color);
 }
 
 /* 展开时内容 160ms 淡入。只做透明度、不做高度动画 ——
    与程序化 details.open = true（搜索跳转强制展开）不会互相打架。 */
 .root[open] > .content,
 .root[open] > .contentFlush {
-  animation: collapsible-content-in var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+  animation: collapsible-content-in var(--dur-press) var(--ease-out-strong);
 }
 
 @keyframes collapsible-content-in {

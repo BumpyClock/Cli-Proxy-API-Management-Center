@@ -8,40 +8,40 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: clamp(16px, 2vw, 20px);
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  gap: $space-14;
+  padding: clamp($space-16, 2vw, $space-20);
+  border-radius: $radius-16;
+  border: $border-width-1 solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-primary) $tint-0-82, transparent);
 }
 
 .panelHead {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: $space-10;
   flex-wrap: wrap;
 }
 
 .panelTitle {
   margin: 0;
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: $font-size-15;
+  font-weight: $font-weight-650;
+  letter-spacing: (-$letter-spacing-0-01);
   color: var(--text-primary);
 }
 
 .panelExtra {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
   flex-wrap: wrap;
 }
 
 .panelBody {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -50,18 +50,18 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 45%, transparent);
+  gap: $space-10;
+  padding: $space-9 $space-12;
+  border-radius: $radius-10;
+  border: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-7, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) $tint-0-45, transparent);
   transition:
     background-color $transition-fast,
     border-color $transition-fast;
@@ -70,34 +70,34 @@
 @media (hover: hover) and (pointer: fine) {
   .item:hover {
     border-color: var(--border-hover);
-    background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
+    background: color-mix(in srgb, var(--bg-secondary) $tint-0-8, transparent);
   }
 }
 
 .itemInfo {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
   min-width: 0;
 }
 
 .itemProvider {
-  font-family: $font-mono;
-  font-size: 12.5px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12-5;
+  font-weight: $font-weight-650;
   color: var(--text-primary);
   @include text-ellipsis;
 }
 
 .itemCount {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-tertiary);
 }
 
 .itemActions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   flex-shrink: 0;
 }
 
@@ -106,7 +106,7 @@
 .aliasChartSection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -114,15 +114,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .aliasChartTitle {
   margin: 0;
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
+  letter-spacing: $letter-spacing-0-1;
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
@@ -138,39 +138,39 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 24px;
-  padding: 4px 8px 4px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  gap: $space-4 $space-24;
+  padding: $space-4 $space-8 $space-4 $space-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-primary);
 }
 
 .summaryTitle {
   margin: 0;
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
 }
 
 .summaryToggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 6px;
+  gap: $space-6;
+  min-height: $size-32;
+  padding: 0 $space-10;
+  border: $border-width-1 solid transparent;
+  border-radius: $radius-6;
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   cursor: pointer;
   margin-left: auto;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
@@ -182,7 +182,7 @@
 }
 
 .summaryChevron {
-  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  transition: transform var(--dur-hover) var(--ease-out-strong);
 }
 
 .summaryToggle[aria-expanded='true'] .summaryChevron {
@@ -192,7 +192,7 @@
 .summaryList {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 24px;
+  gap: 0 $space-24;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -202,50 +202,50 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0 8px;
-  min-height: 36px;
+  gap: 0 $space-8;
+  min-height: $size-36;
 }
 
 .summaryLabel {
   color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 550;
+  font-size: $font-size-13;
+  font-weight: $font-weight-550;
 }
 
 .summaryCount {
   margin: 0;
-  font-size: 13px;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 }
 
 .summaryBody {
   display: grid;
-  gap: 16px;
+  gap: $space-16;
   grid-template-columns: minmax(0, 1fr);
 
-  @media (min-width: 1024px) {
+  @media (min-width: #{$breakpoint-tablet}) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
   .summaryToggle {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 }
 
 /* Phones: title and toggle share the first line; each section's totals get their own line. */
 @include mobile {
   .summary {
-    padding: 4px 4px 4px 12px;
+    padding: $space-4 $space-4 $space-4 $space-12;
   }
 
   .summaryList {
     order: 1;
     flex-basis: 100%;
     flex-direction: column;
-    gap: 4px;
-    padding: 0 8px 8px 0;
+    gap: $space-4;
+    padding: 0 $space-8 $space-8 0;
   }
 
   /* Label above its totals, so long translations never wrap mid-row. */
@@ -260,14 +260,14 @@
 
 .panel :global(.btn) {
   transition:
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
+    transform var(--dur-press) var(--ease-out-strong),
     background-color $transition-fast,
     border-color $transition-fast,
     color $transition-fast;
 }
 
 .panel :global(.btn:active:not(:disabled)) {
-  transform: scale(0.96);
+  transform: scale($motion-scale-0-96);
 }
 
 @media (prefers-reduced-motion: reduce) {

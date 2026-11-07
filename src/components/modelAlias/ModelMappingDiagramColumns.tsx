@@ -1,6 +1,7 @@
 import type { DragEvent, MouseEvent as ReactMouseEvent, RefObject } from 'react';
 import type { AliasNode, ProviderNode, SourceNode } from './ModelMappingDiagramTypes';
 import styles from './ModelMappingDiagram.module.scss';
+import { opacity } from '@/design-system';
 
 interface ProviderColumnProps {
   providerNodes: ProviderNode[];
@@ -161,7 +162,7 @@ export function SourceColumn({
               className={styles.dot}
               style={{
                 background: getProviderColor(source.provider),
-                opacity: source.aliases.length > 0 ? 1 : 0.3,
+                opacity: source.aliases.length > 0 ? 1 : opacity['0-3'],
               }}
             />
           </div>

@@ -3,7 +3,7 @@
 // on any failure. Run manually (needs a browser and the dev server):
 //   PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs node tests/visual-audit/interactions.mjs
 import { pathToFileURL } from 'node:url';
-import { installFixtures, login, gotoRoute } from './fixtures.mjs';
+import { buildFixtures, installFixtures, login, gotoRoute } from './fixtures.mjs';
 
 const playwrightPath = process.env.PLAYWRIGHT_MODULE;
 if (!playwrightPath) throw new Error('Set PLAYWRIGHT_MODULE to playwright-core/index.mjs');
@@ -32,9 +32,9 @@ const phone = {
   locale: 'en-US',
 };
 
-async function open(options) {
+async function open(options, overrides = {}) {
   const context = await browser.newContext(options);
-  await installFixtures(context, origin);
+  await installFixtures(context, origin, overrides);
   const page = await context.newPage();
   const writes = [];
   page.on('request', (request) => {
@@ -126,6 +126,125 @@ const focusedIs = (page, locator) =>
   await context.close();
 }
 
+// Last-row Actions escape clipped route ancestors, flip at the viewport edge and scroll when short.
+for (const [name, options] of [
+  ['desktop', desktop],
+  ['phone', phone],
+  ['short viewport', { ...desktop, viewport: { width: 1440, height: 240 } }],
+]) {
+  const credentials = buildFixtures().routes['/auth-files']();
+  Object.assign(credentials.files.at(-1), {
+    name: 'z-claude-team.json',
+    provider: 'claude',
+    type: 'claude',
+  });
+  const { context, page } = await open(options, { '/auth-files': credentials });
+  await gotoRoute(page, origin, '/auth-files');
+  const trigger = page
+    .locator('main tbody tr')
+    .last()
+    .getByRole('button', { name: /^Actions/ });
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.focus();
+  await page.keyboard.press('ArrowUp');
+  const menu = page.getByRole('menu');
+  await menu.waitFor();
+  await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menuitem');
+  const last = menu.getByRole('menuitem').last();
+  check(`auth-files ${name}: ArrowUp focuses last action`, await focusedIs(page, last));
+  check(
+    `auth-files ${name}: entire menu is inside viewport and outside clipped ancestors`,
+    await menu.evaluate((element) => {
+      const r = element.getBoundingClientRect();
+      return (
+        element.parentElement === document.body &&
+        r.top >= 0 &&
+        r.left >= 0 &&
+        r.bottom <= innerHeight &&
+        r.right <= innerWidth
+      );
+    })
+  );
+  await last.scrollIntoViewIfNeeded();
+  check(
+    `auth-files ${name}: last action is hit-testable`,
+    await last.evaluate((element) => {
+      const r = element.getBoundingClientRect();
+      return element.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+    })
+  );
+  await page.keyboard.press('Home');
+  const first = menu.getByRole('menuitem').first();
+  check(
+    `auth-files ${name}: Home reveals and focuses the first action above the fixed header`,
+    (await focusedIs(page, first)) &&
+      (await first.evaluate((element) => {
+        const r = element.getBoundingClientRect();
+        return element.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+      }))
+  );
+  if (name === 'short viewport') {
+    check(
+      'auth-files short viewport: oversized menu scrolls instead of clipping actions',
+      await menu.evaluate(
+        (element) =>
+          element.scrollHeight > element.clientHeight &&
+          getComputedStyle(element).overflowY === 'auto'
+      )
+    );
+  }
+  await page.keyboard.press('Escape');
+  check(`auth-files ${name}: Escape restores trigger`, await focusedIs(page, trigger));
+  await trigger.click();
+  await menu.waitFor();
+  await page.keyboard.press('Tab');
+  check(
+    `auth-files ${name}: Tab exits menu in row order`,
+    await page.evaluate(
+      () =>
+        document.activeElement?.getAttribute('aria-haspopup') !== 'menu' &&
+        document.activeElement?.getAttribute('role') !== 'menuitem' &&
+        document.activeElement !== document.body
+    )
+  );
+  await context.close();
+}
+
+// Auth Files has regular header actions. Mount a small-variant CSS fixture in that real
+// header to test the shared PageHeader contract above the phone breakpoint.
+for (const width of [1024, 1366]) {
+  const { context, page } = await open({
+    ...desktop,
+    hasTouch: true,
+    viewport: { width, height: 900 },
+  });
+  await gotoRoute(page, origin, '/auth-files');
+  check(
+    `header ${width}: emulated pointer is coarse`,
+    await page.evaluate(() => matchMedia('(pointer: coarse)').matches)
+  );
+  const sizes = await page
+    .locator('main header')
+    .first()
+    .evaluate((header) => {
+      const actions = header.querySelector('button.btn')?.parentElement;
+      if (!actions) return [];
+      const fixture = document.createElement('button');
+      fixture.className = 'btn btn-secondary btn-sm';
+      fixture.textContent = 'Small action fixture';
+      actions.append(fixture);
+      const r = fixture.getBoundingClientRect();
+      fixture.remove();
+      return [{ width: r.width, height: r.height }];
+    });
+  check(
+    `header ${width}: shared small-action variant reaches 44px targets`,
+    sizes.length > 0 && sizes.every((r) => r.width >= 44 && r.height >= 44),
+    JSON.stringify(sizes)
+  );
+  await context.close();
+}
+
 // Providers: labelled row Actions menu with arrow keys and focus restore; delete stays guarded.
 {
   const { context, page, writes } = await open(desktop);
@@ -168,7 +287,7 @@ const focusedIs = (page, locator) =>
   await search.click();
   await page.keyboard.type('kimi');
   await page.waitForTimeout(200);
-  const status = await page.getByRole('status').filter({ hasText: /of/ }).first().textContent();
+  const status = await page.locator('#oauth-provider-search-results').textContent();
   check('oauth: typing filters providers', /^2 of /.test(status?.trim() ?? ''), status ?? '');
   await page.keyboard.press('Escape');
   check('oauth: Escape clears the search', (await search.inputValue()) === '');

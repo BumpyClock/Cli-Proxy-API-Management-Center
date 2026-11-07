@@ -14,6 +14,7 @@ import {
 } from '../fields/FieldPrimitives';
 import { ApiKeysField, HostField, PortField } from '../fields/sharedFields';
 import { getValidationMessage } from '../blocks/shared';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.connectivity;
 
@@ -31,7 +32,7 @@ export function SectionConnectivity({
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.connectivity}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.connectivity.title')}
       description={t('config_management.visual.sections.connectivity.description')}
       animateIn={animateIn}

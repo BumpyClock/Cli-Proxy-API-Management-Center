@@ -9,7 +9,7 @@
     var(--bg-tertiary) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer $duration-1500 $ease-in-out infinite;
   border-radius: var(--radius-md);
   display: block;
 }

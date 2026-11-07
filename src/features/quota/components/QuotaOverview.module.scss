@@ -3,32 +3,32 @@
 .overview {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: $space-24;
   min-width: 0;
 }
 .controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 20px;
+  gap: $space-8 $space-20;
 }
 /* Each mode switch keeps its visible group name at every width. */
 .control {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 .groupLabel {
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
 }
 
 .panel {
   min-width: 0;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   overflow: hidden;
 }
 .panelHeader {
@@ -36,57 +36,57 @@
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-12;
+  padding: $space-16;
+  border-bottom: $border-width-1 solid var(--border-color);
 }
 .panelHeader h2 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
 }
 .panelHeader > span {
-  margin: 4px 0 0;
+  margin: $space-4 0 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
 }
 /* Desktop: the account list sits beside the chart. Narrow: it leads, the chart follows. */
 .glance {
   display: grid;
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax($size-280, $size-340) minmax(0, 1fr);
+  gap: $space-24;
   align-items: start;
-  padding: 16px;
+  padding: $space-16;
 }
 .chart {
   min-width: 0;
 }
-@media (max-width: 1024px) {
+@media (max-width: #{$breakpoint-tablet}) {
   .glance {
     grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
+    gap: $space-20;
   }
 }
 .details summary {
   @include disclosure-summary;
-  margin-bottom: 16px;
+  margin-bottom: $space-16;
 }
 /* Phones: View and Window share one row, each name above its switch, so accounts come sooner. */
-@media (max-width: 600px) {
+@media (max-width: #{$breakpoint-600}) {
   .overview {
-    gap: 16px;
+    gap: $space-16;
   }
   .controls {
     align-items: flex-end;
-    gap: 8px 12px;
+    gap: $space-8 $space-12;
   }
   .control {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: $space-4;
   }
   .panelHeader,
   .glance {
-    padding: 12px;
+    padding: $space-12;
   }
 }

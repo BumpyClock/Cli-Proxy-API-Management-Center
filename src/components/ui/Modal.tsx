@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { IconX } from './icons';
 import { openModalSurface, type ModalSurface } from './modalStack';
 import { FOCUSABLE_SELECTOR, lockScroll, unlockScroll } from './scrollLock';
+import { duration, iconSize, size } from '@/design-system';
 
 interface ModalProps {
   open: boolean;
@@ -23,14 +24,15 @@ interface ModalProps {
   closeDisabled?: boolean;
 }
 
-const CLOSE_ANIMATION_DURATION = 350;
+// Matches the `.modal-overlay.closing` / `.modal.closing` animations in components.scss.
+const CLOSE_ANIMATION_DURATION = duration['modal-exit'];
 
 export function Modal({
   open,
   title,
   onClose,
   footer,
-  width = 520,
+  width = size['520'],
   className,
   closeDisabled = false,
   children,
@@ -205,7 +207,7 @@ export function Modal({
           aria-label={t('common.close')}
           disabled={closeDisabled}
         >
-          <IconX size={20} />
+          <IconX size={iconSize['20']} />
         </button>
         <div className="modal-header">
           <div className="modal-title" id={title ? titleId : undefined}>

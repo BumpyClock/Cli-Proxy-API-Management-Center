@@ -37,6 +37,7 @@ import { ApiKeyEntriesEditor } from './ApiKeyEntriesEditor';
 import { ModelEntriesEditor } from './ModelEntriesEditor';
 import styles from './sharedForm.module.scss';
 import { MAX_CREDENTIAL_WEIGHT } from '@/utils/credentialWeight';
+import { iconSize, space } from '@/design-system';
 
 /** 模块级常量，免得每次渲染都给 picker 一个新数组引用。 */
 const DISABLE_ALL_RULES = [DISABLE_ALL_RULE];
@@ -568,7 +569,11 @@ export function BaseProviderForm({
                     : t('providersPage.form.showApiKey')
                 }
               >
-                {showSingleApiKey ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                {showSingleApiKey ? (
+                  <IconEyeOff size={iconSize['16']} />
+                ) : (
+                  <IconEye size={iconSize['16']} />
+                )}
               </button>
             </div>
           </div>
@@ -705,7 +710,7 @@ export function BaseProviderForm({
                 >
                   {singleConnectivity.status.state === 'loading' ? (
                     <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-                      <IconLoader2 size={14} />
+                      <IconLoader2 size={iconSize['14']} />
                     </span>
                   ) : null}
                   <span>{t('providersPage.connectivity.test')}</span>
@@ -816,7 +821,7 @@ export function BaseProviderForm({
             {headersList.map((entry, idx) => (
               <div
                 key={idx}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: space['8'] }}
               >
                 <input
                   className={styles.input}
@@ -855,7 +860,7 @@ export function BaseProviderForm({
                     )
                   }
                 >
-                  <IconX size={12} />
+                  <IconX size={iconSize['12']} />
                 </button>
               </div>
             ))}
@@ -865,7 +870,7 @@ export function BaseProviderForm({
               disabled={mutating}
               onClick={() => updateField('headers', [...headersList, emptyHeader()])}
             >
-              <IconPlus size={12} />
+              <IconPlus size={iconSize['12']} />
               <span>{t('providersPage.form.addHeader')}</span>
             </button>
           </div>
@@ -886,7 +891,7 @@ export function BaseProviderForm({
                   onClick={openDiscovery}
                   disabled={mutating}
                 >
-                  <IconDownload size={14} />
+                  <IconDownload size={iconSize['14']} />
                   <span>{t('providersPage.discovery.openButton')}</span>
                 </button>
               </div>

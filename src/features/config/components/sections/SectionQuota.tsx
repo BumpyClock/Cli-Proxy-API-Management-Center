@@ -4,6 +4,7 @@ import type { ConfigSectionProps } from '../../types';
 import { SectionCard } from '../SectionCard';
 import { FieldAnchor, FieldGrid, ToggleRow } from '../fields/FieldPrimitives';
 import { QuotaSwitchPreviewModelToggle, QuotaSwitchProjectToggle } from '../fields/sharedFields';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.quota;
 
@@ -14,7 +15,7 @@ export function SectionQuota({ values, disabled, animateIn, onChange }: ConfigSe
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.quota}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.quota.title')}
       description={t('config_management.visual.sections.quota.description')}
       animateIn={animateIn}

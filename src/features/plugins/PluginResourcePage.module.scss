@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   width: 100%;
   height: 100%;
   padding-top: var(--header-height);
@@ -13,7 +13,7 @@
 }
 
 .literal {
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   overflow-wrap: anywhere;
 }
 
@@ -31,16 +31,16 @@
 .stateShell {
   display: flex;
   width: 100%;
-  min-height: 240px;
+  min-height: $size-240;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
+  padding: $space-32 $space-16;
   background: var(--bg-secondary);
 }
 
 .statusPanel {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: $font-size-14;
 }
 
 .frameShell {
@@ -48,18 +48,18 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   overflow: hidden;
 }
 .statusPanel {
-  padding: 12px;
+  padding: $space-12;
 }
 .page a {
   color: var(--accent-color);
-  font-size: 13px;
+  font-size: $font-size-13;
 }
 .page :focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: $space-2;
 }

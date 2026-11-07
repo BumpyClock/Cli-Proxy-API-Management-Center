@@ -13,6 +13,7 @@ import {
 import { useOverflowStrip } from '@/features/authFiles/hooks/useOverflowStrip';
 import { scrollProviderTabs } from './providerTabsWheel';
 import styles from './ProviderTabs.module.scss';
+import { iconSize } from '@/design-system';
 
 export type ProviderTabsProps = {
   types: string[];
@@ -54,7 +55,7 @@ export function ProviderTabs({
     const label = labelOf(type);
     const icon =
       type === 'all' ? (
-        <IconFilterAll className={styles.glyph} size={15} />
+        <IconFilterAll className={styles.glyph} size={iconSize['15']} />
       ) : (
         <span
           className={styles.iconWrap}
@@ -99,7 +100,7 @@ export function ProviderTabs({
               strip.scrollTo({ left: atEnd ? 0 : strip.scrollLeft + strip.clientWidth * 0.75 });
             }}
           >
-            <IconChevronLeft size={16} aria-hidden="true" />
+            <IconChevronLeft size={iconSize['16']} aria-hidden="true" />
           </button>
         )}
       </div>

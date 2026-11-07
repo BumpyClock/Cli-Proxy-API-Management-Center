@@ -2,16 +2,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--control-outline);
-  border-radius: 6px;
+  gap: $space-8;
+  min-height: $size-36;
+  padding: 0 $space-12;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-6;
   background: var(--bg-primary);
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
@@ -32,12 +32,12 @@
   }
 
   &:active:not([aria-disabled='true']) {
-    transform: scale(0.97);
+    transform: scale($motion-scale-0-97);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
   &[aria-disabled='true'] {
@@ -49,9 +49,9 @@
     cursor: progress;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
-    padding: 0 14px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+    padding: 0 $space-14;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -68,7 +68,7 @@
 }
 
 /* display:none also drops the hidden variant from the accessible name. */
-@media (max-width: 768px) {
+@media (max-width: #{$breakpoint-mobile}) {
   .fullLabel {
     display: none;
   }
@@ -79,7 +79,7 @@
 }
 
 .spinning {
-  animation: refreshButtonSpin 0.9s linear infinite;
+  animation: refreshButtonSpin $duration-900 $ease-linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

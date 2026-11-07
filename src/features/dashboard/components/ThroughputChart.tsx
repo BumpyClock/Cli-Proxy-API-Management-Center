@@ -7,6 +7,7 @@ import type { TrafficWindow } from '../types';
 import { formatClock, formatClockRange } from '../logic/time';
 import { axisMax } from '../utils';
 import styles from './ThroughputChart.module.scss';
+import { chart } from '@/design-system';
 
 const trafficSummary = (t: TFunction, traffic: TrafficWindow): string =>
   t('dashboard.traffic_chart_summary', {
@@ -141,7 +142,7 @@ export function ThroughputChart({ traffic }: { traffic: TrafficWindow }) {
       formatY={formatCount}
       ariaLabel={summary}
       emptyText={t('status_bar.no_requests')}
-      height={250}
+      height={chart.height.throughput}
       dataTable={<ThroughputTable traffic={traffic} />}
     />
   );

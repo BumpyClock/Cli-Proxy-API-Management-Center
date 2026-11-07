@@ -1,4 +1,5 @@
 import type { ParsedLogLine } from './logTypes';
+import { borderWidth, px, size, space } from '@/design-system';
 
 export const LOG_STRUCTURED_COLUMNS = [
   'status',
@@ -36,23 +37,25 @@ export const resolveStructuredColumns = (lines: readonly ParsedLogLine[]): LogSt
 
 type Track = { track: string; minPx: number };
 
+const fixedTrack = (width: number): Track => ({ track: px(width), minPx: width });
+
 const STRUCTURED_TRACKS: Record<LogStructuredColumn, Track> = {
-  status: { track: '48px', minPx: 48 },
+  status: fixedTrack(size['48']),
   // Fits the `Latency (ms)` header; values are right-aligned tabular numbers.
-  latency: { track: '96px', minPx: 96 },
-  method: { track: '64px', minPx: 64 },
-  path: { track: 'minmax(160px, 1fr)', minPx: 160 },
-  client: { track: '120px', minPx: 120 },
-  source: { track: 'minmax(120px, 160px)', minPx: 120 },
+  latency: fixedTrack(size['96']),
+  method: fixedTrack(size['64']),
+  path: { track: `minmax(${px(size['160'])}, 1fr)`, minPx: size['160'] },
+  client: fixedTrack(size['120']),
+  source: { track: `minmax(${px(size['120'])}, ${px(size['160'])})`, minPx: size['120'] },
 };
 
 const MIN_TIMESTAMP_CH = 8;
 const MAX_TIMESTAMP_CH = 36;
 const LEVEL_CH = 6;
-const MESSAGE_MIN_PX = 240;
-const COLUMN_GAP_PX = 16;
-// 10px padding each side plus the 3px severity border.
-const ROW_PADDING_PX = 23;
+const MESSAGE_MIN_PX = size['240'];
+// Mirrors `.logRow` in LogsPage.module.scss: column gap, inline padding and severity border.
+const COLUMN_GAP_PX = space['16'];
+const ROW_PADDING_PX = space['10'] * 2 + borderWidth['3'];
 
 export type LogGrid = {
   /** Shared `grid-template-columns` for the header and every row, so cells stay aligned. */

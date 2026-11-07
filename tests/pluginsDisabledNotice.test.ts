@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { compileString } from 'sass';
 import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider } from 'react-i18next';
@@ -47,9 +48,15 @@ describe('plugin notice severities', () => {
   });
 
   test('the blocker is styled above the advisory: tinted, bordered and accented', () => {
-    const css = readFileSync('src/features/plugins/components/PluginNotices.module.scss', 'utf8');
+    const css = compileString(
+      `@use 'src/styles/variables' as *;\n${readFileSync(
+        'src/features/plugins/components/PluginNotices.module.scss',
+        'utf8'
+      )}`,
+      { url: new URL('../src/features/plugins/components/PluginNotices.module.scss', import.meta.url), loadPaths: [process.cwd()] }
+    ).css;
     const block = (name: string) =>
-      css.slice(css.indexOf(`.${name} {`), css.indexOf('}\n\n', css.indexOf(`.${name} {`)));
+      css.slice(css.indexOf(`.${name} {`), css.indexOf('}\n', css.indexOf(`.${name} {`)));
     expect(block('blocking')).toContain('background: var(--warning-bg)');
     expect(block('blocking')).toContain('border-left: 4px solid var(--warning-color)');
     expect(block('security')).not.toContain('--warning');

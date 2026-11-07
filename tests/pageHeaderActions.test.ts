@@ -28,7 +28,7 @@ describe('page header action slot', () => {
 
   test('System header action carries an icon like the other header buttons', () => {
     const actions = headerActions(source('src/pages/SystemPage.tsx'));
-    expect(actions).toMatch(/<Icon\w+ size=\{16\}/);
+    expect(actions).toMatch(/<Icon\w+ size=\{iconSize\['16'\]\}/);
     expect(actions).toContain("t('system_info.version_check_button')");
   });
 

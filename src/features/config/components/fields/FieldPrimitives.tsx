@@ -103,7 +103,12 @@ export function FieldGroupHeading({ title }: { title: string }) {
 
 /** Backend YAML key as secondary mono text beside a human label; the label itself stays plain. */
 export function YamlKey({ name }: { name: string }) {
-  return <code className={styles.yamlKey}>{name}</code>;
+  return (
+    <>
+      {' '}
+      <code className={styles.yamlKey}>{name}</code>
+    </>
+  );
 }
 
 export function FieldShell({

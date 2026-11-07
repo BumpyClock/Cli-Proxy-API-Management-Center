@@ -34,6 +34,7 @@ import iconGrok from '@/assets/icons/grok.svg';
 import iconGrokDark from '@/assets/icons/grok-dark.svg';
 import iconDevin from '@/assets/icons/devin.svg';
 import iconDevinDark from '@/assets/icons/devin-dark.svg';
+import { iconSize } from '@/design-system';
 
 interface ProviderState {
   url?: string;
@@ -155,6 +156,7 @@ const KIMI_SIGN_UP_URLS: Partial<Record<BuiltInOAuthProvider, string>> = {
 const BUILTIN_PROVIDER_IDS = new Set<string>(PROVIDERS.map((provider) => provider.id));
 const CALLBACK_SUPPORTED = new Set<string>(['codex', 'anthropic', 'antigravity', 'xai', 'devin']);
 const XAI_CALLBACK_URL = 'http://127.0.0.1:56121/callback';
+// design-tokens: allow flow reset timing, not an animation
 const SUCCESS_RESET_DELAY_MS = 5000;
 const getProviderI18nPrefix = (provider: string) => provider.replace('-', '_');
 const getAuthKey = (provider: string, suffix: string) =>
@@ -173,7 +175,7 @@ function PluginOAuthIcon({ src }: { src: string }) {
   }
   return (
     <span className={styles.cardTitleIconFallback} aria-hidden="true">
-      <IconPlug size={18} />
+      <IconPlug size={iconSize['18']} />
     </span>
   );
 }
@@ -773,7 +775,7 @@ export function OAuthPage() {
             >
               <span>
                 {t('auth_login.kimi_sign_up_button')}
-                <IconExternalLink size={14} aria-hidden="true" />
+                <IconExternalLink size={iconSize['14']} aria-hidden="true" />
               </span>
             </a>
           )}
@@ -917,7 +919,7 @@ export function OAuthPage() {
       <div className={styles.content}>
         <div className={styles.providerFinder}>
           <div className={styles.searchField}>
-            <IconSearch size={16} className={styles.searchIcon} aria-hidden="true" />
+            <IconSearch size={iconSize['16']} className={styles.searchIcon} aria-hidden="true" />
             <input
               ref={providerSearchRef}
               className={styles.searchInput}
@@ -944,7 +946,7 @@ export function OAuthPage() {
                 title={t('auth_login.provider_search_clear')}
                 onClick={clearProviderQuery}
               >
-                <IconX size={14} aria-hidden="true" />
+                <IconX size={iconSize['14']} aria-hidden="true" />
               </button>
             )}
           </div>

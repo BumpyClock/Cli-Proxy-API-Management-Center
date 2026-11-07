@@ -59,6 +59,7 @@ bun run build
 
 - Output: `dist/index.html` (all assets are inlined).
 - For CLI Proxy API bundling, the release workflow renames it to `management.html`.
+- Before installing custom HTML, disable upstream panel auto-updates or point the updater at your fork's release stream. See [custom-panel deployment](docs/workspace-redesign.md#deploying-a-custom-panel), including the first-access download caveat.
 - To preview locally: `bun run preview`
 
 Tip: opening `dist/index.html` via `file://` may be blocked by browser CORS; serving it (preview/static server) is more reliable.
@@ -170,8 +171,10 @@ bun run test       # Bun test suite
 bun run lint       # ESLint (fails on warnings)
 bun run verify     # test + lint + build
 bun run format     # Prettier
-bun run type-check # tsc --noEmit
+bun run type-check # app and build/token tooling, no emitted files
 ```
+
+Visual and motion values come from one registry, `src/design-system/tokens.ts`. See [docs/design-tokens.md](docs/design-tokens.md) for how to change tokens and what the drift guard enforces (`bun run tokens`, `bun run tokens:check`).
 
 ## Contributing
 

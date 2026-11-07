@@ -14,6 +14,7 @@ import {
   toggleExcludedRule,
 } from './excludedModelRules';
 import styles from './ExcludedModelsPicker.module.scss';
+import { iconSize } from '@/design-system';
 
 export type { ExcludedModelCandidate };
 
@@ -173,11 +174,15 @@ export function ExcludedModelsPicker({
       >
         <span className={styles.triggerText}>
           {catalogState === 'loading' ? (
-            <IconLoader2 size={13} className={styles.triggerSpinner} aria-hidden="true" />
+            <IconLoader2
+              size={iconSize['13']}
+              className={styles.triggerSpinner}
+              aria-hidden="true"
+            />
           ) : null}
           {summaryText()}
         </span>
-        <IconChevronDown size={14} className={styles.chevron} aria-hidden="true" />
+        <IconChevronDown size={iconSize['14']} className={styles.chevron} aria-hidden="true" />
         {hasCatalog ? (
           <span
             className={styles.meter}
@@ -290,7 +295,7 @@ export function ExcludedModelsPicker({
 
           {reservedHit ? (
             <p className={styles.ruleWarning}>
-              <IconAlertTriangle size={12} aria-hidden="true" />
+              <IconAlertTriangle size={iconSize['12']} aria-hidden="true" />
               {reservedRuleMessage ?? t('excluded_models.rules_reserved')}
             </p>
           ) : null}

@@ -1,15 +1,16 @@
 .container {
   position: fixed;
   z-index: $z-notification;
-  top: max(1rem, env(safe-area-inset-top));
+  top: max($space-1rem, env(safe-area-inset-top));
   inset-inline: 0;
-  max-height: calc(100dvh - max(1rem, env(safe-area-inset-top)) - 1rem);
+  max-height: calc(100dvh - max($size-1rem, env(safe-area-inset-top)) - $size-1rem);
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem max(1rem, env(safe-area-inset-right)) 1.5rem max(1rem, env(safe-area-inset-left));
+  gap: $space-0-5rem;
+  padding: $space-0-25rem max($space-1rem, env(safe-area-inset-right)) $space-1-5rem
+    max($space-1rem, env(safe-area-inset-left));
   overflow-y: auto;
   scrollbar-width: thin;
   pointer-events: none;
@@ -26,13 +27,13 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 0.625rem;
+  gap: $space-0-625rem;
   flex-shrink: 0;
   width: fit-content;
-  max-width: min(26rem, 100%);
-  padding: 0.625rem 0.625rem 0.625rem 0.875rem;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-lg;
+  max-width: min($size-26rem, 100%);
+  padding: $space-0-625rem $space-0-625rem $space-0-625rem $space-0-875rem;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-12;
   background: var(--floating-surface);
   box-shadow: var(--shadow-lg), var(--shadow);
   color: var(--text-primary);
@@ -40,18 +41,18 @@
   opacity: 1;
   transform: translateY(0) scale(1);
   transition:
-    opacity 200ms var(--ease-out-strong),
-    transform 200ms var(--ease-out-strong);
+    opacity $duration-200 var(--ease-out-strong),
+    transform $duration-200 var(--ease-out-strong);
 
   @starting-style {
     opacity: 0;
-    transform: translateY(-8px) scale(0.98);
+    transform: translateY((-$distance-8)) scale($motion-scale-0-98);
   }
 
   &[data-exiting] {
     opacity: 0;
-    transform: translateY(-6px) scale(0.98);
-    transition-duration: 160ms;
+    transform: translateY((-$distance-6)) scale($motion-scale-0-98);
+    transition-duration: $duration-notification-exit;
     pointer-events: none;
   }
 }
@@ -79,9 +80,9 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-top: 0.125rem;
+  width: $size-1-75rem;
+  height: $size-1-75rem;
+  margin-top: $space-0-125rem;
   border-radius: 50%;
   background: var(--notification-tint);
   color: var(--notification-accent);
@@ -90,10 +91,10 @@
 .message {
   min-width: 0;
   flex: 1;
-  padding-block: 0.3125rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.5;
+  padding-block: $space-0-3125rem;
+  font-size: $font-size-0-875rem;
+  font-weight: $font-weight-500;
+  line-height: $line-height-1-5;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -102,19 +103,19 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
+  width: $size-2rem;
+  height: $size-2rem;
   padding: 0;
   border: none;
-  border-radius: $radius-md;
+  border-radius: $radius-8;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color 120ms ease,
-    color 120ms ease,
-    transform 120ms var(--ease-out-strong);
+    background-color $duration-120 $ease-default,
+    color $duration-120 $ease-default,
+    transform $duration-120 var(--ease-out-strong);
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -124,21 +125,21 @@
   }
 
   &:active {
-    transform: scale(0.96);
+    transform: scale($motion-scale-0-96);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-secondary);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--text-secondary);
+    outline-offset: $space-2;
   }
 }
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
-  margin: -1px;
+  margin: (-$space-1);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
@@ -147,9 +148,9 @@
 
 @media (pointer: coarse) {
   .closeButton {
-    width: 2.75rem;
-    height: 2.75rem;
-    margin: -0.375rem;
+    width: $size-2-75rem;
+    height: $size-2-75rem;
+    margin: (-$space-0-375rem);
     margin-inline-start: 0;
   }
 }
@@ -158,7 +159,7 @@
   .notification,
   .notification[data-exiting] {
     transform: none;
-    transition: opacity 120ms ease;
+    transition: opacity $duration-120 $ease-default;
 
     @starting-style {
       transform: none;

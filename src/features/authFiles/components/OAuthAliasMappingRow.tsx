@@ -6,6 +6,7 @@ import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { IconTrash2 } from '@/components/ui/icons';
 import type { OAuthModelAliasEntry } from '@/types';
 import styles from './OAuthEditor.module.scss';
+import { iconSize } from '@/design-system';
 
 interface OAuthAliasMappingRowProps {
   entry: OAuthModelAliasEntry;
@@ -83,7 +84,7 @@ export function OAuthAliasMappingRow({
             title={t('oauth_model_alias.remove_mapping', { number: index + 1 })}
             aria-label={t('oauth_model_alias.remove_mapping', { number: index + 1 })}
           >
-            <IconTrash2 size={15} aria-hidden="true" />
+            <IconTrash2 size={iconSize['15']} aria-hidden="true" />
           </Button>
         )}
       </div>

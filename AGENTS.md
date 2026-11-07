@@ -8,7 +8,7 @@ This is a React 19 + TypeScript + Vite management frontend for CLI Proxy API, no
 - `src/pages/`: existing route pages outside the feature layout. Follow nearby conventions when modifying these; do not migrate unrelated code.
 - `src/components/`, `src/hooks/`, `src/utils/`: shared UI, hooks, and utilities. Keep feature-specific code within its feature rather than promoting it prematurely.
 - `src/services/api/`: API client, domain endpoints, and backend data normalization. `src/services/storage/`: browser persistence.
-- `src/stores/`: Zustand state. `src/types/`: shared types. `src/styles/`: global styles and theme tokens.
+- `src/stores/`: Zustand state. `src/types/`: shared types. `src/styles/`: global styles. `src/design-system/`: the token registry (`tokens.ts`), TS adapters (`index.ts`) and generated Sass output (`generated/`, do not edit).
 - `src/App.tsx`: hash-router setup. `src/router/MainRoutes.tsx`: authenticated route table. `ProtectedRoute` and `MainLayout` guard and wrap the authenticated app.
 - `src/assets/`: bundled assets, including provider icons in `icons/`.
 - `src/i18n/locales/`: `en.json`, `zh-CN.json`, `zh-TW.json`, and `ru.json`; fallback language is `zh-CN`. Update all four files when adding or changing translation keys, including accessible labels.
@@ -24,7 +24,7 @@ Use Bun; `package.json` pins `bun@1.3.14`, and CI uses Node.js 24. Keep dependen
 - `bun run test`: run all Bun tests.
 - `bun test tests/apiError.test.ts`: example focused test run.
 - `bun run lint`: run ESLint over TypeScript/TSX files. Some rules emit warnings; the current command does not enforce zero warnings.
-- `bun run type-check`: run `tsc --noEmit`; the main TypeScript config includes `src`, not `tests`.
+- `bun run type-check`: check the app (`tsconfig.app.json`) and build/token tooling (`tsconfig.node.json`) without emitting files. Tests run through Bun, not the app TypeScript project.
 - `bun run verify`: run tests, lint, and build (which includes TypeScript compilation).
 - `bun run format`: format all `src/**/*.{ts,tsx,css,scss}`. Prefer targeted formatting of changed files during routine work to avoid unrelated diffs.
 
@@ -48,7 +48,7 @@ Preserve hash routing and single-file deployment. Changes to assets, imports, co
 
 Use 2-space indentation, semicolons, single quotes, ES5 trailing commas, and 100-character line width. Prefer typed React components and `unknown` with narrowing for untrusted data; avoid introducing `any` unless an unavoidable boundary requires it. Use the `@/` alias for `src` imports.
 
-Component files use PascalCase, hooks use `useName`, and API modules use domain names such as `oauth.ts`. SCSS Modules sit beside their page or component as `Name.module.scss`. Vite automatically injects `src/styles/variables.scss` into SCSS; new modules do not need to import it again. Reuse shared components from `src/components/ui/` and existing theme tokens before adding new primitives or hard-coded colors.
+Component files use PascalCase, hooks use `useName`, and API modules use domain names such as `oauth.ts`. SCSS Modules sit beside their page or component as `Name.module.scss`. Vite automatically injects `src/styles/variables.scss` into SCSS; new modules do not need to import it again. Reuse shared components from `src/components/ui/` before adding new primitives. Every colour, size, space, type, radius, shadow, layer, breakpoint and motion value comes from `src/design-system/tokens.ts` (Sass variables, theme custom properties, or `@/design-system` in TS). `tests/designTokenGuard.test.ts` rejects raw values. See `docs/design-tokens.md` for adding tokens, `bun run tokens`, and the allowed structural exceptions.
 
 Keep user-facing text in i18n. Preserve keyboard interaction, accessible names, focus behavior, and reduced-motion handling when modifying interactive UI.
 

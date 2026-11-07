@@ -44,8 +44,8 @@
   outline: none;
 
   &:focus {
-    outline: 2px solid $primary-color;
-    outline-offset: 2px;
+    outline: $border-width-2 solid $color-legacy-primary;
+    outline-offset: $space-2;
   }
 }
 
@@ -55,14 +55,14 @@
 @mixin disclosure-summary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 4px 8px 4px 4px;
-  margin-left: -4px;
-  border-radius: 6px;
+  gap: $space-6;
+  min-height: $size-32;
+  padding: $space-4 $space-8 $space-4 $space-4;
+  margin-left: (-$space-4);
+  border-radius: $radius-6;
   color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   cursor: pointer;
   list-style: none;
   user-select: none;
@@ -74,13 +74,13 @@
   &::before {
     content: '';
     flex: none;
-    width: 7px;
-    height: 7px;
-    margin: 0 3px 0 2px;
-    border-right: 1.5px solid currentColor;
-    border-bottom: 1.5px solid currentColor;
+    width: $size-7;
+    height: $size-7;
+    margin: 0 $space-3 0 $space-2;
+    border-right: $border-width-1-5 solid currentColor;
+    border-bottom: $border-width-1-5 solid currentColor;
     transform: rotate(-45deg);
-    transition: transform 0.15s ease;
+    transition: transform $duration-150 $ease-default;
   }
 
   &:is([open] > *)::before {
@@ -88,16 +88,16 @@
   }
 
   &:hover {
-    background: var(--bg-hover, var(--bg-secondary));
+    background: var(--bg-hover);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconRefreshCw } from './icons';
 import styles from './RefreshButton.module.scss';
+import { iconSize } from '@/design-system';
 
 export interface RefreshButtonProps {
   onClick: () => void;
@@ -54,7 +55,7 @@ export function RefreshButton({
       title={title}
     >
       <IconRefreshCw
-        size={15}
+        size={iconSize['15']}
         aria-hidden="true"
         className={refreshing ? styles.spinning : undefined}
       />

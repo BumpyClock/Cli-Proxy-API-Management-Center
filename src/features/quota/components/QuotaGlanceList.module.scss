@@ -9,10 +9,10 @@
 
 .row {
   display: grid;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: $space-10 0;
+  border-bottom: $border-width-1 solid var(--border-color);
 
   &:first-child {
     padding-top: 0;
@@ -25,20 +25,20 @@
 
   /* Hidden from the chart: the row stays readable, only its line key fades. */
   &[data-hidden='true'] .swatch {
-    opacity: 0.35;
+    opacity: $opacity-0-35;
   }
 }
 
 /* Wide dashboards: two columns, each row separated by a rule above it. */
-@media (min-width: 1100px) {
+@media (min-width: #{$breakpoint-1100}) {
   .list[data-layout='columns'] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 32px;
+    column-gap: $space-32;
 
     .row {
-      padding: 10px 0;
-      border-top: 1px solid var(--border-color);
+      padding: $space-10 0;
+      border-top: $border-width-1 solid var(--border-color);
       border-bottom: 0;
     }
 
@@ -52,7 +52,7 @@
 .head {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -61,7 +61,7 @@
   display: flex;
   flex: 1 1 auto;
   align-items: flex-start;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -73,10 +73,10 @@
 }
 
 button.toggle {
-  min-height: 32px;
-  margin: -6px 0 -6px -6px;
-  padding: 6px;
-  border-radius: 6px;
+  min-height: $size-32;
+  margin: (-$space-6) 0 (-$space-6) (-$space-6);
+  padding: $space-6;
+  border-radius: $radius-6;
   cursor: pointer;
 
   @media (hover: hover) and (pointer: fine) {
@@ -86,7 +86,7 @@ button.toggle {
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
+    outline: $border-width-2 solid var(--focus-ring);
     outline-offset: 0;
   }
 
@@ -99,49 +99,49 @@ button.toggle {
     }
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
-    padding-block: 12px;
-    margin-top: -12px;
-    margin-bottom: -6px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+    padding-block: $space-12;
+    margin-top: (-$space-12);
+    margin-bottom: (-$space-6);
   }
 }
 
 .number {
   flex: 0 0 auto;
-  min-width: 20px;
-  padding: 0 4px;
-  border: 1px solid var(--border-primary);
-  border-radius: 4px;
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 18px;
+  min-width: $size-20;
+  padding: 0 $space-4;
+  border: $border-width-1 solid var(--border-primary);
+  border-radius: $radius-4;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-18px;
   text-align: center;
 }
 
 .swatch {
-  margin-top: 5px;
+  margin-top: $space-5;
 }
 
 .name {
   flex: 1 1 auto;
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 20px;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
+  line-height: $line-height-20px;
 }
 
 .value {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: baseline;
-  line-height: 20px;
+  line-height: $line-height-20px;
 
   strong {
-    font-size: 15px;
-    font-weight: 650;
+    font-size: $font-size-15;
+    font-weight: $font-weight-650;
     font-variant-numeric: tabular-nums;
   }
 }
@@ -150,24 +150,24 @@ button.toggle {
 .states {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 2px;
+  gap: $space-4;
+  margin-bottom: $space-2;
 }
 
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 7px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 20px;
+  gap: $space-4;
+  padding: 0 $space-7;
+  border-radius: $radius-999;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-20px;
   white-space: nowrap;
 
   &[data-state='problem'] {
     color: var(--error-color);
-    background: color-mix(in srgb, var(--error-color) 11%, transparent);
+    background: color-mix(in srgb, var(--error-color) $tint-0-11, transparent);
   }
 
   &[data-state='stale'] {
@@ -177,15 +177,15 @@ button.toggle {
 
   &[data-state='unknown'] {
     color: var(--text-secondary);
-    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    background: color-mix(in srgb, var(--text-primary) $tint-0-07, transparent);
   }
 }
 
 .bar {
   display: block;
-  height: 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  height: $size-6;
+  border-radius: $radius-999;
+  background: color-mix(in srgb, var(--text-primary) $tint-0-08, transparent);
   overflow: hidden;
 }
 
@@ -205,7 +205,7 @@ button.toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -213,20 +213,20 @@ button.toggle {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: $space-2;
   min-width: 0;
 }
 
 /* Reset and check times are what an operator acts on: one step above the 12px floor. */
 .meta {
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: $font-size-13;
+  line-height: $line-height-1-4;
   font-variant-numeric: tabular-nums;
 }
 
 .error {
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
 }
 
 /* Lines wrap between parts, never inside a time such as "Nov 10, 12:00 AM". */
@@ -247,11 +247,11 @@ button.toggle {
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: $size-32;
+  height: $size-32;
   padding: 0;
-  border: 1px solid var(--control-outline);
-  border-radius: 6px;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-6;
   background: var(--bg-primary);
   color: var(--text-primary);
   cursor: pointer;
@@ -263,18 +263,18 @@ button.toggle {
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
   &:disabled {
     color: var(--text-secondary);
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: $opacity-0-6;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    width: 44px;
-    height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    width: $size-touch-target;
+    height: $size-touch-target;
   }
 }

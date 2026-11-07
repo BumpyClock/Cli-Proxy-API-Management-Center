@@ -2,6 +2,19 @@
 
 The management frontend keeps the existing Management API, hash routes, provider controls, plugin trust gates and single-file deployment. The UI can be deployed independently by replacing the backend-hosted `management.html`. Backend configuration and provider credentials are unchanged.
 
+## Deploying a custom panel
+
+Before replacing the HTML, prevent the backend updater from restoring an upstream release:
+
+```yaml
+remote-management:
+  disable-auto-update-panel: true
+```
+
+Alternatively, set `remote-management.panel-github-repository` to this fork if you want automatic updates from its releases. The repository must publish a release asset named `management.html`. A branch build alone is not an updater release.
+
+Place the custom `management.html` before the first panel request. A missing file can still trigger a bootstrap download even with automatic updates disabled. The backend resolves its location from `MANAGEMENT_STATIC_PATH`, then `WRITABLE_PATH/static/` (also accepts lowercase `writable_path`), then `static/` beside the backend config. Back up the existing HTML before replacement. These details were checked against the sibling CLIProxyAPIPlus checkout; verify them for other backend versions.
+
 ## Operator experience
 
 - Page headers, segmented controls, disclosures, selects and refresh actions use shared owners. Page refresh labels name their scope. The separate global action says "Refresh config & page". Mobile Utilities provides configuration refresh, language, theme and sign out.
@@ -16,15 +29,17 @@ The management frontend keeps the existing Management API, hash routes, provider
 
 ## Maintainer ownership
 
-`SegmentedControl`, `NativeSelect`, `RefreshButton` and `PageHeader` own shared control patterns. Route tabs remain distinct from mode switches and multi-select filters. `menuFocus.ts` owns shared menu focus behavior. Theme tokens cover referenced custom properties, and regression tests enforce the 12px typography floor.
+Design and motion tokens have one owner, `src/design-system/tokens.ts`; see [design-tokens.md](design-tokens.md). `SegmentedControl`, `NativeSelect`, `RefreshButton` and `PageHeader` own shared control patterns. Route tabs remain distinct from mode switches and multi-select filters. `menuFocus.ts` owns shared menu focus behavior. `useFloatingMenuPosition` owns viewport clamping, flipping and scroll/resize positioning for Auth Files and Provider row menus. Open menus portal to the document body; oversized menus scroll within the available viewport. Theme tokens cover referenced custom properties, and regression tests enforce the 12px typography floor.
 
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification
 
-The final implementation passed `bun run verify` with Bun 1.3.14. It ran 1,494 tests, ESLint, TypeScript compilation and the production single-file build. The implementation lead also ran the same checks in a no-secrets Boat Linux sandbox using Node 24. No dependency or lockfile changes were required.
+`bun run verify` runs Bun regression tests, ESLint, both TypeScript projects and the production single-file build. Token suites check generated output, whole-tree adoption and injected drift failures. Run the same command in a no-secrets Boat Linux sandbox with Node 24 and Bun 1.3.14 for CI parity. Keep revision-specific results in the PR.
 
-The coordinating agent reran the full local verification, native browser interactions and rendered census. Active diagnostics were also probed. Some TypeScript-server clean results were inconclusive; compilation passed. Auxiliary analysis reported two style warnings in the chart model, not compilation failures.
+Application runtime dependencies are unchanged. Token tooling adds Node 24 development types. Active language-server probes can be inconclusive; report their coverage rather than treating an empty result as a clean check.
+
+`bun run type-check` checks both the application and Node-based build/token tooling. Date-label tests preload UTC through `bunfig.toml`, including when the host exports another `TZ`; production date formatting still uses the viewer's timezone.
 
 Rerun browser checks against a local Vite server with synthetic fixtures:
 
@@ -44,7 +59,7 @@ Logs deliberately trades some initial reading space for a full-width mobile sear
 
 ## Limits
 
-The UI checks did not exercise real account authorization or inference calls. The authoritative sibling backend checkout was unavailable. Mobbin required authentication, so no Mobbin references were inspected.
+The UI checks did not exercise real account authorization or inference calls. The upstream `../CLIProxyAPI` checkout was unavailable. Panel-updater behavior was checked against the sibling CLIProxyAPIPlus source, not a live backend mutation. Mobbin required authentication, so no Mobbin references were inspected.
 
 Screenshot scores are subjective craft judgments, not usability studies or accessibility certification. Fixtures cover partial quota and plugin states. The static council did not exercise interactions, and its viewport captures do not establish full-page coverage. The implementation lead separately checked selected Chinese and Russian layouts. Full assistive-technology, real-device, translated-layout and live-data coverage remain incomplete.
 

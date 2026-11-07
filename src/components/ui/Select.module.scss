@@ -14,17 +14,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: $space-8;
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  height: $size-40;
+  padding: 0 $space-12;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background-color: var(--bg-primary);
   box-shadow: var(--shadow);
   color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   cursor: pointer;
   appearance: none;
   text-align: left;
@@ -36,31 +36,27 @@
 
   &:focus {
     outline: none;
-    box-shadow:
-      var(--shadow),
-      0 0 0 3px rgba($primary-color, 0.18);
+    box-shadow: $shadow-select-focus;
   }
 
   &[aria-expanded='true'] {
     border-color: var(--primary-color);
-    box-shadow:
-      var(--shadow),
-      0 0 0 3px rgba($primary-color, 0.18);
+    box-shadow: $shadow-select-focus;
   }
 }
 
 .triggerSm {
-  height: 32px;
-  padding: 0 10px;
-  font-size: 12px;
+  height: $size-32;
+  padding: 0 $space-10;
+  font-size: $font-size-12;
   box-shadow: none;
 }
 
 /* Same 44px touch target rule as .btn on phones and touch screens. */
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
   .trigger,
   .triggerSm {
-    height: 44px;
+    height: $size-touch-target;
   }
 }
 
@@ -78,7 +74,7 @@
   display: inline-flex;
   color: var(--text-secondary);
   flex-shrink: 0;
-  transition: transform 0.2s ease;
+  transition: transform $duration-200 $ease-default;
 
   [aria-expanded='true'] > & {
     transform: rotate(180deg);
@@ -88,32 +84,32 @@
 .dropdown {
   position: fixed;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-lg;
-  padding: 6px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-12;
+  padding: $space-6;
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: 240px;
+  gap: $space-4;
+  max-height: $size-240;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
 
 .option {
-  padding: 8px 12px;
-  border-radius: $radius-md;
-  border: 1px solid transparent;
+  padding: $space-8 $space-12;
+  border-radius: $radius-8;
+  border: $border-width-1 solid transparent;
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
   text-align: left;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    background-color $duration-150 $ease-default,
+    border-color $duration-150 $ease-default;
   flex-shrink: 0;
 
   &:hover {
@@ -122,9 +118,9 @@
 }
 
 .optionActive {
-  border-color: rgba($primary-color, 0.5);
-  background: rgba($primary-color, 0.1);
-  font-weight: 600;
+  border-color: rgba($color-legacy-primary, $opacity-0-5);
+  background: rgba($color-legacy-primary, $opacity-0-1);
+  font-weight: $font-weight-600;
 }
 
 .optionHighlighted {

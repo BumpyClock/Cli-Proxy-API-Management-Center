@@ -12,6 +12,7 @@ import { BaseProviderForm } from './forms/BaseProviderForm';
 import { ResourceDetailView } from './ResourceDetailView';
 import { SponsorProviderForm } from './forms/SponsorProviderForm';
 import styles from './forms/sharedForm.module.scss';
+import { iconSize } from '@/design-system';
 
 type SheetMode = 'detail' | 'create' | 'edit';
 
@@ -188,7 +189,7 @@ export function ProviderSheet({
             onClick={onSwitchToEdit}
             disabled={formMutating}
           >
-            <IconPencil size={14} />
+            <IconPencil size={iconSize['14']} />
             {t('providersPage.actions.edit')}
           </button>
         </>
@@ -217,7 +218,7 @@ export function ProviderSheet({
           className={`${styles.footerBtn} ${styles.footerBtnPrimary}`}
           disabled={submitDisabled}
         >
-          {submitting ? <IconLoader2 size={14} /> : null}
+          {submitting ? <IconLoader2 size={iconSize['14']} /> : null}
           {state.mode === 'create'
             ? t('providersPage.actions.create')
             : t('providersPage.actions.save')}

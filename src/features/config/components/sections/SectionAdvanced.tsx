@@ -19,6 +19,7 @@ import {
 } from '../fields/FieldPrimitives';
 import { PluginStoreAuthEditor } from '../blocks/PluginStoreAuthEditor';
 import { StringListEditor } from '../blocks/StringListEditor';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.advanced;
 
@@ -46,7 +47,7 @@ export function SectionAdvanced({ values, disabled, animateIn, onChange }: Confi
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.advanced}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.advanced.title')}
       description={t('config_management.visual.sections.advanced.description')}
       animateIn={animateIn}
@@ -319,9 +320,7 @@ export function SectionAdvanced({ values, disabled, animateIn, onChange }: Confi
             <FieldGrid>
               <FieldAnchor fieldId="codexIdentityConfuse">
                 <ToggleRow
-                  title={t(
-                    'config_management.visual.sections.headers.codex_identity_confuse'
-                  )}
+                  title={t('config_management.visual.sections.headers.codex_identity_confuse')}
                   description={t(
                     'config_management.visual.sections.headers.codex_identity_confuse_desc'
                   )}

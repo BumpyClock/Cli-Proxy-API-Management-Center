@@ -7,7 +7,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: $space-20;
   width: 100%;
   min-width: 0;
 }
@@ -17,7 +17,7 @@
 .workbench {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: $space-14;
   min-width: 0;
 }
 
@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: $space-12;
   min-width: 0;
 
   > :first-child {
@@ -41,7 +41,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: $space-8 $space-16;
   min-width: 0;
 }
 
@@ -49,24 +49,24 @@
   position: relative;
   display: flex;
   align-items: center;
-  flex: 0 1 340px;
+  flex: 0 1 $size-340;
   min-width: 0;
-  height: 36px;
-  border-radius: 10px;
+  height: $size-36;
+  border-radius: $radius-10;
   background: var(--bg-secondary);
   color: var(--text-secondary);
 
   /* An inset ring instead of a border keeps the input the full control height. */
   &:focus-within {
-    box-shadow: inset 0 0 0 1px var(--border-hover);
-    outline: 2px solid var(--focus-ring, var(--accent-color));
-    outline-offset: 2px;
+    box-shadow: $shadow-inset-border-hover;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
 .searchIcon {
   position: absolute;
-  left: 11px;
+  left: $space-11;
   pointer-events: none;
 }
 
@@ -74,14 +74,14 @@
   width: 100%;
   min-width: 0;
   height: 100%;
-  padding: 0 42px 0 35px;
+  padding: 0 $space-42 0 $space-35;
   border: 0;
   border-radius: inherit;
   outline: none;
   background: transparent;
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
+  font-size: $font-size-13;
   appearance: none;
 
   &::placeholder {
@@ -96,46 +96,46 @@
 
 .clearSearch {
   position: absolute;
-  right: 2px;
+  right: $space-2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: $size-32;
+  height: $size-32;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: $radius-8;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--accent-color));
-    outline-offset: -2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale($motion-scale-0-97);
   }
 }
 
 .sort {
   flex: 0 0 auto;
-  min-width: 148px;
+  min-width: $size-148;
   max-width: 100%;
 
   button[aria-haspopup='listbox'] {
-    height: 36px;
+    height: $size-36;
     border-color: transparent;
-    border-radius: 10px;
+    border-radius: $radius-10;
     background: transparent;
     box-shadow: none;
     color: var(--text-secondary);
 
     &:focus-visible,
     &[aria-expanded='true'] {
-      outline: 2px solid var(--focus-ring, var(--accent-color));
-      outline-offset: 2px;
+      outline: $border-width-2 solid var(--focus-ring);
+      outline-offset: $space-2;
       background: var(--bg-secondary);
       color: var(--text-primary);
     }
@@ -156,31 +156,31 @@
   }
 }
 
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
   .searchField {
-    flex: 1 1 220px;
-    height: 44px;
+    flex: 1 1 $size-220;
+    height: $size-touch-target;
   }
 
   .clearSearch {
     right: 0;
-    width: 44px;
-    height: 44px;
+    width: $size-touch-target;
+    height: $size-touch-target;
   }
 
   .sort button[aria-haspopup='listbox'] {
-    height: 44px;
+    height: $size-touch-target;
   }
 }
 
 .errorBanner {
-  font-size: 12.5px;
-  line-height: 1.5;
+  font-size: $font-size-12-5;
+  line-height: $line-height-1-5;
   color: var(--danger-color);
   background: var(--bg-error-light);
-  border: 1px solid var(--warning-border);
-  border-radius: 10px;
-  padding: 9px 12px;
+  border: $border-width-1 solid var(--warning-border);
+  border-radius: $radius-10;
+  padding: $space-9 $space-12;
   overflow-wrap: anywhere;
 }
 
@@ -190,8 +190,8 @@
 
 .grid {
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: $space-16;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, $size-340), 1fr));
   align-items: stretch;
 }
 
@@ -201,30 +201,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: $space-14;
   flex-wrap: wrap;
 }
 
 .pageInfo {
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  letter-spacing: $letter-spacing-0-02;
   color: var(--text-tertiary);
   white-space: nowrap;
 }
 
 @include mobile {
   .page {
-    gap: 16px;
+    gap: $space-16;
   }
 }
 
 .checkStatus,
 .checkWarning {
-  margin: -8px 0 0;
+  margin: (-$space-8) 0 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
 }
 .checkWarning {
@@ -235,14 +235,14 @@
 }
 .filters summary {
   @include disclosure-summary;
-  margin-bottom: 8px;
+  margin-bottom: $space-8;
 }
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
   .filters summary {
     margin-bottom: 0;
   }
 }
 .filters[open] {
   display: grid;
-  gap: 12px;
+  gap: $space-12;
 }

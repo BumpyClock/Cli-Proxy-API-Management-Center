@@ -6,16 +6,16 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: $space-8 $space-10;
 }
 
 /* ---------- 搜索 ---------- */
 
 .searchField {
   position: relative;
-  flex: 1 1 160px;
+  flex: 1 1 $size-160;
   min-width: 0;
-  max-width: 340px;
+  max-width: $size-340;
 
   /* Input 组件外层是 .form-group，去掉其默认下边距 */
   :global(.form-group) {
@@ -23,11 +23,11 @@
   }
 
   :global(.input) {
-    height: 36px;
+    height: $size-36;
     /* Reserve room for the trailing search icon so text and placeholder never run under it. */
-    padding-right: 34px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding-right: $space-34;
+    border-radius: $radius-10;
+    font-size: $font-size-13;
     text-overflow: ellipsis;
   }
 }
@@ -41,8 +41,8 @@
 /* Wildcard help: always the input's accessible description; shown visually while it has focus. */
 .searchHint {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   margin: 0;
   overflow: hidden;
   clip-path: inset(50%);
@@ -50,22 +50,22 @@
 }
 
 .searchField:focus-within .searchHint {
-  top: calc(100% + 6px);
+  top: calc(100% + $space-6);
   left: 0;
   z-index: $z-dropdown;
   width: max-content;
-  max-width: min(320px, calc(100vw - 32px));
+  max-width: min($size-320, calc(100vw - $size-32));
   height: auto;
-  padding: 6px 10px;
+  padding: $space-6 $space-10;
   overflow: visible;
   clip-path: none;
   white-space: normal;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--floating-surface);
   box-shadow: var(--floating-shadow);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
 }
 
@@ -85,22 +85,22 @@
 .optionsTrigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: $radius-md;
-  border: 1px solid var(--border-color);
+  gap: $space-6;
+  height: $size-36;
+  padding: 0 $space-12;
+  border-radius: $radius-8;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
-  font-weight: 550;
+  font-size: $font-size-13;
+  font-weight: $font-weight-550;
   color: var(--text-secondary);
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   transition:
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    color var(--dur-hover) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong);
 
   &[aria-expanded='true'] {
     color: var(--text-primary);
@@ -108,8 +108,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-1;
   }
 }
 
@@ -122,23 +122,23 @@
 
 /* Count of options that differ from their defaults. */
 .changedBadge {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: $radius-full;
+  min-width: $size-18;
+  height: $size-18;
+  padding: 0 $space-5;
+  border-radius: $radius-9999;
   background: var(--text-primary);
   color: var(--bg-primary);
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 18px;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
+  line-height: $line-height-18px;
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
@@ -146,20 +146,20 @@
 
 .panel {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + $space-6);
   right: 0;
   z-index: $z-dropdown;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: min(300px, calc(100vw - 32px));
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  gap: $space-10;
+  width: min($size-300, calc(100vw - $size-32));
+  padding: $space-12 $space-14;
+  border-radius: $radius-12;
+  border: $border-width-1 solid var(--border-color);
   background: var(--floating-surface);
   box-shadow: var(--floating-shadow);
   transform-origin: top right;
-  animation: toolbar-panel-in var(--dur-hover, 200ms) var(--ease-out-strong, ease-out) both;
+  animation: toolbar-panel-in var(--dur-hover) var(--ease-out-strong) both;
 
   &[hidden] {
     display: none;
@@ -169,7 +169,7 @@
 @keyframes toolbar-panel-in {
   from {
     opacity: 0;
-    transform: scale(0.97);
+    transform: scale($motion-scale-0-97);
   }
 }
 
@@ -177,33 +177,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
+  gap: $space-12;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 }
 
 .pageSizeInput {
-  width: 72px;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: $radius-md;
-  border: 1px solid var(--border-color);
+  width: $size-72;
+  height: $size-36;
+  padding: 0 $space-10;
+  border-radius: $radius-8;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
   font: inherit;
-  font-size: 14px;
+  font-size: $font-size-14;
   font-variant-numeric: tabular-nums;
   text-align: right;
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-1;
   }
 }
 
 /* ---------- Responsive ---------- */
 
-@media (max-width: 900px) {
+@media (max-width: #{$breakpoint-900}) {
   .searchField {
     max-width: none;
   }
@@ -217,7 +217,7 @@
     grid-template-areas:
       'search options'
       'status status';
-    gap: 8px;
+    gap: $space-8;
   }
 
   .searchField {
@@ -237,14 +237,14 @@
   .searchField :global(.input),
   .optionsTrigger,
   .pageSizeInput {
-    height: 44px;
+    height: $size-touch-target;
   }
 }
 
 @media (pointer: coarse) {
   .optionsTrigger,
   .pageSizeInput {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 }
 

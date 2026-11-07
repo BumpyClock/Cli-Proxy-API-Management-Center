@@ -59,6 +59,7 @@ import {
 } from './TimeSeriesChart.model';
 import { TimeSeriesChartTable } from './TimeSeriesChartTable';
 import styles from './TimeSeriesChart.module.scss';
+import { chart, fontWeight, media, px, size } from '@/design-system';
 
 export type {
   TimeSeriesAnnotation,
@@ -76,7 +77,7 @@ const subscribeReducedMotion = (listener: () => void) => {
   return () => media.removeEventListener('change', listener);
 };
 const readReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const NARROW_QUERY = '(max-width: 600px)';
+const NARROW_QUERY = media.chartCompact;
 const subscribeNarrow = (listener: () => void) => {
   const media = window.matchMedia(NARROW_QUERY);
   media.addEventListener('change', listener);
@@ -84,7 +85,11 @@ const subscribeNarrow = (listener: () => void) => {
 };
 const readNarrow = () => window.matchMedia(NARROW_QUERY).matches;
 
-const HALO = { stroke: 'var(--bg-primary)', strokeWidth: 3, paintOrder: 'stroke' } as const;
+const HALO = {
+  stroke: 'var(--bg-primary)',
+  strokeWidth: chart.haloStroke,
+  paintOrder: 'stroke',
+} as const;
 
 const AXIS_TICK = { fill: 'var(--text-secondary)', fontSize: AXIS_FONT_SIZE };
 
@@ -136,7 +141,7 @@ function MarkerLabels({
             textAnchor={edgeAnchor(group.x, area.x, area.x + area.width, 12)}
             fill="var(--text-primary)"
             fontSize={AXIS_FONT_SIZE}
-            fontWeight={600}
+            fontWeight={fontWeight['600']}
             {...HALO}
           >
             <title>{group.ids.map((id) => labels.get(id)).join(', ')}</title>
@@ -189,7 +194,7 @@ function PlotLabels({
                 y={area.y - 10}
                 textAnchor={edgeAnchor(x, area.x, right, 60)}
                 fill="var(--text-primary)"
-                fontWeight={600}
+                fontWeight={fontWeight['600']}
                 {...HALO}
               >
                 {annotation.label}
@@ -221,23 +226,23 @@ export function SeriesSwatch({
   marker?: boolean;
   className?: string;
 }) {
-  const width = marker ? 30 : 24;
+  const width = marker ? size['30'] : size['24'];
   return (
     <svg
       className={[styles.swatch, className].filter(Boolean).join(' ')}
       width={width}
-      height="10"
-      viewBox={`0 0 ${width} 10`}
+      height={chart.swatch.height}
+      viewBox={`0 0 ${width} ${chart.swatch.height}`}
       aria-hidden="true"
     >
-      {marker && <circle cx="4" cy="5" r="3.5" fill={color} />}
+      {marker && <circle cx="4" cy="5" r={chart.swatch.dotRadius} fill={color} />}
       <line
         x1={marker ? 9 : 1}
         y1="5"
         x2={width - 1}
         y2="5"
         stroke={color}
-        strokeWidth="2.5"
+        strokeWidth={chart.swatch.stroke}
         strokeDasharray={dash}
       />
     </svg>
@@ -490,8 +495,13 @@ export function TimeSeriesChart({
       {forecast && (
         <p className={styles.guideKey}>
           <span>
-            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-              <circle cx="5" cy="5" r="4" fill="var(--text-secondary)" />
+            <svg
+              width={chart.keyDot.size}
+              height={chart.keyDot.size}
+              viewBox="0 0 10 10"
+              aria-hidden="true"
+            >
+              <circle cx="5" cy="5" r={chart.keyDot.radius} fill="var(--text-secondary)" />
             </svg>
             {t('redesign.chart.key_snapshot')}
           </span>
@@ -575,7 +585,7 @@ export function TimeSeriesChart({
                   interval={0}
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={6}
+                  tickMargin={chart.tickMargin}
                 />
                 <YAxis
                   dataKey={independent ? 'value' : undefined}
@@ -594,10 +604,10 @@ export function TimeSeriesChart({
                   formatter={(value) => formatY(Number(value))}
                   contentStyle={{
                     background: 'var(--floating-surface)',
-                    border: '1px solid var(--border-primary)',
-                    borderRadius: 8,
+                    border: `${px(chart.tooltip.borderWidth)} solid var(--border-primary)`,
+                    borderRadius: chart.tooltip.radius,
                     color: 'var(--text-primary)',
-                    fontSize: 12,
+                    fontSize: chart.tooltip.fontSize,
                   }}
                 />
                 {forecast && !projectedOnly && (
@@ -608,7 +618,7 @@ export function TimeSeriesChart({
                     x2={xDomain[1]}
                     ifOverflow="hidden"
                     fill="var(--text-secondary)"
-                    fillOpacity={0.06}
+                    fillOpacity={chart.forecastTintOpacity}
                     stroke="none"
                   />
                 )}
@@ -617,7 +627,7 @@ export function TimeSeriesChart({
                     x={forecast.from}
                     ifOverflow="hidden"
                     stroke="var(--text-secondary)"
-                    strokeWidth={1.5}
+                    strokeWidth={chart.boundaryStroke}
                   />
                 )}
                 {axis.rules.map((rule) => (
@@ -632,8 +642,8 @@ export function TimeSeriesChart({
                   <ReferenceLine
                     key={`${annotation.x}-${annotation.label}`}
                     x={annotation.x}
-                    stroke="var(--text-tertiary, var(--text-secondary))"
-                    strokeDasharray="1 3"
+                    stroke="var(--text-tertiary)"
+                    strokeDasharray={chart.annotationDash}
                   />
                 ))}
                 {traces.flatMap(({ ids, numbers, lead, shared, color, dash }) => {
@@ -651,13 +661,13 @@ export function TimeSeriesChart({
                       }
                       type={lead.item.interpolation ?? 'linear'}
                       stroke={color}
-                      strokeWidth={shared ? 2.5 : 2.25}
+                      strokeWidth={shared ? chart.sharedSeriesStroke : chart.seriesStroke}
                       strokeDasharray={lineDash}
                       connectNulls={false}
                       dot={false}
                       activeDot={false}
                       isAnimationActive={!reducedMotion}
-                      animationDuration={180}
+                      animationDuration={chart.animationDuration}
                     />
                   );
                   const key = ids.join('|');
@@ -681,10 +691,10 @@ export function TimeSeriesChart({
                     key={`${marker.id}-marker`}
                     x={marker.timestamp}
                     y={marker.value}
-                    r={5}
+                    r={chart.markerRadius}
                     fill={strokes.get(marker.id)?.color ?? marker.color}
                     stroke="var(--bg-primary)"
-                    strokeWidth={2}
+                    strokeWidth={chart.markerStroke}
                   />
                 ))}
                 <MarkerLabels markers={markers} formatGroup={formatMarkerGroup} />
@@ -693,7 +703,11 @@ export function TimeSeriesChart({
                   annotations={annotations}
                 />
                 {inspecting && timestamp !== undefined && (
-                  <ReferenceLine x={timestamp} stroke="var(--focus-ring)" strokeDasharray="3 4" />
+                  <ReferenceLine
+                    x={timestamp}
+                    stroke="var(--focus-ring)"
+                    strokeDasharray={chart.inspectDash}
+                  />
                 )}
               </LineChart>
             </ResponsiveContainer>

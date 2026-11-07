@@ -141,7 +141,7 @@ describe('row actions menu control', () => {
   });
 
   test('the menu floats instead of stretching the actions column, and closes predictably', () => {
-    expect(cardCss).toMatch(/\.actions \{ position: absolute;/);
+    expect(cardCss).toMatch(/\.actions \{ position: fixed;/);
     const source = readFileSync('src/features/authFiles/components/AuthFileCard.tsx', 'utf8');
     expect(source).toContain("event.key === 'Escape'");
     expect(source).toContain("document.addEventListener('pointerdown', handlePointerDown)");

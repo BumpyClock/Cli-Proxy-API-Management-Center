@@ -9,6 +9,7 @@ import { MAX_CARD_PAGE_SIZE, MIN_CARD_PAGE_SIZE } from '@/features/authFiles/con
 import type { ViewOptionsSummary } from '@/features/authFiles/logic';
 import type { AuthFilesSortMode, AuthFilesStatusFilterMode } from '@/features/authFiles/uiState';
 import styles from './AuthFilesToolbar.module.scss';
+import { iconSize } from '@/design-system';
 
 export type AuthFilesToolbarProps = {
   search: string;
@@ -86,7 +87,7 @@ export function AuthFilesToolbar(props: AuthFilesToolbarProps) {
           placeholder={t('auth_files.search_placeholder')}
           aria-label={t('auth_files.search_label')}
           aria-describedby={searchHintId}
-          rightElement={<IconSearch className={styles.searchIcon} size={16} />}
+          rightElement={<IconSearch className={styles.searchIcon} size={iconSize['16']} />}
         />
         <p id={searchHintId} className={styles.searchHint}>
           {t('auth_files.search_hint')}
@@ -122,7 +123,7 @@ export function AuthFilesToolbar(props: AuthFilesToolbarProps) {
           aria-controls={panelId}
           onClick={() => setOptionsOpen((open) => !open)}
         >
-          <IconSlidersHorizontal size={15} aria-hidden="true" />
+          <IconSlidersHorizontal size={iconSize['15']} aria-hidden="true" />
           <span>{t('auth_files.display_options_label')}</span>
           {viewOptions.changedCount > 0 && (
             <>

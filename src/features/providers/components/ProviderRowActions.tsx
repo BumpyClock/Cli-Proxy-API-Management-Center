@@ -1,38 +1,12 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent,
-} from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { IconChevronDown, IconEye, IconPencil, IconTrash2 } from '@/components/ui/icons';
 import { menuFocusTarget } from '@/utils/menuFocus';
 import styles from './ProviderRowActions.module.scss';
-
-const MENU_OFFSET = 6;
-// Measured before it is placed. Opacity, not visibility: hidden items cannot take focus, and
-// `.btn` transitions would keep them hidden past the first frame.
-const UNPOSITIONED_STYLE: CSSProperties = { top: 0, right: 0, opacity: 0, pointerEvents: 'none' };
-const VIEWPORT_MARGIN = 8;
-
-/**
- * Right-aligned under the trigger, flipped above it when the viewport has no room below.
- * Fixed and portalled, because the table scrolls inside an overflow container.
- */
-const resolveMenuStyle = (trigger: HTMLElement, menuHeight: number): CSSProperties => {
-  const rect = trigger.getBoundingClientRect();
-  const right = Math.max(VIEWPORT_MARGIN, window.innerWidth - rect.right);
-  const fitsBelow = rect.bottom + MENU_OFFSET + menuHeight + VIEWPORT_MARGIN <= window.innerHeight;
-  return fitsBelow || rect.top < menuHeight + MENU_OFFSET + VIEWPORT_MARGIN
-    ? { top: rect.bottom + MENU_OFFSET, right }
-    : { bottom: window.innerHeight - rect.top + MENU_OFFSET, right };
-};
+import { iconSize } from '@/design-system';
+import { useFloatingMenuPosition, UNPOSITIONED_MENU_STYLE } from '@/hooks/useFloatingMenuPosition';
 
 interface ProviderRowActionItemsProps {
   disableMutations: boolean;
@@ -52,7 +26,7 @@ export function ProviderRowActionItems({
   return (
     <>
       <Button variant="ghost" role="menuitem" tabIndex={-1} onClick={onView}>
-        <IconEye size={15} aria-hidden="true" />
+        <IconEye size={iconSize['15']} aria-hidden="true" />
         {t('redesign.providers.menuViewDetails')}
       </Button>
       <Button
@@ -62,7 +36,7 @@ export function ProviderRowActionItems({
         disabled={disableMutations}
         onClick={onEdit}
       >
-        <IconPencil size={15} aria-hidden="true" />
+        <IconPencil size={iconSize['15']} aria-hidden="true" />
         {t('providersPage.actions.edit')}
       </Button>
       <span className={styles.separator} role="separator" />
@@ -74,7 +48,7 @@ export function ProviderRowActionItems({
         disabled={disableMutations}
         onClick={onDelete}
       >
-        <IconTrash2 size={15} aria-hidden="true" />
+        <IconTrash2 size={iconSize['15']} aria-hidden="true" />
         {t('providersPage.actions.delete')}
       </Button>
     </>
@@ -100,9 +74,9 @@ export function ProviderRowActions({
   const { t } = useTranslation();
   const menuId = useId();
   const [open, setOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuStyle = useFloatingMenuPosition(open, triggerRef, menuRef);
   // First item for click/Enter/ArrowDown, last for ArrowUp.
   const openFocusRef = useRef<'first' | 'last'>('first');
   const pendingFocusRef = useRef(false);
@@ -120,25 +94,8 @@ export function ProviderRowActions({
   };
   const closeMenu = useCallback((restoreFocus: boolean) => {
     setOpen(false);
-    setMenuStyle(null);
     if (restoreFocus) triggerRef.current?.focus();
   }, []);
-
-  const position = useCallback(() => {
-    if (!triggerRef.current || !menuRef.current) return;
-    setMenuStyle(resolveMenuStyle(triggerRef.current, menuRef.current.offsetHeight));
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    position();
-    window.addEventListener('resize', position);
-    window.addEventListener('scroll', position, true);
-    return () => {
-      window.removeEventListener('resize', position);
-      window.removeEventListener('scroll', position, true);
-    };
-  }, [open, position]);
 
   // Focus the first (or last) item once the positioned menu is visible.
   useEffect(() => {
@@ -203,7 +160,7 @@ export function ProviderRowActions({
       role="menu"
       aria-label={label}
       className={styles.menu}
-      style={menuStyle ?? UNPOSITIONED_STYLE}
+      style={menuStyle ?? UNPOSITIONED_MENU_STYLE}
       onKeyDown={handleMenuKeyDown}
     >
       <ProviderRowActionItems
@@ -229,7 +186,7 @@ export function ProviderRowActions({
         onKeyDown={handleTriggerKeyDown}
       >
         <span>{t('providersPage.table.actions')}</span>
-        <IconChevronDown className={styles.chevron} size={14} aria-hidden="true" />
+        <IconChevronDown className={styles.chevron} size={iconSize['14']} aria-hidden="true" />
       </button>
       {menu && typeof document !== 'undefined' ? createPortal(menu, document.body) : null}
     </>

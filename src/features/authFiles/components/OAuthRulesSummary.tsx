@@ -4,6 +4,7 @@ import { IconChevronDown } from '@/components/ui/icons';
 import type { OAuthConfigLoadError } from '@/features/authFiles/constants';
 import { countOAuthRules } from '@/features/authFiles/logic';
 import styles from './OAuthConfigPanels.module.scss';
+import { iconSize } from '@/design-system';
 
 type RuleSet = {
   error: OAuthConfigLoadError;
@@ -89,7 +90,11 @@ export function OAuthRulesSummary({
           onClick={() => onExpandedChange(!expanded)}
         >
           <span>{t(expanded ? 'auth_files.oauth_rules_hide' : 'auth_files.oauth_rules_show')}</span>
-          <IconChevronDown className={styles.summaryChevron} size={14} aria-hidden="true" />
+          <IconChevronDown
+            className={styles.summaryChevron}
+            size={iconSize['14']}
+            aria-hidden="true"
+          />
         </button>
       </section>
       {expanded && (

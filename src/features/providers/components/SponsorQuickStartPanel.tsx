@@ -16,6 +16,7 @@ import type { UseProviderWorkbenchResult } from '../useProviderWorkbench';
 import { SponsorProviderForm } from '../sheets/forms/SponsorProviderForm';
 import formStyles from '../sheets/forms/sharedForm.module.scss';
 import styles from './SponsorQuickStartPanel.module.scss';
+import { iconSize } from '@/design-system';
 
 /**
  * Not configured: a plain optional entry point. No logo, promotion or sign-up link; the
@@ -42,7 +43,7 @@ export function QuickStartOptionalKey({
         </p>
       </div>
       <Button variant="secondary" onClick={onAdd} disabled={disabled}>
-        <IconPlus size={16} aria-hidden="true" />
+        <IconPlus size={iconSize['16']} aria-hidden="true" />
         {getProviderCreateLabel(t, 'apikeyFun')}
       </Button>
     </section>
@@ -68,7 +69,7 @@ export function QuickStartAccountLink({ configured }: { configured: boolean }) {
         rel={configured ? 'noopener noreferrer' : 'noopener noreferrer sponsored'}
       >
         <span>{label}</span>
-        <IconExternalLink size={13} aria-hidden="true" />
+        <IconExternalLink size={iconSize['13']} aria-hidden="true" />
         <span className={styles.visuallyHidden}>{t('providersPage.quickStart.newTab')}</span>
       </a>
       {configured ? null : (
@@ -197,11 +198,11 @@ export function SponsorQuickStartPanel({
           disabled={submitDisabled}
         >
           {submitting ? (
-            <IconLoader2 className={styles.spin} size={14} />
+            <IconLoader2 className={styles.spin} size={iconSize['14']} />
           ) : mode === 'create' ? (
-            <IconPlus size={14} />
+            <IconPlus size={iconSize['14']} />
           ) : (
-            <IconCheckCircle2 size={14} />
+            <IconCheckCircle2 size={iconSize['14']} />
           )}
           <span>
             {mode === 'create'

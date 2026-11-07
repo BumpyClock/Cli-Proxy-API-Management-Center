@@ -13,6 +13,7 @@ import { getQuotaObservations } from '@/features/quota/providers/registry';
 import { selectQuotaWindow } from '@/features/quota/providers/observations';
 import { useQuotaActions } from '@/features/quota/hooks/useQuotaActions';
 import styles from './AuthFileQuota.module.scss';
+import { iconSize } from '@/design-system';
 
 const compactQuotaClasses = bindQuotaClasses(styles, 'AuthFileQuota.module.scss');
 
@@ -123,7 +124,7 @@ export function AuthFileQuotaSection({
               title={t('codex_quota.reset_button')}
               aria-label={t('codex_quota.reset_button')}
             >
-              {!resettingQuota && <IconRefreshCw size={14} />}
+              {!resettingQuota && <IconRefreshCw size={iconSize['14']} />}
               {t('codex_quota.reset_button')}
             </Button>
           )}
@@ -138,7 +139,7 @@ export function AuthFileQuotaSection({
               loading={quotaStatus === 'loading' || quota?.refreshing}
               title={t('auth_files.quota_refresh_hint')}
             >
-              {quotaStatus !== 'loading' && <IconRefreshCw size={14} />}
+              {quotaStatus !== 'loading' && <IconRefreshCw size={iconSize['14']} />}
               {t('auth_files.quota_refresh_single')}
             </Button>
           )}
@@ -182,7 +183,7 @@ export function AuthFileQuotaSection({
       >
         <span className={styles.summaryLine}>
           <span className={reported ? styles.summaryValue : styles.summaryMuted}>{summary}</span>
-          <IconChevronDown className={styles.summaryChevron} size={14} />
+          <IconChevronDown className={styles.summaryChevron} size={iconSize['14']} />
         </span>
         {quota?.stale && <small>{t('redesign.quota.stale')}</small>}
         {quota?.refreshing && <small>{t('redesign.quota.checking')}</small>}

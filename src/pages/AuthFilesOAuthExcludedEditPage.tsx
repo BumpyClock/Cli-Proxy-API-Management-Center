@@ -27,6 +27,7 @@ import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import { getErrorMessage } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
 import bodyStyles from './AuthFilesOAuthExcludedEditPage.module.scss';
+import { iconSize } from '@/design-system';
 
 type AuthFileModelItem = { id: string; display_name?: string; type?: string; owned_by?: string };
 
@@ -359,7 +360,7 @@ export function AuthFilesOAuthExcludedEditPage() {
       />
       {initialLoading ? (
         <div className={styles.loading} role="status">
-          <LoadingSpinner size={16} />
+          <LoadingSpinner size={iconSize['16']} />
           {t('common.loading')}
         </div>
       ) : excludedUnsupported ? (

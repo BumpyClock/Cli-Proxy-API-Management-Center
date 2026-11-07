@@ -37,6 +37,7 @@ import {
 } from './uiState';
 import type { ProviderBrand, ProviderResource, ProviderSortBy, SortDir } from './types';
 import styles from './ProvidersWorkbenchPage.module.scss';
+import { size } from '@/design-system';
 
 type SheetMode = 'detail' | 'create' | 'edit';
 
@@ -393,10 +394,10 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
   if (!workbench.snapshot && workbench.isPending) {
     return (
       <div className={styles.page}>
-        <Skeleton height={120} />
+        <Skeleton height={size['120']} />
         <div className={styles.layout}>
-          <Skeleton height={420} />
-          <Skeleton height={420} />
+          <Skeleton height={size['420']} />
+          <Skeleton height={size['420']} />
         </div>
       </div>
     );

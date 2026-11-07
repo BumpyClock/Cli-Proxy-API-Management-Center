@@ -20,9 +20,12 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     textarea.style.position = 'fixed';
     textarea.style.opacity = '0';
     textarea.style.pointerEvents = 'none';
+    // design-tokens: allow offscreen copy buffer, never rendered
     textarea.style.left = '-9999px';
     textarea.style.top = '0';
+    // design-tokens: allow offscreen copy buffer, never rendered
     textarea.style.width = '1px';
+    // design-tokens: allow offscreen copy buffer, never rendered
     textarea.style.height = '1px';
     textarea.style.padding = '0';
     textarea.style.border = '0';

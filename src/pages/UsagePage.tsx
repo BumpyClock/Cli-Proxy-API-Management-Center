@@ -19,6 +19,7 @@ import {
   usageSessionRequestState,
 } from './usage-page-request-guard';
 import styles from './UsagePage.module.scss';
+import { chart } from '@/design-system';
 
 const STALE_AFTER_MS = 5 * 60_000;
 
@@ -238,7 +239,7 @@ export function UsagePageContent({
                       ariaLabel={title}
                       description={t('redesign.usage.daily_evidence')}
                       emptyText={t('redesign.usage.no_dated_data')}
-                      height={220}
+                      height={chart.height.usage}
                     />
                   </section>
                 );

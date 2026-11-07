@@ -6,6 +6,7 @@ import { createSharedClock } from '@/utils/time/sharedClock';
 import { formatDateTimeValue } from '@/utils/format';
 import { cooldownReasonKey, summarizeCooldowns } from '@/features/authFiles/cooldowns';
 import styles from './AuthFileCooldownSection.module.scss';
+import { iconSize } from '@/design-system';
 
 // One timer for visible cooldown cards, never one interval/request per credential.
 const clock = createSharedClock({ intervalMs: 1000 });
@@ -49,7 +50,7 @@ function CooldownDetails({ snapshot }: { snapshot: AuthFileCooldownSnapshot }) {
               : t('auth_files.cooldown_earliest', { time: duration(earliestSeconds) })}
           </span>
         </span>
-        <IconChevronDown size={14} className={styles.chevron} aria-hidden="true" />
+        <IconChevronDown size={iconSize['14']} className={styles.chevron} aria-hidden="true" />
       </summary>
       <div className={styles.body}>
         <ul className={styles.list}>

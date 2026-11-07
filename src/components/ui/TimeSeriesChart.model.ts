@@ -4,6 +4,7 @@ import type {
   TimeSeriesSeries,
   TimeTickUnit,
 } from './TimeSeriesChart.types';
+import { chart } from '@/design-system';
 
 export type { TimeTickUnit } from './TimeSeriesChart.types';
 
@@ -212,7 +213,7 @@ export function groupIdenticalTraces(
 /** Series drawn as one shared trace use this neutral stroke; their numbers name them. */
 export const SHARED_STROKE = 'var(--text-secondary)';
 /** Default dash for projected segments; shared traces and undashed series use it. */
-export const PROJECTED_DASH = '5 4';
+export const PROJECTED_DASH = chart.projectedDash;
 
 export function seriesSamples(
   item: TimeSeriesSeries,
@@ -329,10 +330,10 @@ export function nextHiddenSeries(
 }
 
 /** Plot geometry shared by the renderer and the tick layout. */
-export const PLOT_MARGIN = { top: 24, right: 12, bottom: 8, left: 4 } as const;
-export const Y_AXIS_WIDTH = 54;
+export const PLOT_MARGIN = chart.margin;
+export const Y_AXIS_WIDTH = chart.yAxisWidth;
 /** Axis, marker and annotation labels on the plot. */
-export const AXIS_FONT_SIZE = 13;
+export const AXIS_FONT_SIZE = chart.axisFontSize;
 
 /** Width of the drawable plot area inside a chart container of `containerWidth` pixels. */
 export function plotAreaWidth(containerWidth: number): number {

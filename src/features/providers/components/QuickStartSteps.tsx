@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { IconChevronRight } from '@/components/ui/icons';
 import { QUICK_START_STEPS } from '../workbenchLayout';
 import styles from './QuickStartSteps.module.scss';
+import { iconSize } from '@/design-system';
 
 export function QuickStartSteps() {
   const { t } = useTranslation();
@@ -20,7 +21,11 @@ export function QuickStartSteps() {
               </span>
               <span className={styles.label}>{t(step.labelKey)}</span>
               <span className={styles.destination}>{t(step.destinationKey)}</span>
-              <IconChevronRight size={16} aria-hidden="true" className={styles.chevron} />
+              <IconChevronRight
+                size={iconSize['16']}
+                aria-hidden="true"
+                className={styles.chevron}
+              />
             </Link>
           </li>
         ))}

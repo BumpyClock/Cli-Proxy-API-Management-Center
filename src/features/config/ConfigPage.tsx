@@ -46,9 +46,10 @@ import { SectionPayload } from './components/sections/SectionPayload';
 import { SectionQuota } from './components/sections/SectionQuota';
 import { SectionStreaming } from './components/sections/SectionStreaming';
 import styles from './ConfigPage.module.scss';
+import { media, motion } from '@/design-system';
 
 /** 首载入场预算：卡片延迟 0.28s + 0.45s 动画，之后关闭 animateIn，切 tab 不再重播。 */
-const ENTRANCE_BUDGET_MS = 800;
+const ENTRANCE_BUDGET_MS = motion.cascade['config-cards'].budget;
 
 export function ConfigPage() {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ export function ConfigPage() {
   const showNotification = useNotificationStore((state) => state.showNotification);
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery(media.mobile);
   const revealRef = useRevealGroup<HTMLDivElement>();
 
   const {

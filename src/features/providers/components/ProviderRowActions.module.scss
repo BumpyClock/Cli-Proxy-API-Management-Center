@@ -5,16 +5,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 32px;
-  padding: 0 8px 0 10px;
-  border: 1px solid var(--control-outline, var(--border-color));
-  border-radius: $radius-md;
+  gap: $space-4;
+  min-height: $size-32;
+  padding: 0 $space-8 0 $space-10;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -22,8 +22,8 @@
     border-color $transition-fast;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
@@ -46,16 +46,18 @@
 
 .menu {
   position: fixed;
-  z-index: $z-dropdown;
+  z-index: $z-popover;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
   width: max-content;
-  min-width: 180px;
-  max-width: calc(100vw - 16px);
-  padding: 6px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  min-width: $size-180;
+  max-width: calc(100vw - $size-16);
+  padding: $space-6;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-10;
   background: var(--floating-surface);
   box-shadow: var(--floating-shadow);
 }
@@ -63,23 +65,23 @@
 .menu :global(.btn) {
   justify-content: flex-start;
   width: 100%;
-  min-height: 36px;
-  padding-inline: 10px;
+  min-height: $size-36;
+  padding-inline: $space-10;
   border: 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   text-align: left;
 }
 
 .menu :global(.btn > span) {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .menu :global(.btn:focus-visible) {
-  outline: 2px solid var(--focus-ring, var(--primary-color));
-  outline-offset: -2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: (-$space-2);
 }
 
 .danger:not(:disabled) {
@@ -87,21 +89,21 @@
 }
 
 .separator {
-  height: 1px;
-  margin: 4px 2px;
+  height: $size-1;
+  margin: $space-4 $space-2;
   background: var(--border-color);
 }
 
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
   /* Height grows for touch; padding stays compact so "Действия" fits the 124px column. */
   .trigger {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 10px 0 12px;
+    min-width: $size-touch-target;
+    min-height: $size-touch-target;
+    padding: 0 $space-10 0 $space-12;
   }
 
   .menu :global(.btn) {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 }
 

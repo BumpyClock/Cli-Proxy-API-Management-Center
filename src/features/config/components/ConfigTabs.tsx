@@ -10,6 +10,7 @@ import {
   type ConfigTabId,
 } from '../constants';
 import styles from './ConfigTabs.module.scss';
+import { iconSize } from '@/design-system';
 
 export type ConfigTabsProps = {
   active: ConfigTabId;
@@ -86,7 +87,11 @@ export function ConfigTabs({
               </option>
             ))}
           </select>
-          <IconChevronDown size={16} className={styles.mobileSelectChevron} aria-hidden="true" />
+          <IconChevronDown
+            size={iconSize['16']}
+            className={styles.mobileSelectChevron}
+            aria-hidden="true"
+          />
         </span>
       </label>
       <div
@@ -128,7 +133,7 @@ export function ConfigTabs({
               onClick={() => onChange(id)}
               onKeyDown={handleKeyDown}
             >
-              <Icon size={15} className={styles.tabGlyph} />
+              <Icon size={iconSize['15']} className={styles.tabGlyph} />
               <span className={styles.tabLabel}>{tabLabel}</span>
               {errorCount > 0 ? (
                 <span className={styles.tabBadge} aria-hidden="true">

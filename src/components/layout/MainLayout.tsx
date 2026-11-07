@@ -58,20 +58,21 @@ import { triggerHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { lockScroll, unlockScroll } from '@/components/ui/scrollLock';
 import { getSidebarShortcutLabel, isSidebarToggleShortcut } from '@/utils/sidebarShortcut';
+import { iconSize, media, space } from '@/design-system';
 
 const sidebarIcons: Record<string, ReactNode> = {
-  dashboard: <IconSidebarDashboard size={18} />,
-  quickStart: <IconSidebarQuickStart size={18} />,
-  aiProviders: <IconSidebarProviders size={18} />,
-  authFiles: <IconSidebarAuthFiles size={18} />,
-  oauth: <IconSidebarOauth size={18} />,
-  quota: <IconSidebarQuota size={18} />,
-  usage: <IconSidebarUsage size={18} />,
-  plugins: <IconSidebarPlugins size={18} />,
-  pluginStore: <IconSidebarStore size={18} />,
-  config: <IconSidebarConfig size={18} />,
-  logs: <IconSidebarLogs size={18} />,
-  system: <IconSidebarSystem size={18} />,
+  dashboard: <IconSidebarDashboard size={iconSize['18']} />,
+  quickStart: <IconSidebarQuickStart size={iconSize['18']} />,
+  aiProviders: <IconSidebarProviders size={iconSize['18']} />,
+  authFiles: <IconSidebarAuthFiles size={iconSize['18']} />,
+  oauth: <IconSidebarOauth size={iconSize['18']} />,
+  quota: <IconSidebarQuota size={iconSize['18']} />,
+  usage: <IconSidebarUsage size={iconSize['18']} />,
+  plugins: <IconSidebarPlugins size={iconSize['18']} />,
+  pluginStore: <IconSidebarStore size={iconSize['18']} />,
+  config: <IconSidebarConfig size={iconSize['18']} />,
+  logs: <IconSidebarLogs size={iconSize['18']} />,
+  system: <IconSidebarSystem size={iconSize['18']} />,
 };
 
 interface SidebarNavLinkItem {
@@ -98,7 +99,7 @@ interface SidebarNavDrawerItem {
 type SidebarNavItem = SidebarNavLinkItem | SidebarNavDrawerItem;
 
 const NAV_TOOLTIP_ID = 'sidebar-nav-tooltip';
-const NAV_TOOLTIP_VIEWPORT_MARGIN = 8;
+const NAV_TOOLTIP_VIEWPORT_MARGIN = space['8'];
 
 interface SidebarNavGroup {
   id: string;
@@ -116,7 +117,7 @@ function PluginSidebarIcon({ src }: { src: string }) {
   return showImage ? (
     <img src={src} alt="" onError={() => setFailed(true)} />
   ) : (
-    <IconSidebarPlugins size={18} />
+    <IconSidebarPlugins size={iconSize['18']} />
   );
 }
 
@@ -141,7 +142,7 @@ export function MainLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Below this width the sidebar is an off-canvas drawer (see layout.scss).
-  const isDrawerNav = useMediaQuery('(max-width: 768px)');
+  const isDrawerNav = useMediaQuery(media.mobile);
   const sidebarRef = useRef<HTMLElement | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -756,7 +757,7 @@ export function MainLayout() {
                 <span className="nav-label">{item.label}</span>
               </span>
               <span className="nav-drawer-caret" aria-hidden="true">
-                <IconChevronDown size={14} />
+                <IconChevronDown size={iconSize['14']} />
               </span>
             </>
           )}

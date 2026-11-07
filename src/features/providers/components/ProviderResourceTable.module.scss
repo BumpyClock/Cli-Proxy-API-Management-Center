@@ -3,24 +3,23 @@
 
 /* Column budget: 124 + 108 + 112 + 164 + 124 fixed (see PROVIDER_TABLE_COLUMN_WIDTHS) plus a
    120px floor for Base URL. Below this the table scrolls inside its container. */
-$provider-table-min-width: 752px;
 
 .providerTable {
-  min-width: $provider-table-min-width;
+  min-width: $size-752;
   table-layout: fixed;
 
   /* thead th / tbody td outrank the shared Table's `.head th` and `.row td` padding. */
   thead th,
   tbody td {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: $space-10;
+    padding-right: $space-10;
   }
 
   tbody tr:hover .actionsCell {
     background:
       linear-gradient(
-        color-mix(in srgb, var(--accent-bg) 50%, transparent),
-        color-mix(in srgb, var(--accent-bg) 50%, transparent)
+        color-mix(in srgb, var(--accent-bg) $tint-0-5, transparent),
+        color-mix(in srgb, var(--accent-bg) $tint-0-5, transparent)
       ),
       var(--bg-primary);
   }
@@ -29,12 +28,12 @@ $provider-table-min-width: 752px;
 .primaryCell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
   min-width: 0;
 }
 
 .primaryName {
-  font-weight: 500;
+  font-weight: $font-weight-500;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,9 +42,9 @@ $provider-table-min-width: 752px;
 }
 
 .primarySub {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -57,8 +56,8 @@ $provider-table-min-width: 752px;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -73,29 +72,29 @@ $provider-table-min-width: 752px;
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: top;
-  padding: 3px 9px;
+  padding: $space-3 $space-9;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   background: var(--muted-bg);
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: $font-size-12;
 }
 
 .metricsCell {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: $space-4 $space-10;
   align-items: center;
 }
 
 .metric {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: $space-4;
   padding: 0;
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
   white-space: nowrap;
 }
 
@@ -105,21 +104,21 @@ $provider-table-min-width: 752px;
 
 .metricValue {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: $font-weight-600;
   font-variant-numeric: tabular-nums;
 }
 
 .flagTag {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: $space-3 $space-9;
   border-radius: var(--radius-md);
-  border: 1px solid var(--primary-30);
+  border: $border-width-1 solid var(--primary-30);
   background: var(--primary-10);
   color: var(--primary-color);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
+  line-height: $line-height-1-4;
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
@@ -135,7 +134,7 @@ $provider-table-min-width: 752px;
 .statusCell {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
   align-items: flex-start;
   min-width: 0;
   max-width: 100%;
@@ -144,7 +143,7 @@ $provider-table-min-width: 752px;
 .statusLine {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
   max-width: 100%;
 }
@@ -153,19 +152,19 @@ $provider-table-min-width: 752px;
 .health {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.3;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
+  line-height: $line-height-1-3;
   white-space: nowrap;
 }
 
 .healthDot {
   flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
+  width: $size-8;
+  height: $size-8;
+  border-radius: $radius-999;
   background: currentColor;
 }
 
@@ -183,21 +182,21 @@ $provider-table-min-width: 752px;
 
 .healthFailing {
   color: var(--failure-badge-text);
-  font-weight: 600;
+  font-weight: $font-weight-600;
 }
 
 .requests {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
   width: 100%;
   min-width: 0;
 }
 
 .requestFigure {
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;
@@ -216,17 +215,17 @@ $provider-table-min-width: 752px;
 .providerTable tbody td.actionsCell {
   position: sticky;
   right: 0;
-  border-left: 1px solid var(--border-color);
-  box-shadow: -12px 0 16px -18px rgba(15, 23, 42, 0.45);
+  border-left: $border-width-1 solid var(--border-color);
+  box-shadow: $shadow-table-sticky-edge;
 }
 
 .providerTable .actionsHead {
-  z-index: 3;
+  z-index: $z-stack-3;
   background: linear-gradient(var(--muted-bg), var(--muted-bg)), var(--bg-primary);
 }
 
 .providerTable tbody td.actionsCell {
-  z-index: 2;
+  z-index: $z-stack-2;
   background: var(--bg-primary);
 }
 
@@ -243,7 +242,7 @@ $provider-table-min-width: 752px;
 
 /* Phones: no sideways scrolling. Each resource becomes a labeled stack with its key and
    actions on the first line; the visual column header is replaced by per-cell labels. */
-@media (max-width: 640px) {
+@media (max-width: #{$breakpoint-640}) {
   .providerTable,
   .providerTable tbody {
     display: block;
@@ -257,8 +256,8 @@ $provider-table-min-width: 752px;
 
   .providerTable thead {
     position: absolute;
-    width: 1px;
-    height: 1px;
+    width: $size-1;
+    height: $size-1;
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
@@ -267,9 +266,9 @@ $provider-table-min-width: 752px;
   .providerTable tbody tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px 12px;
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color);
+    gap: $space-10 $space-12;
+    padding: $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
   }
 
   .providerTable tbody tr:last-child {
@@ -304,10 +303,10 @@ $provider-table-min-width: 752px;
   .providerTable tbody td[data-label]:not(:first-child)::before {
     content: attr(data-label);
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: $space-4;
     color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: $font-size-12;
+    font-weight: $font-weight-600;
   }
 
   .providerTable tbody tr:hover td.actionsCell,

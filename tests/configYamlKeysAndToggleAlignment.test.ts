@@ -50,7 +50,7 @@ describe('config labels keep YAML keys out of the human title', () => {
       )
     );
     // Module class names are not mapped under bun:test; the element and its order are the contract.
-    expect(markup).toMatch(/<label>.*Auth Directory<code[^>]*>auth-dir<\/code>.*<\/label>/);
+    expect(markup).toMatch(/<label>.*Auth Directory <code[^>]*>auth-dir<\/code>.*<\/label>/);
     expect(
       readFileSync('src/features/config/components/fields/FieldPrimitives.tsx', 'utf8')
     ).toContain('<code className={styles.yamlKey}>{name}</code>');

@@ -4,10 +4,10 @@
 
 .container {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  bottom: calc($space-12 + env(safe-area-inset-bottom, 0px));
   left: var(--content-center-x, 50%);
   transform: translateX(-50%);
-  width: min(720px, calc(100vw - 24px));
+  width: min($size-720, calc(100vw - $size-24));
   z-index: $z-dropdown;
   pointer-events: none;
 }
@@ -18,11 +18,11 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  --glass-blur: 14px;
-  border: 1px solid var(--glass-border);
+  gap: $space-8 $space-16;
+  padding: $space-10 $space-14;
+  border-radius: $radius-16;
+  --glass-blur: #{$blur-14};
+  border: $border-width-1 solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop-filter);
   box-shadow: var(--shadow-lg);
@@ -30,11 +30,11 @@
 
 /* 状态文案：mono 遥测 */
 .status {
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
-  padding-right: 4px;
+  padding-right: $space-4;
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -59,7 +59,7 @@
 .actionsGroup {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   flex-shrink: 0;
 }
 
@@ -67,41 +67,41 @@
 .savePill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: $space-7;
   border: 0;
   cursor: pointer;
   background: var(--text-primary);
   color: var(--bg-secondary);
-  border-radius: $radius-full;
-  padding: 9px 16px;
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: $radius-9999;
+  padding: $space-9 $space-16;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   line-height: 1;
   transition:
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    box-shadow var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    transform var(--dur-press) var(--ease-out-strong),
+    background-color var(--dur-hover) var(--ease-out-strong),
+    box-shadow var(--dur-hover) var(--ease-out-strong);
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: $opacity-0-55;
   }
 
   &:active:not(:disabled) {
-    transform: translateY(0) scale(0.97);
+    transform: translateY(0) scale($motion-scale-0-97);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-2;
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .savePill:hover:not(:disabled) {
-    transform: translateY(-1px);
-    background: color-mix(in srgb, var(--text-primary) 86%, var(--bg-secondary));
-    box-shadow: 0 12px 26px color-mix(in srgb, var(--text-primary) 22%, transparent);
+    transform: translateY((-$distance-1));
+    background: color-mix(in srgb, var(--text-primary) $tint-0-86, var(--bg-secondary));
+    box-shadow: $shadow-floating-bar;
   }
 }
 
@@ -109,32 +109,32 @@
 .ghostAction {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   border: 0;
   cursor: pointer;
   background: none;
   color: var(--text-secondary);
-  border-radius: $radius-full;
-  padding: 9px 12px;
-  font-size: 12.5px;
-  font-weight: 550;
+  border-radius: $radius-9999;
+  padding: $space-9 $space-12;
+  font-size: $font-size-12-5;
+  font-weight: $font-weight-550;
   line-height: 1;
   transition:
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    color var(--dur-hover) var(--ease-out-strong),
+    transform var(--dur-press) var(--ease-out-strong);
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: $opacity-0-55;
   }
 
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale($motion-scale-0-97);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-2;
   }
 }
 
@@ -146,7 +146,7 @@
 
 @include mobile {
   .container {
-    width: calc(100vw - 16px);
+    width: calc(100vw - $size-16);
   }
 
   .bar {

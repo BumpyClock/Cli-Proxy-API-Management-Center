@@ -6,28 +6,28 @@
 }
 
 .description {
-  margin-bottom: 12px;
+  margin-bottom: $space-12;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
 }
 
 /* Whole-plot projection: one direct label above the plot instead of a region fill. */
 .projectionNote {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 0 0 4px;
+  gap: $space-6;
+  margin: 0 0 $space-4;
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: $space-8;
+  margin-bottom: $space-8;
 }
 
 .swatch {
@@ -39,28 +39,28 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 16px;
-  margin-bottom: 8px;
+  gap: $space-4 $space-16;
+  margin-bottom: $space-8;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: $font-size-13;
+  line-height: $line-height-1-4;
 
   > span {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: $space-6;
   }
 }
 
 .showAll {
-  min-height: 28px;
-  padding: 2px 10px;
-  border: 1px solid var(--control-outline);
-  border-radius: 6px;
+  min-height: $size-28;
+  padding: $space-2 $space-10;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-6;
   background: var(--bg-primary);
   color: var(--text-primary);
   font: inherit;
-  font-weight: 600;
+  font-weight: $font-weight-600;
   cursor: pointer;
 
   &:hover {
@@ -68,36 +68,36 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 }
 
 .series {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 36px;
+  gap: $space-8;
+  min-height: $size-36;
   min-width: 0;
   max-width: 100%;
-  padding: 6px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  padding: $space-6 $space-10;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
   background: transparent;
   color: var(--text-primary);
   font: inherit;
-  font-size: 12px;
+  font-size: $font-size-12;
   text-align: left;
   cursor: pointer;
 
   strong {
     flex: 0 0 auto;
     margin-left: auto;
-    font-weight: 600;
+    font-weight: $font-weight-600;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -114,32 +114,32 @@
     border-style: dashed;
 
     .swatch {
-      opacity: 0.35;
+      opacity: $opacity-0-35;
     }
 
     strong {
-      font-weight: 400;
+      font-weight: $font-weight-400;
       text-decoration: line-through;
     }
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
 .number {
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: $size-18;
+  height: $size-18;
   flex: 0 0 auto;
-  border: 1px solid var(--border-primary);
-  border-radius: 4px;
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 600;
+  border: $border-width-1 solid var(--border-primary);
+  border-radius: $radius-4;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
 }
 
 /* One line: words never break mid-word; the title, accessible name, and table keep the full identity. */
@@ -153,56 +153,56 @@
 
 .plot {
   min-width: 0;
-  border-radius: 4px;
+  border-radius: $radius-4;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
 /* The light grid stays on --border-color; on the dark surface that token nearly vanishes. */
 :global([data-theme='dark']) .plot :global(.recharts-cartesian-grid-horizontal line),
 :global([data-theme='dark']) .plot .rule line {
-  stroke: color-mix(in srgb, var(--border-color) 72%, var(--border-primary));
+  stroke: color-mix(in srgb, var(--border-color) $tint-0-72, var(--border-primary));
 }
 
 /* The exact domain, stated once under the axis instead of as crowded edge tick labels. */
 .range {
   margin: 0;
-  padding-left: 58px;
+  padding-left: $space-58;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: $font-size-13;
   font-variant-numeric: tabular-nums;
-  line-height: 1.4;
+  line-height: $line-height-1-4;
 }
 
 .readout {
-  min-height: 36px;
-  padding-top: 8px;
+  min-height: $size-36;
+  padding-top: $space-8;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
-  line-height: 1.5;
+  line-height: $line-height-1-5;
 
   /* Guided charts print nothing here until a point is inspected. */
   &:empty {
     min-height: 0;
-    padding-top: 4px;
+    padding-top: $space-4;
   }
 }
 
 .empty {
-  padding: 24px 12px;
+  padding: $space-24 $space-12;
   color: var(--text-secondary);
   text-align: center;
 }
 
 .tableDisclosure,
 .guide {
-  margin-top: 8px;
+  margin-top: $space-8;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: $font-size-13;
 
   summary {
     @include disclosure-summary;
@@ -211,20 +211,20 @@
 
 .guide p {
   max-width: 72ch;
-  margin: 8px 0;
-  line-height: 1.5;
+  margin: $space-8 0;
+  line-height: $line-height-1-5;
 }
 
 /* Encoding key: the snapshot dot and the projected dash, as drawn on the plot. */
 .guideKey {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: $space-4 $space-16;
 
   > span {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: $space-6;
   }
 }
 
@@ -241,8 +241,8 @@
 
   th,
   td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border-color);
+    padding: $space-8 $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
     text-align: right;
     white-space: nowrap;
   }
@@ -252,47 +252,47 @@
   }
 
   tbody th {
-    font-weight: 400;
+    font-weight: $font-weight-400;
   }
 }
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
-  margin: -1px;
+  margin: (-$space-1);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
 }
 
 /* Short chips share a row; a long account name takes its own row and ellipsizes. */
-@media (max-width: 768px) {
+@media (max-width: #{$breakpoint-mobile}) {
   .legend {
-    gap: 6px;
+    gap: $space-6;
   }
 
   .series {
     flex: 1 1 auto;
-    gap: 6px;
-    min-height: 44px;
-    padding: 6px 8px;
+    gap: $space-6;
+    min-height: $size-touch-target;
+    padding: $space-6 $space-8;
   }
 }
 
 /* Phones: one full-width row per series so names stay readable (never half-width truncation). */
-@media (max-width: 600px) {
+@media (max-width: #{$breakpoint-600}) {
   .legend {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: $space-6;
   }
 
   .series {
     width: 100%;
-    min-height: 44px;
-    padding: 4px 10px;
+    min-height: $size-touch-target;
+    padding: $space-4 $space-10;
   }
 
   /* No hover on phones; the pressed/dashed state already shows what selection does. */

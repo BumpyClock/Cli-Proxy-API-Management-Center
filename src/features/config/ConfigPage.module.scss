@@ -5,12 +5,12 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: $space-20;
   width: 100%;
   min-width: 0;
   /* 悬浮保存栏出现时由 --config-action-bar-height 撑出底部留白 */
   padding-bottom: calc(
-    var(--config-action-bar-height, 0px) + 16px + env(safe-area-inset-bottom, 0px)
+    var(--config-action-bar-height, 0px) + $space-16 + env(safe-area-inset-bottom, 0px)
   );
 }
 
@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 10px;
+  gap: $space-8 $space-10;
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -29,7 +29,7 @@
   min-width: 0;
   align-self: start;
   position: sticky;
-  top: calc(var(--header-height) + 16px);
+  top: calc(var(--header-height) + $space-16);
 }
 
 .panel {
@@ -40,20 +40,20 @@
 
 @include mobile {
   .page {
-    gap: 16px;
+    gap: $space-16;
   }
 }
 
 .visualLayout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: $size-220 minmax(0, 1fr);
   align-items: start;
-  gap: 20px;
+  gap: $space-20;
 }
-@media (max-width: 900px) {
+@media (max-width: #{$breakpoint-900}) {
   .visualLayout {
     grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+    gap: $space-12;
   }
   .tabsRow {
     position: static;

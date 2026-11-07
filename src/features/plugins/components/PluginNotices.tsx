@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { IconAlertTriangle, IconChevronRight, IconInfo, IconShield } from '@/components/ui/icons';
 import styles from './PluginNotices.module.scss';
+import { iconSize } from '@/design-system';
 
 /** Existing Config Panel deep link (ConfigPage reads `?field=` and jumps to the field). */
 export const PLUGINS_ENABLED_CONFIG_PATH = '/config?field=pluginsEnabled';
@@ -45,7 +46,7 @@ export function PluginNotice({
       data-tone={tone}
       role={tone === 'security' ? 'note' : undefined}
     >
-      <Icon size={16} className={styles.icon} aria-hidden="true" />
+      <Icon size={iconSize['16']} className={styles.icon} aria-hidden="true" />
       <p className={styles.message}>
         {title ? <strong className={styles.title}>{title}</strong> : null}
         {title ? ' ' : null}
@@ -76,7 +77,7 @@ export function PluginsDisabledNotice({ message }: { message: string }) {
       action={
         <Link className={styles.configLink} to={PLUGINS_ENABLED_CONFIG_PATH}>
           {t('plugin_management.open_plugins_setting')}
-          <IconChevronRight size={14} aria-hidden="true" />
+          <IconChevronRight size={iconSize['14']} aria-hidden="true" />
         </Link>
       }
     >

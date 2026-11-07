@@ -10,26 +10,26 @@
 .tapHint {
   position: sticky;
   left: 0;
-  z-index: 3;
-  font-size: 12px;
+  z-index: $z-stack-3;
+  font-size: $font-size-12;
   color: var(--text-secondary);
-  padding: 0 4px;
-  margin-bottom: 8px;
+  padding: 0 $space-4;
+  margin-bottom: $space-8;
 }
 
 .container {
   display: inline-flex;
   position: relative;
   min-width: 100%;
-  min-height: 300px;
+  min-height: $size-300;
   justify-content: space-between;
-  padding: 20px 0;
+  padding: $space-20 0;
   user-select: none;
 
-  @media (max-width: 768px) {
+  @media (max-width: #{$breakpoint-mobile}) {
     // Give mobile extra horizontal room to reduce line overlap; users can swipe to scroll.
-    min-width: max(100%, 960px);
-    padding: 12px 0;
+    min-width: max(100%, $size-960);
+    padding: $space-12 0;
   }
 }
 
@@ -53,82 +53,82 @@
 .column {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  z-index: 2;
+  gap: $space-12;
+  z-index: $z-stack-2;
   flex: 0 0 auto;
 
   &.providers {
     align-items: flex-end;
-    min-width: 140px;
+    min-width: $size-140;
   }
 
   &.sources {
     align-items: flex-start;
-    min-width: 200px;
+    min-width: $size-200;
   }
 
   &.aliases {
     align-items: flex-start;
-    min-width: 200px;
+    min-width: $size-200;
   }
 }
 
 .columnHeader {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  margin-bottom: 8px;
-  padding: 0 4px;
+  margin-bottom: $space-8;
+  padding: 0 $space-4;
 }
 
 .item {
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  padding: $space-10 $space-14;
+  font-size: $font-size-13;
   color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 280px;
+  max-width: $size-280;
   position: relative;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all $duration-200 $ease-default;
+  box-shadow: $shadow-diagram-card;
 
   &:hover {
     border-color: var(--primary-color);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    z-index: 10;
+    transform: translateY((-$distance-1));
+    box-shadow: $shadow-diagram-card-hover;
+    z-index: $z-stack-10;
   }
 
   &.dropTarget {
     background-color: var(--bg-secondary);
     border-color: var(--primary-color);
-    border-width: 2px;
+    border-width: $border-width-2;
   }
 
   &.selected {
     border-color: var(--primary-color);
     background-color: var(--bg-secondary);
-    box-shadow: 0 0 0 2px rgba($primary-color, 0.18);
+    box-shadow: $shadow-legacy-focus-2;
   }
 }
 
 // Mindmap-style provider branch (root node)
 .providerItem {
-  border-left: 3px solid transparent;
-  padding-left: 8px;
+  border-left: $border-width-3 solid transparent;
+  padding-left: $space-8;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 
   .providerLabel {
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: $font-weight-600;
+    font-size: $font-size-13;
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -137,19 +137,19 @@
 
   .collapseBtn {
     flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+    width: $size-24;
+    height: $size-24;
     display: flex;
     align-items: center;
     justify-content: center;
     border: none;
     background: var(--bg-secondary);
-    border-radius: 4px;
+    border-radius: $radius-4;
     cursor: pointer;
     color: var(--text-secondary);
     transition:
-      background-color 0.15s,
-      color 0.15s;
+      background-color $duration-150,
+      color $duration-150;
 
     &:hover {
       background: var(--border-color);
@@ -166,12 +166,12 @@
   }
 
   .chevronDown {
-    border-width: 5px 4px 0 4px;
+    border-width: $border-width-5 $border-width-4 0 $border-width-4;
     border-color: currentColor transparent transparent transparent;
   }
 
   .chevronRight {
-    border-width: 4px 0 4px 5px;
+    border-width: $border-width-4 0 $border-width-4 $border-width-5;
     border-color: transparent transparent transparent currentColor;
   }
 }
@@ -192,38 +192,38 @@
   }
 
   &.dragging {
-    opacity: 0.5;
+    opacity: $opacity-0-5;
     border-style: dashed;
   }
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: $size-6;
+  height: $size-6;
   border-radius: 50%;
   position: absolute;
   top: 50%;
-  margin-top: -3px;
+  margin-top: (-$space-3);
   flex-shrink: 0;
 
   &.dotLeft {
-    left: -3px;
+    left: (-$space-3);
     background: var(--text-tertiary);
   }
 }
 
 .sourceItem .dot {
-  right: -3px;
+  right: (-$space-3);
 }
 
 .providerBadge {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: $font-size-12;
+  padding: $space-2 $space-6;
+  border-radius: $radius-4;
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  margin-right: 8px;
-  font-weight: 500;
+  margin-right: $space-8;
+  font-weight: $font-weight-500;
 }
 
 .itemName {
@@ -234,34 +234,34 @@
 }
 
 .itemCount {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-tertiary);
-  margin-left: 8px;
+  margin-left: $space-8;
   background: var(--bg-secondary);
-  padding: 1px 6px;
-  border-radius: 10px;
+  padding: $space-1 $space-6;
+  border-radius: $radius-10;
 }
 
 .contextMenu {
   position: fixed;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
-  min-width: 120px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
+  box-shadow: $shadow-diagram-menu;
+  z-index: $z-top;
+  min-width: $size-120;
   overflow: hidden;
-  padding: 4px 0;
+  padding: $space-4 0;
 
   .menuItem {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: $space-8 $space-12;
+    font-size: $font-size-13;
     color: var(--text-primary);
     cursor: pointer;
-    transition: background-color 0.1s;
+    transition: background-color $duration-100;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $space-8;
 
     &:hover {
       background-color: var(--bg-secondary);
@@ -277,8 +277,8 @@
   }
 
   .menuDivider {
-    height: 1px;
-    margin: 4px 0;
+    height: $size-1;
+    margin: $space-4 0;
     background: var(--border-color);
     padding: 0;
     cursor: default;
@@ -288,28 +288,28 @@
 
 .settingsEmpty {
   color: var(--text-tertiary);
-  font-size: 13px;
+  font-size: $font-size-13;
   text-align: center;
-  padding: $spacing-lg 0;
+  padding: $space-24 0;
 }
 
 .settingsList {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .settingsRow {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto;
-  gap: $spacing-md;
+  grid-template-columns: minmax($size-200, 1fr) auto;
+  gap: $space-16;
   align-items: center;
-  padding: $spacing-sm $spacing-md;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  padding: $space-8 $space-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
 
-  @media (max-width: 768px) {
+  @media (max-width: #{$breakpoint-mobile}) {
     grid-template-columns: 1fr;
     align-items: flex-start;
   }
@@ -318,8 +318,8 @@
 .settingsNames {
   display: flex;
   align-items: center;
-  gap: $spacing-xs;
-  font-size: 13px;
+  gap: $space-4;
+  font-size: $font-size-13;
   color: var(--text-primary);
   min-width: 0;
 }
@@ -329,7 +329,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 220px;
+  max-width: $size-220;
 }
 
 .settingsArrow {
@@ -339,11 +339,11 @@
 .settingsActions {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .settingsLabel {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-secondary);
 }
 
@@ -351,8 +351,8 @@
   border: 0;
   background: transparent;
   color: var(--error-color);
-  padding: 6px;
-  border-radius: 6px;
+  padding: $space-6;
+  border-radius: $radius-6;
   cursor: pointer;
 
   &:hover {

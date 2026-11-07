@@ -4,17 +4,17 @@
 .allClear {
   position: relative;
   z-index: 1;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border-radius: $radius-8;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-10;
+  padding: $space-12 $space-16;
+  border-bottom: $border-width-1 solid var(--border-color);
 }
 
 .headerIcon {
@@ -27,10 +27,10 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  gap: $space-8;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
+  letter-spacing: (-$letter-spacing-0-01);
   color: var(--text-primary);
 }
 
@@ -39,18 +39,18 @@
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-height: 32px;
+  gap: $space-4;
+  min-height: $size-32;
 
   @media (pointer: coarse) {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--text-secondary);
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: $radius-6;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -60,8 +60,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 3px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-3;
   }
 }
 
@@ -75,12 +75,12 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 24px;
+  gap: $space-8 $space-24;
   align-items: start;
-  padding: 12px 16px 12px 20px;
+  padding: $space-12 $space-16 $space-12 $space-20;
 
   & + & {
-    border-top: 1px solid var(--border-color);
+    border-top: $border-width-1 solid var(--border-color);
   }
 
   /* Severity rail. The chip text carries the meaning; the rail helps scanning. */
@@ -88,14 +88,14 @@
     content: '';
     position: absolute;
     left: 0;
-    top: 14px;
-    bottom: 14px;
-    width: 3px;
-    border-radius: 0 3px 3px 0;
+    top: $space-14;
+    bottom: $space-14;
+    width: $size-3;
+    border-radius: 0 $radius-3 $radius-3 0;
     background: var(--item-accent);
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: #{$breakpoint-640}) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -111,7 +111,7 @@
 .itemBody {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
 }
 
@@ -119,88 +119,88 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .itemTitle {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
 }
 
 .asOf {
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   color: var(--amber-text);
 }
 
 .itemSummary {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .credentials {
   list-style: none;
-  margin: 2px 0 0;
+  margin: $space-2 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .credential {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+  gap: $space-2;
+  padding: $space-8 $space-12;
+  border-radius: $radius-10;
+  background: color-mix(in srgb, var(--bg-tertiary) $tint-0-55, transparent);
   min-width: 0;
 }
 
 .credentialName {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
   overflow-wrap: anywhere;
 }
 
 .mono {
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
 }
 
 .credentialReason {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: $font-size-13;
+  line-height: $line-height-1-45;
   color: var(--text-primary);
   overflow-wrap: anywhere;
 }
 
 .credentialMeta {
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .credentialMore {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-secondary);
-  padding-left: 12px;
+  padding-left: $space-12;
 }
 
 .itemActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $space-8;
   justify-content: flex-end;
 
-  @media (max-width: 640px) {
+  @media (max-width: #{$breakpoint-640}) {
     justify-content: flex-start;
   }
 }
@@ -208,22 +208,22 @@
 .setupActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .action {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 6px 14px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-primary);
+  gap: $space-6;
+  min-height: $size-36;
+  padding: $space-6 $space-14;
+  border-radius: $radius-9999;
+  border: $border-width-1 solid var(--border-primary);
   background: var(--bg-primary);
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
@@ -240,12 +240,12 @@
   }
 
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale($motion-scale-0-97);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-2;
   }
 
   &:disabled,
@@ -256,8 +256,8 @@
 
   /* Touch targets grow to 44px on coarse pointers. */
   @media (pointer: coarse) {
-    min-height: 44px;
-    padding: 8px 16px;
+    min-height: $size-touch-target;
+    padding: $space-8 $space-16;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -270,7 +270,7 @@
 }
 
 .spinning {
-  animation: attentionSpin 0.9s linear infinite;
+  animation: attentionSpin $duration-900 $ease-linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -282,8 +282,8 @@
 .allClear {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
+  gap: $space-12;
+  padding: $space-14 $space-20;
 
   > :last-child {
     margin-left: auto;
@@ -299,20 +299,20 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 12px;
+  gap: $space-4 $space-12;
   min-width: 0;
 }
 
 .allClearTitle {
   margin: 0;
-  font-size: 15px;
-  font-weight: 650;
+  font-size: $font-size-15;
+  font-weight: $font-weight-650;
   color: var(--text-primary);
 }
 
 .allClearDetail {
   margin: 0;
-  font-size: 13px;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 }
 
@@ -326,8 +326,8 @@
 .title,
 .allClearTitle {
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 4px;
-    border-radius: 4px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-4;
+    border-radius: $radius-4;
   }
 }

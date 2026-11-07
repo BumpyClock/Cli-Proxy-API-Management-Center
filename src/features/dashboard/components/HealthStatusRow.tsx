@@ -4,6 +4,7 @@ import { resolveTimeZoneLabel } from '@/utils/time/timezone';
 import type { HealthStatus } from '../logic/healthStatus';
 import { formatInstant } from '../logic/time';
 import styles from './HealthStatusRow.module.scss';
+import { iconSize } from '@/design-system';
 
 type RowStatus = Exclude<HealthStatus, { kind: 'attention' } | { kind: 'setup' }>;
 
@@ -33,7 +34,7 @@ export function HealthStatusRow({ status, windowLabel, now }: HealthStatusRowPro
     return (
       <section className={styles.row} aria-labelledby="dashboard-status-title">
         <span className={`${styles.icon} ${styles.icon_checking}`} aria-hidden="true">
-          <IconLoader2 size={18} />
+          <IconLoader2 size={iconSize['18']} />
         </span>
         <div className={styles.copy}>
           <h2 id="dashboard-status-title" className={styles.lead}>
@@ -60,7 +61,7 @@ export function HealthStatusRow({ status, windowLabel, now }: HealthStatusRowPro
         className={`${styles.icon} ${clear ? styles.icon_clear : styles.icon_idle}`}
         aria-hidden="true"
       >
-        {clear ? <IconCheckCircle2 size={18} /> : <IconInfo size={18} />}
+        {clear ? <IconCheckCircle2 size={iconSize['18']} /> : <IconInfo size={iconSize['18']} />}
       </span>
       <div className={styles.copy}>
         <h2 id="dashboard-status-title" className={styles.lead}>

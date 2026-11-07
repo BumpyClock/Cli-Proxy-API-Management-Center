@@ -21,6 +21,7 @@ import { formatAge } from './formatters';
 import { RecoveryDetails } from './RecoveryDetails';
 import { StatusText } from './StatusText';
 import styles from './AttentionPanel.module.scss';
+import { iconSize } from '@/design-system';
 
 const MAX_CREDENTIALS_PER_ITEM = 3;
 
@@ -248,7 +249,7 @@ function SourceItem({
           }
         >
           <IconRefreshCw
-            size={14}
+            size={iconSize['14']}
             className={retrying ? styles.spinning : undefined}
             aria-hidden="true"
           />
@@ -304,7 +305,7 @@ export function AttentionPanel({
           data-focus-rescue="dashboard-attention-title"
         >
           <span className={styles.setupIcon} aria-hidden="true">
-            <IconAlertTriangle size={18} />
+            <IconAlertTriangle size={iconSize['18']} />
           </span>
           <div className={styles.allClearCopy}>
             <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.allClearTitle}>
@@ -334,7 +335,7 @@ export function AttentionPanel({
     >
       <header className={styles.header}>
         <span className={styles.headerIcon} aria-hidden="true">
-          <IconAlertTriangle size={18} />
+          <IconAlertTriangle size={iconSize['18']} />
         </span>
         <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.title}>
           {t('dashboard.attention_title', { count: items.length })}

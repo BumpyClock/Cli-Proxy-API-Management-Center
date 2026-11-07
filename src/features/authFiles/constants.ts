@@ -21,6 +21,7 @@ import { normalizeOAuthProviderKey } from '@/utils/providerKeys';
 import { formatDateTimeValue, isoTitle } from '@/utils/format';
 import { parseTimestamp } from '@/utils/timestamp';
 import { TYPE_COLORS } from '@/utils/quota';
+import { palette } from '@/design-system';
 
 export type { ResolvedTheme, ThemeColors, TypeColorSet } from '@/types';
 export type AuthFileModelItem = {
@@ -192,7 +193,7 @@ export const isThemeSurfaceIconProvider = (type: string): boolean =>
   THEME_SURFACE_ICON_PROVIDERS.has(normalizeProviderKey(type));
 
 export const getThemeSurfaceIconBackground = (resolvedTheme: ResolvedTheme): string =>
-  resolvedTheme === 'dark' ? '#ffffff' : '#000000';
+  palette['theme-surface-icon'][resolvedTheme];
 
 export const parsePriorityValue = (value: unknown): number | undefined => {
   if (typeof value === 'number') {

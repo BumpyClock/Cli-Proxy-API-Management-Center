@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { IconChevronDown, IconChevronUp, IconSearch } from '@/components/ui/icons';
 import type { UseSourceSearchResult } from '../hooks/useSourceSearch';
 import styles from './SourcePanel.module.scss';
+import { iconSize } from '@/design-system';
 
 const LazyConfigSourceEditor = lazy(() => import('./ConfigSourceEditor'));
 
@@ -54,7 +55,7 @@ export function SourceSearchBar({ search, disabled }: SourceSearchBarProps) {
                 title={t('config_management.search_button')}
                 aria-label={t('config_management.search_button')}
               >
-                <IconSearch size={16} />
+                <IconSearch size={iconSize['16']} />
               </button>
             </div>
           }
@@ -70,7 +71,7 @@ export function SourceSearchBar({ search, disabled }: SourceSearchBarProps) {
           title={t('config_management.search_prev')}
           aria-label={t('config_management.search_prev')}
         >
-          <IconChevronUp size={16} />
+          <IconChevronUp size={iconSize['16']} />
         </Button>
         <Button
           variant="secondary"
@@ -80,7 +81,7 @@ export function SourceSearchBar({ search, disabled }: SourceSearchBarProps) {
           title={t('config_management.search_next')}
           aria-label={t('config_management.search_next')}
         >
-          <IconChevronDown size={16} />
+          <IconChevronDown size={iconSize['16']} />
         </Button>
       </div>
     </div>

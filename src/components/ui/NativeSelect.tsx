@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { IconChevronDown } from './icons';
 import styles from './NativeSelect.module.scss';
+import { iconSize } from '@/design-system';
 
 export interface NativeSelectOption {
   value: string;
@@ -53,7 +54,7 @@ export function NativeSelect({
             </option>
           ))}
         </select>
-        <IconChevronDown size={16} className={styles.chevron} aria-hidden="true" />
+        <IconChevronDown size={iconSize['16']} className={styles.chevron} aria-hidden="true" />
       </span>
     </div>
   );

@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/TimeSeriesChart.model';
 import { QuotaGlanceList } from './QuotaGlanceList';
 import styles from './QuotaOverview.module.scss';
+import { chart } from '@/design-system';
 
 interface QuotaOverviewProps {
   entries: QuotaFileEntry[];
@@ -160,7 +161,7 @@ export function QuotaOverview({
                 formatY={percent}
                 ariaLabel={t('redesign.quota.remaining')}
                 emptyText={t('quota_management.pool_no_window')}
-                height={280}
+                height={chart.height.quotaOverview}
                 compactHeight={180}
                 legendPlacement="none"
                 hiddenSeries={hidden}

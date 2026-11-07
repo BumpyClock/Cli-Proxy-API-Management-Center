@@ -4,8 +4,8 @@
 .group {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
   overflow: hidden;
 }
@@ -15,39 +15,39 @@
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 4px 10px;
-  padding: 10px 14px;
+  gap: $space-4 $space-10;
+  padding: $space-10 $space-14;
   color: var(--text-primary);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: $font-size-13;
+  line-height: $line-height-20px;
 
   & + & {
-    border-top: 1px solid var(--border-color);
+    border-top: $border-width-1 solid var(--border-color);
   }
 }
 
 .icon {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: $space-2;
   color: var(--text-secondary);
 }
 
 .message {
-  flex: 1 1 260px;
+  flex: 1 1 $size-260;
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
 }
 
 .title {
-  font-weight: 650;
+  font-weight: $font-weight-650;
 }
 
 /* Blocking: plugins do nothing until the setting is on. Tinted, bordered and led by its fix. */
 .blocking {
-  border: 1px solid var(--warning-border);
-  border-left: 4px solid var(--warning-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--warning-border);
+  border-left: $border-width-4 solid var(--warning-color);
+  border-radius: $radius-8;
   background: var(--warning-bg);
 
   .icon {
@@ -55,14 +55,14 @@
   }
 
   .message {
-    font-weight: 600;
+    font-weight: $font-weight-600;
   }
 }
 
 /* Advisory: a standing trust caveat. Bordered and never dismissed, but calmer than a blocker. */
 .security {
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
 
   .icon {
@@ -71,45 +71,45 @@
 }
 
 .action {
-  margin-left: 8px;
+  margin-left: $space-8;
   white-space: nowrap;
 }
 
 .configLink {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  min-height: 32px;
+  gap: $space-2;
+  min-height: $size-32;
   /* The target grows into the notice padding instead of pushing the text line down. */
-  margin-block: -6px;
+  margin-block: (-$space-6);
   vertical-align: middle;
-  border-radius: 4px;
+  border-radius: $radius-4;
   color: var(--primary-color);
-  font-weight: 600;
+  font-weight: $font-weight-600;
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: $space-2;
 
   svg {
     flex: 0 0 auto;
   }
 
   &:hover {
-    text-decoration-thickness: 2px;
+    text-decoration-thickness: $border-width-2;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
-  @media (max-width: 768px), (pointer: coarse) {
-    min-height: 44px;
-    margin-block: -12px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+    margin-block: (-$space-12);
   }
 }
 
 @include mobile {
   .notice {
-    padding: 10px 12px;
+    padding: $space-10 $space-12;
   }
 }

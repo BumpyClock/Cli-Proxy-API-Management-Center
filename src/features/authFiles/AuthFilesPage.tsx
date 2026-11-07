@@ -58,6 +58,7 @@ import {
 } from '@/features/authFiles/uiState';
 import { useAuthStore, useNotificationStore, useThemeStore } from '@/stores';
 import styles from './AuthFilesPage.module.scss';
+import { size } from '@/design-system';
 
 const DEFAULT_REGULAR_PAGE_SIZE = 9;
 const DEFAULT_COMPACT_PAGE_SIZE = 12;
@@ -619,7 +620,7 @@ export function AuthFilesPage() {
         {loading ? (
           <div className={styles.loadingRows} aria-label={t('common.loading')} role="status">
             {Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => (
-              <Skeleton key={index} height={72} rounded={0} />
+              <Skeleton key={index} height={size['72']} rounded={0} />
             ))}
           </div>
         ) : isFirstRunEmpty ? (

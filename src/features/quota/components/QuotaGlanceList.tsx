@@ -14,6 +14,7 @@ import type { GlanceRow, QuotaAccount } from '../quotaAccountSeries';
 import { quotaAccountLabel, quotaWindowLabel } from '../quotaChartFormat';
 import { QUOTA_PROGRESS_MEDIUM_THRESHOLD } from './QuotaMeter';
 import styles from './QuotaGlanceList.module.scss';
+import { iconSize } from '@/design-system';
 
 /** Row actions on the Quota page. Without them the list is the compact dashboard summary. */
 export interface QuotaGlanceControls {
@@ -171,7 +172,7 @@ export function QuotaGlanceList({
                       const Icon = STATUS_ICONS[state];
                       return (
                         <span key={state} className={styles.status} data-state={STATUS_TONE[state]}>
-                          <Icon size={13} aria-hidden="true" />
+                          <Icon size={iconSize['13']} aria-hidden="true" />
                           {t(STATUS_TEXT[state])}
                         </span>
                       );
@@ -208,7 +209,7 @@ export function QuotaGlanceList({
                   onClick={() => controls.onRefresh(account)}
                   aria-label={t('redesign.quota.refreshAccount', { name: account.label })}
                 >
-                  <IconRefreshCw size={15} aria-hidden="true" />
+                  <IconRefreshCw size={iconSize['15']} aria-hidden="true" />
                 </button>
               )}
             </div>

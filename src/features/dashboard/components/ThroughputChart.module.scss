@@ -4,10 +4,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 12px;
+  gap: $space-4 $space-12;
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
 }
 
@@ -17,8 +17,8 @@
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
@@ -30,22 +30,22 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 16px;
+  gap: $space-4 $space-16;
   min-width: 0;
 }
 
 .compactTitle {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.4;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: $font-size-15;
+  line-height: $line-height-1-4;
+  font-weight: $font-weight-600;
+  letter-spacing: (-$letter-spacing-0-02);
   color: var(--text-primary);
 }
 
 .tableDisclosure {
   min-width: 0;
-  font-size: 13px;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 
   summary {
@@ -55,21 +55,21 @@
 
 .tableWrap {
   min-width: 0;
-  max-width: 640px;
-  margin-top: 8px;
+  max-width: $size-640;
+  margin-top: $space-8;
   overflow-x: auto;
 
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: $font-size-13;
     font-variant-numeric: tabular-nums;
   }
 
   th,
   td {
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--border-color);
+    padding: $space-6 $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
     text-align: right;
     white-space: nowrap;
   }
@@ -79,11 +79,11 @@
   }
 
   thead th {
-    font-weight: 600;
+    font-weight: $font-weight-600;
     color: var(--text-primary);
   }
 
   tbody th {
-    font-weight: 400;
+    font-weight: $font-weight-400;
   }
 }

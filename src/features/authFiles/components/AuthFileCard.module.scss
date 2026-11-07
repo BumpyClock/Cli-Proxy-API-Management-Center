@@ -4,8 +4,8 @@
   background: var(--bg-primary);
   color: var(--text-primary);
   > td {
-    padding: 12px;
-    border-top: 1px solid var(--border-color);
+    padding: $space-12;
+    border-top: $border-width-1 solid var(--border-color);
     vertical-align: top;
   }
   &:hover {
@@ -13,84 +13,84 @@
   }
 }
 .rowCompact > td {
-  padding-block: 8px;
+  padding-block: $space-8;
 }
 .rowSelected {
-  background: color-mix(in srgb, var(--accent-color, var(--primary-color)) 8%, var(--bg-primary));
+  background: color-mix(in srgb, var(--accent-color) $tint-0-08, var(--bg-primary));
 }
 .selectCell {
-  width: 36px;
+  width: $size-36;
 }
 /* Phones and coarse pointers: the 22px checkbox gets a 44px hit region. */
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
   .selectCell > label {
     position: relative;
   }
   .selectCell > label::after {
     content: '';
     position: absolute;
-    inset: -11px;
+    inset: (-$space-11);
   }
 }
 .identity {
   display: flex;
   margin: 0;
   min-width: 0;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 20px;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
+  line-height: $line-height-20px;
 }
 .account {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 .accountMono {
-  font-family: $font-mono;
+  font-family: $font-family-mono;
 }
 /* Provider, runtime marker and file name share one line under the account. */
 .subline {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 2px 8px;
-  margin: 2px 0 0;
+  gap: $space-2 $space-8;
+  margin: $space-2 0 0;
   min-width: 0;
-  line-height: 20px;
+  line-height: $line-height-20px;
 }
 .providerBadge {
   flex-shrink: 0;
-  font-size: 12px;
-  line-height: 16px;
-  padding: 1px 5px;
-  border-radius: 4px;
+  font-size: $font-size-12;
+  line-height: $line-height-16px;
+  padding: $space-1 $space-5;
+  border-radius: $radius-4;
 }
 .runtimeLabel,
 .unreported {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
 }
 .quotaUnreported {
   /* Aligns with the quota disclosure summary text in neighbouring rows. */
   display: block;
-  padding: 4px 0;
+  padding: $space-4 0;
 }
 .fileName,
 .note {
   min-width: 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
   overflow-wrap: anywhere;
 }
 .fileName {
-  font-family: $font-mono;
+  font-family: $font-family-mono;
 }
 .note {
-  margin: 2px 0 0;
+  margin: $space-2 0 0;
 }
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
@@ -100,13 +100,13 @@
 .state {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 1px 8px 1px 6px;
-  border: 1px solid;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 18px;
+  gap: $space-4;
+  padding: $space-1 $space-8 $space-1 $space-6;
+  border: $border-width-1 solid;
+  border-radius: $radius-999;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-18px;
   white-space: nowrap;
 
   svg {
@@ -126,9 +126,9 @@
 .stateQuiet {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: $space-5;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: $font-size-13;
 }
 .stateQuietIcon {
   flex: 0 0 auto;
@@ -140,10 +140,10 @@
 .warning {
   display: flex;
   align-items: flex-start;
-  gap: 4px;
-  margin-top: 4px;
-  font-size: 12px;
-  line-height: 16px;
+  gap: $space-4;
+  margin-top: $space-4;
+  font-size: $font-size-12;
+  line-height: $line-height-16px;
   color: var(--warning-text);
   overflow-wrap: anywhere;
   /* Desktop rows stay compact: two lines, with a toggle for the rest (see .warningToggle). */
@@ -162,22 +162,22 @@
 .warningToggle {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 0 0 18px;
+  min-height: $size-32;
+  padding: 0 0 0 $space-18;
   border: 0;
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 12px;
-  font-weight: 550;
+  font-size: $font-size-12;
+  font-weight: $font-weight-550;
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: $space-2;
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: 2px;
-    border-radius: 4px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
+    border-radius: $radius-4;
   }
 }
 @media (hover: hover) and (pointer: fine) {
@@ -187,30 +187,30 @@
 }
 @media (pointer: coarse) {
   .warningToggle {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 }
 .warningIcon {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: $space-2;
 }
 .health {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
 }
 /* One inline figure ("12 ok · 1 failed") or one muted "No recent requests". */
 .requestsFigure,
 .requestsIdle {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: $font-size-13;
+  line-height: $line-height-20px;
   color: var(--text-secondary);
 }
 .requestsFigure {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0 6px;
+  gap: 0 $space-6;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -224,24 +224,24 @@
 /* Request history strip renders only when the recent window has traffic. */
 .recent {
   min-width: 0;
-  max-width: 180px;
+  max-width: $size-180;
 }
 .metaRow {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-  line-height: 20px;
+  gap: $space-2;
+  font-size: $font-size-12;
+  line-height: $line-height-20px;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 .modified {
-  font-size: 13px;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 }
 .metaMetric {
   display: inline-flex;
-  gap: 4px;
+  gap: $space-4;
   white-space: nowrap;
 }
 .metaMetricLabel {
@@ -259,24 +259,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 32px;
-  padding: 0 8px 0 10px;
-  border: 1px solid var(--control-outline, var(--border-color));
-  border-radius: 6px;
+  gap: $space-4;
+  min-height: $size-32;
+  padding: 0 $space-8 0 $space-10;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-6;
   background: var(--bg-primary);
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    background-color var(--dur-hover) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong);
   &:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
   &[aria-expanded='true'] {
     border-color: var(--border-hover);
@@ -292,7 +292,7 @@
 .disclosureChevron {
   flex-shrink: 0;
   color: var(--text-secondary);
-  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  transition: transform var(--dur-hover) var(--ease-out-strong);
 }
 .actionsTrigger[aria-expanded='true'] .disclosureChevron,
 .detailsToggle[aria-expanded='true'] .disclosureChevron {
@@ -301,23 +301,21 @@
 
 /* The menu floats over the table instead of stretching the narrow actions column. */
 .actions {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: $z-dropdown;
+  position: fixed;
+  z-index: $z-popover;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   width: max-content;
-  min-width: 220px;
-  max-width: min(300px, calc(100vw - 32px));
-  padding: 6px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  min-width: $size-220;
+  max-width: min($size-300, calc(100vw - $size-32));
+  padding: $space-6;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-10;
   background: var(--floating-surface);
   box-shadow: var(--floating-shadow);
-}
-.actions {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
   &[hidden] {
     display: none;
   }
@@ -325,22 +323,22 @@
 .actions :global(.btn) {
   justify-content: flex-start;
   width: 100%;
-  min-height: 36px;
-  padding-inline: 10px;
+  min-height: $size-36;
+  padding-inline: $space-10;
   border: 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   text-align: left;
   white-space: normal;
 }
 .actions :global(.btn > span) {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 .actions :global(.btn:focus-visible) {
-  outline: 2px solid var(--focus-ring, var(--primary-color));
-  outline-offset: -2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: (-$space-2);
 }
 .actions :global(svg) {
   flex-shrink: 0;
@@ -349,8 +347,8 @@
   color: var(--danger-color);
 }
 .menuSeparator {
-  height: 1px;
-  margin: 4px 2px;
+  height: $size-1;
+  margin: $space-4 $space-2;
   background: var(--border-color);
 }
 
@@ -362,12 +360,12 @@
 .statusBar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .statusBlocks {
   display: flex;
-  gap: 2px;
+  gap: $space-2;
   flex: 1;
   min-width: 0;
 }
@@ -375,30 +373,30 @@
 .statusBlockWrapper {
   position: relative;
   flex: 1 1 0;
-  min-width: 3px;
+  min-width: $size-3;
 }
 
 .statusBlock {
-  height: 14px;
-  border-radius: 2px;
+  height: $size-14;
+  border-radius: $radius-2;
 }
 
 .statusBlockIdle {
-  background: color-mix(in srgb, var(--text-quaternary) 26%, transparent);
+  background: color-mix(in srgb, var(--text-quaternary) $tint-0-26, transparent);
 }
 
 .statusBlockActive .statusBlock {
-  outline: 1px solid var(--text-secondary);
-  outline-offset: 1px;
+  outline: $border-width-1 solid var(--text-secondary);
+  outline-offset: $space-1;
 }
 
 .statusRate {
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
   color: var(--text-quaternary);
-  min-width: 40px;
+  min-width: $size-40;
   text-align: right;
 }
 
@@ -416,23 +414,23 @@
 
 .statusTooltip {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + $space-8);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: $z-stack-20;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 150px;
-  padding: 8px 10px;
-  border-radius: 10px;
+  gap: $space-2;
+  min-width: $size-150;
+  padding: $space-8 $space-10;
+  border-radius: $radius-10;
   background: var(--floating-surface);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   box-shadow: var(--floating-shadow);
   pointer-events: none;
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
 }
 
 .statusTooltipLeft {
@@ -448,12 +446,12 @@
 
 .tooltipTime {
   color: var(--text-tertiary);
-  letter-spacing: 0.03em;
+  letter-spacing: $letter-spacing-0-03;
 }
 
 .tooltipStats {
   display: flex;
-  gap: 6px;
+  gap: $space-6;
   flex-wrap: wrap;
   color: var(--text-secondary);
 }
@@ -474,17 +472,17 @@
 .toggleWithState {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 .toggleState {
   display: none;
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   white-space: nowrap;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: #{$breakpoint-1100}) {
   /* The state word sits under the switch so the credential name keeps the row's width. */
   .toggleWithState {
     flex-direction: column-reverse;
@@ -492,36 +490,36 @@
   }
   .toggleState {
     display: block;
-    font-size: 12px;
-    line-height: 16px;
+    font-size: $font-size-12;
+    line-height: $line-height-16px;
   }
 
   .row {
     display: grid;
     /* Requests sizes to its short value so "No recent requests" stays on one line. */
-    grid-template-columns: 36px fit-content(60%) minmax(0, 1fr) auto;
+    grid-template-columns: $size-36 fit-content(60%) minmax(0, 1fr) auto;
     grid-template-areas:
       'select credential credential toggle'
       '.      status     status     status'
       '.      requests   quota      quota'
       '.      actions    actions    actions'
       '.      updated    updated    updated';
-    column-gap: 20px;
-    padding: 12px;
-    border-top: 1px solid var(--border-color);
+    column-gap: $space-20;
+    padding: $space-12;
+    border-top: $border-width-1 solid var(--border-color);
     > td {
       display: block;
       border: 0;
-      padding: 4px 0;
+      padding: $space-4 0;
       min-width: 0;
     }
     > td::before {
       content: attr(data-label);
       display: block;
       color: var(--text-secondary);
-      font-size: 12px;
-      line-height: 1.4;
-      margin-bottom: 2px;
+      font-size: $font-size-12;
+      line-height: $line-height-1-4;
+      margin-bottom: $space-2;
     }
     > td:nth-child(1) {
       grid-area: select;
@@ -559,7 +557,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0 12px;
+      gap: 0 $space-12;
     }
     > .statusQuiet::before,
     > .statusRepeatsSwitch::before,
@@ -571,19 +569,19 @@
     display: block;
     margin: 0;
     color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 18px;
+    font-size: $font-size-12;
+    line-height: $line-height-18px;
   }
   .state + .cardUpdated,
   .warning ~ .cardUpdated {
-    margin-top: 4px;
+    margin-top: $space-4;
   }
   /* Details opens the full Updated cell, so the card line does not repeat it. */
   .rowExpanded .cardUpdated {
     display: none;
   }
   .rowCompact > td {
-    padding-block: 2px;
+    padding-block: $space-2;
   }
 
   .warning > span {
@@ -598,50 +596,44 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 4px 16px;
+    gap: $space-4 $space-16;
   }
 
   .row > .actionsCell {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 8px;
-    padding-top: 8px;
+    gap: $space-8;
+    padding-top: $space-8;
   }
   .actionsTrigger,
   .detailsToggle {
-    min-height: 44px;
-    padding: 0 14px;
-  }
-  .actions {
-    right: auto;
-    left: 0;
-    /* Opens from the card's left content edge; keep it inside the phone viewport. */
-    max-width: min(300px, calc(100vw - 104px));
+    min-height: $size-touch-target;
+    padding: 0 $space-14;
   }
   .actions :global(.btn) {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
   .detailsToggle {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border: 1px solid transparent;
-    border-radius: 6px;
+    gap: $space-6;
+    border: $border-width-1 solid transparent;
+    border-radius: $radius-6;
     background: none;
     color: var(--text-secondary);
     font: inherit;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: $font-size-13;
+    font-weight: $font-weight-500;
     cursor: pointer;
     &:focus-visible {
-      outline: 2px solid var(--focus-ring, var(--primary-color));
-      outline-offset: 2px;
+      outline: $border-width-2 solid var(--focus-ring);
+      outline-offset: $space-2;
     }
   }
 }
 
-@media (max-width: 1100px) and (hover: hover) and (pointer: fine) {
+@media (max-width: #{$breakpoint-1100}) and (hover: hover) and (pointer: fine) {
   .detailsToggle:hover {
     color: var(--text-primary);
     background: var(--bg-tertiary);
@@ -651,8 +643,8 @@
 @media (pointer: coarse) {
   .actions :global(.btn),
   .actionsTrigger {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: $size-touch-target;
+    min-height: $size-touch-target;
   }
 }
 

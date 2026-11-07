@@ -64,7 +64,9 @@ describe('round 1 plugin refresh and empty states', () => {
     expect(storePage).toContain("label={t('plugin_store.refresh_registry')}");
     // The remaining refresh glyph belongs to the per-card Update action only.
     expect(count(storePage, '<IconRefreshCw')).toBe(1);
-    expect(storePage).toMatch(/<IconRefreshCw size=\{14\} \/>\s*\{t\('plugin_store\.update'\)\}/);
+    expect(storePage).toMatch(
+      /<IconRefreshCw size=\{iconSize\['14'\]\} \/>\s*\{t\('plugin_store\.update'\)\}/
+    );
   });
 
   test('empty states offer a next step that navigates, never a refresh or an install', () => {

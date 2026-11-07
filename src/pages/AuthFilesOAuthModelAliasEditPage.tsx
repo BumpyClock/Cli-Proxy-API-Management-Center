@@ -27,6 +27,7 @@ import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import { generateId, getErrorMessage } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
 import bodyStyles from './AuthFilesOAuthModelAliasEditPage.module.scss';
+import { iconSize } from '@/design-system';
 
 type AuthFileModelItem = { id: string; display_name?: string; type?: string; owned_by?: string };
 
@@ -421,7 +422,7 @@ export function AuthFilesOAuthModelAliasEditPage() {
       />
       {initialLoading ? (
         <div className={styles.loading} role="status">
-          <LoadingSpinner size={16} />
+          <LoadingSpinner size={iconSize['16']} />
           {t('common.loading')}
         </div>
       ) : modelAliasUnsupported ? (
@@ -473,14 +474,14 @@ export function AuthFilesOAuthModelAliasEditPage() {
                 onClick={addMappingEntry}
                 disabled={disableControls || saving || modelAliasUnsupported}
               >
-                <IconPlus size={14} aria-hidden="true" />
+                <IconPlus size={iconSize['14']} aria-hidden="true" />
                 {t('oauth_model_alias.add_alias')}
               </Button>
             </div>
 
             {!providerMissing && (
               <div className={bodyStyles.catalogHint}>
-                <IconInfo size={15} aria-hidden="true" />
+                <IconInfo size={iconSize['15']} aria-hidden="true" />
                 <p className={styles.editorDescription}>{catalogHint}</p>
               </div>
             )}

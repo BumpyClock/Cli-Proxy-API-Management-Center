@@ -7,63 +7,63 @@
 
 .fieldsRoot {
   :global(.form-group) {
-    gap: 7px;
+    gap: $space-7;
     margin-bottom: 0;
   }
 
   :global(.form-group > label) {
     color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-size: $font-size-12;
+    font-weight: $font-weight-700;
+    letter-spacing: $letter-spacing-0-02;
   }
 
   /* Input boundaries use --border-primary (3:1 non-text contrast), not the card divider tone. */
   :global(.input) {
-    border-radius: 6px;
+    border-radius: $radius-6;
     background: var(--bg-secondary);
     border-color: var(--border-primary);
     box-shadow: none;
     transition:
-      border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-      background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-      box-shadow var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+      border-color var(--dur-hover) var(--ease-out-strong),
+      background-color var(--dur-hover) var(--ease-out-strong),
+      box-shadow var(--dur-hover) var(--ease-out-strong);
   }
 
   :global(.input:focus) {
     background: var(--bg-primary);
     border-color: var(--text-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-primary) 12%, transparent);
+    box-shadow: $shadow-field-hover;
   }
 
   :global(textarea.input) {
-    min-height: 112px;
+    min-height: $size-112;
   }
 
   :global(.hint) {
     color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 1.55;
+    font-size: $font-size-12;
+    line-height: $line-height-1-55;
   }
 
   :global(.error-box) {
-    border-radius: 6px;
+    border-radius: $radius-6;
   }
 
   :global(.item-list) {
-    gap: 8px;
-    margin-top: 8px;
+    gap: $space-8;
+    margin-top: $space-8;
   }
 
   :global(.item-row) {
-    border-radius: 6px;
-    padding: 12px;
+    border-radius: $radius-6;
+    padding: $space-12;
     background: transparent;
     border-color: var(--border-color);
   }
 
   :global(.item-row .item-meta) {
-    gap: 4px;
+    gap: $space-4;
   }
 
   :global(.item-row .item-actions) {
@@ -71,8 +71,8 @@
   }
 
   :global(.pill) {
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border: $border-width-1 solid var(--border-color);
+    border-radius: $radius-6;
     background: transparent;
     color: var(--text-secondary);
   }
@@ -83,20 +83,20 @@
 .toggleRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: $space-14;
   /* Top-aligned: paired cards share a row height, and their titles share a baseline even when
      one description wraps to two lines. */
   align-items: start;
   /* Fills its stretched grid cell so paired cards in one row share a height. */
   height: 100%;
-  min-height: 64px;
-  padding: 14px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  min-height: $size-64;
+  padding: $space-14;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
   background: transparent;
   transition:
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    border-color var(--dur-hover) var(--ease-out-strong),
+    background-color var(--dur-hover) var(--ease-out-strong);
 
   @include mobile {
     grid-template-columns: minmax(0, 1fr);
@@ -106,36 +106,36 @@
 @media (hover: hover) and (pointer: fine) {
   .toggleRow:hover {
     border-color: var(--border-hover);
-    background: color-mix(in srgb, var(--bg-tertiary) 40%, transparent);
+    background: color-mix(in srgb, var(--bg-tertiary) $tint-0-4, transparent);
   }
 }
 
 .toggleCopy {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: $space-5;
   min-width: 0;
 }
 
 .toggleTitle {
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: $font-size-14;
+  font-weight: $font-weight-700;
+  line-height: $line-height-1-25;
 }
 
 .toggleDescription {
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: $font-size-12;
+  line-height: $line-height-1-55;
 }
 
 /* ---------- 布局原语 ---------- */
 
 .fieldGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax($size-240, 1fr));
+  gap: $space-14;
 
   @include mobile {
     grid-template-columns: minmax(0, 1fr);
@@ -153,11 +153,11 @@
 .fieldStack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: $space-14;
 }
 
 .divider {
-  height: 1px;
+  height: $size-1;
   background: var(--border-color);
 }
 
@@ -166,7 +166,7 @@
 .fieldAnchor {
   display: block;
   min-width: 0;
-  scroll-margin-top: calc(var(--header-height, 64px) + 16px);
+  scroll-margin-top: calc(var(--header-height) + $space-16);
 }
 
 /* 跨两列的字段（如长文本的代理 URL）；移动端单列布局下回退为一列。 */
@@ -179,19 +179,19 @@
 }
 
 .fieldHighlightActive {
-  border-radius: 6px;
-  animation: config-field-highlight 1.8s ease-out;
+  border-radius: $radius-6;
+  animation: config-field-highlight $duration-field-highlight $ease-out;
 }
 
 @keyframes config-field-highlight {
   0% {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-primary) 55%, transparent);
+    box-shadow: $shadow-field-focus-strong;
   }
   55% {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-primary) 32%, transparent);
+    box-shadow: $shadow-field-focus;
   }
   100% {
-    box-shadow: 0 0 0 3px transparent;
+    box-shadow: $shadow-field-focus-hidden;
   }
 }
 
@@ -200,32 +200,32 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  gap: $space-12;
+  padding: $space-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
   background: transparent;
 }
 
 .groupHeader {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: $space-5;
 }
 
 .groupTitle {
   margin: 0;
   color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: $font-size-15;
+  font-weight: $font-weight-700;
+  line-height: $line-height-1-25;
 }
 
 .groupDescription {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: $font-size-12;
+  line-height: $line-height-1-6;
 }
 
 /* ---------- 字段外壳 ---------- */
@@ -233,15 +233,15 @@
 .fieldShell {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: $space-7;
   min-width: 0;
 }
 
 .fieldLabel {
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
+  letter-spacing: $letter-spacing-0-02;
 }
 
 .fieldControl {
@@ -249,35 +249,35 @@
 }
 
 .yamlKey {
-  margin-left: 6px;
+  margin-left: $space-2;
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 400;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-400;
   letter-spacing: 0;
 }
 
 .fieldHint {
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: $font-size-12;
+  line-height: $line-height-1-55;
 }
 
 .inlinePill {
   position: absolute;
-  right: 8px;
+  right: $space-8;
   top: 50%;
   transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
-  padding: 0 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  min-height: $size-24;
+  padding: 0 $space-8;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
   background: var(--bg-primary);
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
 }
 
 /* ---------- 响应式 ---------- */
@@ -285,14 +285,14 @@
 @include mobile {
   .group,
   .toggleRow {
-    padding: 14px;
+    padding: $space-14;
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: #{$breakpoint-380}) {
   .group,
   .toggleRow {
-    padding: 12px;
+    padding: $space-12;
   }
 }
 
@@ -306,6 +306,6 @@
 
   .fieldHighlightActive {
     animation: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-primary) 32%, transparent);
+    box-shadow: $shadow-field-focus;
   }
 }

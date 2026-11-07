@@ -7,6 +7,7 @@ import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { IconTrash2 } from '@/components/ui/icons';
 import type { AliasNode, SourceNode } from './ModelMappingDiagramTypes';
 import styles from './ModelMappingDiagram.module.scss';
+import { iconSize, size } from '@/design-system';
 
 interface RenameAliasModalProps {
   open: boolean;
@@ -32,7 +33,7 @@ export function RenameAliasModal({
       open={open}
       onClose={onClose}
       title={t('oauth_model_alias.diagram_rename_alias_title')}
-      width={400}
+      width={size['400']}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -81,7 +82,7 @@ export function AddAliasModal({
       open={open}
       onClose={onClose}
       title={t('oauth_model_alias.diagram_add_alias_title')}
-      width={400}
+      width={size['400']}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -130,7 +131,7 @@ export function SettingsAliasModal({
       open={open}
       onClose={onClose}
       title={t('oauth_model_alias.diagram_settings_title', { alias: alias ?? '' })}
-      width={720}
+      width={size['720']}
       footer={
         <Button variant="secondary" onClick={onClose}>
           {t('common.close')}
@@ -183,7 +184,7 @@ export function SettingsAliasModal({
                             name: source.name,
                           })}
                         >
-                          <IconTrash2 size={14} />
+                          <IconTrash2 size={iconSize['14']} />
                         </button>
                       </div>
                     </div>
@@ -219,7 +220,7 @@ export function SettingsSourceModal({
       open={open}
       onClose={onClose}
       title={t('oauth_model_alias.diagram_settings_source_title')}
-      width={720}
+      width={size['720']}
       footer={
         <Button variant="secondary" onClick={onClose}>
           {t('common.close')}
@@ -264,7 +265,7 @@ export function SettingsSourceModal({
                       name: source.name,
                     })}
                   >
-                    <IconTrash2 size={14} />
+                    <IconTrash2 size={iconSize['14']} />
                   </button>
                 </div>
               </div>

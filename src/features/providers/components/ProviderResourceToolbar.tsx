@@ -5,6 +5,7 @@ import { Select } from '@/components/ui/Select';
 import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
 import type { ProviderSortBy, SortDir } from '../types';
 import styles from './ProviderResourceToolbar.module.scss';
+import { iconSize, iconStroke } from '@/design-system';
 
 /** Short visible direction words: alphabetical for names, low/high for numeric sorts. */
 const DIRECTION_LABEL_KEYS: Record<'alpha' | 'value', Record<SortDir, string>> = {
@@ -28,12 +29,12 @@ function SortDirectionIcon({ dir }: { dir: SortDir }) {
       : ['m3 16 4 4 4-4', 'M7 20V4', 'M11 4h10', 'M11 8h7', 'M11 12h4'];
   return (
     <svg
-      width={14}
-      height={14}
+      width={iconSize['14']}
+      height={iconSize['14']}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={iconStroke.default}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -154,9 +155,9 @@ export function ProviderResourceToolbar({
           onClick={() => setFilterOpen((v) => !v)}
           disabled={availableModels.length === 0}
         >
-          <IconSlidersHorizontal size={14} />
+          <IconSlidersHorizontal size={iconSize['14']} />
           <span>{filterLabel}</span>
-          <IconChevronDown size={12} />
+          <IconChevronDown size={iconSize['12']} />
         </button>
         {filterOpen ? (
           <div className={styles.filterPanel}>

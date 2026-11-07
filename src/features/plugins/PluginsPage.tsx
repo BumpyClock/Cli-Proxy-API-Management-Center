@@ -36,6 +36,7 @@ import {
 import { waitForPluginState } from './pluginPolling';
 import { PluginsDisabledNotice } from './components/PluginNotices';
 import styles from './PluginsPage.module.scss';
+import { iconSize } from '@/design-system';
 
 type PluginRuntimeWaitStatus = 'ready' | 'globalDisabled' | 'timeout';
 
@@ -46,7 +47,7 @@ function PluginCardLogo({ src }: { src: string }) {
   return showImage ? (
     <img src={src} alt="" onError={() => setFailed(true)} />
   ) : (
-    <IconPlug size={18} />
+    <IconPlug size={iconSize['18']} />
   );
 }
 
@@ -465,7 +466,7 @@ export function PluginsPage() {
               disabled={!connected || Boolean(mutatingID || deletingID)}
             />
             <Button variant="secondary" onClick={() => navigate('/plugin-store')}>
-              <IconSidebarStore size={16} />
+              <IconSidebarStore size={iconSize['16']} />
               {t('plugin_store.title')}
             </Button>
           </>
@@ -537,7 +538,7 @@ export function PluginsPage() {
           onChange={(event) => setFilter(event.target.value)}
           placeholder={t('plugin_management.search_placeholder')}
           aria-label={t('plugin_management.search_label')}
-          rightElement={<IconSearch size={16} />}
+          rightElement={<IconSearch size={iconSize['16']} />}
         />
       </div>
 
@@ -573,7 +574,7 @@ export function PluginsPage() {
               // Navigation only: installing always goes through the store's trust gate.
               <Link className="btn btn-secondary btn-sm" to="/plugin-store">
                 <span>
-                  <IconSidebarStore size={16} aria-hidden="true" />
+                  <IconSidebarStore size={iconSize['16']} aria-hidden="true" />
                   {t('plugin_management.browse_store')}
                 </span>
               </Link>
@@ -671,7 +672,7 @@ export function PluginsPage() {
                     disabled={!connected || actionBusy}
                     loading={openingConfig}
                   >
-                    <IconSettings size={14} />
+                    <IconSettings size={iconSize['14']} />
                     {t('plugin_management.edit_config')}
                   </Button>
                   <Button
@@ -683,7 +684,7 @@ export function PluginsPage() {
                     title={t('plugin_management.delete_plugin')}
                     aria-label={t('plugin_management.delete_plugin')}
                   >
-                    <IconTrash2 size={14} />
+                    <IconTrash2 size={iconSize['14']} />
                     {t('plugin_management.delete_plugin')}
                   </Button>
                   {github ? (
@@ -695,7 +696,7 @@ export function PluginsPage() {
                       title={t('plugin_management.open_repository')}
                       aria-label={t('plugin_management.open_repository')}
                     >
-                      <IconGithub size={14} />
+                      <IconGithub size={iconSize['14']} />
                     </a>
                   ) : null}
                 </div>

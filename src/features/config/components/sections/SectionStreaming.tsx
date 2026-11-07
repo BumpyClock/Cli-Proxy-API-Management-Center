@@ -13,6 +13,7 @@ import {
   InlinePill,
 } from '../fields/FieldPrimitives';
 import { getValidationMessage } from '../blocks/shared';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.streaming;
 
@@ -48,7 +49,7 @@ export function SectionStreaming({
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.streaming}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.streaming.title')}
       description={t('config_management.visual.sections.streaming.description')}
       animateIn={animateIn}
