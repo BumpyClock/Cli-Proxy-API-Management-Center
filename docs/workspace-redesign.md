@@ -40,6 +40,8 @@ Timeline used-quota fills are measured over the full reported window before clip
 
 Kimi China and International accounts share quota presentation but use separate fixed usage hosts. Credential domain metadata selects the host before a quota request. Monthly allowances remain visible in account snapshots without inventing a fixed month duration or repeated monthly windows. Downloaded credential contents are not cached.
 
+Quota requests identify Antigravity as Hub 2.23.0 and Grok as client 1.0.70. Grok client-version headers and both user-agent segments derive from one version constant.
+
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification

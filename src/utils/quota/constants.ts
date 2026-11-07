@@ -18,27 +18,18 @@ export const ANTIGRAVITY_QUOTA_URLS = [
 export const ANTIGRAVITY_CODE_ASSIST_URL =
   'https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist';
 
-export const ANTIGRAVITY_CLI_VERSION = '1.0.13';
-export const ANTIGRAVITY_CLIENT_NAME = 'aidev_client';
-export const ANTIGRAVITY_CLIENT_PLATFORM = {
-  osType: 'darwin',
-  arch: 'arm64',
-} as const;
+export const ANTIGRAVITY_HUB_VERSION = '2.23.0';
+export const ANTIGRAVITY_HUB_PLATFORM = 'darwin/arm64';
 
 type AntigravityUserAgentOptions = {
   version?: string;
-  clientName?: string;
-  osType?: string;
-  arch?: string;
+  platform?: string;
 };
 
 export const buildAntigravityUserAgent = ({
-  version = ANTIGRAVITY_CLI_VERSION,
-  clientName = ANTIGRAVITY_CLIENT_NAME,
-  osType = ANTIGRAVITY_CLIENT_PLATFORM.osType,
-  arch = ANTIGRAVITY_CLIENT_PLATFORM.arch,
-}: AntigravityUserAgentOptions = {}) =>
-  `antigravity/cli/${version} (${clientName}; os_type=${osType}; arch=${arch})`;
+  version = ANTIGRAVITY_HUB_VERSION,
+  platform = ANTIGRAVITY_HUB_PLATFORM,
+}: AntigravityUserAgentOptions = {}) => `antigravity/hub/${version} ${platform}`;
 
 export const ANTIGRAVITY_USER_AGENT = buildAntigravityUserAgent();
 
@@ -101,8 +92,8 @@ export const XAI_BILLING_MONTHLY_URL = 'https://cli-chat-proxy.grok.com/v1/billi
 export const XAI_API_ME_URL = 'https://api.x.ai/v1/me';
 export const XAI_API_CHAT_URL = 'https://api.x.ai/v1/chat/completions';
 export const XAI_PAID_HEALTH_MODEL = 'grok-4.5';
-export const XAI_GROK_CLIENT_VERSION = '0.2.91';
-export const XAI_GROK_USER_AGENT = 'grok-pager/0.2.91 grok-shell/0.2.91 (macos; aarch64)';
+export const XAI_GROK_CLIENT_VERSION = '1.0.70';
+export const XAI_GROK_USER_AGENT = `grok-pager/${XAI_GROK_CLIENT_VERSION} grok-shell/${XAI_GROK_CLIENT_VERSION} (macos; aarch64)`;
 
 export const XAI_REQUEST_HEADERS = {
   Authorization: 'Bearer $TOKEN$',
