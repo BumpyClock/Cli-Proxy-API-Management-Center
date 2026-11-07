@@ -1,0 +1,28 @@
+{
+  "login": {
+    "show_key": "顯示管理金鑰",
+    "hide_key": "隱藏管理金鑰"
+  },
+  "redesign": {
+    "chart": {
+      "series": "圖表資料系列",
+      "unreported": "未回報",
+      "keyboard": "使用方向鍵查看資料點。Home 和 End 鍵跳至首尾資料點。",
+      "choose_series": "選擇資料系列以顯示資料。",
+      "table": "查看資料表",
+      "time": "時間"
+    },
+    "quota": {
+      "method": "圖表說明"
+    },
+    "authFiles": {
+      "quotaRemaining": "剩餘 {{value}}",
+      "quotaUnlimited": "無上限",
+      "quotaDetails": "{{name}} 的額度詳情"
+    },
+    "dashboard": {
+      "request_flow": "請求趨勢",
+      "traffic_interval": "每 10 分鐘的請求數 · {{zone}} · 最新時段仍可能更新"
+    }
+  }
+}

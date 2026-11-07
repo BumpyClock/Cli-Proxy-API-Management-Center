@@ -1,0 +1,21 @@
+{
+  "redesign": {
+    "settings": {
+      "section": "區段",
+      "modelSearch": "篩選模型",
+      "noModels": "沒有符合的模型。",
+      "rememberHint": "使用可逆混淆儲存在此瀏覽器中。請勿在共用裝置上啟用。",
+      "logColumns": {
+        "time": "時間",
+        "level": "等級",
+        "status": "狀態",
+        "latency": "延遲",
+        "method": "方法",
+        "path": "路徑",
+        "client": "用戶端",
+        "source": "來源"
+      },
+      "official": "官方"
+    }
+  }
+}

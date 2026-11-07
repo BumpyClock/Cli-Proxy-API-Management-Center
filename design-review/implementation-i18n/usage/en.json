@@ -1,0 +1,37 @@
+{
+  "redesign": {
+    "usage": {
+      "state_loading": "Loading usage statistics…",
+      "state_off": "Collection off",
+      "state_unknown": "Collection status unknown",
+      "state_empty": "Collection on · No requests recorded",
+      "state_live": "Collection on · Snapshot loaded",
+      "state_stale": "Cached snapshot · Refresh needed",
+      "state_error": "Usage fetch failed",
+      "retry": "Retry",
+      "off_title": "Usage statistics are off",
+      "off_detail": "This backend is not recording usage. Totals and charts are hidden because zero would mean not recorded, not no traffic. Enabling collection records future requests only; earlier traffic is not backfilled.",
+      "open_config": "Turn on in Config",
+      "unknown_title": "This backend does not report its collection status",
+      "unknown_detail": "The usage-statistics-enabled flag is unavailable. Collection cannot be verified, so totals and charts are hidden. Check backend versions in Management Center Info.",
+      "open_system": "Open Management Center Info",
+      "coverage": "Usage is stored in backend memory and resets on restart. Traffic while collection is off is not backfilled. The backend does not report the collection start time.",
+      "empty_detail": "Collection is on. No requests have been recorded yet. Send a request through the proxy, then refresh.",
+      "no_cached_data": "No previously verified usage snapshot is available. Retry to load usage.",
+      "stale_error": "Refresh failed. Showing the last verified snapshot.",
+      "refreshing_cached": "Refreshing. Values below are from the previous verified snapshot.",
+      "age_stale": "This snapshot is at least {{minutes}} minutes old. Refresh to check current counts.",
+      "flag_failed": "Could not check the collection flag.",
+      "snapshot_failed": "Could not load the usage snapshot.",
+      "requests_by_day": "Requests by day",
+      "tokens_by_day": "Tokens by day",
+      "daily_evidence": "Backend-reported daily totals. Missing dates are not backfilled. Hour-of-day totals are not dated history.",
+      "no_dated_data": "No dated totals reported. Daily points appear only when the backend supplies dates.",
+      "model_evidence": "Top 12 model/API pairs by requests. Latency uses retained request details only, not all-time samples.",
+      "unreported": "Not reported",
+      "p50": "p50 latency",
+      "p95": "p95 latency",
+      "milliseconds": "{{value}} ms"
+    }
+  }
+}

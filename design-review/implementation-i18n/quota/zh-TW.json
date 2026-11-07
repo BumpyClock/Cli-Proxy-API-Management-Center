@@ -1,0 +1,23 @@
+{
+  "redesign": {
+    "quota": {
+      "checking": "正在檢查額度…",
+      "checked": "檢查於 {{time}} · {{success}} 已更新 · {{failed}} 失敗 · {{skipped}} 已略過。",
+      "filters": "篩選帳戶",
+      "skippedAccounts": "已略過的帳戶",
+      "disabled": "已停用",
+      "unsupported": "不支援或不符合條件",
+      "remaining": "剩餘額度",
+      "assumption": "虛線僅表示下次重設的預測，假設不再使用。",
+      "series": "帳戶曲線",
+      "stale": "過期快照",
+      "evidence": "快照為已回報的數值。虛線階梯僅預測下次重設，假設不再使用。無歷史消耗資料。各帳戶與方案的額度相互獨立。過期快照不預測重設。",
+      "breakdown": "帳戶明細",
+      "independent": "獨立額度",
+      "account": "帳戶",
+      "snapshot": "快照",
+      "failed": "檢查失敗",
+      "refreshAccount": "重新整理 {{name}}"
+    }
+  }
+}

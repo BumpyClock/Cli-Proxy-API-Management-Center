@@ -1,0 +1,21 @@
+{
+  "redesign": {
+    "authFiles": {
+      "sections": "认证文件分区",
+      "credentials": "凭证",
+      "disablement": "OAuth 模型禁用",
+      "aliases": "OAuth 模型别名",
+      "select": "选择",
+      "credential": "凭证",
+      "quota": "配额",
+      "updated": "更新时间",
+      "actions": "操作",
+      "actionsFor": "{{name}} 的操作",
+      "notReported": "未报告",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "problem": "异常",
+      "shown": "显示 {{count}} 条，共 {{total}} 条"
+    }
+  }
+}

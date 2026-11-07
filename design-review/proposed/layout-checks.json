@@ -1,0 +1,257 @@
+[
+  {
+    "width": 1440,
+    "results": [
+      {
+        "route": "/",
+        "heading": "2 credentials need attention.",
+        "overflow": false
+      },
+      {
+        "route": "/quick-start",
+        "heading": "Quick Start",
+        "overflow": false
+      },
+      {
+        "route": "/ai-providers",
+        "heading": "AI Providers",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files",
+        "heading": "Auth Files Management",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files/oauth-excluded",
+        "heading": "OAuth Model Disablement",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files/oauth-model-alias",
+        "heading": "OAuth Model Aliases",
+        "overflow": false
+      },
+      {
+        "route": "/oauth",
+        "heading": "OAuth Login",
+        "overflow": false
+      },
+      {
+        "route": "/quota",
+        "heading": "Quota Management",
+        "overflow": false
+      },
+      {
+        "route": "/usage",
+        "heading": "Usage Statistics",
+        "overflow": false
+      },
+      {
+        "route": "/logs",
+        "heading": "Logs Viewer",
+        "overflow": false
+      },
+      {
+        "route": "/config",
+        "heading": "Config Panel",
+        "overflow": false
+      },
+      {
+        "route": "/plugins",
+        "heading": "Plugin Management",
+        "overflow": false
+      },
+      {
+        "route": "/plugin-store",
+        "heading": "Plugin Store",
+        "overflow": false
+      },
+      {
+        "route": "/plugin-pages/privacy-filter/0",
+        "heading": "Redaction rules",
+        "overflow": false
+      },
+      {
+        "route": "/system",
+        "heading": "Management Center Info",
+        "overflow": false
+      },
+      {
+        "route": "/login",
+        "heading": "Login",
+        "overflow": false
+      }
+    ]
+  },
+  {
+    "width": 728,
+    "results": [
+      {
+        "route": "/",
+        "heading": "2 credentials need attention.",
+        "overflow": false
+      },
+      {
+        "route": "/quick-start",
+        "heading": "Quick Start",
+        "overflow": false
+      },
+      {
+        "route": "/ai-providers",
+        "heading": "AI Providers",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files",
+        "heading": "Auth Files Management",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files/oauth-excluded",
+        "heading": "OAuth Model Disablement",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files/oauth-model-alias",
+        "heading": "OAuth Model Aliases",
+        "overflow": false
+      },
+      {
+        "route": "/oauth",
+        "heading": "OAuth Login",
+        "overflow": false
+      },
+      {
+        "route": "/quota",
+        "heading": "Quota Management",
+        "overflow": false
+      },
+      {
+        "route": "/usage",
+        "heading": "Usage Statistics",
+        "overflow": false
+      },
+      {
+        "route": "/logs",
+        "heading": "Logs Viewer",
+        "overflow": false
+      },
+      {
+        "route": "/config",
+        "heading": "Config Panel",
+        "overflow": false
+      },
+      {
+        "route": "/plugins",
+        "heading": "Plugin Management",
+        "overflow": false
+      },
+      {
+        "route": "/plugin-store",
+        "heading": "Plugin Store",
+        "overflow": false
+      },
+      {
+        "route": "/plugin-pages/privacy-filter/0",
+        "heading": "Redaction rules",
+        "overflow": false
+      },
+      {
+        "route": "/system",
+        "heading": "Management Center Info",
+        "overflow": false
+      },
+      {
+        "route": "/login",
+        "heading": "Login",
+        "overflow": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "results": [
+      {
+        "route": "/",
+        "heading": "2 credentials need attention.",
+        "overflow": false
+      },
+      {
+        "route": "/quick-start",
+        "heading": "Quick Start",
+        "overflow": false
+      },
+      {
+        "route": "/ai-providers",
+        "heading": "AI Providers",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files",
+        "heading": "Auth Files Management",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files/oauth-excluded",
+        "heading": "OAuth Model Disablement",
+        "overflow": false
+      },
+      {
+        "route": "/auth-files/oauth-model-alias",
+        "heading": "OAuth Model Aliases",
+        "overflow": false
+      },
+      {
+        "route": "/oauth",
+        "heading": "OAuth Login",
+        "overflow": false
+      },
+      {
+        "route": "/quota",
+        "heading": "Quota Management",
+        "overflow": false
+      },
+      {
+        "route": "/usage",
+        "heading": "Usage Statistics",
+        "overflow": false
+      },
+      {
+        "route": "/logs",
+        "heading": "Logs Viewer",
+        "overflow": false
+      },
+      {
+        "route": "/config",
+        "heading": "Config Panel",
+        "overflow": false
+      },
+      {
+        "route": "/plugins",
+        "heading": "Plugin Management",
+        "overflow": false
+      },
+      {
+        "route": "/plugin-store",
+        "heading": "Plugin Store",
+        "overflow": false
+      },
+      {
+        "route": "/plugin-pages/privacy-filter/0",
+        "heading": "Redaction rules",
+        "overflow": false
+      },
+      {
+        "route": "/system",
+        "heading": "Management Center Info",
+        "overflow": false
+      },
+      {
+        "route": "/login",
+        "heading": "Login",
+        "overflow": false
+      }
+    ]
+  }
+]
