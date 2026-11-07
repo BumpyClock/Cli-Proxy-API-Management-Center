@@ -31,6 +31,12 @@ export interface PluginMenu {
   description: string;
 }
 
+export interface PluginOAuthProviderEntry {
+  identifier: string;
+  name?: string;
+  logo?: string;
+}
+
 export interface PluginListEntry {
   id: string;
   path: string;
@@ -40,6 +46,9 @@ export interface PluginListEntry {
   effectiveEnabled: boolean;
   supportsOAuth: boolean;
   oauthProvider?: string;
+  /** Absent on backends that only advertise the singular OAuth provider. */
+  oauthProviders?: string[];
+  oauthProviderEntries?: PluginOAuthProviderEntry[];
   logo: string;
   configFields: PluginConfigField[];
   menus: PluginMenu[];
