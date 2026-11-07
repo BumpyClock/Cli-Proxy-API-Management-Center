@@ -18,8 +18,11 @@ interface Scheduler {
   clearTimeout: (timer: number) => void;
 }
 
-// A provider owns one attempt and at most one scheduled task. Invalidating an
-// attempt also makes already-dispatched requests inert when they settle.
+/**
+ * Own one current attempt and at most one scheduled task per provider.
+ * Polling stays active through scheduled and in-flight requests until a terminal
+ * result or request error. Invalidation aborts requests and makes late results inert.
+ */
 export function createOAuthAttempts(scheduler: Scheduler) {
   const attempts = new Map<string, OAuthAttempt>();
 
