@@ -261,11 +261,18 @@ const normalizeAuthFileEntry = (
   const modified = readDateField(entry);
   const priority = readIntegerField(entry['priority']);
   const weight = readIntegerField(entry['weight']);
+  const quotaCapability = entry['supports_quota'] ?? entry.supportsQuota;
+  const supportsQuota =
+    quotaCapability === true || quotaCapability === 'true' || quotaCapability === '1';
+  const quotaProvider =
+    readTextField(entry, 'quota_provider') || readTextField(entry, 'quotaProvider');
 
   return {
     ...entry,
     cooldownSnapshot: normalizeAuthFileCooldowns(entry.cooldowns, observedAt, receivedAtMs),
     runtimeOnly: readRuntimeOnlyField(entry),
+    supportsQuota,
+    ...(quotaProvider ? { quotaProvider } : {}),
     authIndex: normalizeRecentRequestAuthIndex(entry['auth_index'] ?? entry.authIndex),
     recentRequests: normalizeRecentRequestBuckets(entry.recent_requests ?? entry.recentRequests),
     successCount: normalizeUsageTotal(entry.success),

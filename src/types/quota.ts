@@ -356,6 +356,38 @@ export interface MetaQuotaState {
   errorStatus?: number;
 }
 
+export interface PluginQuotaMetric {
+  key: string;
+  label: string;
+  value: number;
+  unit?: string;
+  format?: 'number' | 'currency';
+  currency?: string;
+}
+
+export interface PluginQuotaBucket {
+  id: string;
+  label: string;
+  description: string;
+  remainingPercent: number | null;
+  resetAtMs: number | null;
+}
+
+export interface PluginQuotaGroup {
+  id: string;
+  label: string;
+  buckets: PluginQuotaBucket[];
+}
+
+export interface PluginQuotaState {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  groups: PluginQuotaGroup[];
+  subscription: string | null;
+  summary: PluginQuotaMetric[];
+  error?: string;
+  errorStatus?: number;
+}
+
 // Kimi API payload types
 export interface KimiUsageDetail {
   used?: number | string;

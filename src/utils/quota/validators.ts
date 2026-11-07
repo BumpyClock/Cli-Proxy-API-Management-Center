@@ -52,3 +52,20 @@ export function isDisabledAuthFile(file: AuthFileItem): boolean {
   if (typeof raw === 'string') return raw.trim().toLowerCase() === 'true';
   return false;
 }
+
+/** Only use advertised generic quotas when no built-in adapter owns this provider. */
+export function isPluginQuotaFile(file: AuthFileItem): boolean {
+  const supported = file.supportsQuota ?? file['supports_quota'];
+  if (supported !== true && supported !== 'true' && supported !== '1') return false;
+  return ![
+    'antigravity',
+    'claude',
+    'codex',
+    'github-copilot',
+    'devin',
+    'kimi',
+    'meta',
+    'qoder',
+    'xai',
+  ].includes(resolveAuthProvider(file));
+}

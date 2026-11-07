@@ -146,6 +146,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
   const metaQuota = useQuotaStore((state) => state.metaQuota);
   const qoderQuota = useQuotaStore((state) => state.qoderQuota);
   const xaiQuota = useQuotaStore((state) => state.xaiQuota);
+  const pluginQuota = useQuotaStore((state) => state.pluginQuota);
 
   const quotaByType = useMemo<Record<QuotaProviderType, Record<string, QuotaCardState>>>(
     () => ({
@@ -158,6 +159,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
       meta: metaQuota,
       qoder: qoderQuota,
       xai: xaiQuota,
+      plugin: pluginQuota,
     }),
     [
       antigravityQuota,
@@ -169,6 +171,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
       metaQuota,
       qoderQuota,
       xaiQuota,
+      pluginQuota,
     ]
   );
 

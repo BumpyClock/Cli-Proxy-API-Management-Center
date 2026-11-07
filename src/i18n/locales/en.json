@@ -574,7 +574,8 @@
     "oauth_rules_providers_one": "{{count}} provider",
     "oauth_rules_providers_other": "{{count}} providers",
     "warning_show_more": "Show more",
-    "warning_show_less": "Show less"
+    "warning_show_less": "Show less",
+    "filter_plugin": "Plugin quotas"
   },
   "antigravity_subscription": {
     "plan_unknown": "Unknown",
@@ -2406,5 +2407,18 @@
       "daily_title": "Daily requests and tokens",
       "no_dated_both": "The backend reported no dated request or token totals. Daily charts appear when it supplies dates; hour-of-day totals are not dated history and missing dates are never filled with zeros."
     }
+  },
+  "plugin_quota": {
+    "title": "Plugin quotas",
+    "idle": "Click to load quota",
+    "loading": "Loading quota…",
+    "load_failed": "Failed to load quota: {{message}}",
+    "unavailable": "Plugin quotas are not available for this credential.",
+    "missing_auth_index": "Auth file missing auth_index",
+    "empty_data": "No quota data reported",
+    "plan_label": "Plan",
+    "remaining_percent": "{{percent}}% remaining",
+    "not_reported": "Not reported",
+    "limit": "Quota limit"
   }
 }

@@ -46,6 +46,8 @@ Claude account details show read-only extra usage and independent dollar balance
 
 Codex credit balances are supplemental account data from the existing usage response. A zero balance is shown. Unlimited credits do not imply unlimited rate limits, change remaining percentages, or add manual reset credits.
 
+Generic plugin quotas use the current backend `/quota/fetch` contract and only run when plugin support and credential quota capability are advertised. Built-in provider adapters remain authoritative. Numeric and currency summaries are separate from percentage allowances. Unknown periods do not produce recurring timeline windows. Plugin observations share request deduplication, session isolation, and cache cleanup with built-in providers.
+
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification
