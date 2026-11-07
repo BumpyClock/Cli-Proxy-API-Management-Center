@@ -1,0 +1,37 @@
+{
+  "redesign": {
+    "usage": {
+      "state_loading": "正在加载使用统计…",
+      "state_off": "统计收集已关闭",
+      "state_unknown": "统计收集状态未知",
+      "state_empty": "统计收集已开启 · 尚无请求记录",
+      "state_live": "统计收集已开启 · 快照已加载",
+      "state_stale": "缓存快照 · 需要刷新",
+      "state_error": "使用统计获取失败",
+      "retry": "重试",
+      "off_title": "使用统计已关闭",
+      "off_detail": "此后端未记录使用情况。总数和图表已隐藏，因为零会被误解为没有流量，而实际是未记录。开启收集后仅记录后续请求，不会补录之前的流量。",
+      "open_config": "前往配置开启",
+      "unknown_title": "此后端未报告统计收集状态",
+      "unknown_detail": "无法获取 usage-statistics-enabled 标志，无法确认是否正在收集统计，因此隐藏总数和图表。请在管理中心信息中检查后端版本。",
+      "open_system": "打开管理中心信息",
+      "coverage": "使用统计保存在后端内存中，重启后清空。收集关闭期间的流量不会补录。后端未报告统计收集的开始时间。",
+      "empty_detail": "统计收集已开启，但尚未记录任何请求。请通过代理发送请求，然后刷新。",
+      "no_cached_data": "没有之前已确认的使用统计快照。请重试以加载使用统计。",
+      "stale_error": "刷新失败，正在显示上次已确认的快照。",
+      "refreshing_cached": "正在刷新。下方数值来自上次已确认的快照。",
+      "age_stale": "此快照已有至少 {{minutes}} 分钟。请刷新以检查当前计数。",
+      "flag_failed": "无法检查统计收集标志。",
+      "snapshot_failed": "无法加载使用统计快照。",
+      "requests_by_day": "每日请求数",
+      "tokens_by_day": "每日令牌数",
+      "daily_evidence": "后端报告的每日总数。缺失日期不会补录。按小时汇总的数据不是带日期的历史记录。",
+      "no_dated_data": "未报告带日期的总数。仅在后端提供日期时显示每日数据点。",
+      "model_evidence": "按请求数列出前 12 个模型/API 组合。延迟仅使用保留的请求明细计算，不代表全部历史样本。",
+      "unreported": "未报告",
+      "p50": "p50 延迟",
+      "p95": "p95 延迟",
+      "milliseconds": "{{value}} 毫秒"
+    }
+  }
+}

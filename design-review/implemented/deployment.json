@@ -1,0 +1,49 @@
+{
+  "url": "https://cliproxy-production-6997.up.railway.app/management.html",
+  "artifactSha256": "6ec58c5efb67abca46938a1490b35e0e1f8559a481b5cd35a4a311e52bbfb037",
+  "artifactBytes": 3314800,
+  "previousSha256": "cd7e5d191e178ba93aba97f41dd52442ad1ed8d27529e8d25878eb1308cfeabb",
+  "rollbackFile": "/data/ui-deployments/redesign-6ec58c5efb67abca/management.previous.html",
+  "method": "Checksum-verified atomic HTML replacement over Railway SSH",
+  "backendRestarted": false,
+  "configAndBinaryUnchanged": true,
+  "authFileCountUnchanged": true,
+  "remoteFacts": {
+    "UI_SHA256": "6ec58c5efb67abca46938a1490b35e0e1f8559a481b5cd35a4a311e52bbfb037",
+    "CONFIG_SHA256": "24f42d26dd5d0d9c69722af9c3cd388857c311b01056d1225ef3589e99f936db",
+    "BINARY_SHA256": "ed435095ee0cdfeb5194ed588999b3b9abd81dde180f8eb542771986d737e7cf",
+    "AUTH_FILE_COUNT": "4",
+    "PROCESS_START": "459664219"
+  },
+  "sourceCommit": "c460cbebfa5c7a022709e067f6e3147ac5a555fa",
+  "localVerification": "Bun 1.3.14; 1120 tests, lint, TypeScript passed on identical PR tree; merged-main build passed",
+  "boatCI": "GitHub verify and test-build checks passed on PR head 02b3201.",
+  "publicDelivery": {
+    "status": 200,
+    "exactArtifactMatch": true,
+    "bytes": 3314800
+  },
+  "unauthenticatedChecks": {
+    "/v0/management/config": 401,
+    "/v1/models": 401
+  },
+  "liveBrowserSmoke": [
+    {
+      "width": 1440,
+      "appRendered": true,
+      "loginVisible": false,
+      "horizontalOverflow": false,
+      "chartSvgCount": 2
+    },
+    {
+      "width": 390,
+      "appRendered": true,
+      "loginVisible": false,
+      "horizontalOverflow": false,
+      "chartSvgCount": 2
+    }
+  ],
+  "verifiedAt": "2026-11-03T07:17:57.347222+00:00",
+  "pullRequest": "https://github.com/BumpyClock/Cli-Proxy-API-Management-Center/pull/4",
+  "knownFollowUp": "Minor quota-group exception cleanup finding 4451676245 remains open; deployment explicitly requested."
+}

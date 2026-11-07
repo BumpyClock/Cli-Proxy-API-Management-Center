@@ -1,0 +1,183 @@
+{
+  "selftests": {
+    "1440": {
+      "pass": true,
+      "errors": [],
+      "routes": 16,
+      "states": 25,
+      "focus": true,
+      "arrows": true,
+      "oneTabStop": true
+    },
+    "728": {
+      "pass": true,
+      "errors": [],
+      "routes": 16,
+      "states": 25,
+      "focus": true,
+      "arrows": true,
+      "oneTabStop": true
+    },
+    "390": {
+      "pass": true,
+      "errors": [],
+      "routes": 16,
+      "states": 25,
+      "focus": true,
+      "arrows": true,
+      "oneTabStop": true
+    }
+  },
+  "badges": {
+    "topRemoved": true,
+    "navRemoved": true,
+    "legacyBadgeCount": 0
+  },
+  "automaticStart": {
+    "busy": "true",
+    "cached": true,
+    "count": "1"
+  },
+  "automaticResult": {
+    "busy": "false",
+    "partial": "true",
+    "text": "Checked 10:00:58 AM \u00b7 3 updated \u00b7 1 failed. Skipped 1 unsupported and 1 disabled."
+  },
+  "filterDedup": {
+    "before": "1",
+    "after": "1",
+    "focused": true
+  },
+  "nativeLegend": {
+    "series": "failure",
+    "pressed": "false"
+  },
+  "nativeArrows": {
+    "chart": "dash",
+    "index": "1",
+    "outline": "solid",
+    "readout": "05:00 \u00b7 0 successful \u00b7 0 failed"
+  },
+  "nativeNextTab": {
+    "tag": "SUMMARY",
+    "text": "Data table"
+  },
+  "screenshots": [
+    {
+      "file": "design-review/proposed/final/quota-1440.png",
+      "width": 1440,
+      "height": 1000,
+      "route": "/quota",
+      "theme": "dark",
+      "detail": false,
+      "heading": "Quota Management",
+      "overflow": false,
+      "plotTop": 438.8671875,
+      "plotBottom": 685.421875,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/final/dashboard-1440.png",
+      "width": 1440,
+      "height": 1000,
+      "route": "/",
+      "theme": "dark",
+      "detail": false,
+      "heading": "2 credentials need attention.",
+      "overflow": false,
+      "plotTop": 787.6796875,
+      "plotBottom": 1034.234375,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/final/quota-728.png",
+      "width": 728,
+      "height": 1000,
+      "route": "/quota",
+      "theme": "dark",
+      "detail": false,
+      "heading": "Quota Management",
+      "overflow": false,
+      "plotTop": 486.8671875,
+      "plotBottom": 735.890625,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/final/dashboard-728.png",
+      "width": 728,
+      "height": 1000,
+      "route": "/",
+      "theme": "dark",
+      "detail": true,
+      "heading": "2 credentials need attention.",
+      "overflow": false,
+      "plotTop": 245.078125,
+      "plotBottom": 494.1015625,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/final/quota-light-728.png",
+      "width": 728,
+      "height": 1000,
+      "route": "/quota",
+      "theme": "light",
+      "detail": false,
+      "heading": "Quota Management",
+      "overflow": false,
+      "plotTop": 486.8671875,
+      "plotBottom": 735.890625,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/final/quota-390.png",
+      "width": 390,
+      "height": 844,
+      "route": "/quota",
+      "theme": "dark",
+      "detail": false,
+      "heading": "Quota Management",
+      "overflow": false,
+      "plotTop": 584.78125,
+      "plotBottom": 830.8671875,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/final/dashboard-390.png",
+      "width": 390,
+      "height": 844,
+      "route": "/",
+      "theme": "dark",
+      "detail": true,
+      "heading": "2 credentials need attention.",
+      "overflow": false,
+      "plotTop": 313.859375,
+      "plotBottom": 559.9453125,
+      "toasts": 0
+    }
+  ],
+  "reducedMotion": {
+    "reduced": true,
+    "visible": true,
+    "animation": "none"
+  },
+  "contrast": {
+    "dark": {
+      "--chart-1": 9.2,
+      "--chart-3": 8.71,
+      "--chart-4": 5.93,
+      "--chart-5": 7.11,
+      "--foreground": 15.47,
+      "--muted-foreground": 6.89,
+      "--ring": 9.2
+    },
+    "light": {
+      "--chart-1": 4.07,
+      "--chart-3": 3.72,
+      "--chart-4": 4.75,
+      "--chart-5": 5.28,
+      "--foreground": 17.18,
+      "--muted-foreground": 6.52,
+      "--ring": 5.59
+    }
+  }
+}

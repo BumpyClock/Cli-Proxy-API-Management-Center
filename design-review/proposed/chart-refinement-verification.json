@@ -1,0 +1,180 @@
+{
+  "entryStart": {
+    "busy": "true",
+    "visits": 4,
+    "cachedGraph": true,
+    "refreshDisabled": true
+  },
+  "entrySettled": {
+    "busy": "false",
+    "visits": 4,
+    "completed": 4,
+    "status": "Updated just now \u00b7 Refreshes on page open"
+  },
+  "filterDedup": {
+    "before": 4,
+    "after": 4
+  },
+  "screenshots": [
+    {
+      "file": "design-review/proposed/chart-review/dashboard-1440.png",
+      "width": 1440,
+      "route": "/",
+      "heading": "2 credentials need attention.",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/quick-start-1440.png",
+      "width": 1440,
+      "route": "/quick-start",
+      "heading": "Quick Start",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/providers-1440.png",
+      "width": 1440,
+      "route": "/ai-providers",
+      "heading": "AI Providers",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/auth-files-1440.png",
+      "width": 1440,
+      "route": "/auth-files",
+      "heading": "Auth Files Management",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/oauth-excluded-1440.png",
+      "width": 1440,
+      "route": "/auth-files/oauth-excluded",
+      "heading": "OAuth Model Disablement",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/oauth-model-alias-1440.png",
+      "width": 1440,
+      "route": "/auth-files/oauth-model-alias",
+      "heading": "OAuth Model Aliases",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/oauth-1440.png",
+      "width": 1440,
+      "route": "/oauth",
+      "heading": "OAuth Login",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/quota-1440.png",
+      "width": 1440,
+      "route": "/quota",
+      "heading": "Quota Management",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/usage-1440.png",
+      "width": 1440,
+      "route": "/usage",
+      "heading": "Usage Statistics",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/logs-1440.png",
+      "width": 1440,
+      "route": "/logs",
+      "heading": "Logs Viewer",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/config-1440.png",
+      "width": 1440,
+      "route": "/config",
+      "heading": "Config Panel",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/plugins-1440.png",
+      "width": 1440,
+      "route": "/plugins",
+      "heading": "Plugin Management",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/plugin-store-1440.png",
+      "width": 1440,
+      "route": "/plugin-store",
+      "heading": "Plugin Store",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/plugin-resource-1440.png",
+      "width": 1440,
+      "route": "/plugin-pages/privacy-filter/0",
+      "heading": "Redaction rules",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/system-1440.png",
+      "width": 1440,
+      "route": "/system",
+      "heading": "Management Center Info",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/login-1440.png",
+      "width": 1440,
+      "route": "/login",
+      "heading": "Login",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/quota-728.png",
+      "width": 728,
+      "route": "/quota",
+      "heading": "Quota Management",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/dashboard-728.png",
+      "width": 728,
+      "route": "/",
+      "heading": "2 credentials need attention.",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/quota-390.png",
+      "width": 390,
+      "route": "/quota",
+      "heading": "Quota Management",
+      "overflow": false,
+      "toasts": 0
+    },
+    {
+      "file": "design-review/proposed/chart-review/dashboard-390.png",
+      "width": 390,
+      "route": "/",
+      "heading": "2 credentials need attention.",
+      "overflow": false,
+      "toasts": 0
+    }
+  ]
+}

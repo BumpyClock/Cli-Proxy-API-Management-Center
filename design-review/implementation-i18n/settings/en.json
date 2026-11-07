@@ -1,0 +1,21 @@
+{
+  "redesign": {
+    "settings": {
+      "section": "Section",
+      "modelSearch": "Filter models",
+      "noModels": "No models match this search.",
+      "rememberHint": "Saved in this browser with reversible obfuscation. Skip on shared devices.",
+      "logColumns": {
+        "time": "Time",
+        "level": "Level",
+        "status": "Status",
+        "latency": "Latency",
+        "method": "Method",
+        "path": "Path",
+        "client": "Client",
+        "source": "Source"
+      },
+      "official": "Official"
+    }
+  }
+}

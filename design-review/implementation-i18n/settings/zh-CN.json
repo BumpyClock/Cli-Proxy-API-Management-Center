@@ -1,0 +1,21 @@
+{
+  "redesign": {
+    "settings": {
+      "section": "分区",
+      "modelSearch": "筛选模型",
+      "noModels": "没有匹配的模型。",
+      "rememberHint": "使用可逆混淆保存在此浏览器中。请勿在共享设备上启用。",
+      "logColumns": {
+        "time": "时间",
+        "level": "级别",
+        "status": "状态",
+        "latency": "延迟",
+        "method": "方法",
+        "path": "路径",
+        "client": "客户端",
+        "source": "来源"
+      },
+      "official": "官方"
+    }
+  }
+}

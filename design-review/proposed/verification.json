@@ -1,0 +1,129 @@
+{
+  "1440": {
+    "pass": true,
+    "errors": [],
+    "navFocusCheck": "not applicable; desktop menu trigger hidden",
+    "routeCount": 16,
+    "stateCount": 25,
+    "pluginTypedIdentity": true
+  },
+  "728": {
+    "pass": true,
+    "errors": [],
+    "navFocusCheck": "verified",
+    "routeCount": 16,
+    "stateCount": 25,
+    "pluginTypedIdentity": true
+  },
+  "390": {
+    "pass": true,
+    "errors": [],
+    "navFocusCheck": "verified",
+    "routeCount": 16,
+    "stateCount": 25,
+    "pluginTypedIdentity": true
+  },
+  "screenshots": [
+    {
+      "file": "design-review/proposed/dashboard.png",
+      "width": 1440,
+      "route": "/",
+      "theme": "dark",
+      "heading": "2 credentials need attention.",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/credentials.png",
+      "width": 1440,
+      "route": "/auth-files",
+      "theme": "dark",
+      "heading": "Auth Files Management",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/usage.png",
+      "width": 1440,
+      "route": "/usage",
+      "theme": "dark",
+      "heading": "Usage Statistics",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/config-light.png",
+      "width": 1440,
+      "route": "/config",
+      "theme": "light",
+      "heading": "Config Panel",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/quota.png",
+      "width": 1440,
+      "route": "/quota",
+      "theme": "dark",
+      "heading": "Quota Management",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/logs.png",
+      "width": 1440,
+      "route": "/logs",
+      "theme": "dark",
+      "heading": "Logs Viewer",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/dashboard-inline.png",
+      "width": 728,
+      "route": "/",
+      "theme": "dark",
+      "heading": "2 credentials need attention.",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/credentials-inline.png",
+      "width": 728,
+      "route": "/auth-files",
+      "theme": "dark",
+      "heading": "Auth Files Management",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/usage-inline.png",
+      "width": 728,
+      "route": "/usage",
+      "theme": "dark",
+      "heading": "Usage Statistics",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/config-inline.png",
+      "width": 728,
+      "route": "/config",
+      "theme": "light",
+      "heading": "Config Panel",
+      "overflow": false
+    },
+    {
+      "file": "design-review/proposed/mobile.png",
+      "width": 390,
+      "route": "/auth-files",
+      "theme": "dark",
+      "heading": "Auth Files Management",
+      "overflow": false
+    }
+  ],
+  "reducedMotion": {
+    "enabled": true,
+    "heading": "2 credentials need attention.",
+    "animation": "none",
+    "overflow": false
+  },
+  "keyboardBefore": {
+    "open": true
+  },
+  "keyboardAfter": {
+    "closed": true,
+    "focusReturned": true
+  }
+}

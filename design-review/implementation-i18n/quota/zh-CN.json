@@ -1,0 +1,23 @@
+{
+  "redesign": {
+    "quota": {
+      "checking": "正在检查额度…",
+      "checked": "检查于 {{time}} · {{success}} 已更新 · {{failed}} 失败 · {{skipped}} 已跳过。",
+      "filters": "筛选账户",
+      "skippedAccounts": "已跳过的账户",
+      "disabled": "已禁用",
+      "unsupported": "不支持或不符合条件",
+      "remaining": "剩余额度",
+      "assumption": "虚线仅表示下次重置的预测，假设不再使用。",
+      "series": "账户曲线",
+      "stale": "过期快照",
+      "evidence": "快照为已报告的数值。虚线阶梯仅预测下次重置，假设不再使用。无历史消耗数据。各账户与套餐的额度相互独立。过期快照不预测重置。",
+      "breakdown": "账户明细",
+      "independent": "独立额度",
+      "account": "账户",
+      "snapshot": "快照",
+      "failed": "检查失败",
+      "refreshAccount": "刷新 {{name}}"
+    }
+  }
+}

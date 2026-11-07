@@ -1,0 +1,21 @@
+{
+  "redesign": {
+    "authFiles": {
+      "sections": "Разделы файлов авторизации",
+      "credentials": "Учётные данные",
+      "disablement": "Отключение моделей OAuth",
+      "aliases": "Псевдонимы моделей OAuth",
+      "select": "Выбрать",
+      "credential": "Учётные данные",
+      "quota": "Квота",
+      "updated": "Обновлено",
+      "actions": "Действия",
+      "actionsFor": "Действия для {{name}}",
+      "notReported": "Нет данных",
+      "enabled": "Включено",
+      "disabled": "Отключено",
+      "problem": "Проблема",
+      "shown": "Показано {{count}} из {{total}}"
+    }
+  }
+}

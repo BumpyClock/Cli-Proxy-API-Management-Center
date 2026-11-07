@@ -1,0 +1,138 @@
+[
+  {
+    "name": "quota",
+    "route": "#/quota",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "headings": [
+      "Quota Management"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 3,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "usage",
+    "route": "#/usage",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "headings": [
+      "Usage Statistics"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 2,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "plugins",
+    "route": "#/plugins",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "headings": [
+      "Plugin Management"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 0,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "plugin-store",
+    "route": "#/plugin-store",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "headings": [
+      "Plugin Store"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 0,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "quota",
+    "route": "#/quota",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [
+      "Quota Management"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 3,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "usage",
+    "route": "#/usage",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [
+      "Usage Statistics"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 2,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "plugins",
+    "route": "#/plugins",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [
+      "Plugin Management"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 0,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  },
+  {
+    "name": "plugin-store",
+    "route": "#/plugin-store",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [
+      "Plugin Store"
+    ],
+    "overflow": false,
+    "rawKeys": false,
+    "chartLines": 0,
+    "healthyShellBadges": 0,
+    "reducedMotion": false,
+    "image": null
+  }
+]

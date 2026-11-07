@@ -1,0 +1,12 @@
+{
+  "redesign": {
+    "providers": {
+      "configured": "已設定",
+      "setupTitle": "設定步驟",
+      "setupProvider": "連線至上游供應商",
+      "setupOAuth": "如果供應商使用 OAuth，請新增 OAuth 憑證",
+      "setupClient": "在設定面板中建立用戶端 API 金鑰",
+      "setupUsage": "從用戶端傳送請求，然後查看使用統計"
+    }
+  }
+}
