@@ -35,6 +35,8 @@ Claude quota snapshots and timelines prefer the account-wide five-hour and seven
 
 Quota timeline columns follow local calendar boundaries. Column widths reflect elapsed time, including 23-hour and 25-hour days, so date labels and quota bars stay aligned across daylight-saving changes.
 
+Timeline used-quota fills are measured over the full reported window before clipping to the visible date range. Usage outside that range does not create a visible fill, and projected windows do not reuse reported usage.
+
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification
