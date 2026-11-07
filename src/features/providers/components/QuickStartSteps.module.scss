@@ -1,0 +1,121 @@
+.setup {
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  background: var(--bg-primary);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  padding: $space-16;
+  border-bottom: $border-width-1 solid var(--border-color);
+  font-size: $font-size-14;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li + li {
+    border-top: $border-width-1 solid var(--border-color);
+  }
+
+  li:last-child .stepLink {
+    border-radius: 0 0 $radius-8 $radius-8;
+  }
+}
+
+.stepLink {
+  display: flex;
+  align-items: center;
+  gap: $space-12;
+  min-height: $size-52;
+  padding: $space-12 $space-16;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background: var(--bg-secondary);
+
+    .label {
+      text-decoration: underline;
+      text-underline-offset: $space-4;
+    }
+
+    .chevron {
+      color: var(--text-primary);
+    }
+  }
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
+  }
+}
+
+.number {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: $size-24;
+  height: $size-24;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-999;
+  color: var(--text-secondary);
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  font-size: $font-size-14;
+  font-weight: $font-weight-500;
+}
+
+.destination {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: $font-size-13;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+@media (max-width: #{$breakpoint-640}) {
+  .stepLink {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: $space-2;
+  }
+
+  .label {
+    flex-basis: calc(100% - $size-64);
+  }
+
+  .destination {
+    order: 3;
+    margin-left: $space-36;
+    flex-basis: calc(100% - $size-64);
+  }
+
+  .chevron {
+    order: 2;
+    margin-top: $space-4;
+  }
+
+  .number {
+    margin-top: (-$space-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepLink {
+    transition: none;
+  }
+}

@@ -14,6 +14,7 @@ import {
   resolvePluginAssetURL,
 } from '../pluginResources';
 import styles from './PluginInstallGateModal.module.scss';
+import { iconSize, size } from '@/design-system';
 
 interface PluginInstallGateModalProps {
   open: boolean;
@@ -29,7 +30,7 @@ function GateLogo({ src }: { src: string }) {
   return src && !failed ? (
     <img src={src} alt="" onError={() => setFailed(true)} />
   ) : (
-    <IconPlug size={26} />
+    <IconPlug size={iconSize['26']} />
   );
 }
 
@@ -100,7 +101,7 @@ export function PluginInstallGateModal({
           aria-label={t('plugin_store.open_repository')}
         >
           <span>{repoLabel}</span>
-          <IconExternalLink size={12} />
+          <IconExternalLink size={iconSize['12']} />
         </a>
       ) : (
         <p className={styles.slug}>{repoLabel}</p>
@@ -126,7 +127,7 @@ export function PluginInstallGateModal({
       <>
         {identity}
         <div className={styles.warningBanner}>
-          <IconAlertTriangle size={18} />
+          <IconAlertTriangle size={iconSize['18']} />
           <span>{t('plugin_store.gate_warning')}</span>
         </div>
         <ul className={styles.effects}>
@@ -193,7 +194,7 @@ export function PluginInstallGateModal({
       })}
       closeDisabled={installing}
       footer={footer}
-      width={520}
+      width={size['520']}
       className={styles.gateModal}
     >
       {body}

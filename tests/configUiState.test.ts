@@ -177,16 +177,17 @@ describe('buildHeaderMeta', () => {
     }
   });
 
-  test('clean state ends with a synced segment', () => {
+  test('clean state reports sync, then states that edits apply only when saved', () => {
     const meta = buildHeaderMeta(base);
-    expect(meta.map((segment) => segment.key)).toEqual(['fields', 'synced']);
+    expect(meta.map((segment) => segment.key)).toEqual(['fields', 'synced', 'save_hint']);
+    expect(meta[2]).toMatchObject({ labelKey: 'config_management.meta_save_hint', tone: 'muted' });
     expect(meta[0].count).toBe(58);
   });
 
   test('dirty and errors stack after the field count', () => {
     const status = resolveStatus(statusInput({ validationBlocked: true, dirty: true }));
     const meta = buildHeaderMeta({ ...base, status, dirtyCount: 3, errorCount: 2 });
-    expect(meta.map((segment) => segment.key)).toEqual(['fields', 'dirty', 'errors']);
+    expect(meta.map((segment) => segment.key)).toEqual(['fields', 'dirty', 'errors', 'save_hint']);
     expect(meta[1].count).toBe(3);
     expect(meta[1].tone).toBe('warning');
     expect(meta[2].count).toBe(2);
@@ -196,10 +197,10 @@ describe('buildHeaderMeta', () => {
   test('source dirty supersedes the visual dirty count', () => {
     const status = resolveStatus(statusInput({ dirty: true }));
     const meta = buildHeaderMeta({ ...base, status, dirtyCount: 3, sourceDirty: true });
-    expect(meta.map((segment) => segment.key)).toEqual(['fields', 'dirty_source']);
+    expect(meta.map((segment) => segment.key)).toEqual(['fields', 'dirty_source', 'save_hint']);
   });
 
-  test('yaml error shows without a synced tail', () => {
+  test('yaml error shows without a synced or save-model tail', () => {
     const status = resolveStatus(statusInput({ yamlError: true }));
     const meta = buildHeaderMeta({ ...base, status });
     expect(meta.map((segment) => segment.key)).toEqual(['fields', 'yaml_error']);

@@ -1,0 +1,115 @@
+@use '../../../styles/mixins' as *;
+
+/* Calm notices (status, info) share one bordered surface instead of stacking as banners. */
+.group {
+  display: flex;
+  flex-direction: column;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* One notice layout for every severity; the tone classes below only change emphasis. */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: $space-4 $space-10;
+  padding: $space-10 $space-14;
+  color: var(--text-primary);
+  font-size: $font-size-13;
+  line-height: $line-height-20px;
+
+  & + & {
+    border-top: $border-width-1 solid var(--border-color);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: $space-2;
+  color: var(--text-secondary);
+}
+
+.message {
+  flex: 1 1 $size-260;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  font-weight: $font-weight-650;
+}
+
+/* Blocking: plugins do nothing until the setting is on. Tinted, bordered and led by its fix. */
+.blocking {
+  border: $border-width-1 solid var(--warning-border);
+  border-left: $border-width-4 solid var(--warning-color);
+  border-radius: $radius-8;
+  background: var(--warning-bg);
+
+  .icon {
+    color: var(--warning-text);
+  }
+
+  .message {
+    font-weight: $font-weight-600;
+  }
+}
+
+/* Advisory: a standing trust caveat. Bordered and never dismissed, but calmer than a blocker. */
+.security {
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  background: var(--bg-secondary);
+
+  .icon {
+    color: var(--text-primary);
+  }
+}
+
+.action {
+  margin-left: $space-8;
+  white-space: nowrap;
+}
+
+.configLink {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-height: $size-32;
+  /* The target grows into the notice padding instead of pushing the text line down. */
+  margin-block: (-$space-6);
+  vertical-align: middle;
+  border-radius: $radius-4;
+  color: var(--primary-color);
+  font-weight: $font-weight-600;
+  text-decoration: underline;
+  text-underline-offset: $space-2;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:hover {
+    text-decoration-thickness: $border-width-2;
+  }
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
+  }
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+    margin-block: (-$space-12);
+  }
+}
+
+@include mobile {
+  .notice {
+    padding: $space-10 $space-12;
+  }
+}

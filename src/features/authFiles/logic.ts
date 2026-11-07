@@ -81,3 +81,85 @@ export const sortAuthFiles = (files: AuthFileItem[], mode: AuthFilesSortMode): A
   }
   return copy;
 };
+
+type RecentRequestWindow = {
+  blockDetails: ReadonlyArray<{ startTime: number; endTime: number }>;
+  totalSuccess: number;
+  totalFailure: number;
+};
+
+/** Window covered by the request mini-bars, and whether any request landed in it. */
+export const describeRecentRequests = (
+  data: RecentRequestWindow
+): { windowMinutes: number; hasRequests: boolean } => {
+  const first = data.blockDetails[0];
+  const last = data.blockDetails[data.blockDetails.length - 1];
+  return {
+    windowMinutes: first && last ? Math.round((last.endTime - first.startTime) / 60_000) : 0,
+    hasRequests: data.totalSuccess + data.totalFailure > 0,
+  };
+};
+
+/**
+ * What the Requests cell shows. `idle` means nothing to report, so the row renders one muted
+ * value. Totals come from the backend counters; the strip only renders when the recent window
+ * itself has traffic.
+ */
+export type RequestActivity =
+  | { kind: 'idle'; windowMinutes: number }
+  | {
+      kind: 'active';
+      success: number;
+      failure: number;
+      windowMinutes: number;
+      windowHasSignal: boolean;
+    };
+
+export const summarizeRequestActivity = (
+  totals: { success: number; failure: number },
+  window: RecentRequestWindow
+): RequestActivity => {
+  const { windowMinutes, hasRequests } = describeRecentRequests(window);
+  const hasTotals = totals.success + totals.failure > 0;
+  if (!hasTotals && !hasRequests) return { kind: 'idle', windowMinutes };
+  return {
+    kind: 'active',
+    success: hasTotals ? totals.success : window.totalSuccess,
+    failure: hasTotals ? totals.failure : window.totalFailure,
+    windowMinutes,
+    windowHasSignal: hasRequests,
+  };
+};
+
+export type ViewOptionsSummary = {
+  sortChanged: boolean;
+  pageSizeChanged: boolean;
+  /** Settings that differ from their defaults; the options trigger shows this count. */
+  changedCount: number;
+};
+
+/** Which list options differ from defaults, so the collapsed options control can say so. */
+export const summarizeViewOptions = (options: {
+  sortMode: AuthFilesSortMode;
+  pageSize: number;
+  defaultPageSize: number;
+}): ViewOptionsSummary => {
+  const sortChanged = options.sortMode !== 'default';
+  const pageSizeChanged = options.pageSize !== options.defaultPageSize;
+  return {
+    sortChanged,
+    pageSizeChanged,
+    changedCount: Number(sortChanged) + Number(pageSizeChanged),
+  };
+};
+
+/** Provider and rule totals for a per-provider OAuth rule map (disabled models or aliases). */
+export const countOAuthRules = (
+  rules: Record<string, readonly unknown[] | null | undefined>
+): { providers: number; rules: number } => {
+  const lists = Object.values(rules);
+  return {
+    providers: lists.length,
+    rules: lists.reduce<number>((total, list) => total + (list?.length ?? 0), 0),
+  };
+};

@@ -1,22 +1,22 @@
 .chipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: $space-4;
   min-width: 0;
   max-width: 100%;
-  padding: 4px 5px 4px 9px;
-  border-radius: $radius-full;
+  padding: $space-4 $space-5 $space-4 $space-9;
+  border-radius: $radius-9999;
   color: var(--text-primary);
-  font-family: $font-mono;
-  font-size: 11px;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
 }
 
 .label {
@@ -25,39 +25,45 @@
   white-space: nowrap;
 }
 
+/* Status prose beside the identifier, so sans rather than the chip's mono. */
 .detail {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  font-size: 10px;
+  font-family: $font-family-sans;
+  font-size: $font-size-12;
 }
 
 /* 显式勾选：实线 + primary 染色，读起来是「我选的」。 */
 .exact {
-  border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
-  background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-primary));
+  border: $border-width-1 solid color-mix(in srgb, var(--primary-color) $tint-0-45, var(--border-color));
+  background: color-mix(in srgb, var(--primary-color) $tint-0-08, var(--bg-primary));
 }
 
 /* 规则派生：虚线 = 「不是逐个挑的，是某条规则算出来的」。 */
 .wildcard {
-  border: 1px dashed color-mix(in srgb, var(--primary-color) 38%, var(--border-color));
+  border: $border-width-1 dashed color-mix(in srgb, var(--primary-color) $tint-0-38, var(--border-color));
   background: transparent;
   color: var(--text-secondary);
 }
 
 /* 目录外的精确规则：同样虚线，但更弱——它指向一个我们无法确认存在的模型。 */
 .unknown {
-  border: 1px dashed var(--border-color);
+  border: $border-width-1 dashed var(--border-color);
   background: transparent;
   color: var(--text-tertiary);
 }
 
+/* The visible circle stays 20px (::before); the button box is a 32px target (44px on touch)
+   whose negative margins keep the chip's size unchanged. */
 .remove {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: $size-32;
+  height: $size-32;
+  margin: (-$space-6) (-$space-6) (-$space-6) (-$space-2);
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -65,34 +71,67 @@
   color: var(--text-tertiary);
   cursor: pointer;
   transition:
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    background-color var(--dur-hover) var(--ease-out-strong),
+    color var(--dur-hover) var(--ease-out-strong),
+    transform var(--dur-press) var(--ease-out-strong);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: calc(50% - $space-10);
+    border-radius: 50%;
+    background: transparent;
+    transition: background-color var(--dur-hover) var(--ease-out-strong);
+  }
+
+  svg {
+    position: relative;
+  }
 
   &:active:not(:disabled) {
-    transform: scale(0.9);
+    transform: scale($motion-scale-0-9);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: (-$space-6);
+  }
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    width: $size-touch-target;
+    height: $size-touch-target;
+    margin: (-$space-12) (-$space-12) (-$space-12) (-$space-8);
+
+    &:focus-visible {
+      outline-offset: (-$space-12);
+    }
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: $opacity-0-5;
   }
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled) {
-      background: var(--bg-tertiary);
       color: var(--text-primary);
+
+      &::before {
+        background: var(--bg-tertiary);
+      }
     }
   }
 }
 
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+  .chipRow {
+    gap: $space-8;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .remove {
+  .remove,
+  .remove::before {
     transition: none;
   }
 

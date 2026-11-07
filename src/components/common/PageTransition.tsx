@@ -7,6 +7,15 @@ import {
   PageTransitionLayerContext,
   type LayerStatus,
 } from './PageTransitionLayer';
+import {
+  distance,
+  easingFunction,
+  motion,
+  motionScale,
+  motionSeconds,
+  opacity,
+  shadow,
+} from '@/design-system';
 import './PageTransition.scss';
 
 interface PageTransitionProps {
@@ -16,28 +25,30 @@ interface PageTransitionProps {
   scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
-// Premium personality: enter > exit, decelerate-in / accelerate-out.
-const VERTICAL_ENTER_DURATION = 0.36;
-const VERTICAL_EXIT_DURATION = 0.22;
-const VERTICAL_ENTER_DISTANCE = 28;
-const VERTICAL_EXIT_DISTANCE = 12;
-const REDUCED_MOTION_DURATION = 0.15;
+// Premium personality: enter > exit, decelerate-in / accelerate-out. Values: motion.page.
+const { verticalEnter, verticalExit, reduced, ios } = motion.page;
+const VERTICAL_ENTER_DURATION = motionSeconds(verticalEnter.duration);
+const VERTICAL_EXIT_DURATION = motionSeconds(verticalExit.duration);
+const VERTICAL_ENTER_DISTANCE = distance[verticalEnter.distance];
+const VERTICAL_EXIT_DISTANCE = distance[verticalExit.distance];
+const REDUCED_MOTION_DURATION = motionSeconds(reduced.duration);
 
-const IOS_TRANSITION_DURATION = 0.44;
-const IOS_ENTER_FROM_X_PERCENT = 100;
-const IOS_EXIT_TO_X_PERCENT_FORWARD = -22;
-const IOS_EXIT_TO_X_PERCENT_BACKWARD = 100;
-const IOS_ENTER_FROM_X_PERCENT_BACKWARD = -22;
-const IOS_BACKGROUND_SCALE = 0.96;
-const IOS_BACKGROUND_OPACITY = 0.5;
-const IOS_SHADOW_VALUE = '-20px 0 36px rgba(0, 0, 0, 0.20)';
+const IOS_TRANSITION_DURATION = motionSeconds(ios.duration);
+const IOS_ENTER_FROM_X_PERCENT = ios.enterFromPercent;
+const IOS_EXIT_TO_X_PERCENT_FORWARD = ios.exitToPercentForward;
+const IOS_EXIT_TO_X_PERCENT_BACKWARD = ios.exitToPercentBackward;
+const IOS_ENTER_FROM_X_PERCENT_BACKWARD = ios.enterFromPercentBackward;
+const IOS_BACKGROUND_SCALE = motionScale[ios.backgroundScale];
+const IOS_BACKGROUND_OPACITY = opacity[ios.backgroundOpacity];
+const IOS_SHADOW_VALUE = shadow['page-push'];
 
 // easeOutQuart: powerful but elegant deceleration for hero entrances.
-const easeOutQuart = (progress: number) => 1 - (1 - progress) ** 4;
+const easeOutQuart = easingFunction(verticalEnter.easing);
 // easeInQuad: gentle start, accelerates away — exits should not linger.
-const easeInQuad = (progress: number) => progress * progress;
+const easeInQuad = easingFunction(verticalExit.easing);
 // easeOutCubic: smooth Apple-style settle for iOS push/pop.
-const easeOutCubic = (progress: number) => 1 - (1 - progress) ** 3;
+const easeOutCubic = easingFunction(ios.easing);
+const easeReduced = easingFunction(reduced.easing);
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -281,7 +292,7 @@ export function PageTransition({
           animate(
             exitingLayerEl,
             { opacity: [1, 0] },
-            { duration: REDUCED_MOTION_DURATION, ease: easeOutCubic }
+            { duration: REDUCED_MOTION_DURATION, ease: easeReduced }
           )
         );
       }
@@ -290,7 +301,7 @@ export function PageTransition({
         animate(
           currentLayerEl,
           { opacity: [0, 1] },
-          { duration: REDUCED_MOTION_DURATION, ease: easeOutCubic }
+          { duration: REDUCED_MOTION_DURATION, ease: easeReduced }
         )
       );
     } else if (transitionVariant === 'ios') {

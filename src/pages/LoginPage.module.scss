@@ -9,131 +9,124 @@
   flex: 1;
   justify-content: center;
   align-items: flex-start;
-  padding: clamp(32px, 12vh, 120px) 16px 40px;
+  padding: clamp($space-32, 12vh, $space-120) $space-16 $space-40;
 }
 .formContent {
   width: 100%;
-  max-width: 420px;
+  max-width: $size-420;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: $space-20;
 }
 .identity {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $space-12;
   h1 {
-    font-size: 18px;
-    line-height: 1.4;
+    font-size: $font-size-18;
+    line-height: $line-height-1-4;
     margin: 0;
-    font-weight: 600;
+    font-weight: $font-weight-600;
   }
   p {
-    font-size: 13px;
+    font-size: $font-size-13;
     color: var(--text-secondary);
-    margin: 4px 0 0;
+    margin: $space-4 0 0;
   }
 }
 .logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: $size-44;
+  height: $size-44;
+  border-radius: $radius-8;
   flex-shrink: 0;
 }
 .loginCard {
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  padding: $space-20;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   :global(.form-group) {
     margin-bottom: 0;
   }
-}
-.loginHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 .titleRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: $space-12;
 }
 .title {
-  font-size: 14px;
-  font-weight: 600;
-}
-.subtitle {
-  display: none;
+  margin: 0;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
 }
 .languageSelect {
-  min-width: 108px;
+  min-width: $size-108;
 }
 .connectionBox {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
-.label,
+/* Same type as the form-group labels below it (Management Key). */
+.label {
+  color: var(--text-primary);
+  font-weight: $font-weight-600;
+}
 .toggleLabel {
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: $font-size-13;
 }
 .value {
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   overflow-wrap: anywhere;
-  padding: 10px;
+  padding: $space-10;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
 }
 .hint {
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-  margin: -6px 0 0;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
+  margin: (-$space-6) 0 0;
 }
 .toggleAdvanced {
   display: flex;
   align-items: center;
 }
 .errorBox {
-  padding: 10px;
-  border: 1px solid var(--error-color);
-  border-radius: 6px;
+  padding: $space-10;
+  border: $border-width-1 solid var(--error-color);
+  border-radius: $radius-6;
   color: var(--error-color);
-  font-size: 13px;
+  font-size: $font-size-13;
   overflow-wrap: anywhere;
 }
 .splashContent {
   display: flex;
-  max-width: 420px;
+  max-width: $size-420;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: $space-16;
 }
 .splashLogo {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: $size-44;
+  height: $size-44;
+  border-radius: $radius-8;
 }
 .splashTitle {
-  font-size: 22px;
+  font-size: $font-size-22;
   margin: 0;
   text-align: center;
 }
-.splashSubtitle {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
 .splashLoader {
-  width: 120px;
-  height: 3px;
+  width: $size-120;
+  height: $size-3;
   background: var(--border-color);
   overflow: hidden;
 }
@@ -141,7 +134,7 @@
   width: 100%;
   height: 100%;
   background: var(--accent-color);
-  animation: loading 1.2s ease-in-out infinite;
+  animation: loading $duration-1200 $ease-in-out infinite;
 }
 @keyframes loading {
   from {
@@ -152,15 +145,15 @@
   }
 }
 .container :focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: $space-2;
 }
-@media (max-width: 480px) {
+@media (max-width: #{$breakpoint-480}) {
   .formPanel {
-    padding-top: 40px;
+    padding-top: $space-40;
   }
   .loginCard {
-    padding: 16px;
+    padding: $space-16;
   }
 }
 @media (prefers-reduced-motion: reduce) {

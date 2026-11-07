@@ -3,34 +3,41 @@
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px 24px;
+  gap: $space-12 $space-24;
   margin: 0;
 }
 
 .heading {
   min-width: 0;
-  flex: 1 1 240px;
+  flex: 1 1 $size-240;
 
   h1 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 22px;
-    font-weight: 650;
-    line-height: 28px;
-    letter-spacing: -0.025em;
+    font-size: $font-size-22;
+    font-weight: $font-weight-650;
+    line-height: $line-height-28px;
+    letter-spacing: (-$letter-spacing-0-025);
+  }
+
+  /* Desktop: the title line matches the 36px action height so actions center on it. */
+  @media (min-width: #{$breakpoint-mobile + 1px}) {
+    h1:not(.hero) {
+      line-height: $line-height-36px;
+    }
   }
 
   .hero {
-    font-size: 30px;
-    line-height: 36px;
+    font-size: $font-size-30;
+    line-height: $line-height-36px;
   }
 }
 
 .description {
-  margin-top: 6px;
+  margin-top: $space-6;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   max-width: 80ch;
 }
 
@@ -38,12 +45,13 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px 12px;
-  margin-top: 6px;
+  gap: $space-6 $space-12;
+  margin-top: $space-6;
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
+  /* Status prose is sans; callers wrap literal values (paths, versions) in their own mono span. */
+  font-size: $font-size-12;
+  font-variant-numeric: tabular-nums;
+  line-height: $line-height-1-5;
 }
 
 .actions {
@@ -51,7 +59,14 @@
   align-items: center;
   flex-wrap: wrap;
   flex: 0 0 auto;
-  gap: 8px;
+  gap: $space-8;
+
+  /* One header-action size on every page: small variants never shrink in this slot. */
+  :global(.btn.btn-sm) {
+    min-height: $size-36;
+    padding: $space-7 $space-12;
+    font-size: $font-size-13;
+  }
 }
 
 .detail {
@@ -59,13 +74,60 @@
   min-width: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: #{$breakpoint-mobile}) {
   .header {
-    gap: 12px;
+    gap: $space-12;
+  }
+
+  /* Phones: the title and a single action share the first row; metadata and description take
+     the full width beneath. Two or more actions drop to their own row, and so does a single
+     action that would squeeze the title below its longest word (long translated titles). */
+  .header {
+    align-items: center;
+    gap: $space-6 $space-12;
+  }
+
+  .heading {
+    display: contents;
+  }
+
+  .heading h1 {
+    flex: 1 1 auto;
+    order: 0;
+  }
+
+  .actions {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .description,
+  .meta,
+  .detail {
+    flex: 1 1 100%;
+    order: 2;
+    margin-top: 0;
+  }
+
+  /* Two or more actions, or a page that opts in (stackActionsOnPhone), use their own row
+     after the description and metadata. */
+  .header:has(.actions > :nth-child(2), .actions :is(button, a):nth-of-type(2)) .actions,
+  .stackActions .actions {
+    flex: 1 1 100%;
+    order: 3;
+    margin-left: 0;
   }
 
   .heading .hero {
-    font-size: 24px;
-    line-height: 30px;
+    font-size: $font-size-24;
+    line-height: $line-height-30px;
+  }
+}
+
+/* The header-action size above outranks the global `.btn` touch rule, so restate the shared
+   touch target here for phones and for coarse pointers at any width (tablets). */
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+  .actions :global(.btn.btn-sm) {
+    min-height: $size-touch-target;
   }
 }

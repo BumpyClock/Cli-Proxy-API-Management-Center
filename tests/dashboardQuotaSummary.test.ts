@@ -83,23 +83,59 @@ describe('dashboard quota summary rendering', () => {
     expect(markup).toContain('Remaining quota');
     expect(markup).toContain('<strong>25%</strong>');
     expect(markup).toContain('<strong>80%</strong>');
-    expect(markup).toContain('first.json · Weekly');
-    expect(markup).toContain('second.json · Weekly');
-    expect(markup).toContain('aria-pressed="true"');
-    expect(markup).toMatch(/aria-hidden="true">1<\/span>/);
-    expect(markup).toMatch(/aria-hidden="true">2<\/span>/);
-    expect(markup).toContain(i18n.t('redesign.chart.table'));
+    expect(markup).toContain('Claude · first.json · Weekly');
+    expect(markup).toContain('Claude · second.json · Weekly');
+    // Per-account bars lead; least remaining first, numbered like the chart's lines.
+    const list = markup.match(/<ul[^>]*aria-label="Remaining by account"[\s\S]*?<\/ul>/)?.[0];
+    const rows = list?.match(/<li[\s\S]*?<\/li>/g) ?? [];
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toContain('first.json');
+    expect(rows[0]).toMatch(/aria-hidden="true">1<\/span>/);
+    expect(rows[1]).toMatch(/aria-hidden="true">2<\/span>/);
+    expect(rows[0]).toContain('Low');
+    expect(rows[1]).not.toContain('Low');
+    // Line keys only make sense beside a visible chart; the projection starts closed.
+    expect(list).not.toContain('<circle');
+    expect(list).not.toContain('stroke-dasharray');
+    // The compact summary has no isolation toggles or per-account refresh.
+    expect(markup).not.toContain('aria-pressed=');
+    expect(list).not.toContain('<button');
+    // The forecast sits behind a closed disclosure and mounts only when opened.
+    expect(markup).toContain('<summary>Show 7-day projection</summary>');
+    expect(markup).not.toMatch(/<details[^>]*open/);
+    expect(markup).not.toContain('recharts');
+    expect(markup).not.toContain(i18n.t('redesign.chart.table'));
     expect(markup).not.toContain('<table');
     expect(markup).not.toContain('105%');
     expect(markup).toContain('2 of 2 eligible accounts measured');
     expect(markup).toContain('Oldest displayed snapshot');
     expect(markup).toContain(`dateTime="${new Date(now - 120_000).toISOString()}"`);
     expect(markup).toContain('href="/quota"');
-    expect(markup).toContain('No automatic quota polling.');
-    expect(markup).toContain('No usage history.');
     expect(markup).not.toContain('never-show-this-secret');
     expect(markup).not.toContain('redesign.');
     expect(markup).not.toContain('NaN');
+  });
+
+  test('a large fleet shows the six lowest accounts and says how many exist', () => {
+    const fleet = Array.from({ length: 8 }, (_, index) => ({
+      name: `fleet-${index}.json`,
+      provider: 'claude',
+    }));
+    useQuotaStore
+      .getState()
+      .setClaudeQuota(
+        Object.fromEntries(fleet.map((file, index) => [file.name, snapshot(10 + index * 10)]))
+      );
+    const markup = render(fleet);
+    const list = markup.match(/<ul[^>]*aria-label="Remaining by account"[\s\S]*?<\/ul>/)?.[0];
+    const rows = list?.match(/<li[\s\S]*?<\/li>/g) ?? [];
+    expect(rows).toHaveLength(6);
+    expect(rows[0]).toContain('<strong>10%</strong>');
+    expect(rows[5]).toContain('<strong>60%</strong>');
+    expect(list).not.toContain('fleet-6.json');
+    expect(list).not.toContain('fleet-7.json');
+    expect(markup).toContain('Lowest 6 of 8 accounts shown');
+    expect(markup).toContain('8 of 8 eligible accounts measured');
   });
 
   test('missing, failed, expired and successful-but-unreported accounts never become zero', () => {
@@ -162,7 +198,7 @@ describe('dashboard quota summary rendering', () => {
     expect(markup).toContain('<strong>35%</strong>');
     expect(markup).toContain('Checking eligible accounts.');
     expect(markup).toContain('Cached snapshots stay visible.');
-    expect(markup).toContain('disabled=""');
+    expect(markup).toContain('aria-disabled="true"');
   });
 
   test('failed refresh keeps and labels stale measurements without projecting a reset', () => {
@@ -175,7 +211,7 @@ describe('dashboard quota summary rendering', () => {
     });
     const markup = render();
     expect(markup).toContain('<strong>35%</strong>');
-    expect(markup).toContain('first.json · Weekly · Stale');
+    expect(markup).toContain('Claude · first.json · Weekly · Stale snapshot');
     expect(markup).toContain('Quota checks failed');
     expect(markup).not.toContain('<td>100%</td>');
     expect(markup).toContain(`dateTime="${new Date(cached.checkedAt).toISOString()}"`);
@@ -193,7 +229,7 @@ describe('dashboard quota summary rendering', () => {
     expect(markup).toContain('2 skipped');
     expect(markup).toContain('No eligible accounts.');
     expect(markup).not.toContain('<strong>90%</strong>');
-    expect(markup).toContain('disabled=""');
+    expect(markup).toContain('aria-disabled="true"');
   });
 
   test('production locales interpolate eligible and skipped coverage counts', async () => {
@@ -241,7 +277,7 @@ describe('dashboard quota summary rendering', () => {
   test('waiting and disconnected states do not advertise successful fresh checks', () => {
     const waiting = render([], false);
     expect(waiting).toContain('Waiting for credential files.');
-    expect(waiting).toContain('disabled=""');
+    expect(waiting).toContain('aria-disabled="true"');
     expect(waiting).not.toContain('<time');
     useQuotaStore.getState().setClaudeQuota({ 'first.json': snapshot(25) });
     connectionStatus = 'disconnected';

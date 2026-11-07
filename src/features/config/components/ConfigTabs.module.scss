@@ -6,7 +6,7 @@
   display: flex;
   align-items: stretch;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
   overflow-x: auto;
   scrollbar-width: none;
   min-width: 0;
@@ -21,60 +21,60 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: $space-7;
   flex-shrink: 0;
   border: 0;
   background: none;
   cursor: pointer;
-  padding: 10px 12px;
-  min-height: 40px;
+  padding: $space-10 $space-12;
+  min-height: $size-40;
   text-align: left;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 550;
+  border-radius: $radius-6;
+  font-size: $font-size-13;
+  font-weight: $font-weight-400;
   color: var(--text-secondary);
   white-space: normal;
   transition:
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    color var(--dur-hover) var(--ease-out-strong),
+    background-color var(--dur-hover) var(--ease-out-strong);
 
   &::after {
     content: '';
     position: absolute;
     left: 0;
-    top: 6px;
-    bottom: 6px;
-    width: 2px;
-    border-radius: $radius-full;
+    top: $space-6;
+    bottom: $space-6;
+    width: $size-2;
+    border-radius: $radius-9999;
     background: transparent;
-    transition: background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    transition: background-color var(--dur-hover) var(--ease-out-strong);
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: $opacity-0-55;
   }
 
   &:active:not(:disabled) {
-    transform: translateY(0.5px);
+    transform: translateY($distance-0-5);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: -2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .tab:hover:not(:disabled) {
     color: var(--text-primary);
-    background: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+    background: color-mix(in srgb, var(--bg-tertiary) $tint-0-55, transparent);
   }
 }
 
 .tabActive {
   color: var(--text-primary);
-  font-weight: 650;
+  font-weight: $font-weight-600;
 
   &::after {
     background: var(--accent-color);
@@ -98,28 +98,28 @@
 .tabLabel {
   min-width: 0;
   overflow-wrap: anywhere;
-  line-height: 1.4;
+  line-height: $line-height-1-4;
 }
 
 /* 校验错误徽章：mono 数字，失败色（数据墨水走 --viz-*） */
 .tabBadge {
   flex-shrink: 0;
-  font-family: $font-mono;
-  font-size: 10.5px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
-  line-height: 1.6;
+  line-height: $line-height-1-6;
   color: var(--viz-failure);
-  padding: 0 6px;
-  border-radius: $radius-full;
-  background: color-mix(in srgb, var(--viz-failure) 12%, transparent);
+  padding: 0 $space-6;
+  border-radius: $radius-9999;
+  background: color-mix(in srgb, var(--viz-failure) $tint-0-12, transparent);
 }
 
 /* 待保存脏点：6px 琥珀 */
 .tabDirtyDot {
-  width: 6px;
-  height: 6px;
-  border-radius: $radius-full;
+  width: $size-6;
+  height: $size-6;
+  border-radius: $radius-9999;
   background: var(--amber-color);
   flex-shrink: 0;
 }
@@ -141,30 +141,53 @@
 .mobilePicker {
   display: none;
 }
-@media (max-width: 900px) {
+.mobileSelectWrap {
+  position: relative;
+  display: block;
+}
+.mobileSelectChevron {
+  position: absolute;
+  top: 50%;
+  right: $space-14;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+@media (max-width: #{$breakpoint-900}) {
   .tabs {
     display: none;
   }
   .mobilePicker {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: $space-6;
     width: 100%;
-    font-size: 13px;
+    font-size: $font-size-13;
     color: var(--text-secondary);
     select {
       width: 100%;
-      min-height: 44px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 12px;
+      min-height: $size-touch-target;
+      border: $border-width-1 solid var(--border-primary);
+      border-radius: $radius-8;
+      padding: $space-8 $space-40 $space-8 $space-12;
       background: var(--bg-primary);
+      box-shadow: var(--shadow);
       color: var(--text-primary);
       font: inherit;
+      font-weight: $font-weight-500;
+      appearance: none;
+      cursor: pointer;
+    }
+    select:hover:not(:disabled) {
+      border-color: var(--border-hover);
+    }
+    select:disabled {
+      cursor: not-allowed;
+      opacity: $opacity-0-6;
     }
     select:focus-visible {
-      outline: 2px solid var(--focus-ring);
-      outline-offset: 2px;
+      outline: $border-width-2 solid var(--focus-ring);
+      outline-offset: $space-2;
     }
   }
 }

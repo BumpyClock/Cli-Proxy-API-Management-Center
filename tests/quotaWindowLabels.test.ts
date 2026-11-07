@@ -64,7 +64,7 @@ const locales = [
   { language: 'ru', bundle: ru, meta: 'Недельная квота', copilot: 'Премиум-взаимодействия' },
 ];
 
-describe('quota breakdown window labels from production locales', () => {
+describe('quota account list window labels from production locales', () => {
   for (const { language, bundle, meta, copilot } of locales) {
     test(`Meta and Copilot keys resolve in ${language}; upstream literal labels survive`, async () => {
       // No shared singleton, staging fragments or cross-language fallback can mask a missing key.
@@ -90,16 +90,22 @@ describe('quota breakdown window labels from production locales', () => {
           })
         )
       );
-      expect(markup).toContain(`<small>${meta}</small>`);
-      expect(markup).toContain(`<small>${copilot}</small>`);
-      expect(markup).toContain(renderToStaticMarkup(createElement('small', null, literalLabel)));
+      // Each row of the account list names its provider window next to the provider.
+      const list = markup.match(/<ul[^>]*id="quota-accounts-list"[\s\S]*?<\/ul>/)?.[0] ?? '';
+      const rows = list.match(/<li[\s\S]*?<\/li>/g) ?? [];
+      expect(rows).toHaveLength(3);
+      const texts = rows.map((row) => row.replace(/<[^>]+>/g, ''));
+      expect(texts.some((text) => text.includes(` · ${meta} · `))).toBe(true);
+      expect(texts.some((text) => text.includes(` · ${copilot} · `))).toBe(true);
+      const literal = renderToStaticMarkup(createElement('span', null, literalLabel));
+      expect(texts.some((text) => text.includes(` · ${literal.slice(6, -7)} · `))).toBe(true);
       expect(markup).not.toContain('meta_quota.weekly');
       expect(markup).not.toContain('copilot_quota.premium_interactions');
       expect(markup).not.toContain('redesign.quota.');
       expect(markup).not.toContain('quota_management.');
       expect(markup).not.toContain('{{');
-      expect(markup.match(/<table\b/g)).toHaveLength(1);
-      expect(markup.match(/<tr>/g)).toHaveLength(4);
+      // Exact values stay in the chart's collapsed data table, not a second scrolling table.
+      expect(markup).not.toContain('<table');
     });
   }
 });

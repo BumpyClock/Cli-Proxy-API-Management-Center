@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { IconChevronLeft } from '@/components/ui/icons';
 import styles from './SecondaryScreenShell.module.scss';
+import { iconSize } from '@/design-system';
 
 export type SecondaryScreenShellProps = {
   title: ReactNode;
@@ -52,7 +53,7 @@ export const SecondaryScreenShell = forwardRef<HTMLDivElement, SecondaryScreenSh
               aria-label={resolvedBackAriaLabel}
             >
               <span className={styles.backIcon}>
-                <IconChevronLeft size={18} />
+                <IconChevronLeft size={iconSize['18']} />
               </span>
               <span className={styles.backText}>{backLabel}</span>
             </Button>
@@ -67,7 +68,7 @@ export const SecondaryScreenShell = forwardRef<HTMLDivElement, SecondaryScreenSh
 
         {isLoading ? (
           <div className={styles.loadingState}>
-            <LoadingSpinner size={16} />
+            <LoadingSpinner size={iconSize['16']} />
             <span>{loadingLabel}</span>
           </div>
         ) : (

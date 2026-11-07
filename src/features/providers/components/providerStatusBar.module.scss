@@ -5,14 +5,14 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   width: 100%;
   max-width: 100%;
 }
 
 .statusBlocks {
   display: flex;
-  gap: 2px;
+  gap: $space-2;
   width: 100%;
   min-width: 0;
   position: relative;
@@ -28,16 +28,16 @@
 
 .statusBlock {
   width: 100%;
-  height: 6px;
-  border-radius: 2px;
+  height: $size-6;
+  border-radius: $radius-2;
   transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
+    transform $duration-150 $ease-default,
+    opacity $duration-150 $ease-default;
 
   .statusBlockWrapper:hover &,
   .statusBlockWrapper.statusBlockActive & {
-    transform: scaleY(1.8);
-    opacity: 0.9;
+    transform: scaleY($motion-scale-1-8);
+    opacity: $opacity-0-9;
   }
 }
 
@@ -47,17 +47,17 @@
 
 .statusTooltip {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + $space-8);
   left: 50%;
   transform: translateX(-50%);
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  line-height: 1.5;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
+  padding: $space-6 $space-10;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: $shadow-status-bar;
   z-index: $z-dropdown;
   pointer-events: none;
   color: var(--text-primary);
@@ -68,7 +68,7 @@
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border: 5px solid transparent;
+    border: $border-width-5 solid transparent;
     border-top-color: var(--bg-primary);
   }
 
@@ -78,7 +78,7 @@
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border: 6px solid transparent;
+    border: $border-width-6 solid transparent;
     border-top-color: var(--border-color);
   }
 }
@@ -89,7 +89,7 @@
 
   &::after,
   &::before {
-    left: 8px;
+    left: $space-8;
     transform: none;
   }
 }
@@ -102,7 +102,7 @@
   &::after,
   &::before {
     left: auto;
-    right: 8px;
+    right: $space-8;
     transform: none;
   }
 }
@@ -110,51 +110,51 @@
 .tooltipTime {
   color: var(--text-secondary);
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: $space-2;
 }
 
 .tooltipStats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .tooltipSuccess {
-  color: var(--success-color, #22c55e);
+  color: var(--success-color);
 }
 
 .tooltipFailure {
-  color: var(--danger-color, #ef4444);
+  color: var(--danger-color);
 }
 
 .tooltipRate {
   color: var(--text-secondary);
-  margin-left: 2px;
+  margin-left: $space-2;
 }
 
 .statusRate {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  font-size: 12px;
-  font-weight: 600;
+  min-width: $size-48;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
   white-space: nowrap;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: $space-2 $space-6;
+  border-radius: $radius-4;
   background: var(--bg-tertiary);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .statusRateHigh {
-  color: var(--success-badge-text, #065f46);
-  background: var(--success-badge-bg, #d1fae5);
+  color: var(--success-badge-text);
+  background: var(--success-badge-bg);
 }
 
 .statusRateMedium {
-  color: var(--warning-text, #92400e);
-  background: var(--warning-bg, #fef3c7);
+  color: var(--warning-text);
+  background: var(--warning-bg);
 }
 
 .statusRateLow {

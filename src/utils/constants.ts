@@ -47,4 +47,5 @@ export const LANGUAGE_LABEL_KEYS: Record<Language, string> = {
 export const SUPPORTED_LANGUAGES = LANGUAGE_ORDER;
 
 // 通知持续时间
+// design-tokens: allow notification dismissal policy, not an animation
 export const NOTIFICATION_DURATION_MS = 3000;

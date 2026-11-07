@@ -1,0 +1,126 @@
+@use '../../styles/mixins' as *;
+
+.track {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  max-width: 100%;
+  padding: $space-2;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-10;
+  background: var(--bg-tertiary);
+  flex-wrap: wrap;
+}
+
+.scrollable {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+
+  .segment {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-6;
+  flex-shrink: 0;
+  min-height: $size-32;
+  padding: $space-4 $space-12;
+  border: 0;
+  border-radius: $radius-8;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: $font-size-13;
+  font-weight: $font-weight-550;
+  line-height: $line-height-1-3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-hover) var(--ease-out-strong),
+    background-color var(--dur-hover) var(--ease-out-strong),
+    box-shadow var(--dur-hover) var(--ease-out-strong);
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: $opacity-0-55;
+  }
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: (-$space-2);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .segment:hover:not(:disabled):not(.selected) {
+    color: var(--text-primary);
+  }
+}
+
+.selected {
+  color: var(--text-primary);
+  font-weight: $font-weight-650;
+  background: var(--floating-surface);
+  box-shadow: $shadow-segmented-thumb;
+
+  /* A disabled group still reports the current choice at full contrast. */
+  &:disabled {
+    opacity: 1;
+  }
+}
+
+.danger.selected {
+  color: var(--danger-color);
+  background: color-mix(in srgb, var(--danger-color) $tint-0-12, var(--floating-surface));
+}
+
+/* Dark track and raised surface are the same token, and shadows vanish on dark surfaces, so the
+   selected segment takes a lifted, accent-tinted fill and an accent edge (>= 3:1 on the track). */
+:global([data-theme='dark']) .selected {
+  background: color-mix(in srgb, var(--accent-color) $tint-0-14, var(--bg-hover));
+  box-shadow: $shadow-inset-accent;
+}
+
+:global([data-theme='dark']) .danger.selected {
+  background: color-mix(in srgb, var(--danger-color) $tint-0-1, var(--bg-tertiary));
+  box-shadow: $shadow-inset-danger;
+}
+
+.label {
+  line-height: inherit;
+}
+
+.count {
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+  .segment {
+    min-height: $size-touch-target;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment {
+    transition: none;
+  }
+}

@@ -1,4 +1,5 @@
 import type { QuotaProviderType } from './providers/types';
+import { motion } from '@/design-system';
 
 /** tab 顺序 = 旧页五分区的纵向顺序，'全部' tab 下卡片也按此分组排列。 */
 export const QUOTA_TAB_ORDER: readonly QuotaProviderType[] = [
@@ -24,4 +25,4 @@ export const QUOTA_SORT_MODES = ['default', 'soonest'] as const;
 export type QuotaSortMode = (typeof QUOTA_SORT_MODES)[number];
 
 /** 与 useRevealGroup 的 GROUP_MAX_TOTAL 一致：卡片级联总预算 360ms。 */
-export const CARD_ENTRANCE_BUDGET_MS = 360;
+export const CARD_ENTRANCE_BUDGET_MS = motion.cascade['quota-cards'].budget;

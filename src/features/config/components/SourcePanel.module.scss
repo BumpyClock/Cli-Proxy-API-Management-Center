@@ -5,10 +5,10 @@
 .searchBar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1 1 240px;
+  gap: $space-8;
+  flex: 1 1 $size-240;
   min-width: 0;
-  max-width: 560px;
+  max-width: $size-560;
 }
 
 .searchInputWrapper {
@@ -25,30 +25,30 @@
 }
 
 .searchInput {
-  height: 38px !important;
-  border-radius: 10px !important;
-  font-size: 13px !important;
-  padding-right: 128px !important;
+  height: $size-38 !important;
+  border-radius: $radius-10 !important;
+  font-size: $font-size-13 !important;
+  padding-right: $space-128 !important;
 }
 
 .searchRight {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .searchCount {
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  padding: 0 8px;
-  border-radius: $radius-full;
+  min-height: $size-26;
+  padding: 0 $space-8;
+  border-radius: $radius-9999;
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 11.5px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  background: color-mix(in srgb, var(--text-primary) $tint-0-06, transparent);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -58,46 +58,56 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: $radius-full;
-  border: 1px solid var(--text-primary);
+  position: relative;
+  width: $size-32;
+  height: $size-32;
+  border-radius: $radius-9999;
+  border: $border-width-1 solid var(--text-primary);
   background: var(--text-primary);
   color: var(--bg-secondary);
   transition:
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
+    transform var(--dur-press) var(--ease-out-strong),
     background-color $transition-fast,
     border-color $transition-fast,
     opacity $transition-fast;
 
   &:active:not(:disabled) {
-    transform: scale(0.94);
+    transform: scale($motion-scale-0-94);
   }
 
   &:disabled {
-    opacity: 0.45;
+    opacity: $opacity-0-45;
     cursor: not-allowed;
+  }
+
+  /* Touch: extend the hit area to 44px without growing the glyph inside the field. */
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: (-$space-6);
+    }
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .searchButton:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--text-primary) 86%, var(--bg-secondary));
+    background: color-mix(in srgb, var(--text-primary) $tint-0-86, var(--bg-secondary));
     border-color: transparent;
   }
 }
 
 .searchActions {
   display: flex;
-  gap: 6px;
+  gap: $space-6;
   flex-shrink: 0;
 
   button {
-    min-width: 38px;
-    width: 38px;
-    height: 38px;
+    min-width: $size-38;
+    width: $size-38;
+    height: $size-38;
     padding: 0 !important;
-    border-radius: 10px;
+    border-radius: $radius-10;
   }
 }
 
@@ -106,21 +116,21 @@
 .editorWrapper {
   width: 100%;
   flex: 0 0 auto;
-  height: clamp(500px, 70vh, 1040px);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
+  height: clamp($size-500, 70vh, $size-1040);
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-14;
   overflow: hidden;
   background: var(--bg-primary);
 
   @supports (height: 100dvh) {
-    height: clamp(500px, 70dvh, 1040px);
+    height: clamp($size-500, 70dvh, $size-1040);
   }
 
   :global {
     .cm-editor {
       height: 100%;
-      font-size: 13px;
-      font-family: $font-mono;
+      font-size: $font-size-13;
+      font-family: $font-family-mono;
       background: transparent;
     }
 
@@ -132,32 +142,32 @@
     }
 
     .cm-gutters {
-      border-right: 1px solid var(--border-color);
-      background: color-mix(in srgb, var(--bg-secondary) 86%, transparent);
+      border-right: $border-width-1 solid var(--border-color);
+      background: color-mix(in srgb, var(--bg-secondary) $tint-0-86, transparent);
     }
 
     .cm-lineNumbers .cm-gutterElement {
-      padding: 0 8px 0 12px;
-      min-width: 40px;
+      padding: 0 $space-8 0 $space-12;
+      min-width: $size-40;
       color: var(--text-muted);
     }
 
     .cm-activeLine,
     .cm-activeLineGutter {
-      background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+      background: color-mix(in srgb, var(--text-primary) $tint-0-05, transparent);
     }
 
     .cm-selectionMatch {
-      background: rgba(224, 170, 20, 0.24);
+      background: rgba($color-legacy-amber, $opacity-0-24);
     }
 
     .cm-searchMatch {
-      background: rgba(224, 170, 20, 0.32);
-      outline: 1px solid rgba(224, 170, 20, 0.48);
+      background: rgba($color-legacy-amber, $opacity-0-32);
+      outline: $border-width-1 solid rgba($color-legacy-amber, $opacity-0-48);
     }
 
     .cm-searchMatch-selected {
-      background: rgba(198, 87, 70, 0.32);
+      background: rgba($color-legacy-warning, $opacity-0-32);
     }
   }
 }
@@ -182,9 +192,9 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: #{$breakpoint-480}) {
   .searchInput {
-    padding-right: 108px !important;
+    padding-right: $space-108 !important;
   }
 }
 

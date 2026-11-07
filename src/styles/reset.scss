@@ -20,11 +20,11 @@ body {
 
 body {
   margin: 0;
-  font-family: $font-family;
-  font-size: 14px;
+  font-family: $font-family-sans;
+  font-size: $font-size-14;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: $line-height-1-5;
 }
 
 #root {
@@ -37,6 +37,12 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+/* Browser defaults vary (and fade in dark); --text-tertiary is >=4.9:1 on field surfaces. */
+::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
 }
 
 a {

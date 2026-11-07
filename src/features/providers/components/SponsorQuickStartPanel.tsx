@@ -2,15 +2,82 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useNotificationStore } from '@/stores';
+import { Button } from '@/components/ui/Button';
 import { IconCheckCircle2, IconExternalLink, IconLoader2, IconPlus } from '@/components/ui/icons';
-import { PROVIDER_LOGOS } from '../brandLogos';
-import { APIKEY_FUN_AFFILIATE_URL, APIKEY_FUN_DASHBOARD_URL } from '../sponsor';
+import {
+  APIKEY_FUN_AFFILIATE_URL,
+  APIKEY_FUN_DASHBOARD_URL,
+  APIKEY_FUN_DISPLAY_NAME,
+} from '../sponsor';
 import { isSponsorPartialMutationError } from '../sponsorMutationRecovery';
+import { getProviderCreateLabel } from '../createLabel';
 import type { ProviderEntryFormInput, ProviderResource } from '../types';
 import type { UseProviderWorkbenchResult } from '../useProviderWorkbench';
 import { SponsorProviderForm } from '../sheets/forms/SponsorProviderForm';
 import formStyles from '../sheets/forms/sharedForm.module.scss';
 import styles from './SponsorQuickStartPanel.module.scss';
+import { iconSize } from '@/design-system';
+
+/**
+ * Not configured: a plain optional entry point. No logo, promotion or sign-up link; the
+ * sponsored sign-up link lives with the other optional resources on System.
+ */
+export function QuickStartOptionalKey({
+  titleId,
+  disabled,
+  onAdd,
+}: {
+  titleId: string;
+  disabled: boolean;
+  onAdd: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section className={styles.optional} aria-labelledby={titleId}>
+      <div className={styles.optionalText}>
+        <h2 className={styles.title} id={titleId}>
+          {t('providersPage.quickStart.optionalKeyTitle', { provider: APIKEY_FUN_DISPLAY_NAME })}
+        </h2>
+        <p className={styles.optionalHint}>
+          {t('providersPage.quickStart.optionalKeyHint', { provider: APIKEY_FUN_DISPLAY_NAME })}
+        </p>
+      </div>
+      <Button variant="secondary" onClick={onAdd} disabled={disabled}>
+        <IconPlus size={iconSize['16']} aria-hidden="true" />
+        {getProviderCreateLabel(t, 'apikeyFun')}
+      </Button>
+    </section>
+  );
+}
+
+/**
+ * The one quiet link key entry needs: the account dashboard once configured, otherwise where to
+ * get a key. The latter is an affiliate link, so it is marked and labelled sponsored.
+ */
+export function QuickStartAccountLink({ configured }: { configured: boolean }) {
+  const { t } = useTranslation();
+  const href = configured ? APIKEY_FUN_DASHBOARD_URL : APIKEY_FUN_AFFILIATE_URL;
+  const label = configured
+    ? t('providersPage.sponsor.dashboardLink')
+    : t('providersPage.quickStart.getKey');
+  return (
+    <>
+      <a
+        className={styles.accountLink}
+        href={href}
+        target="_blank"
+        rel={configured ? 'noopener noreferrer' : 'noopener noreferrer sponsored'}
+      >
+        <span>{label}</span>
+        <IconExternalLink size={iconSize['13']} aria-hidden="true" />
+        <span className={styles.visuallyHidden}>{t('providersPage.quickStart.newTab')}</span>
+      </a>
+      {configured ? null : (
+        <span className={styles.sponsoredTag}>{t('providersPage.sponsor.sponsoredLabel')}</span>
+      )}
+    </>
+  );
+}
 
 interface SponsorQuickStartPanelProps {
   resource: ProviderResource | null;
@@ -26,6 +93,7 @@ export function SponsorQuickStartPanel({
   const { t } = useTranslation();
   const { showNotification } = useNotificationStore();
   const formId = useId();
+  const titleId = useId();
   const [submitting, setSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
@@ -34,7 +102,6 @@ export function SponsorQuickStartPanel({
   const formMutating = submitting || mutationDisabled || workbench.mutating;
   const mode = resource ? 'edit' : 'create';
   const submitDisabled = formMutating || (mode === 'edit' && !isDirty);
-  const logo = PROVIDER_LOGOS.apikeyFun;
 
   useUnsavedChangesGuard({
     shouldBlock: isDirty && !submitting,
@@ -79,61 +146,21 @@ export function SponsorQuickStartPanel({
 
   if (!resource && !showCreateForm) {
     return (
-      <section className={styles.panel}>
-        <div className={styles.header}>
-          <div className={styles.titleRow}>
-            <img src={logo.src} alt="" aria-hidden="true" className={styles.logo} />
-            <div className={styles.titleText}>
-              <h2 className={styles.title}>{t('providersPage.providerNames.apikeyFun')}</h2>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.empty}>
-          <div>{t('providersPage.sponsor.emptyRegisterHint')}</div>
-          <div className={styles.emptyActions}>
-            <button
-              type="button"
-              className={`${styles.emptyActionButton} ${styles.emptyActionButtonPrimary}`}
-              onClick={() => setShowCreateForm(true)}
-              disabled={formMutating}
-            >
-              <IconPlus size={16} />
-              <span>{t('providersPage.actions.new')}</span>
-            </button>
-            <a
-              className={`${styles.emptyActionButton}`}
-              href={APIKEY_FUN_AFFILIATE_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <IconExternalLink size={16} />
-              <span>{t('providersPage.sponsor.registerNow')}</span>
-            </a>
-          </div>
-        </div>
-      </section>
+      <QuickStartOptionalKey
+        titleId={titleId}
+        disabled={formMutating}
+        onAdd={() => setShowCreateForm(true)}
+      />
     );
   }
 
-  const actionHref = resource ? APIKEY_FUN_DASHBOARD_URL : APIKEY_FUN_AFFILIATE_URL;
-  const actionLabel = resource
-    ? t('providersPage.sponsor.dashboardLink')
-    : t('providersPage.sponsor.registerLink');
-
   return (
-    <section className={styles.panel}>
+    <section className={styles.panel} aria-labelledby={titleId}>
       <div className={styles.header}>
-        <div className={styles.titleRow}>
-          <img src={logo.src} alt="" aria-hidden="true" className={styles.logo} />
-          <div className={styles.titleText}>
-            <h2 className={styles.title}>{t('providersPage.providerNames.apikeyFun')}</h2>
-          </div>
-          <a className={styles.topLink} href={actionHref} target="_blank" rel="noreferrer">
-            <IconExternalLink size={14} />
-            <span>{actionLabel}</span>
-          </a>
-        </div>
+        <h2 className={styles.title} id={titleId}>
+          {APIKEY_FUN_DISPLAY_NAME}
+        </h2>
+        <QuickStartAccountLink configured={resource !== null} />
       </div>
 
       <SponsorProviderForm
@@ -171,11 +198,11 @@ export function SponsorQuickStartPanel({
           disabled={submitDisabled}
         >
           {submitting ? (
-            <IconLoader2 className={styles.spin} size={14} />
+            <IconLoader2 className={styles.spin} size={iconSize['14']} />
           ) : mode === 'create' ? (
-            <IconPlus size={14} />
+            <IconPlus size={iconSize['14']} />
           ) : (
-            <IconCheckCircle2 size={14} />
+            <IconCheckCircle2 size={iconSize['14']} />
           )}
           <span>
             {mode === 'create'

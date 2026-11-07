@@ -7,8 +7,8 @@
 .pulse {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  height: 34px;
+  gap: $space-10;
+  height: $size-34;
   pointer-events: none;
   user-select: none;
 }
@@ -16,24 +16,30 @@
 .bars {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
+  gap: $space-3;
   flex: 1;
   min-width: 0;
   height: 100%;
   /* 基线 + 两端渐隐：与 LiveWire 的水平 mask 同语汇 */
-  padding-bottom: 3px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 85%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 2%, #000 98%, transparent);
+  padding-bottom: $space-3;
+  border-bottom: $border-width-1 solid color-mix(in srgb, var(--border-color) $tint-0-85, transparent);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    $color-base-black 2%,
+    $color-base-black 98%,
+    transparent
+  );
 }
 
 .bar {
   flex: 1 1 0;
-  min-width: 2px;
-  max-width: 14px;
-  border-radius: 2px 2px 1px 1px;
+  min-width: $size-2;
+  max-width: $size-14;
+  border-radius: $radius-2 $radius-2 $radius-1 $radius-1;
   transform-origin: bottom;
-  animation: pulse-bar-in 0.45s var(--ease-out-strong, ease-out) both;
-  animation-delay: calc(0.35s + var(--bar-delay, 0s));
+  animation: pulse-bar-in $duration-450 var(--ease-out-strong) both;
+  animation-delay: calc($delay-350 + var(--bar-delay, 0s));
 }
 
 @keyframes pulse-bar-in {
@@ -50,7 +56,7 @@
 
 .barIdle {
   height: 42%;
-  background: color-mix(in srgb, var(--text-quaternary) 55%, transparent);
+  background: color-mix(in srgb, var(--text-quaternary) $tint-0-55, transparent);
 }
 
 .barWarning {
@@ -64,28 +70,28 @@
 }
 
 .barDisabled {
-  opacity: 0.32;
+  opacity: $opacity-0-32;
   height: 30%;
 }
 
 .overflow {
   flex-shrink: 0;
-  font-family: $font-mono;
-  font-size: 11px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
   color: var(--text-tertiary);
   line-height: 1;
-  padding-bottom: 1px;
+  padding-bottom: $space-1;
 }
 
 /* 零凭证：LiveWire 式虚线基线 */
 .idleLine {
   flex: 1;
   height: 0;
-  border-bottom: 2px dashed var(--text-quaternary);
-  opacity: 0.6;
-  margin-bottom: 6px;
+  border-bottom: $border-width-2 dashed var(--text-quaternary);
+  opacity: $opacity-0-6;
+  margin-bottom: $space-6;
 }
 
 @media (prefers-reduced-motion: reduce) {

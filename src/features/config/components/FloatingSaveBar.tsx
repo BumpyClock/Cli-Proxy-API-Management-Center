@@ -8,11 +8,10 @@ import { prefersReducedMotion } from '@/hooks/motion';
 import { useActionBarHeightVar } from '@/hooks/useActionBarHeightVar';
 import type { ConfigStatusTone } from '../uiState';
 import styles from './FloatingSaveBar.module.scss';
+import { actionBarMotion, iconSize } from '@/design-system';
 
-const easeOutQuart = (progress: number) => 1 - (1 - progress) ** 4;
-const easeInCubic = (progress: number) => progress ** 3;
 const BASE_TRANSFORM = 'translateX(-50%)';
-const HIDDEN_TRANSFORM = 'translateX(-50%) translateY(56px)';
+const HIDDEN_TRANSFORM = `translateX(-50%) translateY(${actionBarMotion.hiddenOffset}px)`;
 
 export type FloatingSaveBarProps = {
   /** 有未保存修改时可见（与未保存离开守卫的 block 条件一致）。 */
@@ -28,7 +27,7 @@ export type FloatingSaveBarProps = {
 
 /**
  * 悬浮保存栏：portal 到 body 的玻璃工具栏，仅在 dirty 时出现。
- * - 上浮入场 0.28s 强减速，退场 0.22s 加速后卸载；
+ * - 上浮入场强减速、退场加速后卸载（时长与曲线见 actionBarMotion）；
  * - reduced-motion 只做透明度淡入淡出（保留 translateX(-50%)，防止错位半宽）；
  * - 实时高度写入 --config-action-bar-height 供页面底部留白。
  */
@@ -76,8 +75,7 @@ export function FloatingSaveBar(props: FloatingSaveBarProps) {
           el,
           { opacity: [0, 1] },
           {
-            duration: 0.15,
-            ease: 'linear',
+            ...actionBarMotion.reducedEnter,
             onComplete: () => {
               el.style.opacity = '1';
             },
@@ -88,8 +86,7 @@ export function FloatingSaveBar(props: FloatingSaveBarProps) {
           el,
           { transform: [HIDDEN_TRANSFORM, BASE_TRANSFORM], opacity: [0, 1] },
           {
-            duration: 0.28,
-            ease: easeOutQuart,
+            ...actionBarMotion.enter,
             onComplete: () => {
               el.style.transform = BASE_TRANSFORM;
               el.style.opacity = '1';
@@ -106,13 +103,13 @@ export function FloatingSaveBar(props: FloatingSaveBarProps) {
         animationRef.current = animate(
           el,
           { opacity: [1, 0] },
-          { duration: 0.12, ease: 'linear', onComplete: finishExit }
+          { ...actionBarMotion.reducedExit, onComplete: finishExit }
         );
       } else {
         animationRef.current = animate(
           el,
           { transform: [BASE_TRANSFORM, HIDDEN_TRANSFORM], opacity: [1, 0] },
-          { duration: 0.22, ease: easeInCubic, onComplete: finishExit }
+          { ...actionBarMotion.exit, onComplete: finishExit }
         );
       }
     }
@@ -159,7 +156,11 @@ export function FloatingSaveBar(props: FloatingSaveBarProps) {
             onClick={onSave}
             disabled={saveDisabled}
           >
-            {saving ? <LoadingSpinner size={14} /> : <IconCheck size={15} />}
+            {saving ? (
+              <LoadingSpinner size={iconSize['14']} />
+            ) : (
+              <IconCheck size={iconSize['15']} />
+            )}
             {t('config_management.actions.save')}
           </button>
         </div>

@@ -1,5 +1,6 @@
+import { iconSize } from '@/design-system';
 export function LoadingSpinner({
-  size = 20,
+  size = iconSize['20'],
   className = '',
 }: {
   size?: number;

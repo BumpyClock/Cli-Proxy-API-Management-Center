@@ -6,6 +6,7 @@ import { SectionCard } from '../SectionCard';
 import { FieldAnchor, FieldGrid, FieldStack, ToggleRow } from '../fields/FieldPrimitives';
 import { DebugToggle, LoggingToFileToggle } from '../fields/sharedFields';
 import { getValidationMessage } from '../blocks/shared';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.logging;
 
@@ -28,7 +29,7 @@ export function SectionLogging({
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.logging}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.logging.title')}
       description={t('config_management.visual.sections.logging.description')}
       animateIn={animateIn}

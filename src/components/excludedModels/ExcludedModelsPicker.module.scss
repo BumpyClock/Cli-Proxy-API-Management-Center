@@ -1,7 +1,7 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -14,42 +14,47 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
+  gap: $space-8;
   width: 100%;
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: $size-40;
+  padding: 0 $space-12;
   overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: $font-size-13;
   text-align: left;
   cursor: pointer;
   transition:
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    border-color var(--dur-hover) var(--ease-out-strong),
+    background-color var(--dur-hover) var(--ease-out-strong),
+    transform var(--dur-press) var(--ease-out-strong);
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+  }
 
   /* 整条 40px 宽元素上 0.97 太橡皮；0.99 足够被感知又不显廉价。 */
   &:active:not(:disabled) {
-    transform: scale(0.99);
+    transform: scale($motion-scale-0-99);
   }
 
   &:focus-visible {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.18);
+    box-shadow: $shadow-legacy-focus-3;
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: $opacity-0-6;
   }
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled) {
-      border-color: color-mix(in srgb, var(--primary-color) 40%, var(--border-color));
+      border-color: color-mix(in srgb, var(--primary-color) $tint-0-4, var(--border-color));
     }
   }
 }
@@ -57,7 +62,7 @@
 .triggerText {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -67,13 +72,13 @@
 .triggerSpinner {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  animation: excluded-spin 900ms linear infinite;
+  animation: excluded-spin $duration-900 $ease-linear infinite;
 }
 
 .chevron {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  transition: transform var(--dur-hover) var(--ease-out-strong);
 }
 
 .triggerOpen .chevron {
@@ -86,15 +91,15 @@
   right: 0;
   bottom: 0;
   left: 0;
-  height: 2px;
+  height: $size-2;
   background: var(--bg-tertiary);
 }
 
 .meterFill {
   display: block;
   height: 100%;
-  background: color-mix(in srgb, var(--primary-color) 70%, var(--text-primary));
-  transition: width 360ms var(--ease-out-strong, ease);
+  background: color-mix(in srgb, var(--primary-color) $tint-0-7, var(--text-primary));
+  transition: width $duration-360 var(--ease-out-strong);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -106,12 +111,12 @@
   display: grid;
   grid-template-rows: 0fr;
   /* 退场更快 + 加速。themes.scss 无 --ease-in* token，这里用关键字而非发明全局 token。 */
-  transition: grid-template-rows 120ms ease-in;
+  transition: grid-template-rows $duration-120 $ease-in;
 }
 
 .disclosureOpen {
   grid-template-rows: 1fr;
-  transition: grid-template-rows var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  transition: grid-template-rows var(--dur-hover) var(--ease-out-strong);
 }
 
 .disclosureInner {
@@ -123,13 +128,13 @@
 .panel {
   display: flex;
   flex-direction: column;
-  margin-top: 6px;
+  margin-top: $space-6;
   overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
   transform-origin: top;
-  animation: excluded-panel-in var(--dur-hover, 200ms) var(--ease-out-strong, ease-out) both;
+  animation: excluded-panel-in var(--dur-hover) var(--ease-out-strong) both;
 }
 
 /* 只写 from，让元素的静止样式定义终点（与 toolbar-popover-in 同一写法）。 */
@@ -137,7 +142,7 @@
   from {
     opacity: 0;
     /* 0.98 而非 0.95——面板是宽内联块，600px 下 0.95 是 30px 的横向蠕动。 */
-    transform: scale(0.98);
+    transform: scale($motion-scale-0-98);
   }
 }
 
@@ -155,25 +160,25 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid var(--border-color);
+  padding: $space-8;
+  border-bottom: $border-width-1 solid var(--border-color);
 }
 
 .searchIcon {
   position: absolute;
-  left: 18px;
+  left: $space-18;
   color: var(--text-tertiary);
   pointer-events: none;
 }
 
-.search {
+.searchField {
   width: 100%;
-  padding: 6px 10px 6px 32px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-sm;
+  padding: $space-6 $space-10 $space-6 $space-32;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-4;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: $font-size-12;
 
   &::placeholder {
     color: var(--text-tertiary);
@@ -182,7 +187,7 @@
   &:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.18);
+    box-shadow: $shadow-legacy-focus-3;
   }
 }
 
@@ -193,8 +198,8 @@
 .list {
   display: flex;
   flex-direction: column;
-  max-height: 260px;
-  padding: 6px;
+  max-height: $size-260;
+  padding: $space-6;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -203,15 +208,15 @@
 .row {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  padding: 7px 8px;
-  border-radius: $radius-sm;
+  gap: $space-8;
+  padding: $space-7 $space-8;
+  border-radius: $radius-4;
   cursor: pointer;
-  transition: background-color var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+  transition: background-color var(--dur-press) var(--ease-out-strong);
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: (-$space-2);
   }
 }
 
@@ -228,7 +233,7 @@
 /* 纯规则命中：压暗且不可切换，但仍可聚焦、仍会朗读原因。 */
 .rowLocked {
   cursor: default;
-  opacity: 0.62;
+  opacity: $opacity-0-62;
 }
 
 .checkbox {
@@ -236,20 +241,20 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-sm;
+  width: $size-16;
+  height: $size-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-4;
   background: var(--bg-primary);
   transition:
-    background-color var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    background-color var(--dur-press) var(--ease-out-strong),
+    border-color var(--dur-press) var(--ease-out-strong);
 }
 
 .rowText {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: $space-1;
   min-width: 0;
   flex: 1;
 }
@@ -257,8 +262,8 @@
 .rowId {
   overflow: hidden;
   color: var(--text-primary);
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -267,18 +272,19 @@
 .rowReason {
   overflow: hidden;
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: $font-size-12;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .badge {
   flex-shrink: 0;
-  padding: 2px 6px;
-  border: 1px dashed color-mix(in srgb, var(--primary-color) 38%, var(--border-color));
-  border-radius: $radius-full;
+  padding: $space-2 $space-6;
+  border: $border-width-1 dashed
+    color-mix(in srgb, var(--primary-color) $tint-0-38, var(--border-color));
+  border-radius: $radius-9999;
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: $font-size-12;
 }
 
 .badgeMuted {
@@ -288,9 +294,9 @@
 
 .noResults {
   margin: 0;
-  padding: $spacing-lg $spacing-sm;
+  padding: $space-24 $space-8;
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: $font-size-12;
   text-align: center;
 }
 
@@ -302,49 +308,49 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
-  padding: 8px 10px;
-  border-top: 1px solid var(--border-color);
+  gap: $space-8;
+  padding: $space-8 $space-10;
+  border-top: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
 }
 
 .footerCount {
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: $font-size-12;
   font-variant-numeric: tabular-nums;
 }
 
 .footerActions {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: $space-4;
 }
 
 .footerButton {
-  padding: 4px 8px;
+  padding: $space-4 $space-8;
   border: 0;
-  border-radius: $radius-sm;
+  border-radius: $radius-4;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: $font-size-12;
   cursor: pointer;
   transition:
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    background-color var(--dur-hover) var(--ease-out-strong),
+    color var(--dur-hover) var(--ease-out-strong),
+    transform var(--dur-press) var(--ease-out-strong);
 
   &:active:not(:disabled) {
-    transform: scale(0.96);
+    transform: scale($motion-scale-0-96);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-1;
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: $opacity-0-5;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -363,54 +369,54 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
-  margin-top: 6px;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  gap: $space-8;
+  margin-top: $space-6;
+  padding: $space-12;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
 }
 
 .retryButton {
   flex-shrink: 0;
-  padding: 4px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-sm;
+  padding: $space-4 $space-10;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-4;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 11px;
+  font-size: $font-size-12;
   cursor: pointer;
-  transition: transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+  transition: transform var(--dur-press) var(--ease-out-strong);
 
   &:active {
-    transform: scale(0.96);
+    transform: scale($motion-scale-0-96);
   }
 }
 
 .chipsMore {
   align-self: center;
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: $font-size-12;
 }
 
 .ruleEditor {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .ruleLabel {
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
 }
 
 .ruleMatches {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -418,29 +424,29 @@
   li {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: $space-6;
     color: var(--text-tertiary);
-    font-size: 11px;
+    font-size: $font-size-12;
   }
 
   code {
     color: var(--text-secondary);
-    font-family: $font-mono;
+    font-family: $font-family-mono;
   }
 }
 
 /* 零命中是 warning 不是 error：规则可以合法地指向目录不认识的模型。 */
 .ruleMatchNone {
-  color: var(--warning-color, #{$warning-color});
+  color: var(--warning-color);
 }
 
 .ruleWarning {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   margin: 0;
-  color: var(--warning-color, #{$warning-color});
-  font-size: 11px;
+  color: var(--warning-color);
+  font-size: $font-size-12;
 }
 
 /* -------------------------------------------------------------------------- */

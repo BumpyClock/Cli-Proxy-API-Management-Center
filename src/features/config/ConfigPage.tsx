@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useRevealGroup } from '@/hooks/motion';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
@@ -35,7 +36,6 @@ import { ConfigSearch } from './components/ConfigSearch';
 import { ConfigTabs } from './components/ConfigTabs';
 import { DiffModal } from './components/DiffModal';
 import { FloatingSaveBar } from './components/FloatingSaveBar';
-import { ModeSwitch } from './components/ModeSwitch';
 import { SourcePanel, SourceSearchBar } from './components/SourcePanel';
 import { SectionAdvanced } from './components/sections/SectionAdvanced';
 import { SectionCommon } from './components/sections/SectionCommon';
@@ -46,9 +46,10 @@ import { SectionPayload } from './components/sections/SectionPayload';
 import { SectionQuota } from './components/sections/SectionQuota';
 import { SectionStreaming } from './components/sections/SectionStreaming';
 import styles from './ConfigPage.module.scss';
+import { media, motion } from '@/design-system';
 
 /** 首载入场预算：卡片延迟 0.28s + 0.45s 动画，之后关闭 animateIn，切 tab 不再重播。 */
-const ENTRANCE_BUDGET_MS = 800;
+const ENTRANCE_BUDGET_MS = motion.cascade['config-cards'].budget;
 
 export function ConfigPage() {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ export function ConfigPage() {
   const showNotification = useNotificationStore((state) => state.showNotification);
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery(media.mobile);
   const revealRef = useRevealGroup<HTMLDivElement>();
 
   const {
@@ -317,7 +318,16 @@ export function ConfigPage() {
         ) : (
           <SourceSearchBar search={sourceSearch} disabled={disableControls || doc.loading} />
         )}
-        <ModeSwitch mode={mode} disabled={doc.saving || doc.loading} onChange={handleModeChange} />
+        <SegmentedControl<ConfigEditorMode>
+          ariaLabel={t('config_management.mode.label')}
+          options={[
+            { value: 'visual', label: t('config_management.mode.visual') },
+            { value: 'source', label: t('config_management.mode.source') },
+          ]}
+          value={mode}
+          disabled={doc.saving || doc.loading}
+          onChange={handleModeChange}
+        />
       </div>
 
       {mode === 'visual' ? (

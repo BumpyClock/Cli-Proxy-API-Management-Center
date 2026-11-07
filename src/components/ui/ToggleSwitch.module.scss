@@ -2,7 +2,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   cursor: pointer;
 }
 
@@ -23,52 +23,61 @@
   position: absolute;
 }
 
+/* Off: a bounded track (inset --border-primary, >=3:1 on page surfaces) so it never vanishes in dark. */
 .track {
-  width: 44px;
-  height: 24px;
-  background: var(--border-color);
-  border-radius: $radius-full;
+  width: $size-44;
+  height: $size-24;
+  background: var(--bg-tertiary);
+  box-shadow: $shadow-inset-border-primary;
+  border-radius: $radius-9999;
   position: relative;
   transition: background $transition-fast;
 }
 
 .thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
+  top: $space-3;
+  left: $space-3;
+  width: $size-18;
+  height: $size-18;
   background: var(--text-secondary);
-  border-radius: $radius-full;
+  border-radius: $radius-9999;
   box-shadow: $shadow-sm;
   transition: transform $transition-fast;
 }
 
 .root input:checked + .track {
   background: var(--primary-color);
+  box-shadow: none;
 }
 
 .root input:checked + .track .thumb {
   background: var(--primary-contrast);
-  transform: translateX(20px);
+  transform: translateX($distance-20);
 }
 
 .root input:focus-visible + .track {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 3px;
+  outline: $border-width-2 solid var(--focus-ring);
+  outline-offset: $space-3;
 }
 
 .disabled .track {
-  opacity: 0.55;
+  opacity: $opacity-0-55;
 }
 
 @media (pointer: coarse) {
   .root {
-    min-height: 44px;
+    min-height: $size-touch-target;
   }
 }
 
 .label {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: $font-weight-600;
+}
+
+.fieldLabel .label {
+  color: var(--text-secondary);
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
 }

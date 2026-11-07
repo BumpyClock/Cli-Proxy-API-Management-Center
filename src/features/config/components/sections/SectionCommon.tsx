@@ -14,6 +14,7 @@ import {
   QuotaSwitchPreviewModelToggle,
   QuotaSwitchProjectToggle,
 } from '../fields/sharedFields';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.common;
 
@@ -33,7 +34,7 @@ export function SectionCommon({
 
   return (
     <SectionCard
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.common.title')}
       description={t('config_management.visual.sections.common.description')}
       animateIn={animateIn}
@@ -47,7 +48,7 @@ export function SectionCommon({
 
         <ApiKeysField values={values} disabled={disabled} onChange={onChange} />
 
-        <FieldGrid>
+        <FieldGrid pairs>
           <DebugToggle values={values} disabled={disabled} onChange={onChange} />
           <LoggingToFileToggle values={values} disabled={disabled} onChange={onChange} />
           <QuotaSwitchProjectToggle values={values} disabled={disabled} onChange={onChange} />

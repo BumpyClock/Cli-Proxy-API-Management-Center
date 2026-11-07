@@ -30,6 +30,7 @@ import type {
 } from './ModelMappingDiagramTypes';
 import { hasModelAliasConflict } from './aliasValidation';
 import styles from './ModelMappingDiagram.module.scss';
+import { chart, diagramColors } from '@/design-system';
 
 export interface ModelMappingDiagramProps {
   modelAlias: Record<string, OAuthModelAliasEntry[]>;
@@ -44,16 +45,7 @@ export interface ModelMappingDiagramProps {
   className?: string;
 }
 
-const PROVIDER_COLORS = [
-  '#8b8680',
-  '#10b981',
-  '#f59e0b',
-  '#c65746',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#84cc16',
-];
+const PROVIDER_COLORS = diagramColors;
 
 function getProviderColor(provider: string): string {
   const hash = provider.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -569,7 +561,7 @@ export const ModelMappingDiagram = forwardRef<ModelMappingDiagramRef, ModelMappi
                 key={line.id}
                 d={line.path}
                 stroke={line.color}
-                strokeOpacity={isDark ? 0.4 : 0.3}
+                strokeOpacity={chart.diagramEdgeOpacity[isDark ? 'dark' : 'light']}
               />
             ))}
           </svg>

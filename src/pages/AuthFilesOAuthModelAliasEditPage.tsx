@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
@@ -7,13 +7,18 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { IconInfo, IconPlus } from '@/components/ui/icons';
 import { OAuthEditorProviderCard } from '@/features/authFiles/components/OAuthEditorProviderCard';
 import { OAuthAliasMappingRow } from '@/features/authFiles/components/OAuthAliasMappingRow';
+import { OAuthEditorActions } from '@/features/authFiles/components/OAuthEditorActions';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { authFilesApi } from '@/services/api';
-import { buildOAuthProviderOptions, normalizeProviderKey } from '@/features/authFiles/constants';
+import {
+  buildOAuthProviderOptions,
+  getTypeLabel,
+  normalizeProviderKey,
+} from '@/features/authFiles/constants';
 import {
   getModelAliasDraftSignature,
   isOAuthEditorDirty,
@@ -22,6 +27,7 @@ import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import { generateId, getErrorMessage } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
 import bodyStyles from './AuthFilesOAuthModelAliasEditPage.module.scss';
+import { iconSize } from '@/design-system';
 
 type AuthFileModelItem = { id: string; display_name?: string; type?: string; owned_by?: string };
 
@@ -80,6 +86,8 @@ export function AuthFilesOAuthModelAliasEditPage() {
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState<'unsupported' | null>(null);
   const [saving, setSaving] = useState(false);
+  const providerRequirementId = useId();
+  const saveReasonId = useId();
 
   useEffect(() => {
     setProvider(providerFromParams);
@@ -102,6 +110,8 @@ export function AuthFilesOAuthModelAliasEditPage() {
   }, [excluded, files, modelAlias]);
 
   const resolvedProviderKey = useMemo(() => normalizeProviderKey(provider), [provider]);
+  /** One predicate gates Save, the requirement under the Provider field and the catalog hint. */
+  const providerMissing = !resolvedProviderKey;
   const isEditing = useMemo(() => {
     if (!resolvedProviderKey) return false;
     return Object.prototype.hasOwnProperty.call(modelAlias, resolvedProviderKey);
@@ -131,13 +141,15 @@ export function AuthFilesOAuthModelAliasEditPage() {
     shouldBlock: isDirty,
     dialog: unsavedChangesDialog,
   });
-  const title = isEditing
-    ? t('oauth_model_alias.edit_title', { provider: provider.trim() || resolvedProviderKey })
-    : t('oauth_model_alias.add_title');
-  const headerHint = useMemo(() => {
-    if (!provider.trim()) {
-      return t('oauth_model_alias.provider_hint');
-    }
+  // The h1 names the destination (matches breadcrumb and section tab); the provider goes in meta.
+  const providerName = getTypeLabel(t, provider.trim() || resolvedProviderKey);
+  const headerMeta = providerMissing
+    ? undefined
+    : t(isEditing ? 'oauth_model_alias.meta_editing' : 'oauth_model_alias.meta_new', {
+        provider: providerName,
+      });
+
+  const catalogHint = useMemo(() => {
     if (modelsLoading) {
       return t('oauth_model_alias.model_source_loading');
     }
@@ -145,7 +157,7 @@ export function AuthFilesOAuthModelAliasEditPage() {
       return t('oauth_model_alias.model_source_unsupported');
     }
     return t('oauth_model_alias.model_source_loaded', { count: modelsList.length });
-  }, [modelsError, modelsList.length, modelsLoading, provider, t]);
+  }, [modelsError, modelsList.length, modelsLoading, t]);
 
   const handleBack = useCallback(() => {
     const state = location.state as LocationState;
@@ -335,11 +347,7 @@ export function AuthFilesOAuthModelAliasEditPage() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    const channel = normalizeProviderKey(provider);
-    if (!channel) {
-      showNotification(t('oauth_model_alias.provider_required'), 'error');
-      return;
-    }
+    if (providerMissing) return;
 
     const seenAlias = new Set<string>();
     let hasDuplicateAlias = false;
@@ -371,9 +379,9 @@ export function AuthFilesOAuthModelAliasEditPage() {
     setSaving(true);
     try {
       if (normalized.length) {
-        await authFilesApi.saveOauthModelAlias(channel, normalized);
+        await authFilesApi.saveOauthModelAlias(resolvedProviderKey, normalized);
       } else if (isEditing) {
-        await authFilesApi.deleteOauthModelAlias(channel);
+        await authFilesApi.deleteOauthModelAlias(resolvedProviderKey);
       }
       showNotification(t('oauth_model_alias.save_success'), 'success');
       allowNextNavigation();
@@ -384,9 +392,21 @@ export function AuthFilesOAuthModelAliasEditPage() {
     } finally {
       setSaving(false);
     }
-  }, [allowNextNavigation, handleBack, isEditing, mappings, provider, showNotification, t]);
+  }, [
+    allowNextNavigation,
+    handleBack,
+    isEditing,
+    mappings,
+    providerMissing,
+    resolvedProviderKey,
+    showNotification,
+    t,
+  ]);
 
+  const editorReady = !initialLoading && !modelAliasUnsupported && initialLoadError === null;
+  const showProviderRequirement = editorReady && providerMissing;
   const canSave =
+    !providerMissing &&
     !disableControls &&
     !saving &&
     baselineReady &&
@@ -396,22 +416,13 @@ export function AuthFilesOAuthModelAliasEditPage() {
   return (
     <div ref={swipeRef} className={styles.pageContent}>
       <PageHeader
-        title={title}
+        title={t('oauth_model_alias.title')}
         description={t('oauth_model_alias.editor_description')}
-        actions={
-          <>
-            <Button variant="secondary" size="sm" onClick={handleBack}>
-              {t('common.back')}
-            </Button>
-            <Button size="sm" onClick={handleSave} loading={saving} disabled={!canSave}>
-              {t('oauth_model_alias.save')}
-            </Button>
-          </>
-        }
+        meta={headerMeta && <p className={styles.headerMeta}>{headerMeta}</p>}
       />
       {initialLoading ? (
         <div className={styles.loading} role="status">
-          <LoadingSpinner size={16} />
+          <LoadingSpinner size={iconSize['16']} />
           {t('common.loading')}
         </div>
       ) : modelAliasUnsupported ? (
@@ -441,12 +452,13 @@ export function AuthFilesOAuthModelAliasEditPage() {
             onChange={updateProvider}
             disabled={disableControls || saving}
             translationPrefix="oauth_model_alias"
+            requirementId={showProviderRequirement ? providerRequirementId : undefined}
           />
 
           <Card className={styles.settingsCard}>
             <div className={styles.editorHeader}>
               <div className={styles.sectionHeading}>
-                <span className={styles.editorStepNumber} aria-hidden="true">
+                <span className={styles.stepNumber} aria-hidden="true">
                   02
                 </span>
                 <div className={styles.headingCopy}>
@@ -462,15 +474,17 @@ export function AuthFilesOAuthModelAliasEditPage() {
                 onClick={addMappingEntry}
                 disabled={disableControls || saving || modelAliasUnsupported}
               >
-                <IconPlus size={14} aria-hidden="true" />
+                <IconPlus size={iconSize['14']} aria-hidden="true" />
                 {t('oauth_model_alias.add_alias')}
               </Button>
             </div>
 
-            <div className={bodyStyles.catalogHint}>
-              <IconInfo size={15} aria-hidden="true" />
-              <p className={styles.editorDescription}>{headerHint}</p>
-            </div>
+            {!providerMissing && (
+              <div className={bodyStyles.catalogHint}>
+                <IconInfo size={iconSize['15']} aria-hidden="true" />
+                <p className={styles.editorDescription}>{catalogHint}</p>
+              </div>
+            )}
 
             <div className={bodyStyles.mappingsBody}>
               {mappings.map((entry, index) => (
@@ -495,6 +509,26 @@ export function AuthFilesOAuthModelAliasEditPage() {
           </Card>
         </>
       )}
+      <OAuthEditorActions
+        reason={
+          showProviderRequirement
+            ? { id: saveReasonId, text: t('oauth_model_alias.provider_required') }
+            : undefined
+        }
+      >
+        <Button variant="secondary" className={styles.pageBack} onClick={handleBack}>
+          {t('common.back')}
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          loading={saving}
+          disabled={!canSave}
+          aria-describedby={showProviderRequirement ? saveReasonId : undefined}
+        >
+          {t('oauth_model_alias.save')}
+        </Button>
+      </OAuthEditorActions>
     </div>
   );
 }

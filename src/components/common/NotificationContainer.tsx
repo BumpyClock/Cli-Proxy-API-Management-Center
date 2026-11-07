@@ -6,13 +6,14 @@ import { NOTIFICATION_DURATION_MS } from '@/utils/constants';
 import type { Notification } from '@/types';
 import { createNotificationTimer } from './notificationTimer';
 import styles from './NotificationContainer.module.scss';
+import { duration, iconSize } from '@/design-system';
 
 interface AnimatedNotification extends Notification {
   isExiting?: boolean;
 }
 
 // Matches the exit transition; each card owns and cleans up its removal timer.
-const EXIT_DURATION_MS = 160;
+const EXIT_DURATION_MS = duration['notification-exit'];
 
 const notificationIcons = {
   success: IconCheckCircle2,
@@ -95,7 +96,7 @@ function NotificationCard({
       }}
     >
       <span className={styles.icon} aria-hidden="true">
-        <Icon size={18} />
+        <Icon size={iconSize['18']} />
       </span>
       <div
         className={styles.message}
@@ -112,7 +113,7 @@ function NotificationCard({
         disabled={isExiting}
         aria-label={t('common.close')}
       >
-        <IconX size={16} />
+        <IconX size={iconSize['16']} />
       </button>
     </div>
   );

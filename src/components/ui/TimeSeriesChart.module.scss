@@ -1,112 +1,230 @@
+@use '@/styles/mixins' as *;
+
 .chart {
   min-width: 0;
   margin: 0;
 }
 
 .description {
-  margin-bottom: 12px;
+  margin-bottom: $space-12;
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
+}
+
+/* Whole-plot projection: one direct label above the plot instead of a region fill. */
+.projectionNote {
+  display: flex;
+  align-items: center;
+  gap: $space-6;
+  margin: 0 0 $space-4;
+  color: var(--text-secondary);
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: $space-8;
+  margin-bottom: $space-8;
+}
+
+.swatch {
+  flex: 0 0 auto;
+}
+
+/* Shared-trace explanation and the isolate hint: one quiet line under the legend. */
+.legendNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-4 $space-16;
+  margin-bottom: $space-8;
+  color: var(--text-secondary);
+  font-size: $font-size-13;
+  line-height: $line-height-1-4;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-6;
+  }
+}
+
+.showAll {
+  min-height: $size-28;
+  padding: $space-2 $space-10;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-6;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: $font-weight-600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-tertiary);
+  }
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
+  }
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+  }
 }
 
 .series {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 36px;
+  gap: $space-8;
+  min-height: $size-36;
   min-width: 0;
-  padding: 6px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  max-width: 100%;
+  padding: $space-6 $space-10;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-6;
   background: transparent;
   color: var(--text-primary);
   font: inherit;
-  font-size: 12px;
+  font-size: $font-size-12;
   text-align: left;
   cursor: pointer;
 
   strong {
+    flex: 0 0 auto;
     margin-left: auto;
-    font-weight: 600;
+    font-weight: $font-weight-600;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--bg-tertiary);
+    }
+  }
+
+  /* Hidden series: dashed outline, muted text, struck value; the swatch fades. */
   &[aria-pressed='false'] {
     color: var(--text-secondary);
     border-style: dashed;
+
+    .swatch {
+      opacity: $opacity-0-35;
+    }
+
+    strong {
+      font-weight: $font-weight-400;
+      text-decoration: line-through;
+    }
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
 .number {
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: $size-18;
+  height: $size-18;
   flex: 0 0 auto;
-  border: 1px solid var(--border-primary);
-  border-radius: 4px;
-  font-family: $font-mono;
-  font-size: 11px;
-  font-weight: 600;
+  border: $border-width-1 solid var(--border-primary);
+  border-radius: $radius-4;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
 }
 
+/* One line: words never break mid-word; the title, accessible name, and table keep the full identity. */
 .name {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .plot {
   min-width: 0;
-  border-radius: 4px;
+  border-radius: $radius-4;
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 }
 
-.readout {
-  min-height: 36px;
-  padding-top: 8px;
+/* The light grid stays on --border-color; on the dark surface that token nearly vanishes. */
+:global([data-theme='dark']) .plot :global(.recharts-cartesian-grid-horizontal line),
+:global([data-theme='dark']) .plot .rule line {
+  stroke: color-mix(in srgb, var(--border-color) $tint-0-72, var(--border-primary));
+}
+
+/* The exact domain, stated once under the axis instead of as crowded edge tick labels. */
+.range {
+  margin: 0;
+  padding-left: $space-58;
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  font-variant-numeric: tabular-nums;
+  line-height: $line-height-1-4;
+}
+
+.readout {
+  min-height: $size-36;
+  padding-top: $space-8;
+  color: var(--text-secondary);
+  font-size: $font-size-12;
+  font-variant-numeric: tabular-nums;
+  line-height: $line-height-1-5;
+
+  /* Guided charts print nothing here until a point is inspected. */
+  &:empty {
+    min-height: 0;
+    padding-top: $space-4;
+  }
 }
 
 .empty {
-  padding: 24px 12px;
+  padding: $space-24 $space-12;
   color: var(--text-secondary);
   text-align: center;
 }
 
-.tableDisclosure {
-  margin-top: 8px;
+.tableDisclosure,
+.guide {
+  margin-top: $space-8;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-13;
 
   summary {
-    min-height: 36px;
-    padding: 8px 0;
-    cursor: pointer;
+    @include disclosure-summary;
   }
+}
 
-  summary:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+.guide p {
+  max-width: 72ch;
+  margin: $space-8 0;
+  line-height: $line-height-1-5;
+}
+
+/* Encoding key: the snapshot dot and the projected dash, as drawn on the plot. */
+.guideKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-4 $space-16;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-6;
   }
 }
 
@@ -123,8 +241,8 @@
 
   th,
   td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border-color);
+    padding: $space-8 $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
     text-align: right;
     white-space: nowrap;
   }
@@ -134,33 +252,55 @@
   }
 
   tbody th {
-    font-weight: 400;
+    font-weight: $font-weight-400;
   }
 }
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
-  margin: -1px;
+  margin: (-$space-1);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
 }
 
-@media (max-width: 768px) {
+/* Short chips share a row; a long account name takes its own row and ellipsizes. */
+@media (max-width: #{$breakpoint-mobile}) {
   .legend {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
+    gap: $space-6;
   }
 
   .series {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) auto;
-    gap: 6px;
-    min-height: 44px;
-    padding: 6px;
+    flex: 1 1 auto;
+    gap: $space-6;
+    min-height: $size-touch-target;
+    padding: $space-6 $space-8;
+  }
+}
+
+/* Phones: one full-width row per series so names stay readable (never half-width truncation). */
+@media (max-width: #{$breakpoint-600}) {
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: $space-6;
+  }
+
+  .series {
+    width: 100%;
+    min-height: $size-touch-target;
+    padding: $space-4 $space-10;
+  }
+
+  /* No hover on phones; the pressed/dashed state already shows what selection does. */
+  .isolateHint {
+    display: none;
+  }
+
+  .legendNote:not(:has(> :not(.isolateHint))) {
+    display: none;
   }
 }

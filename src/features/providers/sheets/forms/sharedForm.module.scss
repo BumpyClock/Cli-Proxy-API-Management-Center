@@ -4,78 +4,78 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   min-width: 0;
   max-width: 100%;
 }
 
 .quickStartForm {
-  gap: 20px;
+  gap: $space-20;
 
   .section {
-    gap: 14px;
+    gap: $space-14;
   }
 
   .sectionTitle {
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1.35;
+    font-size: $font-size-17;
+    font-weight: $font-weight-700;
+    line-height: $line-height-1-35;
     letter-spacing: 0;
   }
 
   .sectionDesc {
     max-width: 72ch;
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: $font-size-14;
+    line-height: $line-height-1-6;
     color: var(--text-secondary);
   }
 
   .field {
-    gap: 7px;
+    gap: $space-7;
   }
 
   .label {
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.45;
+    font-size: $font-size-13;
+    font-weight: $font-weight-600;
+    line-height: $line-height-1-45;
   }
 
   .labelHint {
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: $font-size-12;
+    line-height: $line-height-1-6;
     color: var(--muted-foreground);
   }
 
   .input,
   .textarea,
   .discoverySearch {
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: $font-size-14;
+    line-height: $line-height-1-45;
   }
 
   .entryCard {
-    gap: 12px;
+    gap: $space-12;
   }
 
   .entryCardHeader {
-    font-size: 13px;
-    line-height: 1.45;
+    font-size: $font-size-13;
+    line-height: $line-height-1-45;
   }
 
   .sponsorGroupTitle {
-    gap: 3px;
+    gap: $space-3;
 
     strong {
-      font-size: 14px;
-      font-weight: 650;
-      line-height: 1.4;
+      font-size: $font-size-14;
+      font-weight: $font-weight-650;
+      line-height: $line-height-1-4;
     }
   }
 
   .sponsorUrlOptionText,
   .checkboxText {
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: $font-size-14;
+    line-height: $line-height-1-45;
   }
 
   .sponsorUrlOptionText small,
@@ -87,102 +87,103 @@
   .discoveryItem,
   .discoveryBatchLabel,
   .discoveryName {
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: $font-size-12;
+    line-height: $line-height-1-6;
   }
 
   .sponsorProtocolName {
-    font-size: 13px;
-    font-weight: 650;
-    line-height: 1.4;
+    font-size: $font-size-13;
+    font-weight: $font-weight-650;
+    line-height: $line-height-1-4;
   }
 
   .sponsorUsageMain {
-    line-height: 1.45;
+    line-height: $line-height-1-45;
   }
 
   .sponsorUsageMeta,
   .discoveryAlias,
   .discoveryCount,
   .discoveryAddedTag {
-    font-size: 12px;
-    line-height: 1.55;
+    font-size: $font-size-12;
+    line-height: $line-height-1-55;
   }
 
   .connectivityBtn,
   .discoveryApplyBtn,
   .addBtn,
   .removeBtn {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: $font-size-13;
+    font-weight: $font-weight-600;
     line-height: 1;
   }
 
   .footerBtn {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: $font-size-14;
+    font-weight: $font-weight-600;
     line-height: 1;
   }
 
   details summary {
-    font-size: 14px;
-    font-weight: 650;
-    line-height: 1.45;
+    @include disclosure-summary;
+    font-size: $font-size-14;
+    font-weight: $font-weight-600;
+    line-height: $line-height-1-45;
   }
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $space-12;
   min-width: 0;
 }
 
 .sectionTitle {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .sectionDesc {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  line-height: 1.5;
+  line-height: $line-height-1-5;
   margin: 0;
 }
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
 }
 
 .label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   color: var(--text-primary);
 }
 
 .labelHint {
-  font-size: 11px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  font-weight: 400;
+  font-weight: $font-weight-400;
 }
 
 .input,
 .textarea {
   width: 100%;
-  height: 36px;
-  padding: 8px 12px;
+  height: $size-36;
+  padding: $space-8 $space-12;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: $font-size-13;
   font-family: inherit;
   box-sizing: border-box;
 
@@ -193,37 +194,37 @@
   &:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-10);
+    box-shadow: $shadow-focus-ring-primary;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     cursor: not-allowed;
   }
 }
 
 .textarea {
   height: auto;
-  min-height: 80px;
+  min-height: $size-80;
   resize: vertical;
-  font-family: $font-mono;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  line-height: $line-height-1-5;
 }
 
 .checkboxRow {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: $space-10;
   cursor: pointer;
   user-select: none;
 }
 
 .checkboxBox {
-  margin-top: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  margin-top: $space-2;
+  width: $size-16;
+  height: $size-16;
+  border-radius: $radius-4;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   display: inline-flex;
   align-items: center;
@@ -240,88 +241,88 @@
 
   &:checked::after {
     content: '';
-    width: 8px;
-    height: 4px;
-    border-left: 2px solid var(--primary-contrast);
-    border-bottom: 2px solid var(--primary-contrast);
-    transform: rotate(-45deg) translateY(-2px);
+    width: $size-8;
+    height: $size-4;
+    border-left: $border-width-2 solid var(--primary-contrast);
+    border-bottom: $border-width-2 solid var(--primary-contrast);
+    transform: rotate(-45deg) translateY((-$distance-2));
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-2;
   }
 }
 
 .checkboxText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 13px;
+  gap: $space-2;
+  font-size: $font-size-13;
   color: var(--text-primary);
 
   small {
     color: var(--muted-foreground);
-    font-size: 11px;
+    font-size: $font-size-12;
   }
 }
 
 .fieldRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: $space-12;
   min-width: 0;
 }
 
 .divider {
   border: 0;
-  border-top: 1px solid var(--border-color);
-  margin: 4px 0;
+  border-top: $border-width-1 solid var(--border-color);
+  margin: $space-4 0;
 }
 
 .errorBox {
-  border: 1px solid var(--destructive-30);
+  border: $border-width-1 solid var(--destructive-30);
   background: var(--destructive-10);
   color: var(--destructive-color);
-  padding: 10px 12px;
+  padding: $space-10 $space-12;
   border-radius: var(--radius-md);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
 }
 
 .dl {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: $space-12 $space-16;
   margin: 0;
 }
 
 .dt {
-  font-size: 11px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  font-weight: 500;
+  font-weight: $font-weight-500;
 }
 
 .dd {
   margin: 0;
-  margin-top: 2px;
-  font-size: 12px;
-  font-family: $font-mono;
+  margin-top: $space-2;
+  font-size: $font-size-12;
+  font-family: $font-family-mono;
   color: var(--text-primary);
   word-break: break-word;
 }
 
 .detailHeader {
-  margin-bottom: 4px;
+  margin-bottom: $space-4;
 }
 
 .entryCard {
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: $space-12;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: $space-10;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
@@ -332,10 +333,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: $space-12;
   min-width: 0;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   color: var(--muted-foreground);
 }
 
@@ -345,7 +346,7 @@
   flex: 1;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: $space-12;
   padding: 0;
   border: 0;
   background: transparent;
@@ -354,9 +355,9 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 3px;
-    border-radius: var(--radius-sm);
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-3;
+    border-radius: $radius-4;
   }
 }
 
@@ -364,11 +365,11 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
 
   strong {
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: $font-size-13;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -381,7 +382,7 @@
   flex: 1;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .sponsorSummaryKey,
@@ -394,21 +395,21 @@
 }
 
 .sponsorSummaryKey {
-  max-width: 140px;
-  font-family: $font-mono;
+  max-width: $size-140;
+  font-family: $font-family-mono;
   color: var(--text-primary);
 }
 
 .sponsorSummaryUrl {
-  max-width: min(360px, 45vw);
-  font-family: $font-mono;
+  max-width: min($size-360, 45vw);
+  font-family: $font-family-mono;
   color: var(--muted-foreground);
 }
 
 .entryCardHeaderRight {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   flex-shrink: 0;
 }
 
@@ -416,17 +417,17 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 10px;
+  gap: $space-10;
 }
 
 .entryCardIconBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: $size-32;
+  height: $size-32;
   padding: 0;
-  border: 1px solid transparent;
+  border: $border-width-1 solid transparent;
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-tertiary);
@@ -441,8 +442,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -1px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: (-$space-1);
   }
 }
 
@@ -458,8 +459,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  margin-bottom: 2px;
+  gap: $space-8;
+  margin-bottom: $space-2;
 }
 
 .entriesToolbarSplit {
@@ -469,9 +470,9 @@
 .sponsorUrlOptions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: $space-8;
 
-  @media (min-width: 560px) {
+  @media (min-width: #{$breakpoint-560}) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -479,10 +480,10 @@
 .sponsorUrlOption {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: $space-10;
   min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
+  padding: $space-10 $space-12;
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
   cursor: pointer;
@@ -491,7 +492,7 @@
     background-color $transition-fast;
 
   input {
-    margin: 2px 0 0;
+    margin: $space-2 0 0;
     accent-color: var(--primary-color);
     flex-shrink: 0;
 
@@ -514,14 +515,14 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 2px;
-  font-size: 13px;
+  gap: $space-2;
+  font-size: $font-size-13;
   color: var(--text-primary);
 
   small {
-    font-family: $font-mono;
-    font-size: 11px;
-    line-height: 1.4;
+    font-family: $font-family-mono;
+    font-size: $font-size-12;
+    line-height: $line-height-1-4;
     color: var(--muted-foreground);
     overflow-wrap: anywhere;
   }
@@ -529,16 +530,16 @@
 
 .sponsorUrlOptionText .sponsorUrlOptionDescription {
   font-family: inherit;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: $font-size-12;
+  line-height: $line-height-1-45;
 }
 
 .sponsorProtocolGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: $space-8;
 
-  @media (min-width: 560px) {
+  @media (min-width: #{$breakpoint-560}) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -547,23 +548,23 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
+  gap: $space-4;
+  padding: $space-10 $space-12;
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
 }
 
 .sponsorProtocolName {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
 }
 
 .sponsorProtocolUrl {
-  font-family: $font-mono;
-  font-size: 11px;
-  line-height: 1.4;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
   color: var(--muted-foreground);
   overflow-wrap: anywhere;
 }
@@ -572,7 +573,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .sponsorUsageResult {
@@ -580,14 +581,14 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--success-color) 34%, var(--border-color));
+  gap: $space-4;
+  padding: $space-8 $space-10;
+  border: $border-width-1 solid color-mix(in srgb, var(--success-color) $tint-0-34, var(--border-color));
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--success-color) 8%, var(--bg-primary));
+  background: color-mix(in srgb, var(--success-color) $tint-0-08, var(--bg-primary));
   color: var(--text-primary);
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
 }
 
 .sponsorUsageResultWarning {
@@ -599,8 +600,8 @@
 .sponsorUsageMain {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 500;
+  gap: $space-6;
+  font-weight: $font-weight-500;
 }
 
 .sponsorUsageMeta {
@@ -610,22 +611,22 @@
 .connectivityRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
+  gap: $space-8;
+  margin-top: $space-4;
 }
 
 .connectivityBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 12px;
+  gap: $space-6;
+  height: $size-32;
+  padding: 0 $space-12;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   cursor: pointer;
   transition:
     background-color $transition-fast,
@@ -636,13 +637,13 @@
     color: var(--primary-color);
   }
 
-  @media (pointer: coarse) {
-    height: 44px;
-    padding: 0 16px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    height: $size-touch-target;
+    padding: 0 $space-16;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     cursor: not-allowed;
   }
 }
@@ -650,15 +651,15 @@
 .connectivityBtnGhost {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 24px;
-  padding: 0 8px;
+  gap: $space-6;
+  height: $size-24;
+  padding: 0 $space-8;
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  border: $border-width-1 solid transparent;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   cursor: pointer;
   transition:
     background-color $transition-fast,
@@ -670,24 +671,24 @@
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     cursor: not-allowed;
   }
 }
 
 .connectivityError {
-  border: 1px solid var(--destructive-30);
+  border: $border-width-1 solid var(--destructive-30);
   background: var(--destructive-10);
   color: var(--destructive-color);
-  padding: 8px 10px;
+  padding: $space-8 $space-10;
   border-radius: var(--radius-md);
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
   word-break: break-word;
 }
 
 .connectivityHintSuccess {
-  font-size: 11px;
+  font-size: $font-size-12;
   color: var(--primary-color);
 }
 
@@ -695,13 +696,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: $size-14;
+  height: $size-14;
 }
 
 .statusIconLoading {
   color: var(--text-secondary);
-  animation: spin 0.8s linear infinite;
+  animation: spin $duration-800 $ease-linear infinite;
 }
 
 .statusIconSuccess {
@@ -715,9 +716,9 @@
 .discoveryPanel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--border-color);
+  gap: $space-10;
+  padding: $space-12;
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
 }
@@ -725,7 +726,7 @@
 .discoveryToolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .discoverySearchWrap {
@@ -737,7 +738,7 @@
 
 .discoverySearchIcon {
   position: absolute;
-  left: 10px;
+  left: $space-10;
   display: inline-flex;
   align-items: center;
   color: var(--muted-foreground);
@@ -746,13 +747,13 @@
 
 .discoverySearch {
   width: 100%;
-  height: 32px;
-  padding: 6px 10px 6px 30px;
+  height: $size-32;
+  padding: $space-6 $space-10 $space-6 $space-30;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: $font-size-12;
   box-sizing: border-box;
 
   &::placeholder {
@@ -762,16 +763,16 @@
   &:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-10);
+    box-shadow: $shadow-focus-ring-primary;
   }
 }
 
 .discoveryEmpty {
-  padding: 16px;
+  padding: $space-16;
   text-align: center;
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  border: 1px dashed var(--border-color);
+  border: $border-width-1 dashed var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
 }
@@ -780,17 +781,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 4px;
+  padding: $space-2 $space-4;
 }
 
 .discoveryBatchLabel {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   color: var(--text-primary);
 }
 
 .discoveryCount {
-  font-size: 11px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
@@ -801,10 +802,10 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-height: 240px;
+  gap: $space-2;
+  max-height: $size-240;
   overflow-y: auto;
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
 }
@@ -813,10 +814,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--border-color);
-  font-size: 12px;
+  gap: $space-8;
+  padding: $space-8 $space-10;
+  border-bottom: $border-width-1 solid var(--border-color);
+  font-size: $font-size-12;
   color: var(--text-primary);
 
   &:last-child {
@@ -830,8 +831,8 @@
 }
 
 .discoveryName {
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   word-break: break-all;
 }
 
@@ -839,21 +840,21 @@
   display: inline-flex;
   min-width: 0;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-2;
 }
 
 .discoveryAlias {
-  font-size: 11px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
   word-break: break-all;
 }
 
 .discoveryAddedTag {
-  font-size: 11px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  padding: 2px 8px;
+  padding: $space-2 $space-8;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
 }
 
@@ -861,21 +862,21 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .discoveryApplyBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 14px;
+  gap: $space-6;
+  height: $size-30;
+  padding: 0 $space-14;
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  border: $border-width-1 solid transparent;
   background: var(--primary-color);
   color: var(--primary-contrast);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   cursor: pointer;
   transition: background-color $transition-fast;
 
@@ -884,7 +885,7 @@
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     cursor: not-allowed;
   }
 }
@@ -907,32 +908,34 @@
 
 .passwordInput {
   @extend .input;
-  padding-right: 36px;
+  padding-right: $space-40;
 
-  @media (pointer: coarse) {
-    padding-right: 48px;
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    padding-right: $space-48;
   }
 }
 
 .passwordToggle {
   position: absolute;
-  right: 8px;
+  right: $space-8;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  width: $size-32;
+  height: $size-32;
+  padding: $space-4;
   border: none;
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: $radius-4;
   transition: color $transition-fast;
 
-  /* Touch: a 44px hit area at the field's right edge. */
-  @media (pointer: coarse) {
+  /* Phones and touch: a 44px hit area at the field's right edge. */
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
     right: 0;
-    width: 44px;
-    height: 44px;
+    width: $size-touch-target;
+    height: $size-touch-target;
   }
 
   &:hover:not(:disabled) {
@@ -940,7 +943,7 @@
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: $opacity-0-5;
     cursor: not-allowed;
   }
 }
@@ -948,15 +951,15 @@
 .entriesList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: $space-10;
 }
 
 .modelAliasRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 8px;
+  gap: $space-8;
 
-  @media (max-width: 520px) {
+  @media (max-width: #{$breakpoint-520}) {
     grid-template-columns: 1fr auto;
 
     input:first-child {
@@ -968,30 +971,30 @@
 .modelEntry {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
 }
 
 .modelEntryActions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   flex-shrink: 0;
 }
 
 .modelEntryDetails {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--border-color);
+  gap: $space-10;
+  padding: $space-12;
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
 }
 
 .thinkingFieldset {
   display: grid;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -1001,16 +1004,16 @@
 .thinkingExistingHint {
   margin: 0;
   color: var(--warning-color);
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
 }
 
 .thinkingLevelGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: $space-8;
 
-  @media (max-width: 520px) {
+  @media (max-width: #{$breakpoint-520}) {
     grid-template-columns: 1fr;
   }
 }
@@ -1018,8 +1021,8 @@
 .thinkingLevelOption {
   width: 100%;
   min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--border-color);
+  padding: $space-8 $space-10;
+  border: $border-width-1 solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
   box-sizing: border-box;
@@ -1029,23 +1032,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
   flex: 1;
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
 
   code {
     color: var(--muted-foreground);
-    font-size: 10px;
-    font-weight: 400;
+    font-size: $font-size-12;
+    font-weight: $font-weight-400;
   }
 }
 
 .thinkingLevelOptionSelected {
-  border-color: color-mix(in srgb, var(--primary-color) 50%, var(--border-color));
-  background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-primary));
+  border-color: color-mix(in srgb, var(--primary-color) $tint-0-5, var(--border-color));
+  background: color-mix(in srgb, var(--primary-color) $tint-0-08, var(--bg-primary));
 
   .thinkingLevelLabel {
     color: var(--text-primary);
@@ -1058,7 +1061,7 @@
   flex: 1;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .entrySummaryKey {
@@ -1067,20 +1070,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   color: var(--text-primary);
 }
 
 .entryBadge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
+  padding: $space-1 $space-7;
+  border-radius: $radius-999;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-tertiary);
   color: var(--muted-foreground);
-  font-size: 10px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1089,15 +1092,15 @@
   align-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: $space-6;
+  padding: $space-6 $space-12;
   border-radius: var(--radius-md);
-  border: 1px dashed var(--border-color);
+  border: $border-width-1 dashed var(--border-color);
   background: var(--bg-primary);
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
 
   &:hover {
     border-color: var(--primary-color);
@@ -1108,21 +1111,24 @@
 .removeBtn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  justify-content: center;
+  gap: $space-4;
+  min-width: $size-32;
+  min-height: $size-32;
+  padding: $space-4 $space-8;
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  border: $border-width-1 solid transparent;
   background: transparent;
   color: var(--destructive-color);
   cursor: pointer;
-  font-size: 12px;
+  font-size: $font-size-12;
 
   &:hover {
     background: var(--destructive-10);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: $opacity-0-5;
     cursor: not-allowed;
   }
 }
@@ -1130,15 +1136,16 @@
 .addBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: $space-6;
+  min-height: $size-32;
+  padding: $space-6 $space-12;
   border-radius: var(--radius-md);
-  border: 1px dashed var(--border-color);
+  border: $border-width-1 dashed var(--border-color);
   background: var(--bg-primary);
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
   align-self: flex-start;
 
   &:hover {
@@ -1150,26 +1157,26 @@
 .footerBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 14px;
+  gap: $space-6;
+  height: $size-32;
+  padding: 0 $space-14;
   border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
   cursor: pointer;
   transition: background-color $transition-fast;
-  border: 1px solid transparent;
+  border: $border-width-1 solid transparent;
   background: transparent;
   color: var(--text-primary);
 
-  /* Touch: 44px target for the sheet's Cancel / Edit / Save. */
-  @media (pointer: coarse) {
-    height: 44px;
-    padding: 0 18px;
+  /* Phones and touch: 44px target for the sheet's Cancel / Edit / Save. */
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    height: $size-touch-target;
+    padding: 0 $space-18;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     cursor: not-allowed;
   }
 }
@@ -1202,22 +1209,22 @@
 }
 
 .apiKeyEntriesSection {
-  margin-top: 16px;
+  margin-top: $space-16;
   min-width: 0;
   max-width: 100%;
 }
 
 .apiKeyEntriesLabel {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: $space-6;
 }
 
 .apiKeyEntryList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
   min-width: 0;
   max-width: 100%;
 }
@@ -1226,33 +1233,33 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
   max-width: 100%;
-  padding: 8px 12px;
+  padding: $space-8 $space-12;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-secondary);
-  border-radius: 8px;
-  font-size: 12px;
+  border: $border-width-1 solid var(--border-secondary);
+  border-radius: $radius-8;
+  font-size: $font-size-12;
 }
 
 .apiKeyEntryIndex {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: $size-20;
+  height: $size-20;
   border-radius: 50%;
   background: var(--primary-color);
   color: var(--primary-contrast);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
   flex-shrink: 0;
 }
 
 .apiKeyEntryKey {
-  font-family: 'Monaco', 'Menlo', 'Consolas', 'Ubuntu Mono', monospace;
-  font-weight: 600;
+  font-family: $font-family-editor-mono;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
   min-width: 0;
   max-width: 100%;
@@ -1262,7 +1269,7 @@
 
 .apiKeyEntryProxy {
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: $font-size-12;
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -1276,18 +1283,18 @@
 
 .apiKeyEntryStats {
   display: flex;
-  gap: 6px;
+  gap: $space-6;
   margin-left: auto;
 }
 
 .apiKeyEntryStat {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 600;
+  gap: $space-3;
+  padding: $space-2 $space-6;
+  border-radius: $radius-10;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
 
   svg {
     display: block;
@@ -1302,4 +1309,26 @@
 .apiKeyEntryStatFailure {
   background: var(--failure-badge-bg);
   color: var(--failure-badge-text);
+}
+
+/* Phones and touch: 44px fields and targets for the small card and list controls. */
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+  .input {
+    height: $size-touch-target;
+  }
+
+  .entryCardToggle {
+    min-height: $size-touch-target;
+  }
+
+  .entryCardIconBtn {
+    width: $size-touch-target;
+    height: $size-touch-target;
+  }
+
+  .removeBtn,
+  .addBtn {
+    min-width: $size-touch-target;
+    min-height: $size-touch-target;
+  }
 }

@@ -24,7 +24,7 @@ describe('Devin OAuth login UI', () => {
       )
     );
     expect(markup).toContain('Devin OAuth');
-    expect(markup).toContain('Start Devin Login');
+    expect(markup).toContain('Log in with Devin');
     expect(markup).toContain('v7.3.1');
     expect(markup).toContain('five minutes');
     expect(markup).not.toContain('auth_login.devin_');

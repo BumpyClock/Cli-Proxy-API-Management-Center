@@ -1,6 +1,7 @@
 import { useState, type HTMLAttributes, type PropsWithChildren, type ReactNode } from 'react';
 import { IconChevronDown } from '../icons';
 import styles from './Collapsible.module.scss';
+import { iconSize } from '@/design-system';
 
 interface CollapsibleProps extends HTMLAttributes<HTMLDetailsElement> {
   label: ReactNode;
@@ -45,7 +46,7 @@ export function Collapsible({
           {hint ? <span className={styles.summaryHint}>{hint}</span> : null}
         </span>
         <span className={styles.chevron} aria-hidden="true">
-          <IconChevronDown size={16} />
+          <IconChevronDown size={iconSize['16']} />
         </span>
       </summary>
       <div className={contentCls}>{children}</div>

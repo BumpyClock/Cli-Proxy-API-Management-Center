@@ -23,7 +23,7 @@ export function OAuthExcludedCard(props: OAuthExcludedCardProps) {
       <header className={styles.panelHead}>
         <h3 className={styles.panelTitle}>{t('oauth_excluded.title')}</h3>
         <div className={styles.panelExtra}>
-          <Button size="sm" onClick={onAdd} disabled={disableControls || excludedError !== null}>
+          <Button onClick={onAdd} disabled={disableControls || excludedError !== null}>
             {t('oauth_excluded.add')}
           </Button>
         </div>
@@ -38,7 +38,7 @@ export function OAuthExcludedCard(props: OAuthExcludedCardProps) {
           <EmptyState
             title={t('notification.refresh_failed')}
             action={
-              <Button variant="secondary" size="sm" onClick={() => void onRetry()}>
+              <Button variant="secondary" onClick={() => void onRetry()}>
                 {t('common.refresh')}
               </Button>
             }
@@ -60,10 +60,10 @@ export function OAuthExcludedCard(props: OAuthExcludedCardProps) {
                   </div>
                 </div>
                 <div className={styles.itemActions}>
-                  <Button variant="secondary" size="sm" onClick={() => onEdit(provider)}>
+                  <Button variant="secondary" onClick={() => onEdit(provider)}>
                     {t('common.edit')}
                   </Button>
-                  <Button variant="danger" size="sm" onClick={() => onDelete(provider)}>
+                  <Button variant="danger-outline" onClick={() => onDelete(provider)}>
                     {t('oauth_excluded.delete')}
                   </Button>
                 </div>

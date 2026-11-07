@@ -1,4 +1,5 @@
 import type { SVGProps } from 'react';
+import { iconSize, iconStroke } from '@/design-system';
 
 // Inline SVG icons (Lucide, ISC). We embed paths to keep the WebUI single-file/offline friendly.
 // Source: https://github.com/lucide-icons/lucide (via lucide-static).
@@ -12,14 +13,14 @@ const baseSvgProps: SVGProps<SVGSVGElement> = {
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 2,
+  strokeWidth: iconStroke.default,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
   'aria-hidden': 'true',
   focusable: 'false',
 };
 
-export function IconSlidersHorizontal({ size = 20, ...props }: IconProps) {
+export function IconSlidersHorizontal({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <line x1="21" x2="14" y1="4" y2="4" />
@@ -35,7 +36,7 @@ export function IconSlidersHorizontal({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconKey({ size = 20, ...props }: IconProps) {
+export function IconKey({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4" />
@@ -45,7 +46,7 @@ export function IconKey({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconBot({ size = 20, ...props }: IconProps) {
+export function IconBot({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M12 8V4H8" />
@@ -58,7 +59,7 @@ export function IconBot({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconModelCluster({ size = 20, ...props }: IconProps) {
+export function IconModelCluster({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <rect x="3" y="5" width="6" height="6" rx="1.5" />
@@ -72,7 +73,7 @@ export function IconModelCluster({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconFilterAll({ size = 20, ...props }: IconProps) {
+export function IconFilterAll({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <rect x="3.5" y="3.5" width="5" height="5" rx="1.4" />
@@ -88,7 +89,7 @@ export function IconFilterAll({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconFileText({ size = 20, ...props }: IconProps) {
+export function IconFileText({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
@@ -100,7 +101,7 @@ export function IconFileText({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconShield({ size = 20, ...props }: IconProps) {
+export function IconShield({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
@@ -108,7 +109,7 @@ export function IconShield({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSettings({ size = 20, ...props }: IconProps) {
+export function IconSettings({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -117,7 +118,7 @@ export function IconSettings({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconPlug({ size = 20, ...props }: IconProps) {
+export function IconPlug({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M12 22v-5" />
@@ -128,7 +129,7 @@ export function IconPlug({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconScrollText({ size = 20, ...props }: IconProps) {
+export function IconScrollText({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M15 12h-5" />
@@ -139,7 +140,7 @@ export function IconScrollText({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconInfo({ size = 20, ...props }: IconProps) {
+export function IconInfo({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <circle cx="12" cy="12" r="10" />
@@ -149,7 +150,7 @@ export function IconInfo({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconRefreshCw({ size = 20, ...props }: IconProps) {
+export function IconRefreshCw({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
@@ -158,7 +159,7 @@ export function IconRefreshCw({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconDownload({ size = 20, ...props }: IconProps) {
+export function IconDownload({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M12 15V3" />
@@ -168,7 +169,7 @@ export function IconDownload({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconUpload({ size = 20, ...props }: IconProps) {
+export function IconUpload({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M12 3v12" />
@@ -178,7 +179,7 @@ export function IconUpload({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconTrash2({ size = 20, ...props }: IconProps) {
+export function IconTrash2({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M3 6h18" />
@@ -190,7 +191,7 @@ export function IconTrash2({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconMaximize2({ size = 20, ...props }: IconProps) {
+export function IconMaximize2({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M15 3h6v6" />
@@ -201,7 +202,7 @@ export function IconMaximize2({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconMinimize2({ size = 20, ...props }: IconProps) {
+export function IconMinimize2({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M4 14h6v6" />
@@ -212,7 +213,7 @@ export function IconMinimize2({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconPlus({ size = 20, ...props }: IconProps) {
+export function IconPlus({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M5 12h14" />
@@ -221,7 +222,7 @@ export function IconPlus({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconPencil({ size = 20, ...props }: IconProps) {
+export function IconPencil({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
@@ -230,7 +231,7 @@ export function IconPencil({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconAlertTriangle({ size = 20, ...props }: IconProps) {
+export function IconAlertTriangle({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
@@ -240,7 +241,7 @@ export function IconAlertTriangle({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconCheckCircle2({ size = 20, ...props }: IconProps) {
+export function IconCheckCircle2({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <circle cx="12" cy="12" r="10" />
@@ -249,7 +250,7 @@ export function IconCheckCircle2({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconNetwork({ size = 20, ...props }: IconProps) {
+export function IconNetwork({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <rect x="16" y="16" width="6" height="6" rx="1" />
@@ -261,7 +262,7 @@ export function IconNetwork({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconLoader2({ size = 20, ...props }: IconProps) {
+export function IconLoader2({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M21 12a9 9 0 1 1-6.219-8.56" />
@@ -269,7 +270,7 @@ export function IconLoader2({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconChevronUp({ size = 20, ...props }: IconProps) {
+export function IconChevronUp({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m18 15-6-6-6 6" />
@@ -277,7 +278,7 @@ export function IconChevronUp({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconChevronDown({ size = 20, ...props }: IconProps) {
+export function IconChevronDown({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m6 9 6 6 6-6" />
@@ -285,7 +286,7 @@ export function IconChevronDown({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconChevronLeft({ size = 20, ...props }: IconProps) {
+export function IconChevronLeft({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m15 18-6-6 6-6" />
@@ -293,7 +294,15 @@ export function IconChevronLeft({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSearch({ size = 20, ...props }: IconProps) {
+export function IconChevronRight({ size = iconSize['20'], ...props }: IconProps) {
+  return (
+    <svg {...baseSvgProps} width={size} height={size} {...props}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+export function IconSearch({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m21 21-4.34-4.34" />
@@ -302,7 +311,7 @@ export function IconSearch({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconX({ size = 20, ...props }: IconProps) {
+export function IconX({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M18 6 6 18" />
@@ -311,7 +320,7 @@ export function IconX({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconCheck({ size = 20, ...props }: IconProps) {
+export function IconCheck({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M20 6 9 17l-5-5" />
@@ -319,7 +328,7 @@ export function IconCheck({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconEye({ size = 20, ...props }: IconProps) {
+export function IconEye({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
@@ -328,7 +337,7 @@ export function IconEye({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconEyeOff({ size = 20, ...props }: IconProps) {
+export function IconEyeOff({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
@@ -339,7 +348,7 @@ export function IconEyeOff({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconInbox({ size = 20, ...props }: IconProps) {
+export function IconInbox({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
@@ -348,7 +357,7 @@ export function IconInbox({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSatellite({ size = 20, ...props }: IconProps) {
+export function IconSatellite({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m13.5 6.5-3.148-3.148a1.205 1.205 0 0 0-1.704 0L6.352 5.648a1.205 1.205 0 0 0 0 1.704L9.5 10.5" />
@@ -360,7 +369,7 @@ export function IconSatellite({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconTimer({ size = 20, ...props }: IconProps) {
+export function IconTimer({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <line x1="10" x2="14" y1="2" y2="2" />
@@ -370,7 +379,7 @@ export function IconTimer({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconDollarSign({ size = 20, ...props }: IconProps) {
+export function IconDollarSign({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <line x1="12" x2="12" y1="2" y2="22" />
@@ -379,7 +388,7 @@ export function IconDollarSign({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconGithub({ size = 20, ...props }: IconProps) {
+export function IconGithub({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
@@ -388,7 +397,7 @@ export function IconGithub({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconHeart({ size = 20, ...props }: IconProps) {
+export function IconHeart({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
@@ -396,7 +405,7 @@ export function IconHeart({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconExternalLink({ size = 20, ...props }: IconProps) {
+export function IconExternalLink({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M15 3h6v6" />
@@ -406,7 +415,7 @@ export function IconExternalLink({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconBookOpen({ size = 20, ...props }: IconProps) {
+export function IconBookOpen({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M12 7v14" />
@@ -415,7 +424,7 @@ export function IconBookOpen({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconCode({ size = 20, ...props }: IconProps) {
+export function IconCode({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <polyline points="16 18 22 12 16 6" />
@@ -424,7 +433,7 @@ export function IconCode({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSidebarDashboard({ size = 20, ...props }: IconProps) {
+export function IconSidebarDashboard({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <rect width="7" height="9" x="3" y="3" rx="1" />
@@ -435,7 +444,7 @@ export function IconSidebarDashboard({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSidebarQuickStart({ size = 20, ...props }: IconProps) {
+export function IconSidebarQuickStart({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
@@ -447,7 +456,7 @@ export const IconSidebarConfig = IconSlidersHorizontal;
 
 export const IconSidebarPlugins = IconPlug;
 
-export function IconSidebarStore({ size = 20, ...props }: IconProps) {
+export function IconSidebarStore({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
@@ -461,7 +470,7 @@ export function IconSidebarStore({ size = 20, ...props }: IconProps) {
 
 export const IconSidebarProviders = IconNetwork;
 
-export function IconSidebarAuthFiles({ size = 20, ...props }: IconProps) {
+export function IconSidebarAuthFiles({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
@@ -470,7 +479,7 @@ export function IconSidebarAuthFiles({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSidebarOauth({ size = 20, ...props }: IconProps) {
+export function IconSidebarOauth({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M2 21a8 8 0 0 1 13.292-6" />
@@ -480,7 +489,7 @@ export function IconSidebarOauth({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSidebarQuota({ size = 20, ...props }: IconProps) {
+export function IconSidebarQuota({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="m12 14 4-4" />
@@ -489,7 +498,7 @@ export function IconSidebarQuota({ size = 20, ...props }: IconProps) {
   );
 }
 
-export function IconSidebarUsage({ size = 20, ...props }: IconProps) {
+export function IconSidebarUsage({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <path d="M4 19V5" />
@@ -502,7 +511,7 @@ export function IconSidebarUsage({ size = 20, ...props }: IconProps) {
 
 export const IconSidebarLogs = IconScrollText;
 
-export function IconSidebarSystem({ size = 20, ...props }: IconProps) {
+export function IconSidebarSystem({ size = iconSize['20'], ...props }: IconProps) {
   return (
     <svg {...baseSvgProps} width={size} height={size} {...props}>
       <rect width="20" height="8" x="2" y="2" rx="2" />

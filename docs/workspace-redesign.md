@@ -1,29 +1,66 @@
-# Management workspace redesign
+# Management workspace
 
-The redesign keeps the existing management API, provider controls, plugin trust gates, hash routes, and single-file deployment. Healthy dashboards show no attention card. Incidents and initial provider setup remain actionable.
+The management frontend keeps the existing Management API, hash routes, provider controls, plugin trust gates and single-file deployment. The UI can be deployed independently by replacing the backend-hosted `management.html`. Backend configuration and provider credentials are unchanged.
 
-## Review fixes
+## Deploying a custom panel
 
-- One per-credential request owner coalesces batch and individual observations. Session, file, and operation ownership checks reject superseded results without replacing accepted values or timestamps.
-- Automatic xAI checks only observe billing data. Inference health tests require a separate action whose translated label warns about charges.
-- Snapshot-backed refreshes reload auth files before reading usage. Failed reads retain stale snapshots without advancing successful timestamps.
-- Quota projections keep independent sparse series. Tests cover 500 accounts using 2,000 samples. This is a data-size bound, not a browser-latency claim.
-- The existing account breakdown supplies accessible quota evidence. Other chart tables mount only when opened. Keyboard inspection and numbered series remain available.
-- Product tests use isolated instances of shipped locale bundles. Missing-key and interpolation tests do not depend on design-review artifacts. Meta and Copilot window labels are translated.
-- OAuth editors share the feature-owned shell stylesheet while retaining separate body styles.
+Before replacing the HTML, prevent the backend updater from restoring an upstream release:
+
+```yaml
+remote-management:
+  disable-auto-update-panel: true
+```
+
+Alternatively, set `remote-management.panel-github-repository` to this fork if you want automatic updates from its releases. The repository must publish a release asset named `management.html`. A branch build alone is not an updater release.
+
+Place the custom `management.html` before the first panel request. A missing file can still trigger a bootstrap download even with automatic updates disabled. The backend resolves its location from `MANAGEMENT_STATIC_PATH`, then `WRITABLE_PATH/static/` (also accepts lowercase `writable_path`), then `static/` beside the backend config. Back up the existing HTML before replacement. These details were checked against the sibling CLIProxyAPIPlus checkout; verify them for other backend versions.
+
+## Operator experience
+
+- Page headers, segmented controls, disclosures, selects and refresh actions use shared owners. Page refresh labels name their scope. The separate global action says "Refresh config & page". Mobile Utilities provides configuration refresh, language, theme and sign out.
+- Desktop tables become labeled mobile records. Auth Files keeps credential identity, availability, health and freshness visible. Details and Actions preserve secondary information and operations. Provider selection precedes resource controls on phones.
+- Dashboard status describes the sources checked, not an unconditional health verdict. Failed or stale sources retain their attention states. Requests through current credentials and usage-statistics records are separate sources over the same window, with an explanation of their different coverage.
+- Quota leads with per-account remaining percentages, limits, reset times and snapshot state. Remaining below 30% is marked Low with text and an icon. Exact overlapping projections share one gray trace and an explicit account-group label. Isolating an account restores its individual stroke. Future values remain projections, not invented usage history.
+- Empty request windows retain their time range and data-table access without drawing a fabricated trend. Missing dated Usage history is Not reported, never zero. Usage tables retain request, token, failure and latency evidence.
+- Logs accept timestamps with `Z` or an offset and structured `status=200` values. Mobile messages wrap. Options groups display, export and destructive controls. Clear logs retains its confirmation. Each structured record is one keyboard-copy button named with the complete raw line; its visual columns are not separate accessible table cells.
+- OAuth Login has provider search and distinguishes regional Kimi variants. Model editors explain required provider selection beside the field and Save. Login restores the original route query. Editor scroll clearance keeps final fields, dropdowns and keyboard focus above the action bar.
+- Config states that edits apply when saved. Plugin disablement has an actionable configuration link. The separate third-party trust warning remains visible and cannot be dismissed. Sponsored resources live on System rather than inside credential fields or onboarding promotions.
+- The full product name is CLI Proxy API Management Center, with CPAMC as its short form. Changed text and accessible labels are maintained in English, Simplified Chinese, Traditional Chinese and Russian.
+
+## Maintainer ownership
+
+Design and motion tokens have one owner, `src/design-system/tokens.ts`; see [design-tokens.md](design-tokens.md). `SegmentedControl`, `NativeSelect`, `RefreshButton` and `PageHeader` own shared control patterns. Route tabs remain distinct from mode switches and multi-select filters. `menuFocus.ts` owns shared menu focus behavior. `useFloatingMenuPosition` owns viewport clamping, flipping and scroll/resize positioning for Auth Files and Provider row menus. Open menus portal to the document body; oversized menus scroll within the available viewport. Theme tokens cover referenced custom properties, and regression tests enforce the 12px typography floor.
+
+Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification
 
-Pinned Bun 1.3.14. Full tests, ESLint, TypeScript, and production single-file build passed. Frozen dependency installation passed with default registry resolution and unchanged package integrity values.
+`bun run verify` runs Bun regression tests, ESLint, both TypeScript projects and the production single-file build. Token suites check generated output, whole-tree adoption and injected drift failures. Run the same command in a no-secrets Boat Linux sandbox with Node 24 and Bun 1.3.14 for CI parity. Keep revision-specific results in the PR.
 
-Existing-profile Chrome checks covered Dashboard, Auth Files, both OAuth editors, Quota, and Usage at 1440 × 1000 and 390 × 844. Local synthetic fixtures verified native chart keyboard navigation, series focus, request-free filter/search/window changes, cached refreshes with partial failures, route re-entry checks, and live/off/unknown/error/stale Usage states. No real credentials or inference calls were used for these checks.
+Application runtime dependencies are unchanged. Token tooling adds Node 24 development types. Active language-server probes can be inconclusive; report their coverage rather than treating an empty result as a clean check.
 
-These review fixes have not been redeployed to Railway. The previously deployed redesign predates them. Backend configuration and credentials are outside this PR.
+`bun run type-check` checks both the application and Node-based build/token tooling. Date-label tests preload UTC through `bunfig.toml`, including when the host exports another `TZ`; production date formatting still uses the viewer's timezone.
 
-## Screenshots
+Rerun browser checks against a local Vite server with synthetic fixtures:
 
-Both images use synthetic local fixtures. No prototype data is bundled into the production application.
+```sh
+PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs \
+CHROME_EXECUTABLE=/path/to/chromium \
+node tests/visual-audit/census.mjs /tmp/cpamc-census --assert
 
-![Desktop dashboard with synthetic fixture data](screenshots/workspace-dashboard.png)
+PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs \
+CHROME_EXECUTABLE=/path/to/chromium \
+node tests/visual-audit/interactions.mjs
+```
 
-![Mobile quota workspace with synthetic fixture data](screenshots/workspace-quota-mobile.png)
+The census checks rendered selection styles, control targets, overflow and first-content positions. The interaction script exercises native keyboard, pointer and touch input for menus, cancelled destructive actions, filters, provider-query restoration, quota axes and account isolation, and Utilities focus restoration. These fixtures make no live backend requests and contain no real credentials.
+
+Logs deliberately trades some initial reading space for a full-width mobile search field and the full Auto refresh label. Its final English first-row gate is 340px, compared with 270px in an earlier iteration. This is an explicit layout tradeoff, not an unchanged performance metric.
+
+## Limits
+
+The UI checks did not exercise real account authorization or inference calls. The upstream `../CLIProxyAPI` checkout was unavailable. Panel-updater behavior was checked against the sibling CLIProxyAPIPlus source, not a live backend mutation. Mobbin required authentication, so no Mobbin references were inspected.
+
+Screenshot scores are subjective craft judgments, not usability studies or accessibility certification. Fixtures cover partial quota and plugin states. The static council did not exercise interactions, and its viewport captures do not establish full-page coverage. The implementation lead separately checked selected Chinese and Russian layouts. Full assistive-technology, real-device, translated-layout and live-data coverage remain incomplete.
+
+Known residual issues include dense mobile metadata, a three-line sidebar brand block that exceeds the top-bar height, and pre-existing Escape behavior that leaves an OAuth editor while its model list is open. No claim of complete accessibility or backend validation is made.

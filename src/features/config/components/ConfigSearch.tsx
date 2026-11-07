@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/Input';
 import { IconSearch } from '@/components/ui/icons';
 import { searchConfigFields, type ConfigFieldSearchEntry } from '../searchIndex';
 import styles from './ConfigSearch.module.scss';
+import { iconSize } from '@/design-system';
 
 export type ConfigSearchProps = {
   disabled?: boolean;
@@ -124,7 +125,7 @@ export function ConfigSearch({ disabled = false, onJump }: ConfigSearchProps) {
         }}
         rightElement={
           <span className={styles.searchIcon} aria-hidden="true">
-            <IconSearch size={16} />
+            <IconSearch size={iconSize['16']} />
           </span>
         }
       />

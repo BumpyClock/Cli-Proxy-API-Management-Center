@@ -1,55 +1,34 @@
+@use '@/styles/mixins' as *;
+
 .overview {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: $space-24;
   min-width: 0;
 }
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: $space-8 $space-20;
 }
-.viewGroup {
-  display: flex;
-  padding: 3px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-secondary);
+/* Each mode switch keeps its visible group name at every width. */
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-8;
 }
-.overview button {
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
+.groupLabel {
   color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 7px 10px;
-  min-height: 34px;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
 }
-.overview button:focus-visible,
-.tableScroll:focus-visible,
-.details summary:focus-visible {
-  outline: 2px solid var(--focus-ring, var(--accent-color));
-  outline-offset: 2px;
-}
-.overview button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.viewGroup button {
-  border-color: transparent;
-}
-.viewGroup button[aria-pressed='true'] {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--border-color);
-}
+
 .panel {
   min-width: 0;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   overflow: hidden;
 }
 .panelHeader {
@@ -57,107 +36,57 @@
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-12;
+  padding: $space-16;
+  border-bottom: $border-width-1 solid var(--border-color);
 }
 .panelHeader h2 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
 }
-.panelHeader p,
 .panelHeader > span {
-  margin: 4px 0 0;
+  margin: $space-4 0 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: $font-size-12;
+}
+/* Desktop: the account list sits beside the chart. Narrow: it leads, the chart follows. */
+.glance {
+  display: grid;
+  grid-template-columns: minmax($size-280, $size-340) minmax(0, 1fr);
+  gap: $space-24;
+  align-items: start;
+  padding: $space-16;
 }
 .chart {
-  padding: 16px;
+  min-width: 0;
 }
-.notes {
-  padding: 0 16px 12px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.notes summary {
-  min-height: 36px;
-  padding: 8px 0;
-  cursor: pointer;
-}
-.notes summary:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-.number {
-  display: inline-block;
-  padding: 0 4px;
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-.legend {
-  padding: 12px 16px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  border-top: 1px solid var(--border-color);
-}
-.tableScroll {
-  overflow: auto;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.table caption {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-.table th,
-.table td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
-  text-align: left;
-  vertical-align: top;
-}
-.table thead th {
-  color: var(--text-secondary);
-  font-weight: 400;
-  font-size: 12px;
-}
-.table tbody th {
-  font-weight: 500;
-  overflow-wrap: anywhere;
-  min-width: 190px;
-}
-.table small {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-.table td {
-  font-variant-numeric: tabular-nums;
-  min-width: 110px;
-}
-.warning {
-  color: var(--warning-color);
+@media (max-width: #{$breakpoint-tablet}) {
+  .glance {
+    grid-template-columns: minmax(0, 1fr);
+    gap: $space-20;
+  }
 }
 .details summary {
-  cursor: pointer;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
-  font-size: 13px;
+  @include disclosure-summary;
+  margin-bottom: $space-16;
 }
-@media (max-width: 600px) {
-  .panelHeader {
-    padding: 16px;
+/* Phones: View and Window share one row, each name above its switch, so accounts come sooner. */
+@media (max-width: #{$breakpoint-600}) {
+  .overview {
+    gap: $space-16;
+  }
+  .controls {
+    align-items: flex-end;
+    gap: $space-8 $space-12;
+  }
+  .control {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-4;
+  }
+  .panelHeader,
+  .glance {
+    padding: $space-12;
   }
 }

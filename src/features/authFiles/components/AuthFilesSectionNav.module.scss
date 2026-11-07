@@ -1,0 +1,52 @@
+.subnav {
+  display: flex;
+  gap: $space-24;
+  border-bottom: $border-width-1 solid var(--border-color);
+
+  a {
+    flex-shrink: 0;
+    padding: $space-12 0;
+    border-bottom: $border-width-2 solid transparent;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-size: $font-size-14;
+    text-decoration: none;
+  }
+
+  a[aria-current='page'] {
+    border-bottom-color: var(--accent-color);
+    color: var(--text-primary);
+  }
+
+  a:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .subnav a:not([aria-current='page']):hover {
+    color: var(--text-primary);
+  }
+}
+
+.picker {
+  display: none;
+}
+
+@media (max-width: #{$breakpoint-1100}) {
+  .subnav {
+    gap: $space-20;
+  }
+}
+
+/* Phones: one labelled select names the current section and lists all three. */
+@media (max-width: #{$breakpoint-mobile}) {
+  .subnav {
+    display: none;
+  }
+
+  .picker {
+    display: flex;
+  }
+}

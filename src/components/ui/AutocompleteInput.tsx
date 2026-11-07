@@ -7,6 +7,18 @@ import {
   type ReactNode,
 } from 'react';
 import { IconChevronDown } from './icons';
+import {
+  borderWidth,
+  fontSize,
+  fontWeight,
+  iconSize,
+  opacity,
+  px,
+  shadow,
+  size,
+  space,
+  z,
+} from '@/design-system';
 
 interface AutocompleteInputProps {
   label?: string;
@@ -21,6 +33,8 @@ interface AutocompleteInputProps {
   wrapperClassName?: string;
   wrapperStyle?: React.CSSProperties;
   id?: string;
+  /** Ids of helper or validation text that describes the field. */
+  ariaDescribedBy?: string;
   rightElement?: ReactNode;
 }
 
@@ -37,6 +51,7 @@ export function AutocompleteInput({
   wrapperClassName = '',
   wrapperStyle,
   id,
+  ariaDescribedBy,
   rightElement,
 }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -118,13 +133,14 @@ export function AutocompleteInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
+          aria-describedby={ariaDescribedBy}
           autoComplete="off"
-          style={{ paddingRight: 32 }}
+          style={{ paddingRight: space['32'] }}
         />
         <div
           style={{
             position: 'absolute',
-            right: 8,
+            right: space['8'],
             top: '50%',
             transform: 'translateY(-50%)',
             display: 'flex',
@@ -136,7 +152,10 @@ export function AutocompleteInput({
           onClick={() => !disabled && setIsOpen(!isOpen)}
         >
           {rightElement}
-          <IconChevronDown size={16} style={{ opacity: 0.5, marginLeft: 4 }} />
+          <IconChevronDown
+            size={iconSize['16']}
+            style={{ opacity: opacity['0-5'], marginLeft: space['4'] }}
+          />
         </div>
 
         {isOpen && filteredOptions.length > 0 && !disabled && (
@@ -144,16 +163,16 @@ export function AutocompleteInput({
             className="autocomplete-dropdown"
             style={{
               position: 'absolute',
-              top: 'calc(100% + 4px)',
+              top: `calc(100% + ${px(space['4'])})`,
               left: 0,
               right: 0,
-              zIndex: 1000,
+              zIndex: z.dropdown,
               backgroundColor: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)',
+              border: `${px(borderWidth['1'])} solid var(--border-color)`,
               borderRadius: 'var(--radius-md)',
-              maxHeight: 200,
+              maxHeight: size['200'],
               overflowY: 'auto',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              boxShadow: shadow['autocomplete-menu'],
             }}
           >
             {filteredOptions.map((opt, index) => (
@@ -161,20 +180,20 @@ export function AutocompleteInput({
                 key={`${opt.value}-${index}`}
                 onClick={() => handleSelect(opt.value)}
                 style={{
-                  padding: '8px 12px',
+                  padding: `${px(space['8'])} ${px(space['12'])}`,
                   cursor: 'pointer',
                   backgroundColor:
                     index === highlightedIndex ? 'var(--bg-tertiary)' : 'transparent',
                   color: 'var(--text-primary)',
                   display: 'flex',
                   flexDirection: 'column',
-                  fontSize: '0.9rem',
+                  fontSize: fontSize['0-9rem'],
                 }}
                 onMouseEnter={() => setHighlightedIndex(index)}
               >
-                <span style={{ fontWeight: 500 }}>{opt.value}</span>
+                <span style={{ fontWeight: fontWeight['500'] }}>{opt.value}</span>
                 {opt.label && opt.label !== opt.value && (
-                  <span style={{ fontSize: '0.85em', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: fontSize['0-85em'], color: 'var(--text-secondary)' }}>
                     {opt.label}
                   </span>
                 )}

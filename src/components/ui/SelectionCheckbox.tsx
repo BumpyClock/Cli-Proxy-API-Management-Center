@@ -1,6 +1,7 @@
 import type { ChangeEvent, ReactNode } from 'react';
 import { IconCheck } from './icons';
 import styles from './SelectionCheckbox.module.scss';
+import { iconSize } from '@/design-system';
 
 interface SelectionCheckboxProps {
   checked: boolean;
@@ -43,8 +44,10 @@ export function SelectionCheckbox({
         aria-label={ariaLabel}
         disabled={disabled}
       />
-      <span className={boxClassName}>{checked ? <IconCheck size={12} /> : null}</span>
-      {label ? <div className={textClassName}>{label}</div> : null}
+      <span className={boxClassName}>
+        {checked ? <IconCheck size={iconSize['12']} aria-hidden="true" /> : null}
+      </span>
+      {label ? <span className={textClassName}>{label}</span> : null}
     </label>
   );
 }

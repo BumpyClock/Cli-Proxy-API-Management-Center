@@ -10,35 +10,35 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  padding: 15px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  gap: $space-11;
+  padding: $space-15 $space-16;
+  border-radius: $radius-14;
+  border: $border-width-1 solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-primary) $tint-0-82, transparent);
   transition:
-    transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    box-shadow var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    transform var(--dur-hover) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong),
+    box-shadow var(--dur-hover) var(--ease-out-strong);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    transform: translateY(-2px);
+    transform: translateY((-$distance-2));
     border-color: var(--border-hover);
-    box-shadow: 0 12px 26px -14px rgb(0 0 0 / 0.16);
+    box-shadow: $shadow-quota-card;
   }
 }
 
 /* 首次数据到达时的一次性级联入场；切 tab / 翻页 / 刷新不重播 */
 .cardEnter {
-  animation: quota-card-in 0.45s var(--ease-out-strong, ease-out) both;
+  animation: quota-card-in $duration-450 var(--ease-out-strong) both;
   animation-delay: var(--card-delay, 0s);
 }
 
 @keyframes quota-card-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 16px, 0);
+    transform: translate3d(0, $distance-16, 0);
   }
 }
 
@@ -47,7 +47,7 @@
 .head {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: $space-9;
   min-width: 0;
 }
 
@@ -56,31 +56,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-tertiary) 60%, transparent);
+  width: $size-26;
+  height: $size-26;
+  border-radius: $radius-8;
+  background: color-mix(in srgb, var(--bg-tertiary) $tint-0-6, transparent);
 }
 
 .icon {
-  width: 16px;
-  height: 16px;
+  width: $size-16;
+  height: $size-16;
   object-fit: contain;
   display: block;
 }
 
 .iconFallback {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
   color: var(--text-secondary);
 }
 
 .fileName {
   min-width: 0;
-  font-family: $font-mono;
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: $font-family-mono;
+  font-size: $font-size-12-5;
+  font-weight: $font-weight-600;
+  letter-spacing: $letter-spacing-0-01;
   color: var(--text-primary);
   @include text-ellipsis;
 }
@@ -90,7 +90,7 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: $space-9;
   min-width: 0;
 }
 
@@ -101,38 +101,38 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: $space-6;
   width: 100%;
-  min-height: 76px;
-  padding: 12px 10px;
+  min-height: $size-76;
+  padding: $space-12 $space-10;
   cursor: pointer;
-  border: 1px dashed var(--border-color);
-  border-radius: 10px;
+  border: $border-width-1 dashed var(--border-color);
+  border-radius: $radius-10;
   background: none;
   color: var(--text-tertiary);
   transition:
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    transform var(--dur-press) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong),
+    color var(--dur-hover) var(--ease-out-strong);
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: $opacity-0-55;
   }
 
   &:active:not(:disabled) {
-    transform: scale(0.98);
+    transform: scale($motion-scale-0-98);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-2;
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .idleBody:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
+    border-color: color-mix(in srgb, var(--primary-color) $tint-0-35, var(--border-color));
     border-style: solid;
     color: var(--text-secondary);
   }
@@ -140,13 +140,13 @@
 
 .idleGlyph {
   flex-shrink: 0;
-  opacity: 0.8;
+  opacity: $opacity-0-8;
 }
 
 .idleHint {
-  font-family: $font-mono;
-  font-size: 11.5px;
-  line-height: 1.5;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   text-align: center;
 }
 
@@ -155,31 +155,31 @@
 .skeleton {
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  padding: 4px 0 2px;
+  gap: $space-11;
+  padding: $space-4 0 $space-2;
 }
 
 .skeletonRow {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
 
 /* 骨架：底色 + 一道 1.2s 匀速扫光（linear —— 环境性匀速运动的唯一例外） */
 .skeletonLabel,
 .skeletonTrack {
   display: block;
-  border-radius: $radius-full;
-  background-color: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  border-radius: $radius-9999;
+  background-color: color-mix(in srgb, var(--text-primary) $tint-0-08, transparent);
   background-image: linear-gradient(
     90deg,
     transparent 20%,
-    color-mix(in srgb, var(--text-primary) 6%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) $tint-0-06, transparent) 50%,
     transparent 80%
   );
   background-repeat: no-repeat;
   background-size: 220% 100%;
-  animation: quota-skeleton-sweep 1.2s linear infinite;
+  animation: quota-skeleton-sweep $duration-1200 $ease-linear infinite;
 }
 
 @keyframes quota-skeleton-sweep {
@@ -193,20 +193,20 @@
 
 .skeletonLabel {
   width: 40%;
-  height: 10px;
+  height: $size-10;
 }
 
 .skeletonTrack {
   width: 100%;
-  height: 6px;
+  height: $size-6;
 }
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
-  margin: -1px;
+  margin: (-$space-1);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
@@ -216,13 +216,13 @@
 /* ---------- error ---------- */
 
 .errorStrip {
-  font-size: 11.5px;
-  line-height: 1.5;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   color: var(--viz-failure);
-  background: color-mix(in srgb, var(--viz-failure) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--viz-failure) 32%, transparent);
-  border-radius: 9px;
-  padding: 8px 10px;
+  background: color-mix(in srgb, var(--viz-failure) $tint-0-08, transparent);
+  border: $border-width-1 solid color-mix(in srgb, var(--viz-failure) $tint-0-32, transparent);
+  border-radius: $radius-9;
+  padding: $space-8 $space-10;
   overflow-wrap: anywhere;
 }
 
@@ -231,7 +231,7 @@
 .actionRow {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: $space-6;
   flex-wrap: wrap;
 }
 
@@ -239,48 +239,56 @@
 .actionPill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: $space-5;
   cursor: pointer;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-full;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-9999;
   background: none;
-  padding: 5px 11px;
-  font-size: 11.5px;
-  font-weight: 600;
-  line-height: 1.4;
+  min-height: $size-32;
+  padding: $space-5 $space-12;
+  font-size: $font-size-12;
+  font-weight: $font-weight-600;
+  line-height: $line-height-1-4;
   color: var(--text-secondary);
   white-space: nowrap;
   transition:
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+    transform var(--dur-press) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong),
+    background-color var(--dur-hover) var(--ease-out-strong),
+    color var(--dur-hover) var(--ease-out-strong);
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: $opacity-0-5;
   }
 
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale($motion-scale-0-97);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-2;
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .actionPill:hover:not(:disabled) {
     border-color: var(--border-hover);
-    background: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
+    background: color-mix(in srgb, var(--bg-tertiary) $tint-0-55, transparent);
     color: var(--text-primary);
   }
 }
 
+@media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+  .actionPill {
+    min-height: $size-touch-target;
+    padding-inline: $space-14;
+  }
+}
+
 .spinning {
-  animation: quota-card-spin 0.8s linear infinite;
+  animation: quota-card-spin $duration-800 $ease-linear infinite;
 }
 
 @keyframes quota-card-spin {

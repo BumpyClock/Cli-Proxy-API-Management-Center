@@ -1,0 +1,93 @@
+.refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-8;
+  min-height: $size-36;
+  padding: 0 $space-12;
+  border: $border-width-1 solid var(--control-outline);
+  border-radius: $radius-6;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-hover) var(--ease-out-strong),
+    border-color var(--dur-hover) var(--ease-out-strong),
+    transform var(--dur-press) var(--ease-out-strong);
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not([aria-disabled='true']) {
+      background: var(--bg-tertiary);
+      border-color: var(--border-hover);
+    }
+  }
+
+  &:active:not([aria-disabled='true']) {
+    transform: scale($motion-scale-0-97);
+  }
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
+  }
+
+  &[aria-disabled='true'] {
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+
+  &[aria-busy='true'] {
+    cursor: progress;
+  }
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
+    padding: 0 $space-14;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:active:not([aria-disabled='true']) {
+      transform: none;
+    }
+  }
+}
+
+.compactLabel {
+  display: none;
+}
+
+/* display:none also drops the hidden variant from the accessible name. */
+@media (max-width: #{$breakpoint-mobile}) {
+  .fullLabel {
+    display: none;
+  }
+
+  .compactLabel {
+    display: inline;
+  }
+}
+
+.spinning {
+  animation: refreshButtonSpin $duration-900 $ease-linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes refreshButtonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

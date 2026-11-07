@@ -15,6 +15,7 @@ import {
 } from '../fields/FieldPrimitives';
 import { ProxyUrlField } from '../fields/sharedFields';
 import { getValidationMessage } from '../blocks/shared';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.network;
 
@@ -62,7 +63,7 @@ export function SectionNetwork({
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.network}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.network.title')}
       description={t('config_management.visual.sections.network.description')}
       animateIn={animateIn}

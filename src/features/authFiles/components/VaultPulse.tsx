@@ -3,11 +3,12 @@ import type { AuthFileItem } from '@/types';
 import { hasAuthFileStatusWarning } from '@/features/authFiles/constants';
 import type { AuthFileStatusBarData } from '@/features/authFiles/hooks/useAuthFilesStatusBarCache';
 import styles from './VaultPulse.module.scss';
+import { motion } from '@/design-system';
 
 /** 谱条最多渲染的凭证数；超出以 mono「+N」尾注表示。 */
 const MAX_BARS = 160;
 /** 级联入场总预算（与 useRevealGroup / ThroughputChart 同一 360ms 语汇）。 */
-const ENTRANCE_BUDGET_MS = 360;
+const ENTRANCE_BUDGET_MS = motion.cascade['vault-pulse'].budget;
 
 type PulseState = 'live' | 'idle' | 'warning' | 'problem';
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { IconX } from '@/components/ui/icons';
 import styles from './ExcludedModelRuleChip.module.scss';
+import { iconSize } from '@/design-system';
 
 /**
  * 排除项 chip —— 按**来源**区分三种形态，取代两处近乎重复的手写标记
@@ -55,7 +56,7 @@ export function ExcludedModelRuleChip({
           disabled={disabled}
           aria-label={removeAriaLabel ?? label}
         >
-          <IconX size={12} />
+          <IconX size={iconSize['12']} />
         </button>
       ) : null}
     </span>

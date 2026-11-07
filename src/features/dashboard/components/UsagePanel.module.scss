@@ -4,43 +4,45 @@
 .off {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $space-16;
 }
 
 .off {
   align-items: flex-start;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .offTitle {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
 }
 
 .note {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
 }
 
 .moreLink {
   align-self: flex-start;
 
-  @media (pointer: coarse) {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-0-25em;
+  min-height: $size-32;
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 
-  margin-top: 4px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--primary-active);
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: $radius-4;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -49,8 +51,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-2;
   }
 }
 
@@ -58,24 +60,24 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 13px;
+  font-size: $font-size-13;
   font-variant-numeric: tabular-nums;
 
   th,
   td {
-    padding: 7px 0 7px 10px;
-    border-bottom: 1px solid var(--border-color);
+    padding: $space-7 0 $space-7 $space-10;
+    border-bottom: $border-width-1 solid var(--border-color);
     text-align: right;
-    font-family: $font-mono;
-    font-size: 12px;
+    font-family: $font-family-mono;
+    font-size: $font-size-12;
     color: var(--text-primary);
   }
 
   thead th {
     font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: $font-size-12;
+    font-weight: $font-weight-700;
+    letter-spacing: $letter-spacing-0-04;
     text-transform: uppercase;
     color: var(--text-secondary);
     white-space: nowrap;
@@ -103,32 +105,32 @@
 
 .caption {
   caption-side: top;
-  padding-bottom: 6px;
+  padding-bottom: $space-6;
   text-align: left;
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-secondary);
 }
 
 .model {
-  font-weight: 600;
+  font-weight: $font-weight-600;
   @include text-ellipsis;
 }
 
 .failed {
   color: var(--failure-badge-text) !important;
-  font-weight: 700;
+  font-weight: $font-weight-700;
 }
 
 .failures {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-8;
 }
 
 .subTitle {
   margin: 0;
-  font-size: 13px;
-  font-weight: 650;
+  font-size: $font-size-13;
+  font-weight: $font-weight-650;
   color: var(--text-primary);
 }
 
@@ -138,26 +140,26 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
 }
 
 .failure {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 2px 10px;
+  gap: $space-2 $space-10;
   align-items: baseline;
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--text-secondary);
 }
 
 .failureTime,
 .failureLatency {
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   font-variant-numeric: tabular-nums;
 }
 
 .failureModel {
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   color: var(--text-primary);
   @include text-ellipsis;
 }

@@ -179,7 +179,7 @@ export function resolveStatus(input: ConfigStatusInput): ConfigStatus {
 }
 
 export type HeaderMetaSegment = {
-  key: 'fields' | ConfigStatusKey | 'dirty_source' | 'errors';
+  key: 'fields' | ConfigStatusKey | 'dirty_source' | 'errors' | 'save_hint';
   labelKey: string;
   count?: number;
   tone: 'muted' | 'warning' | 'error' | 'ok';
@@ -252,6 +252,14 @@ export function buildHeaderMeta(input: HeaderMetaInput): HeaderMetaSegment[] {
   }
   if (status.key === 'synced') {
     segments.push({ key: status.key, labelKey: 'config_management.meta_synced', tone: 'ok' });
+  }
+  // Nothing autosaves: edits reach the server only through the save bar's Save action.
+  if (status.key !== 'yaml_error') {
+    segments.push({
+      key: 'save_hint',
+      labelKey: 'config_management.meta_save_hint',
+      tone: 'muted',
+    });
   }
   return segments;
 }

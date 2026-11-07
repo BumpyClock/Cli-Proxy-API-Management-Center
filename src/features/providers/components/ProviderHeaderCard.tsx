@@ -1,18 +1,23 @@
 import { useTranslation } from 'react-i18next';
+import { formatDateTimeValue, isoTitle } from '@/utils/format';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { IconLoader2, IconPlus, IconRefreshCw } from '@/components/ui/icons';
+import { RefreshButton } from '@/components/ui/RefreshButton';
+import { IconPlus } from '@/components/ui/icons';
 import styles from './ProviderHeaderCard.module.scss';
+import { iconSize } from '@/design-system';
 
 interface ProviderHeaderCardProps {
   title?: string;
   totalActive: number;
   totalResources: number;
   providerFamilies: number;
-  updatedAtLabel: string;
+  /** Snapshot fetch time (ISO). Null before the first load. */
+  updatedAt: string | null;
   isFetching?: boolean;
   isNewDisabled?: boolean;
   showNewAction?: boolean;
   showSummary?: boolean;
+  /** Names what the create action adds, e.g. "Add Gemini key". */
   newLabel?: string;
   variant?: 'quickStart';
   onRefresh: () => void;
@@ -24,7 +29,7 @@ export function ProviderHeaderCard({
   totalActive,
   totalResources,
   providerFamilies,
-  updatedAtLabel,
+  updatedAt,
   isFetching = false,
   isNewDisabled = false,
   showNewAction = true,
@@ -34,58 +39,68 @@ export function ProviderHeaderCard({
   onRefresh,
   onNew,
 }: ProviderHeaderCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const updatedLabel = updatedAt ? formatDateTimeValue(updatedAt, i18n.language) : '';
+  const updatedIso = updatedAt ? isoTitle(updatedAt) : '';
+  // One summary line; the fetch time follows as secondary text and wraps on its own on phones.
+  const metaItems = [
+    <span key="summary" className={styles.metaStrong}>
+      {t('providersPage.header.summary', {
+        active: totalActive,
+        total: totalResources,
+        count: providerFamilies,
+      })}
+    </span>,
+    updatedLabel ? (
+      <time key="updated" dateTime={updatedIso} title={updatedIso}>
+        {t('providersPage.header.updatedAt', { time: updatedLabel })}
+      </time>
+    ) : (
+      <span key="updated">{t('providersPage.modelCatalog.notLoaded')}</span>
+    ),
+  ];
   return (
     <PageHeader
       title={title ?? t('providersPage.header.title')}
       className={variant === 'quickStart' ? styles.quickStartCard : undefined}
       actions={
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnOutline}`}
+          <RefreshButton
             onClick={onRefresh}
-            disabled={isFetching}
-            aria-label={
-              isFetching ? t('providersPage.actions.syncing') : t('providersPage.actions.refresh')
-            }
-          >
-            <span className={`${styles.btnIcon} ${isFetching ? styles.spin : ''}`.trim()}>
-              {isFetching ? <IconLoader2 size={16} /> : <IconRefreshCw size={16} />}
-            </span>
-            <span>
-              {isFetching ? t('providersPage.actions.syncing') : t('providersPage.actions.refresh')}
-            </span>
-          </button>
-          {showNewAction ? (
+            refreshing={isFetching}
+            label={t('providersPage.header.refresh')}
+          />
+          {showNewAction && newLabel ? (
             <button
               type="button"
-              className={`${styles.btn} ${styles.btnPrimary}`}
+              className="btn btn-primary"
               onClick={onNew}
               disabled={isNewDisabled}
             >
-              <IconPlus size={16} />
-              <span>{newLabel ?? t('providersPage.actions.new')}</span>
+              <span>
+                <IconPlus size={iconSize['16']} aria-hidden="true" />
+                {newLabel}
+              </span>
             </button>
           ) : null}
         </div>
       }
       meta={
         showSummary ? (
-          <div className={styles.chips}>
-            <span className={`${styles.chip} ${styles.chipPrimary}`}>
-              {t('providersPage.header.activeResources', {
-                active: totalActive,
-                total: totalResources,
-              })}
-            </span>
-            <span className={styles.chip}>
-              {t('providersPage.header.providerFamilies', { count: providerFamilies })}
-            </span>
-            <span className={styles.chip}>
-              {t('providersPage.header.updatedAt', { time: updatedAtLabel })}
-            </span>
-          </div>
+          <span className={styles.meta}>
+            {/* The "·" trails its item inside a no-wrap group, so a wrapped line never starts
+                with a separator. */}
+            {metaItems.map((item, index) => (
+              <span key={item.key} className={styles.metaItem}>
+                {item}
+                {index < metaItems.length - 1 ? (
+                  <span className={styles.metaDot} aria-hidden="true">
+                    ·
+                  </span>
+                ) : null}
+              </span>
+            ))}
+          </span>
         ) : undefined
       }
     />

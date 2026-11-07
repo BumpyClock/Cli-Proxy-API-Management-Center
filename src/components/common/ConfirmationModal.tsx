@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { useNotificationStore } from '@/stores';
+import { space } from '@/design-system';
 
 export function ConfirmationModal() {
   const { t } = useTranslation();
@@ -52,11 +53,18 @@ export function ConfirmationModal() {
   return (
     <Modal open={isOpen} onClose={handleCancel} title={title} closeDisabled={isLoading}>
       {typeof message === 'string' ? (
-        <p style={{ margin: '1rem 0' }}>{message}</p>
+        <p style={{ margin: `${space['1rem']} 0` }}>{message}</p>
       ) : (
-        <div style={{ margin: '1rem 0' }}>{message}</div>
+        <div style={{ margin: `${space['1rem']} 0` }}>{message}</div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: space['1rem'],
+          marginTop: space['2rem'],
+        }}
+      >
         <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>
           {cancelText || t('common.cancel')}
         </Button>

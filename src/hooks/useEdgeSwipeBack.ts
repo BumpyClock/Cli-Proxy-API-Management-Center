@@ -14,6 +14,7 @@ type ActiveGesture = {
   active: boolean;
 };
 
+// design-tokens: allow gesture hit zone for edge-swipe detection, never rendered
 const DEFAULT_EDGE_SIZE = 28;
 const DEFAULT_THRESHOLD = 90;
 const VERTICAL_TOLERANCE_RATIO = 1.2;

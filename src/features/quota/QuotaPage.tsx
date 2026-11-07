@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatDateTimeValue } from '@/utils/format';
 import { authFilesApi } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -47,6 +48,7 @@ import { useQuotaActions } from './hooks/useQuotaActions';
 import { useQuotaBatchLoader } from './hooks/useQuotaBatchLoader';
 import { readQuotaUiState, writeQuotaUiState } from './uiState';
 import styles from './QuotaPage.module.scss';
+import { iconSize, radius, size } from '@/design-system';
 
 const TAB_IDS: string[] = ['all', ...QUOTA_TAB_ORDER];
 const SKELETON_CARD_COUNT = 6;
@@ -390,7 +392,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
             ? t('redesign.quota.stale')
             : checkResult &&
               t('redesign.quota.checked', {
-                time: new Date(checkResult.checkedAt).toLocaleTimeString(i18n.language),
+                time: formatDateTimeValue(checkResult.checkedAt, i18n.language),
                 ...checkResult,
               })}
       </p>
@@ -403,15 +405,14 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
               types={TAB_IDS}
               counts={tabCounts}
               active={tab}
-              variant="pills"
               resolvedTheme={resolvedTheme}
               onChange={handleTabChange}
             />
           </div>
 
           <div className={styles.toolbar}>
-            <div className={styles.search}>
-              <IconSearch size={16} className={styles.searchIcon} aria-hidden="true" />
+            <div className={styles.searchField}>
+              <IconSearch size={iconSize['16']} className={styles.searchIcon} aria-hidden="true" />
               <input
                 ref={searchInputRef}
                 className={styles.searchInput}
@@ -432,7 +433,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
                     searchInputRef.current?.focus();
                   }}
                 >
-                  <IconX size={14} aria-hidden="true" />
+                  <IconX size={iconSize['14']} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -457,7 +458,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
         {loading && entries.length === 0 ? (
           <div className={styles.grid} aria-hidden="true">
             {Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => (
-              <Skeleton key={index} height={168} rounded={14} />
+              <Skeleton key={index} height={size['168']} rounded={radius['14']} />
             ))}
           </div>
         ) : isEmpty ? (

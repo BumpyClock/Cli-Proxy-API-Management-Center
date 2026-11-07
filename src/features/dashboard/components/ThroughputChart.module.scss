@@ -1,31 +1,89 @@
-.placeholder {
-  min-height: 160px;
+@use '@/styles/mixins' as *;
+
+.emptyRow {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-}
-
-.placeholderTitle {
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.placeholderHint {
-  max-width: 52ch;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: $space-4 $space-12;
+  margin: 0;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
+}
+
+.emptyRange {
+  font-variant-numeric: tabular-nums;
 }
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* ---------- All-zero window: one row, the buckets on demand ---------- */
+
+.compactRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: $space-4 $space-16;
+  min-width: 0;
+}
+
+.compactTitle {
+  margin: 0;
+  font-size: $font-size-15;
+  line-height: $line-height-1-4;
+  font-weight: $font-weight-600;
+  letter-spacing: (-$letter-spacing-0-02);
+  color: var(--text-primary);
+}
+
+.tableDisclosure {
+  min-width: 0;
+  font-size: $font-size-13;
+  color: var(--text-secondary);
+
+  summary {
+    @include disclosure-summary;
+  }
+}
+
+.tableWrap {
+  min-width: 0;
+  max-width: $size-640;
+  margin-top: $space-8;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: $font-size-13;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    padding: $space-6 $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  th:first-child {
+    text-align: left;
+  }
+
+  thead th {
+    font-weight: $font-weight-600;
+    color: var(--text-primary);
+  }
+
+  tbody th {
+    font-weight: $font-weight-400;
+  }
 }

@@ -3,41 +3,41 @@
 .editor {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
 }
 
 .loading {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 24px 0;
+  gap: $space-8;
+  padding: $space-24 0;
   justify-content: center;
-  font-size: 13px;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 }
 
 .error {
-  font-size: 12.5px;
-  line-height: 1.5;
+  font-size: $font-size-12-5;
+  line-height: $line-height-1-5;
   color: var(--danger-color);
   background: var(--bg-error-light);
-  border: 1px solid var(--warning-border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border: $border-width-1 solid var(--warning-border);
+  border-radius: $radius-8;
+  padding: $space-8 $space-10;
   overflow-wrap: anywhere;
 }
 
 .jsonWrapper {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .label {
-  font-family: $font-mono;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-700;
+  letter-spacing: $letter-spacing-0-1;
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
@@ -46,19 +46,19 @@
   width: 100%;
   box-sizing: border-box;
   resize: vertical;
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.55;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-55;
   color: var(--text-secondary);
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-10;
+  padding: $space-10 $space-12;
 
   &:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-10);
+    box-shadow: $shadow-focus-ring-primary;
   }
 }
 
@@ -68,16 +68,16 @@
 
 .invalidPreview {
   margin: 0;
-  max-height: 240px;
+  max-height: $size-240;
   overflow: auto;
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.55;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  line-height: $line-height-1-55;
   color: var(--text-secondary);
   background: var(--bg-secondary);
-  border: 1px dashed var(--border-hover);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border: $border-width-1 dashed var(--border-hover);
+  border-radius: $radius-10;
+  padding: $space-10 $space-12;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -85,12 +85,12 @@
 .fields {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: $space-14;
 }
 
 .settingsLink {
   color: var(--primary-color);
-  font-weight: 600;
+  font-weight: $font-weight-600;
   text-decoration: none;
 
   &:hover {
@@ -98,8 +98,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline: $border-width-2 solid var(--primary-color);
+    outline-offset: $space-2;
+    border-radius: $radius-2;
   }
 }

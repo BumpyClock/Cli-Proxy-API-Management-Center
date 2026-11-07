@@ -4,77 +4,24 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: $space-20;
   width: 100%;
-  padding: 32px;
-  box-sizing: border-box;
+  min-width: 0;
 }
 
 .layout {
   display: grid;
   align-items: start;
-  gap: 16px;
+  gap: $space-16;
   grid-template-columns: minmax(0, 1fr);
 
-  @media (min-width: 1000px) {
-    grid-template-columns: 240px minmax(0, 1fr);
+  @media (min-width: #{$breakpoint-1000}) {
+    grid-template-columns: $size-240 minmax(0, 1fr);
   }
 }
 
-.layoutSingle {
-  @media (min-width: 1000px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.modelCatalogSlot {
-  margin-top: 4px;
-}
-
-@media (max-width: 768px) {
+@media (max-width: #{$breakpoint-mobile}) {
   .page {
-    padding: 16px;
-    gap: 16px;
-  }
-}
-
-.setup {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-primary);
-  h2 {
-    font-size: 14px;
-    margin: 0;
-    padding: 16px;
-    border-bottom: 1px solid var(--border-color);
-  }
-  ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    counter-reset: setup;
-  }
-  li {
-    counter-increment: setup;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-  }
-  li + li {
-    border-top: 1px solid var(--border-color);
-  }
-  li::before {
-    content: counter(setup);
-    color: var(--text-secondary);
-    font-family: $font-mono;
-  }
-  a {
-    color: var(--text-primary);
-    text-underline-offset: 4px;
-  }
-  a:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 4px;
+    gap: $space-16;
   }
 }

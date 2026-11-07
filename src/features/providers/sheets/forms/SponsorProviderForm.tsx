@@ -44,6 +44,7 @@ import { ModelEntriesEditor } from './ModelEntriesEditor';
 import { useModelDiscovery, type UseModelDiscoveryResult } from './useModelDiscovery';
 import { useSponsorUsageCheck, type SponsorUsageMessages } from './useSponsorUsageCheck';
 import styles from './sharedForm.module.scss';
+import { iconSize } from '@/design-system';
 
 interface SponsorProviderFormProps {
   brand?: SponsorProviderBrand;
@@ -293,7 +294,7 @@ function SponsorModelSection({
             onClick={openDiscovery}
             disabled={mutating}
           >
-            <IconDownload size={14} />
+            <IconDownload size={iconSize['14']} />
             <span>{t('providersPage.discovery.openButton')}</span>
           </button>
         </div>
@@ -445,7 +446,7 @@ function SponsorKeyEntryCard({
               className={[styles.entryCardChevron, expanded ? styles.entryCardChevronOpen : '']
                 .filter(Boolean)
                 .join(' ')}
-              size={14}
+              size={iconSize['14']}
             />
           </button>
           <button
@@ -456,7 +457,7 @@ function SponsorKeyEntryCard({
             title={t('providersPage.sponsor.removeGroupedKey')}
             aria-label={t('providersPage.sponsor.removeGroupedKey')}
           >
-            <IconX size={12} />
+            <IconX size={iconSize['12']} />
           </button>
         </div>
       </div>
@@ -568,7 +569,11 @@ function SponsorKeyEntryCard({
                     : t('providersPage.form.showApiKey')
                 }
               >
-                {showApiKey ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                {showApiKey ? (
+                  <IconEyeOff size={iconSize['16']} />
+                ) : (
+                  <IconEye size={iconSize['16']} />
+                )}
               </button>
             </div>
             <span className={styles.labelHint}>{t('providersPage.sponsor.apiKeyHint')}</span>
@@ -583,9 +588,9 @@ function SponsorKeyEntryCard({
                 disabled={mutating || usageCheck.isLoading}
               >
                 {usageCheck.isLoading ? (
-                  <IconLoader2 className={styles.statusIconLoading} size={14} />
+                  <IconLoader2 className={styles.statusIconLoading} size={iconSize['14']} />
                 ) : (
-                  <IconDollarSign size={14} />
+                  <IconDollarSign size={iconSize['14']} />
                 )}
                 <span>
                   {usageCheck.isLoading
@@ -606,12 +611,12 @@ function SponsorKeyEntryCard({
                     {usageHealthy ? (
                       <IconCheckCircle2
                         className={`${styles.statusIcon} ${styles.statusIconSuccess}`}
-                        size={14}
+                        size={iconSize['14']}
                       />
                     ) : (
                       <IconAlertTriangle
                         className={`${styles.statusIcon} ${styles.statusIconError}`}
-                        size={14}
+                        size={iconSize['14']}
                       />
                     )}
                     <span>
@@ -914,7 +919,7 @@ export function SponsorProviderForm({
           disabled={mutating || !missingProtocols.length}
           onClick={addEntry}
         >
-          <IconPlus size={12} />
+          <IconPlus size={iconSize['12']} />
           <span>{t('providersPage.sponsor.addGroupedKey')}</span>
         </button>
       </div>

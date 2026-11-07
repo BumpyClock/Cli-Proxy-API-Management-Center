@@ -11,13 +11,13 @@ describe('quota toolbar presentation contracts', () => {
     expect(source).toContain('{search && (');
     expect(source).toContain("aria-label={t('quota_management.search_clear')}");
     expect(source).toMatch(/handleSearchChange\(''\);\s+searchInputRef\.current\?\.focus\(\);/);
-    expect(source).toContain('<IconX size={14} aria-hidden="true" />');
+    expect(source).toContain("<IconX size={iconSize['14']} aria-hidden=\"true\" />");
     expect(styles).toMatch(/&::-webkit-search-cancel-button,[\s\S]*?appearance: none;/);
   });
 
   test('groups search and sorting separately from provider navigation', () => {
     const toolbarStart = source.indexOf('<div className={styles.toolbar}>');
-    const searchStart = source.indexOf('<div className={styles.search}>');
+    const searchStart = source.indexOf('<div className={styles.searchField}>');
     const sortStart = source.indexOf('<div className={styles.sort}>');
     expect(toolbarStart).toBeGreaterThan(source.indexOf('<ProviderTabs'));
     expect(searchStart).toBeGreaterThan(toolbarStart);

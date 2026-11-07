@@ -1,39 +1,54 @@
 @use '../../../styles/mixins' as *;
 @use '../../../styles/variables' as *;
 
+/* Column budget: 124 + 108 + 112 + 164 + 124 fixed (see PROVIDER_TABLE_COLUMN_WIDTHS) plus a
+   120px floor for Base URL. Below this the table scrolls inside its container. */
+
 .providerTable {
-  min-width: 860px;
+  min-width: $size-752;
   table-layout: fixed;
 
+  /* thead th / tbody td outrank the shared Table's `.head th` and `.row td` padding. */
+  thead th,
+  tbody td {
+    padding-left: $space-10;
+    padding-right: $space-10;
+  }
+
   tbody tr:hover .actionsCell {
-    background: color-mix(in srgb, var(--accent-bg) 50%, transparent);
+    background:
+      linear-gradient(
+        color-mix(in srgb, var(--accent-bg) $tint-0-5, transparent),
+        color-mix(in srgb, var(--accent-bg) $tint-0-5, transparent)
+      ),
+      var(--bg-primary);
   }
 }
 
 .primaryCell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
   min-width: 0;
 }
 
 .primaryName {
-  font-weight: 500;
+  font-weight: $font-weight-500;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 220px;
+  max-width: 100%;
 }
 
 .primarySub {
-  font-size: 12px;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
-  font-family: $font-mono;
+  font-family: $font-family-mono;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 220px;
+  max-width: 100%;
 }
 
 .baseUrl {
@@ -41,8 +56,8 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   color: var(--muted-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -50,30 +65,36 @@
 }
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
+  display: inline-block;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+  padding: $space-3 $space-9;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   background: var(--muted-bg);
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: $font-size-12;
 }
 
 .metricsCell {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: $space-4 $space-10;
   align-items: center;
 }
 
 .metric {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: $space-4;
   padding: 0;
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
   white-space: nowrap;
 }
 
@@ -83,219 +104,213 @@
 
 .metricValue {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: $font-weight-600;
   font-variant-numeric: tabular-nums;
 }
 
 .flagTag {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: $space-3 $space-9;
   border-radius: var(--radius-md);
-  border: 1px solid var(--primary-30);
+  border: $border-width-1 solid var(--primary-30);
   background: var(--primary-10);
   color: var(--primary-color);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
+  line-height: $line-height-1-4;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.statusBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: var(--radius-md);
-  border: 1px solid;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
+.statusText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .statusCell {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
   align-items: flex-start;
   min-width: 0;
-  max-width: 190px;
-}
-
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
   max-width: 100%;
 }
 
-.statPill {
+.statusLine {
+  display: flex;
+  align-items: center;
+  gap: $space-8;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* One health word with a dot; colour is never the only signal. */
+.health {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  border: 1px solid transparent;
+  gap: $space-6;
+  min-width: 0;
+  font-size: $font-size-13;
+  font-weight: $font-weight-500;
+  line-height: $line-height-1-3;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
 }
 
-.statSuccess {
-  background-color: var(--success-badge-bg);
-  color: var(--success-badge-text);
-  border-color: var(--success-badge-border);
+.healthDot {
+  flex: none;
+  width: $size-8;
+  height: $size-8;
+  border-radius: $radius-999;
+  background: currentColor;
 }
 
-.statFailure {
-  background-color: var(--failure-badge-bg);
-  color: var(--failure-badge-text);
-  border-color: var(--failure-badge-border);
+.healthActive {
+  color: var(--text-secondary);
+
+  .healthDot {
+    background: var(--success-color);
+  }
 }
 
-.statusActive {
-  border-color: var(--success-badge-border);
-  background: var(--success-badge-bg);
-  color: var(--success-badge-text);
-}
-
-.statusDisabled {
-  border-color: var(--amber-30);
-  background: var(--amber-10);
+.healthDisabled {
   color: var(--amber-text);
 }
 
-.statusBarWrap {
-  width: min(100%, 178px);
+.healthFailing {
+  color: var(--failure-badge-text);
+  font-weight: $font-weight-600;
+}
+
+.requests {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  width: 100%;
   min-width: 0;
 }
 
-.actionsHead,
-.actionsCell {
+.requestFigure {
+  color: var(--text-secondary);
+  font-size: $font-size-12;
+  line-height: $line-height-1-4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusBarWrap {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Sticky only matters when the table scrolls below its min-width. The column keeps its own
+   reserved width, an opaque surface and a divider, so it never paints over Status.
+   `tbody td.` selectors outrank the shared Table's translucent `.row.selected td` / `.row:hover td`. */
+.providerTable .actionsHead,
+.providerTable tbody td.actionsCell {
   position: sticky;
   right: 0;
-  width: 148px;
-  min-width: 148px;
-  box-shadow: -12px 0 16px -18px rgba(15, 23, 42, 0.45);
+  border-left: $border-width-1 solid var(--border-color);
+  box-shadow: $shadow-table-sticky-edge;
 }
 
-.actionsHead {
-  z-index: 3;
-  background: var(--muted-bg);
+.providerTable .actionsHead {
+  z-index: $z-stack-3;
+  background: linear-gradient(var(--muted-bg), var(--muted-bg)), var(--bg-primary);
 }
 
-.actionsCell {
-  z-index: 2;
+.providerTable tbody td.actionsCell {
+  z-index: $z-stack-2;
   background: var(--bg-primary);
 }
 
-.actionsCellSelected {
-  background: var(--primary-8);
-}
-
-.actions {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 0;
+.providerTable tbody td.actionsCellSelected,
+.providerTable tbody tr:hover td.actionsCellSelected {
+  background: linear-gradient(var(--primary-8), var(--primary-8)), var(--bg-primary);
 }
 
 .toggleWrap {
   display: inline-flex;
+  flex: none;
   align-items: center;
-  margin-right: 4px;
 }
 
-.iconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    background-color $transition-fast,
-    color $transition-fast;
-
-  &:hover:not(:disabled) {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -1px;
-  }
-}
-
-.iconBtnDanger {
-  color: var(--destructive-color);
-
-  &:hover:not(:disabled) {
-    background: var(--destructive-10);
-    color: var(--destructive-color);
-  }
-}
-
-/* Narrow screens: the sticky actions column covered most of the table. Let it scroll with
-   the row so status and keys stay readable. */
-@media (max-width: 640px) {
-  .actionsHead,
-  .actionsCell {
-    position: static;
-    width: auto;
+/* Phones: no sideways scrolling. Each resource becomes a labeled stack with its key and
+   actions on the first line; the visual column header is replaced by per-cell labels. */
+@media (max-width: #{$breakpoint-640}) {
+  .providerTable,
+  .providerTable tbody {
+    display: block;
     min-width: 0;
+    width: 100%;
+  }
+
+  .providerTable colgroup {
+    display: none;
+  }
+
+  .providerTable thead {
+    position: absolute;
+    width: $size-1;
+    height: $size-1;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .providerTable tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: $space-10 $space-12;
+    padding: $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
+  }
+
+  .providerTable tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  /* Doubled class outranks the shared Table's per-cell hover/selected tint, which would show
+     as separate tinted blocks with gaps once cells stack. */
+  .providerTable.providerTable tbody td,
+  .providerTable tbody td.actionsCell {
+    display: block;
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  .providerTable tbody td:first-child {
+    grid-column: 1;
+    align-self: center;
+  }
+
+  .providerTable tbody td.actionsCell {
+    grid-column: 2;
+    grid-row: 1;
+    position: static;
     box-shadow: none;
-  }
-}
-
-/* Touch: 44px targets, with the destructive action set apart from edit. */
-@media (pointer: coarse) {
-  .actions {
-    gap: 8px;
+    border-left: none;
   }
 
-  .iconBtn {
-    flex: none;
-    width: 44px;
-    height: 44px;
+  .providerTable tbody td[data-label]:not(:first-child)::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: $space-4;
+    color: var(--text-secondary);
+    font-size: $font-size-12;
+    font-weight: $font-weight-600;
   }
 
-  .iconBtnDanger {
-    margin-left: 12px;
-  }
-
-  .toggleWrap {
-    flex: none;
-  }
-
-  /* The fixed 148px column cannot hold three 44px targets plus the toggle. */
-  .providerTable col:last-child {
-    width: 256px !important;
-  }
-
-  .actionsHead,
-  .actionsCell {
-    width: 256px;
-    min-width: 256px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .iconBtn {
-    transition: none;
+  .providerTable tbody tr:hover td.actionsCell,
+  .providerTable tbody td.actionsCellSelected {
+    background: transparent;
   }
 }

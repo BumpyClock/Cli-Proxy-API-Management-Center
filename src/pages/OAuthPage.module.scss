@@ -8,18 +8,18 @@
 .cardTitle {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .cardTitleIcon {
-  width: 24px;
-  height: 24px;
+  width: $size-24;
+  height: $size-24;
   flex: 0 0 auto;
 }
 
 .cardTitleIconFallback {
-  width: 24px;
-  height: 24px;
+  width: $size-24;
+  height: $size-24;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -29,78 +29,214 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-top: 24px;
+  gap: $space-24;
+  margin-top: $space-24;
+}
+
+/* Find control above the list: filters rows by provider name, region or domain. */
+.providerFinder {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-8 $space-12;
+  min-width: 0;
+}
+
+.searchField {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 $size-340;
+  min-width: 0;
+  height: $size-36;
+  border-radius: $radius-6;
+  /* Inset outline keeps the input itself as tall as the field. */
+  box-shadow: $shadow-inset-control-outline;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+
+  &:focus-within {
+    box-shadow: $shadow-inset-border-hover;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
+  }
+}
+
+.searchIcon {
+  position: absolute;
+  left: $space-11;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 $space-40 0 $space-35;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: $font-size-13;
+  appearance: none;
+
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+  }
+}
+
+.clearSearch {
+  position: absolute;
+  right: $space-2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $size-32;
+  height: $size-32;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-4;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+  }
+}
+
+/* Stays in the tree while empty so the first result count is announced. */
+.searchCount {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: $font-size-13;
+}
+
+.searchEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-12;
+  padding: $space-24 $space-16;
+  border: $border-width-1 dashed var(--border-color);
+  border-radius: $radius-8;
+  color: var(--text-secondary);
+  font-size: $font-size-14;
+
+  p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 .providerSection {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $space-12;
 }
 .providerList {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   overflow: hidden;
 }
 
 .sectionTitle {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
 }
 
 .providerRow {
   display: grid;
-  grid-template-columns: minmax(200px, 30%) minmax(0, 1fr);
+  grid-template-columns: $size-24 minmax(0, 1fr) auto;
   align-items: start;
-  gap: 16px;
-  padding: 16px;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  gap: $space-12;
+  padding: $space-16;
   background: var(--bg-primary);
 
   + .providerRow {
-    border-top: 1px solid var(--border-color);
-  }
-
-  > :global(.card-header) {
-    display: flex;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    min-width: 0;
-  }
-
-  :global(.title) {
-    font-size: 14px;
+    border-top: $border-width-1 solid var(--border-color);
   }
 }
 
+.rowCopy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  .cardHint {
+    max-width: 80ch;
+  }
+}
+
+.rowTitle {
+  color: var(--text-primary);
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
+  line-height: $line-height-24px;
+  overflow-wrap: anywhere;
+}
+
+/* Region of a provider variant (Kimi China vs International), read as part of the row name. */
+.regionBadge {
+  display: inline-block;
+  margin-left: $space-4;
+  padding: 0 $space-8;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-999;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: $font-size-12;
+  font-weight: $font-weight-500;
+  line-height: $line-height-20px;
+  vertical-align: $space-1;
+  white-space: nowrap;
+}
+
+/* One rule for every provider: actions sit in a single line at the row end on wide screens and
+   stack under the description on phones, so no row wraps differently because of label length. */
 .rowActions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
-  flex-direction: row-reverse;
   justify-content: flex-end;
+  gap: $space-8;
 }
 
 .signupLink {
-  color: var(--text-secondary);
-  font-size: 12px;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.rowFlow {
+  grid-column: 2 / -1;
 }
 
 .cardContent {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $space-16;
 
   :global(.form-group) {
     margin-bottom: 0;
@@ -114,94 +250,51 @@
 
 .cardHint {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: $font-size-13;
+  line-height: $line-height-1-6;
   color: var(--text-secondary);
 }
 
 .cardHintSecondary {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   color: var(--text-tertiary);
-}
-
-.oauthSection {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-lg;
-}
-
-.oauthGrid {
-  display: grid;
-  gap: $spacing-lg;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-
-  @include mobile {
-    grid-template-columns: 1fr;
-  }
-}
-
-.oauthCard {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-md;
-}
-
-.oauthStatus {
-  padding: $spacing-md;
-  border-radius: $radius-md;
-  font-size: 14px;
-
-  &.success {
-    background-color: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-  }
-
-  &.error {
-    background-color: rgba($error-color, 0.12);
-    color: $error-color;
-  }
-
-  &.waiting {
-    background-color: rgba($primary-color, 0.12);
-    color: var(--primary-color);
-  }
 }
 
 .callbackSection {
   margin-top: 0;
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .callbackActions {
   display: flex;
-  gap: $spacing-md;
+  gap: $space-16;
 }
 
 .authUrlBox {
   background: var(--bg-secondary);
-  border: 1px dashed var(--border-color);
-  border-radius: $radius-md;
-  padding: $spacing-md;
+  border: $border-width-1 dashed var(--border-color);
+  border-radius: $radius-8;
+  padding: $space-16;
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: $space-4;
 }
 
 .authUrlLabel {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: $font-size-14;
 }
 
 .authUrlValue {
-  font-weight: 700;
+  font-weight: $font-weight-700;
   color: var(--text-primary);
   word-break: break-all;
   overflow-wrap: anywhere;
-  line-height: 1.5;
+  line-height: $line-height-1-5;
   max-width: 100%;
 }
 
@@ -209,60 +302,45 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: $spacing-sm;
-  margin-top: $spacing-sm;
+  gap: $space-8;
+  margin-top: $space-8;
 }
 
 .successActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: $spacing-sm;
-}
-
-.geminiProjectField {
-  :global(.form-group) {
-    margin-top: 0;
-    margin-bottom: 0;
-    gap: $spacing-sm;
-  }
-
-  :global(.input:disabled) {
-    background-color: var(--bg-tertiary);
-    border-color: var(--border-color);
-    color: var(--text-tertiary);
-    cursor: not-allowed;
-  }
+  gap: $space-8;
 }
 
 .formItem {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: $space-4;
 }
 
 .formItemLabel {
   margin: 0;
-  font-weight: 600;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
 }
 
 .filePicker {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-8;
   flex-wrap: wrap;
 }
 
 .fileName {
   flex: 1;
-  min-width: 220px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  min-width: $size-220;
+  padding: $space-10 $space-12;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: $font-size-14;
 }
 
 .fileNamePlaceholder {
@@ -271,42 +349,42 @@
 
 .connectionBox {
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
-  padding: $spacing-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  padding: $space-16;
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .connectionLabel {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: $font-size-14;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
 }
 
 .keyValueList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .keyValueItem {
   display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 10px;
+  grid-template-columns: $size-140 1fr;
+  gap: $space-10;
   align-items: start;
 
   @include mobile {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: $space-2;
   }
 }
 
 .keyValueKey {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: $font-size-13;
 }
 
 .keyValueValue {
@@ -319,15 +397,43 @@
   outline-color: var(--focus-ring);
 }
 
-@media (max-width: 640px) {
+/* Phones: the icon sits beside the name only. Description, actions and flow use the full row
+   width from one left edge, so Log in and Create account fit side by side when they can. */
+@media (max-width: #{$breakpoint-640}) {
   .providerRow {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: $size-24 minmax(0, 1fr);
+    gap: $space-8 $space-10;
+    padding: $space-14;
   }
-  .providerRow > :global(.card-header) {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
+  .rowCopy {
+    display: contents;
+  }
+  .rowTitle {
+    grid-column: 2;
+    align-self: center;
+  }
+  .rowCopy .cardHint {
+    grid-column: 1 / -1;
+  }
+  .rowActions {
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .searchField {
+    flex: 1 1 100%;
+    height: $size-touch-target;
+  }
+  .searchInput {
+    padding-right: $space-48;
+  }
+  .clearSearch {
+    right: 0;
+    width: $size-touch-target;
+    height: $size-touch-target;
+  }
+  .rowFlow {
+    grid-column: 1 / -1;
   }
   .callbackActions {
     flex-wrap: wrap;

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { IconRefreshCw } from '@/components/ui/icons';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
@@ -26,7 +26,10 @@ import {
 import { classifyFreshness, worstFreshness, type SourceFreshness } from './logic/freshness';
 import { redactUrlCredentials } from './logic/redact';
 import { formatInstant } from './logic/time';
+import { deriveRequestScope, requestScopeLabel } from './logic/requestScope';
+import { credentialsVitalLine } from './logic/vitals';
 import { summarizeUsage } from './logic/usage';
+import { deriveHealthStatus, verdictInTitle } from './logic/healthStatus';
 import { useDashboardAnnouncer } from './hooks/useDashboardAnnouncer';
 import { useFocusRescue } from './hooks/useFocusRescue';
 import type { CredentialRow } from './types';
@@ -34,7 +37,8 @@ import { AttentionPanel } from './components/AttentionPanel';
 import { CredentialList } from './components/CredentialList';
 import { ProviderHealthList } from './components/ProviderHealthList';
 import { SourceStamp, type StampEntry } from './components/SourceStamp';
-import { ThroughputChart } from './components/ThroughputChart';
+import { EmptyRequestFlow, ThroughputChart } from './components/ThroughputChart';
+import { HealthStatusRow } from './components/HealthStatusRow';
 import { QuotaSummaryChart } from './components/QuotaSummaryChart';
 import { UsagePanel } from './components/UsagePanel';
 import { VitalsStrip, type Vital } from './components/VitalsStrip';
@@ -56,7 +60,7 @@ const VERDICT_ACCENTS: Record<VerdictTone, string> = {
 const formatHeadline = (value: number): string =>
   value < 100_000 ? value.toLocaleString() : formatCompactNumber(value);
 
-function useVerdictTitle(verdict: Verdict): string {
+function useVerdictTitle(verdict: Verdict, windowLabel: string): string {
   const { t } = useTranslation();
   switch (verdict.kind) {
     case 'down': {
@@ -75,7 +79,8 @@ function useVerdictTitle(verdict: Verdict): string {
     case 'attention':
       return t('dashboard.hero_verdict_attention', { count: verdict.count });
     default:
-      return t(`dashboard.hero_verdict_${verdict.kind}`);
+      // Idle verdicts name the Requests window they describe.
+      return t(`dashboard.hero_verdict_${verdict.kind}`, { window: windowLabel });
   }
 }
 
@@ -140,6 +145,14 @@ export function DashboardPage() {
     missingPrimary.length > 0 ? t('dashboard.partial_short', { sources: missingNames }) : null;
 
   /* ---------- Attention and verdict ---------- */
+
+  const windowMinutes = traffic.windowMinutes > 0 ? traffic.windowMinutes : DEFAULT_WINDOW_MINUTES;
+  const windowLabel = useMemo(() => {
+    const { hours, minutes } = splitWindowMinutes(windowMinutes);
+    if (hours === 0) return t('dashboard.window_m', { minutes });
+    if (minutes === 0) return t('dashboard.window_h', { hours });
+    return t('dashboard.window_hm', { hours, minutes });
+  }, [windowMinutes, t]);
 
   // Every source can raise an attention item when it fails or goes stale. Usage is skipped
   // only while the server's latest successful answer says it has no usage statistics.
@@ -209,9 +222,21 @@ export function DashboardPage() {
     trafficTotal: traffic.total,
     otherScopeActivity: freshness.usage === 'live' && (usageSummary?.requests ?? 0) > 0,
   });
-  const verdictTitle = useVerdictTitle(verdict);
-  const quiet =
-    verdict.kind === 'good' || verdict.kind === 'idle' || verdict.kind === 'idle_other_scope';
+  const verdictTitle = useVerdictTitle(verdict, windowLabel);
+  const primaryReceivedAt =
+    sources.credentials.receivedAt !== null && sources.traffic.receivedAt !== null
+      ? Math.min(sources.credentials.receivedAt, sources.traffic.receivedAt)
+      : null;
+  const checkedCredentials = credentials?.total ?? 0;
+  const healthStatus = deriveHealthStatus({
+    attentionCount: attention.length,
+    verdict: verdict.kind,
+    primaryFreshness,
+    primaryReceivedAt,
+    checkedCredentials,
+    checkedProviders: providers.length,
+  });
+  const heroTitle = verdictInTitle(connected, healthStatus, verdict.kind);
 
   /* ---------- Live announcements (screen readers) ---------- */
 
@@ -233,18 +258,8 @@ export function DashboardPage() {
 
   // Polls and Retry can remove the focused control; keep keyboard users in place.
   useFocusRescue();
-  /* The status full stop breathes only while steady traffic is flowing and fresh. */
-  const heroAlive = verdict.kind === 'good' && primaryFreshness === 'live';
 
   /* ---------- Labels ---------- */
-
-  const windowMinutes = traffic.windowMinutes > 0 ? traffic.windowMinutes : DEFAULT_WINDOW_MINUTES;
-  const windowLabel = useMemo(() => {
-    const { hours, minutes } = splitWindowMinutes(windowMinutes);
-    if (hours === 0) return t('dashboard.window_m', { minutes });
-    if (minutes === 0) return t('dashboard.window_h', { hours });
-    return t('dashboard.window_hm', { hours, minutes });
-  }, [windowMinutes, t]);
 
   const connectionLabel = t(
     connectionStatus === 'connected'
@@ -312,29 +327,50 @@ export function DashboardPage() {
 
   /* ---------- Vitals ---------- */
 
-  // A partial total cannot vouch for health: keep its rate neutral until every source loads.
   // A partial or out-of-date total cannot vouch for health: keep its rate neutral until
-  // every source is live again, and say why beside the number.
+  // every source is live again.
   const primaryLive = primaryFreshness === 'live';
-  const successTone =
-    partialShort || !primaryLive ? 'idle' : toneForSuccessRate(traffic.successRate);
-  const primaryStamp =
-    !primaryLive && hasData ? (
-      <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />
-    ) : null;
+  const requestScope = deriveRequestScope({
+    credentials: sources.credentials,
+    traffic: sources.traffic,
+  });
+  const scopeLabel = requestScopeLabel(requestScope);
+  const scopePartial = scopeLabel?.missingKey != null;
+  const successTone = primaryLive ? toneForSuccessRate(traffic.successRate) : 'idle';
   const exceptionTone = (tone: string): Vital['tone'] =>
     tone === 'critical' ? 'critical' : tone === 'warning' ? 'warning' : undefined;
-  const trafficDetail = partialShort ? (
-    <span className={styles.partialNote}>{partialShort}</span>
-  ) : (
+  const primaryStamp = <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />;
+
+  // One line under the Requests total: its window and exactly which sources it sums.
+  const requestsLine = !scopeLabel ? (
     primaryStamp
+  ) : scopeLabel.missingKey ? (
+    <span className={`${styles.vitalLine} ${styles.partialNote}`}>
+      {t('dashboard.vitals_scope_partial', {
+        window: windowLabel,
+        scope: t(scopeLabel.scopeKey),
+        missing: t(scopeLabel.missingKey),
+      })}
+    </span>
+  ) : (
+    <>
+      <span className={styles.vitalLine}>
+        {t('dashboard.vitals_scope', { window: windowLabel, scope: t(scopeLabel.scopeKey) })}
+      </span>
+      {!primaryLive && primaryStamp}
+    </>
   );
 
+  const credentialsLine = credentials ? credentialsVitalLine(credentials, t) : '';
+  const credentialsStamp =
+    freshness.credentials !== 'live' ? (
+      <SourceStamp entries={stampEntries(['credentials'])} now={now} />
+    ) : null;
   const credentialsVital: Vital = !credentials
     ? {
         key: 'credentials',
         label: t('dashboard.vitals_credentials'),
-        value: DASH,
+        value: null,
         detail: sources.credentials.error ? (
           <span className={styles.failedNote}>{t('dashboard.credentials_load_failed')}</span>
         ) : (
@@ -353,48 +389,51 @@ export function DashboardPage() {
               }),
         unit: credentials.total === 0 ? undefined : t('dashboard.vitals_serving_unit'),
         tone: credentials.problems > 0 ? 'warning' : undefined,
-        detail: (
-          <>
-            <span className={styles.vitalLine}>
-              {credentials.total === 0
-                ? t('dashboard.vitals_credentials_none')
-                : [
-                    // "including N limited" qualifies the serving count, so it comes first.
-                    credentials.limited > 0
-                      ? t('dashboard.vitals_credentials_limited', { count: credentials.limited })
-                      : null,
-                    credentials.problems > 0
-                      ? t('dashboard.vitals_credentials_problems', { count: credentials.problems })
-                      : null,
-                    credentials.disabled > 0
-                      ? t('dashboard.vitals_credentials_disabled', { count: credentials.disabled })
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ') || t('dashboard.vitals_credentials_ok')}
-            </span>
-            {freshness.credentials !== 'live' && (
-              <SourceStamp entries={stampEntries(['credentials'])} now={now} />
-            )}
-          </>
-        ),
+        detail:
+          credentialsLine || credentialsStamp ? (
+            <>
+              {credentialsLine && <span className={styles.vitalLine}>{credentialsLine}</span>}
+              {credentialsStamp}
+            </>
+          ) : undefined,
       };
+
+  const measured = connected && hasData;
+  const successLine = [
+    traffic.total > 0
+      ? t('dashboard.vitals_split', {
+          success: traffic.success.toLocaleString(),
+          failed: traffic.failed.toLocaleString(),
+        })
+      : null,
+    measured && traffic.successRate === null ? t('dashboard.vitals_success_unmeasured') : null,
+    scopePartial && scopeLabel
+      ? t('dashboard.vitals_rate_scope', { scope: t(scopeLabel.scopeKey) })
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   const vitals: Vital[] = [
     {
       key: 'requests',
       label: t('dashboard.vitals_requests'),
-      value: connected && hasData ? formatHeadline(traffic.total) : DASH,
+      value: measured ? formatHeadline(traffic.total) : null,
       detail: (
         <>
-          <span className={styles.vitalLine}>
-            {t('dashboard.vitals_window', { window: windowLabel })}
-          </span>
-          {trafficDetail}
+          {requestsLine}
           {usageDiffers && (
-            <span className={`${styles.vitalLine} ${styles.partialNote}`}>
-              {t('dashboard.vitals_usage_differs', { count: comparableUsageRequests ?? 0 })}
-            </span>
+            <details className={styles.vitalCaveat}>
+              <summary>
+                {t('dashboard.vitals_usage_differs_short', { count: comparableUsageRequests ?? 0 })}
+              </summary>
+              <span>
+                {t('dashboard.vitals_usage_differs', { count: comparableUsageRequests ?? 0 })}{' '}
+                <Link to="/usage" className={styles.vitalLink}>
+                  {t('dashboard.usage_link')} <span aria-hidden="true">→</span>
+                </Link>
+              </span>
+            </details>
           )}
         </>
       ),
@@ -402,31 +441,21 @@ export function DashboardPage() {
     {
       key: 'success',
       label: t('dashboard.vitals_success'),
-      value: traffic.successRate === null ? DASH : formatPercent(traffic.successRate),
+      value: traffic.successRate === null ? null : formatPercent(traffic.successRate),
       tone: exceptionTone(successTone),
       meter:
         traffic.successRate === null
           ? undefined
           : { value: traffic.successRate, tone: successTone, label: t('dashboard.vitals_success') },
-      detail: (
-        <>
-          <span className={styles.vitalLine}>
-            {traffic.total > 0
-              ? t('dashboard.vitals_split', {
-                  success: traffic.success.toLocaleString(),
-                  failed: traffic.failed.toLocaleString(),
-                })
-              : t('dashboard.vitals_no_requests')}
-          </span>
-          {trafficDetail}
-        </>
-      ),
+      detail: successLine ? (
+        <span className={scopePartial ? styles.partialNote : undefined}>{successLine}</span>
+      ) : undefined,
     },
     credentialsVital,
     {
       key: 'models',
       label: t('dashboard.vitals_models'),
-      value: counts.models === null ? DASH : counts.models.toLocaleString(),
+      value: counts.models === null ? null : counts.models.toLocaleString(),
       detail: (
         <SourceStamp
           entries={stampEntries(['models'])}
@@ -482,6 +511,39 @@ export function DashboardPage() {
     traffic.endMs !== null ? new Date(traffic.endMs) : undefined
   );
 
+  // An all-zero window adds nothing the status row has not said, so it yields its place
+  // above the quota to figures that have values and follows them as one compact row.
+  const trafficIdle = traffic.total === 0 && traffic.buckets.length > 0;
+  const requestFlow = trafficIdle ? (
+    <section
+      className={`${styles.panel} ${styles.panelCompact}`}
+      ref={trafficRef}
+      aria-labelledby="dashboard-request-flow-title"
+    >
+      <EmptyRequestFlow
+        traffic={traffic}
+        zoneLabel={timeZoneLabel}
+        stamp={<SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />}
+        note={partialNote && <p className={styles.partialNote}>{partialNote}</p>}
+      />
+    </section>
+  ) : (
+    <section className={`${styles.section} ${styles.panel}`} ref={trafficRef}>
+      <header className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>{t('redesign.dashboard.request_flow')}</h2>
+        {/* The bucket explanation only describes a plot; an unavailable window has none. */}
+        {traffic.total > 0 && (
+          <p className={styles.sectionDescription}>
+            {t('redesign.dashboard.traffic_interval', { zone: timeZoneLabel })}
+          </p>
+        )}
+        {partialNote && <p className={styles.partialNote}>{partialNote}</p>}
+        <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />
+      </header>
+      <ThroughputChart traffic={traffic} />
+    </section>
+  );
+
   return (
     <div className={styles.page}>
       <div className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">
@@ -490,15 +552,15 @@ export function DashboardPage() {
       <section className={styles.hero}>
         <PageHeader
           titleId="dashboard-title"
-          variant={quiet ? 'default' : 'hero'}
+          variant={heroTitle ? 'hero' : 'default'}
           title={
-            quiet ? (
+            !heroTitle ? (
               t('nav.dashboard')
             ) : (
               <>
                 {verdictTitle}
                 <span
-                  className={`${styles.heroPeriod} ${heroAlive ? styles.heroPeriodLive : ''}`}
+                  className={styles.heroPeriod}
                   style={{ color: VERDICT_ACCENTS[verdict.tone] }}
                 >
                   {t('dashboard.hero_period')}
@@ -513,75 +575,46 @@ export function DashboardPage() {
                   {part}
                 </span>
               ))}
-              {connected && (
-                <span className={styles.heroMetaPart}>
-                  <SourceStamp
-                    entries={stampEntries(['credentials', 'traffic'])}
-                    now={now}
-                    className={styles.heroStamp}
-                  />
-                </span>
-              )}
             </span>
           }
           actions={
             connected && (
-              <button
-                type="button"
-                className={styles.refreshButton}
+              <RefreshButton
                 onClick={() => void handleRefresh()}
-                aria-disabled={refreshing || undefined}
-                aria-label={refreshing ? undefined : t('dashboard.refresh_now')}
-                title={t('dashboard.refresh_now')}
-              >
-                <IconRefreshCw
-                  size={14}
-                  className={refreshing ? styles.spinning : undefined}
-                  aria-hidden="true"
-                />
-                <span>{refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}</span>
-              </button>
+                refreshing={refreshing}
+                label={t('dashboard.refresh_now')}
+              />
             )
           }
         />
       </section>
 
-      {/* ---------- Attention ---------- */}
-      {connected && (
-        <AttentionPanel
-          items={attention}
-          evidence={evidence}
-          checkedCredentials={credentials?.total ?? 0}
-          checkedProviders={providers.length}
-          primaryFreshness={primaryFreshness}
-          primaryReceivedAt={
-            sources.credentials.receivedAt !== null && sources.traffic.receivedAt !== null
-              ? Math.min(sources.credentials.receivedAt, sources.traffic.receivedAt)
-              : null
-          }
-          windowLabel={windowLabel}
-          now={now}
-          onRetry={retryAndAnnounce}
-        />
-      )}
+      {/* ---------- Status: the attention list, or one line saying what was checked ---------- */}
+      {connected &&
+        (healthStatus.kind === 'attention' || healthStatus.kind === 'setup' ? (
+          <AttentionPanel
+            items={attention}
+            evidence={evidence}
+            checkedCredentials={checkedCredentials}
+            checkedProviders={providers.length}
+            primaryFreshness={primaryFreshness}
+            primaryReceivedAt={primaryReceivedAt}
+            windowLabel={windowLabel}
+            now={now}
+            onRetry={retryAndAnnounce}
+          />
+        ) : (
+          <HealthStatusRow status={healthStatus} windowLabel={windowLabel} now={now} />
+        ))}
 
       {/* ---------- Vitals ---------- */}
       <VitalsStrip items={vitals} ariaLabel={t('dashboard.stats_aria')} />
 
-      {/* ---------- Traffic ---------- */}
-      <section className={`${styles.section} ${styles.panel}`} ref={trafficRef}>
-        <header className={styles.sectionHead}>
-          <h2 className={styles.sectionTitle}>{t('redesign.dashboard.request_flow')}</h2>
-          <p className={styles.sectionDescription}>
-            {t('redesign.dashboard.traffic_interval', { zone: timeZoneLabel })}
-          </p>
-          {partialNote && <p className={styles.partialNote}>{partialNote}</p>}
-          <SourceStamp entries={stampEntries(['credentials', 'traffic'])} now={now} />
-        </header>
-        <ThroughputChart traffic={traffic} />
-      </section>
+      {!trafficIdle && requestFlow}
 
       <QuotaSummaryChart files={credentialFiles} filesReady={credentialFilesReady} />
+
+      {trafficIdle && requestFlow}
 
       {/* ---------- Providers ---------- */}
       <section className={`${styles.section} ${styles.panel}`} ref={fleetRef}>

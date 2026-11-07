@@ -7,6 +7,7 @@ import {
   type ModelExclusionState,
 } from './excludedModelRules';
 import styles from './ExcludedModelsPicker.module.scss';
+import { iconSize } from '@/design-system';
 
 export interface ExcludedModelCandidate {
   id: string;
@@ -125,11 +126,11 @@ export function ExcludedModelsPanel({
   return (
     <div className={styles.panel}>
       <div className={styles.searchRow}>
-        <IconSearch size={14} className={styles.searchIcon} aria-hidden="true" />
+        <IconSearch size={iconSize['14']} className={styles.searchIcon} aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
-          className={styles.search}
+          className={styles.searchField}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -258,7 +259,7 @@ function ExcludedModelRow({
       onClick={onToggle}
     >
       <span className={styles.checkbox} aria-hidden="true">
-        {excluded ? <IconCheck size={12} /> : null}
+        {excluded ? <IconCheck size={iconSize['12']} /> : null}
       </span>
       <span className={styles.rowText}>
         <span className={styles.rowId}>{candidate.id}</span>

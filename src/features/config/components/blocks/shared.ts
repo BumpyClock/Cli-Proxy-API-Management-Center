@@ -8,6 +8,7 @@ import type {
   VisualConfigValidationErrorCode,
 } from '@/types/visualConfig';
 import { VISUAL_CONFIG_PROTOCOL_OPTIONS } from '@/hooks/useVisualConfig';
+import { motion } from '@/design-system';
 
 export function getValidationMessage(
   t: ReturnType<typeof useTranslation>['t'],
@@ -42,7 +43,7 @@ export function buildProtocolOptions(
 }
 
 /** API Key 强度条相邻两段点亮的间隔；4 段全亮 = 135ms + 段内 160ms，整组仍在 300ms 内 */
-export const SEGMENT_STAGGER_MS = 45;
+export const SEGMENT_STAGGER_MS = motion.cascade['strength-segments'].step;
 
 /**
  * 强度条段填充的起跑延迟：只有本次新增的段排队，已亮的段和熄灭都不延迟。

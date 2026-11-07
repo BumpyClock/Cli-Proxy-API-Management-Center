@@ -1,0 +1,43 @@
+/* Desktop trail parent: a 32px pointer target around the short text link. */
+.parentLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: $size-32;
+}
+
+/* Phone top bar Back link for nested pages; shown only where the layout reveals .header-route-short. */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-4;
+  min-height: $size-touch-target;
+  max-width: 100%;
+  padding: 0 $space-10 0 $space-4;
+  border-radius: $radius-6;
+  color: var(--text-primary);
+  font-size: $font-size-14;
+  font-weight: $font-weight-500;
+  text-decoration: none;
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:focus-visible {
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: (-$space-2);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--bg-hover);
+    }
+  }
+}

@@ -11,6 +11,7 @@ import {
   type ConfigFieldSearchEntry,
   type VisualSectionId,
 } from '../searchIndex';
+import { duration } from '@/design-system';
 
 export type UseFieldJumpArgs = {
   values: VisualConfigValues;
@@ -79,7 +80,7 @@ export function useFieldJump({ values, setActiveSection }: UseFieldJumpArgs) {
         el.classList.remove(FIELD_HIGHLIGHT_CLASS);
         highlightTimerRef.current = null;
         highlightedElRef.current = null;
-      }, 1800);
+      }, duration['field-highlight']);
     };
 
     requestAnimationFrame(() => attempt(1));

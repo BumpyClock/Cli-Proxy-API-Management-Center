@@ -3,12 +3,12 @@
 /* 可视化配色与动效 tokens（--viz-*、--ease-out-strong、--dur-*）已提升到 themes.scss :root。 */
 .page {
   position: relative;
-  max-width: 1120px;
+  max-width: $size-1120;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: $space-24;
 }
 
 /* ---------- Hero ---------- */
@@ -24,107 +24,60 @@
   letter-spacing: 0;
 }
 
-/* 有活流量时状态灯极缓呼吸（仅 opacity，inline 元素安全） */
-.heroPeriodLive {
-  animation: periodBreath 3.2s ease-in-out 1.8s infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
 .heroMetaText {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  row-gap: 4px;
-}
-
-.heroStamp {
-  font-size: inherit;
-  letter-spacing: inherit;
+  row-gap: $space-4;
 }
 
 .heroMetaPart + .heroMetaPart::before {
   content: '·';
-  margin: 0 8px;
+  margin: 0 $space-8;
   color: var(--text-tertiary);
-}
-
-/* Refresh sits beside the age it resets: control next to what it affects. */
-.refreshButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  min-height: 32px;
-
-  @media (pointer: coarse) {
-    min-height: 44px;
-    padding: 6px 16px;
-  }
-
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  transition:
-    background-color var(--dur-hover) var(--ease-out-strong),
-    border-color var(--dur-hover) var(--ease-out-strong),
-    transform var(--dur-press) var(--ease-out-strong);
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover:not(:disabled) {
-      background: var(--bg-tertiary);
-      border-color: var(--border-hover);
-    }
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
-  }
-
-  &:disabled,
-  &[aria-disabled='true'] {
-    cursor: progress;
-    color: var(--text-secondary);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-
-    &:active:not(:disabled) {
-      transform: none;
-    }
-  }
-}
-
-.spinning {
-  animation: dashboardSpin 0.9s linear infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 }
 
 /* Partial or failed source notes beside the numbers they qualify. */
 .partialNote {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: $font-size-12;
+  line-height: $line-height-1-45;
   color: var(--amber-text);
 }
 
 .vitalLine {
   display: block;
+}
+
+/* A labelled alternate source under the headline number; the explanation opens on demand. */
+.vitalCaveat {
+  font-size: $font-size-13;
+  line-height: $line-height-1-45;
+  /* A different scope, not a warning: neutral, with the explanation one click away. */
+  color: var(--text-secondary);
+
+  summary {
+    @include disclosure-summary;
+  }
+
+  .vitalLink {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-0-25em;
+    min-height: $size-32;
+    color: var(--accent-color);
+    white-space: nowrap;
+
+    @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+      min-height: $size-touch-target;
+    }
+  }
+
+  > span {
+    display: block;
+    margin-top: $space-2;
+    color: var(--text-secondary);
+  }
 }
 
 .failedNote {
@@ -137,37 +90,37 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
 }
 
 .sectionHead {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: $space-6;
 }
 
 .sectionTitle {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.4;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: $font-size-15;
+  line-height: $line-height-1-4;
+  font-weight: $font-weight-600;
+  letter-spacing: (-$letter-spacing-0-02);
   color: var(--text-primary);
   text-wrap: balance;
 
   /* Focus lands here after a credentials Retry replaces the load error. */
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 4px;
-    border-radius: 4px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-4;
+    border-radius: $radius-4;
   }
 }
 
 .sectionDescription {
   margin: 0;
   max-width: 64ch;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: $font-size-12;
+  line-height: $line-height-1-5;
   color: var(--text-secondary);
 }
 
@@ -175,45 +128,54 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  gap: $space-16;
+  padding: $space-16;
+  border-radius: $radius-8;
+  border: $border-width-1 solid var(--border-color);
   background: var(--bg-primary);
 
   > header {
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
+    padding-bottom: $space-12;
+    border-bottom: $border-width-1 solid var(--border-color);
   }
+}
+
+/* An all-zero Request flow: one row plus the data-table disclosure. */
+.panelCompact {
+  gap: $space-4;
+  padding: $space-10 $space-16 $space-6;
 }
 
 .panelHead {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-4;
 }
 
 .panelTitle {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: $font-size-15;
+  font-weight: $font-weight-600;
+  letter-spacing: (-$letter-spacing-0-01);
   color: var(--text-primary);
 }
 
 .panelLink {
-  @media (pointer: coarse) {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-0-25em;
+  min-height: $size-32;
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 
   align-self: flex-start;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--primary-active);
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: $radius-4;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -222,22 +184,22 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-2;
   }
 }
 
 .panelLinks {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: $space-8 $space-20;
   margin-top: auto;
 }
 
 /* Age of a panel's own source, when it refreshes on a different cadence than the page. */
 .panelStamp {
-  font-family: $font-mono;
-  font-size: 12px;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
   color: var(--text-secondary);
 }
 
@@ -247,22 +209,25 @@
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: $spacing-sm $spacing-lg;
+  gap: $space-8 $space-24;
 }
 
 .sectionLink {
-  @media (pointer: coarse) {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-0-25em;
+  min-height: $size-32;
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 
   flex: none;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--primary-active);
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: $radius-4;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -271,8 +236,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--text-primary);
+    outline-offset: $space-2;
   }
 }
 
@@ -283,9 +248,9 @@
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: $spacing-md;
+  gap: $space-16;
 
-  @media (max-width: 900px) {
+  @media (max-width: #{$breakpoint-900}) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -302,9 +267,9 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: $spacing-md;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border-color);
+  gap: $space-16;
+  padding: $space-9 0;
+  border-bottom: $border-width-1 solid var(--border-color);
 
   &:last-child {
     border-bottom: none;
@@ -312,14 +277,14 @@
 }
 
 .specLabel {
-  font-size: 13px;
+  font-size: $font-size-13;
   color: var(--text-secondary);
 }
 
 .specValue {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   color: var(--text-primary);
   text-align: right;
   min-width: 0;
@@ -328,44 +293,28 @@
 }
 
 .specOff {
-  font-weight: 500;
+  font-weight: $font-weight-500;
   color: var(--text-secondary);
 }
 
 /* Switches continue the spec table instead of a row of pills. */
 .switchList {
-  margin-top: -$spacing-sm;
+  margin-top: -$space-8;
 }
 
 .specMono {
-  font-family: $font-mono;
-  font-weight: 500;
-  font-size: 12px;
-}
-
-@keyframes periodBreath {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-
-@keyframes dashboardSpin {
-  to {
-    transform: rotate(360deg);
-  }
+  font-family: $font-family-mono;
+  font-weight: $font-weight-500;
+  font-size: $font-size-12;
 }
 
 /* Screen-reader-only live region for verdict changes and refresh results. */
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: $size-1;
+  height: $size-1;
   padding: 0;
-  margin: -1px;
+  margin: (-$space-1);
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;

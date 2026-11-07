@@ -5,51 +5,60 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   min-width: 0;
   box-sizing: border-box;
-  padding: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  padding: $space-16;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  background: color-mix(in srgb, var(--bg-primary) $tint-0-82, transparent);
 
   @include mobile {
-    gap: 14px;
-    padding: 16px;
+    gap: $space-14;
+    padding: $space-16;
   }
 }
 
 /* 首载入场：0.45s 强减速上浮（与全站卡片入场同拍），排在头部级联
    （标题 0 / meta 70 / 动作 140 / 工具栏 210 / tabs 280ms）之后收尾，仅首载播一次 */
 .cardEnter {
-  animation: config-card-in 0.45s var(--ease-out-strong, ease-out) 0.32s backwards;
+  animation: config-card-in $duration-450 var(--ease-out-strong) $delay-320 backwards;
 }
 
 @keyframes config-card-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 24px, 0);
+    transform: translate3d(0, $distance-24, 0);
   }
 }
 
+/* Badges and title share the first row at every width; the description sits under the title
+   on desktop and spans the full card width on phones. */
 .header {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border-color);
+  grid-template-areas:
+    'badges title'
+    '. description';
+  column-gap: $space-10;
+  row-gap: $space-6;
+  align-items: center;
+  padding-bottom: $space-14;
+  border-bottom: $border-width-1 solid var(--border-color);
 
   @include mobile {
-    grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 12px;
+    grid-template-areas:
+      'badges title'
+      'description description';
+    padding-bottom: $space-12;
   }
 }
 
 .badges {
+  grid-area: badges;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-8;
   min-width: 0;
 }
 
@@ -57,52 +66,48 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  min-width: $size-32;
+  height: $size-28;
+  padding: 0 $space-8;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   color: var(--text-secondary);
-  font-family: $font-mono;
-  font-size: 11px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
+  letter-spacing: $letter-spacing-0-08;
 }
 
 .iconBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: $size-28;
+  height: $size-28;
+  border-radius: $radius-8;
   color: var(--text-secondary);
   flex: 0 0 auto;
 }
 
-.heading {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
 .title {
+  grid-area: title;
+  min-width: 0;
   margin: 0;
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 680;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
+  font-size: $font-size-14;
+  font-weight: $font-weight-680;
+  line-height: $line-height-1-18;
+  letter-spacing: (-$letter-spacing-0-01);
 }
 
 .description {
+  grid-area: description;
   margin: 0;
   max-width: 72ch;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: $font-size-13;
+  line-height: $line-height-1-5;
 
   @include mobile {
     max-width: none;
@@ -112,7 +117,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-16;
   width: 100%;
   min-width: 0;
 }

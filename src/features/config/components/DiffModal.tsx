@@ -5,6 +5,7 @@ import { Chunk } from '@codemirror/merge';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import styles from './DiffModal.module.scss';
+import { iconSize, px, size } from '@/design-system';
 
 type DiffModalProps = {
   open: boolean;
@@ -219,7 +220,7 @@ export function DiffModal({
       open={open}
       title={t('config_management.diff.title')}
       onClose={onCancel}
-      width="min(1200px, 90vw)"
+      width={`min(${px(size['1200'])}, 90vw)`}
       className={styles.diffModal}
       closeDisabled={loading}
       footer={
@@ -239,7 +240,12 @@ export function DiffModal({
         ) : (
           <div className={styles.diffContainer}>
             <div className={styles.fileHeader}>
-              <svg className={styles.fileIcon} viewBox="0 0 16 16" width="16" height="16">
+              <svg
+                className={styles.fileIcon}
+                viewBox="0 0 16 16"
+                width={iconSize['16']}
+                height={iconSize['16']}
+              >
                 <path
                   fillRule="evenodd"
                   d="M3.75 1.5a.25.25 0 00-.25.25v11.5c0 .138.112.25.25.25h8.5a.25.25 0 00.25-.25V6H9.75A1.75 1.75 0 018 4.25V1.5H3.75zm5.75.56v2.19c0 .138.112.25.25.25h2.19L9.5 2.06zM2 1.75C2 .784 2.784 0 3.75 0h5.086c.464 0 .909.184 1.237.513l3.414 3.414c.329.328.513.773.513 1.237v8.086A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"
@@ -262,8 +268,8 @@ export function DiffModal({
                       <svg
                         className={styles.hunkExpandIcon}
                         viewBox="0 0 16 16"
-                        width="12"
-                        height="12"
+                        width={iconSize['12']}
+                        height={iconSize['12']}
                       >
                         <path
                           d="M8.177 1.677l2.896 2.896a.25.25 0 01-.177.427H8.75v1.25a.75.75 0 01-1.5 0V5H5.104a.25.25 0 01-.177-.427l2.896-2.896a.25.25 0 01.354 0zM7.25 11.75a.75.75 0 011.5 0V13h2.146a.25.25 0 01.177.427l-2.896 2.896a.25.25 0 01-.354 0l-2.896-2.896A.25.25 0 015.104 13H7.25v-1.25z"

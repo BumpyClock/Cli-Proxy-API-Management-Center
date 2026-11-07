@@ -4,10 +4,10 @@
 
 .container {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  bottom: calc($space-12 + env(safe-area-inset-bottom, 0px));
   left: var(--content-center-x, 50%);
   transform: translateX(-50%);
-  width: min(960px, calc(100vw - 24px));
+  width: min($size-960, calc(100vw - $size-24));
   z-index: $z-dropdown;
   pointer-events: none;
 }
@@ -18,11 +18,11 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  --glass-blur: 14px;
-  border: 1px solid var(--glass-border);
+  gap: $space-8 $space-16;
+  padding: $space-10 $space-14;
+  border-radius: $radius-16;
+  --glass-blur: #{$blur-14};
+  border: $border-width-1 solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-backdrop-filter);
   box-shadow: var(--shadow-lg);
@@ -32,35 +32,35 @@
 .right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-6;
   flex-wrap: wrap;
 }
 
 .count {
-  font-family: $font-mono;
-  font-size: 12px;
-  font-weight: 650;
+  font-family: $font-family-mono;
+  font-size: $font-size-12;
+  font-weight: $font-weight-650;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
-  padding-right: 4px;
+  padding-right: $space-4;
   white-space: nowrap;
 }
 
 .bar :global(.btn) {
   transition:
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out),
+    transform var(--dur-press) var(--ease-out-strong),
     background-color $transition-fast,
     border-color $transition-fast,
     color $transition-fast;
 }
 
 .bar :global(.btn:active:not(:disabled)) {
-  transform: scale(0.96);
+  transform: scale($motion-scale-0-96);
 }
 
 @include mobile {
   .container {
-    width: calc(100vw - 16px);
+    width: calc(100vw - $size-16);
   }
 
   .bar {

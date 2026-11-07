@@ -4,6 +4,7 @@ import { IconLoader2, IconRefreshCw, IconSearch } from '@/components/ui/icons';
 import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
 import type { ModelInfo } from '@/utils/models';
 import styles from './sharedForm.module.scss';
+import { iconSize } from '@/design-system';
 
 interface ModelDiscoveryPanelProps {
   loading: boolean;
@@ -82,7 +83,7 @@ export function ModelDiscoveryPanel({
       <div className={styles.discoveryToolbar}>
         <div className={styles.discoverySearchWrap}>
           <span className={styles.discoverySearchIcon} aria-hidden="true">
-            <IconSearch size={14} />
+            <IconSearch size={iconSize['14']} />
           </span>
           <input
             type="search"
@@ -101,10 +102,10 @@ export function ModelDiscoveryPanel({
         >
           {loading ? (
             <span className={`${styles.statusIcon} ${styles.statusIconLoading}`}>
-              <IconLoader2 size={14} />
+              <IconLoader2 size={iconSize['14']} />
             </span>
           ) : (
-            <IconRefreshCw size={14} />
+            <IconRefreshCw size={iconSize['14']} />
           )}
           <span>{t('providersPage.discovery.reload')}</span>
         </button>

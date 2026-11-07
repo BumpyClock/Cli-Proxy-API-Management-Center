@@ -13,6 +13,7 @@ import { IconX } from '../icons';
 import { openModalSurface, type ModalSurface } from '../modalStack';
 import { FOCUSABLE_SELECTOR, lockScroll, unlockScroll } from '../scrollLock';
 import styles from './Sheet.module.scss';
+import { duration, iconSize } from '@/design-system';
 
 export type SheetSize = 'md' | 'lg' | 'xl';
 
@@ -41,7 +42,8 @@ interface SheetProps {
   focusKey?: string;
 }
 
-const CLOSE_ANIMATION_DURATION = 280;
+// Matches the sheet fade-out / slide-out animations in Sheet.module.scss.
+const CLOSE_ANIMATION_DURATION = duration['sheet-exit'];
 const SIZE_CLASS: Record<SheetSize, string> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
@@ -271,7 +273,7 @@ export function Sheet({
           disabled={closeDisabled}
           aria-label={t('common.close')}
         >
-          <IconX size={18} />
+          <IconX size={iconSize['18']} />
         </button>
         {(eyebrow || title || description) && (
           <div className={styles.header}>

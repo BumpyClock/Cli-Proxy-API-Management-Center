@@ -2,15 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { animate } from 'motion/mini';
+import { actionBarMotion } from '@/design-system';
 import { Button } from '@/components/ui/Button';
 import { prefersReducedMotion } from '@/hooks/motion';
 import { useActionBarHeightVar } from '@/hooks/useActionBarHeightVar';
 import styles from './BatchActionBar.module.scss';
 
-const easePower3Out = (progress: number) => 1 - (1 - progress) ** 4;
-const easePower2In = (progress: number) => progress ** 3;
 const BASE_TRANSFORM = 'translateX(-50%)';
-const HIDDEN_TRANSFORM = 'translateX(-50%) translateY(56px)';
+const HIDDEN_TRANSFORM = `translateX(-50%) translateY(${actionBarMotion.hiddenOffset}px)`;
 
 export type BatchActionBarProps = {
   selectionCount: number;
@@ -30,7 +29,7 @@ export type BatchActionBarProps = {
 
 /**
  * 悬浮批量操作条：portal 到 body 的玻璃工具栏。
- * - 选中数 >0 时上浮入场（0.28s 强减速），清零后加速退场（0.22s）再卸载；
+ * - 选中数 >0 时上浮入场（强减速），清零后加速退场再卸载（时长与曲线见 actionBarMotion）；
  * - reduced-motion 下只做透明度淡入淡出（保留 translateX(-50%) 基础变换，防止错位半宽）；
  * - 实时高度写入 --auth-files-action-bar-height 供页面底部留白。
  */
@@ -86,8 +85,7 @@ export function BatchActionBar(props: BatchActionBarProps) {
           el,
           { opacity: [0, 1] },
           {
-            duration: 0.15,
-            ease: 'linear',
+            ...actionBarMotion.reducedEnter,
             onComplete: () => {
               el.style.opacity = '1';
             },
@@ -98,8 +96,7 @@ export function BatchActionBar(props: BatchActionBarProps) {
           el,
           { transform: [HIDDEN_TRANSFORM, BASE_TRANSFORM], opacity: [0, 1] },
           {
-            duration: 0.28,
-            ease: easePower3Out,
+            ...actionBarMotion.enter,
             onComplete: () => {
               el.style.transform = BASE_TRANSFORM;
               el.style.opacity = '1';
@@ -118,13 +115,13 @@ export function BatchActionBar(props: BatchActionBarProps) {
         animationRef.current = animate(
           el,
           { opacity: [1, 0] },
-          { duration: 0.12, ease: 'linear', onComplete: finishExit }
+          { ...actionBarMotion.reducedExit, onComplete: finishExit }
         );
       } else {
         animationRef.current = animate(
           el,
           { transform: [BASE_TRANSFORM, HIDDEN_TRANSFORM], opacity: [1, 0] },
-          { duration: 0.22, ease: easePower2In, onComplete: finishExit }
+          { ...actionBarMotion.exit, onComplete: finishExit }
         );
       }
     }

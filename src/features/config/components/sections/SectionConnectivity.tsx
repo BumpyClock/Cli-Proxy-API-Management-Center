@@ -4,9 +4,17 @@ import { Input } from '@/components/ui/Input';
 import { CONFIG_TAB_ICONS, SECTION_INDEX_LABELS } from '../../constants';
 import type { ConfigSectionProps } from '../../types';
 import { SectionCard } from '../SectionCard';
-import { Divider, FieldAnchor, FieldGrid, FieldStack, ToggleRow } from '../fields/FieldPrimitives';
+import {
+  Divider,
+  FieldAnchor,
+  FieldGrid,
+  FieldStack,
+  ToggleRow,
+  YamlKey,
+} from '../fields/FieldPrimitives';
 import { ApiKeysField, HostField, PortField } from '../fields/sharedFields';
 import { getValidationMessage } from '../blocks/shared';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.connectivity;
 
@@ -24,7 +32,7 @@ export function SectionConnectivity({
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.connectivity}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.connectivity.title')}
       description={t('config_management.visual.sections.connectivity.description')}
       animateIn={animateIn}
@@ -37,7 +45,12 @@ export function SectionConnectivity({
 
         <FieldAnchor fieldId="authDir">
           <Input
-            label={t('config_management.visual.sections.auth.auth_dir')}
+            label={
+              <>
+                {t('config_management.visual.sections.auth.auth_dir')}
+                <YamlKey name="auth-dir" />
+              </>
+            }
             placeholder="~/.cli-proxy-api"
             value={values.authDir}
             onChange={(e) => onChange({ authDir: e.target.value })}

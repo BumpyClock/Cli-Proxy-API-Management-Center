@@ -4,21 +4,35 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $spacing-sm;
-  border: 1px solid transparent;
-  min-height: 34px;
-  border-radius: 6px;
-  padding: 7px 12px;
-  font-size: 13px;
-  font-weight: 600;
+  gap: $space-8;
+  border: $border-width-1 solid transparent;
+  /* One control height (36px) shared with RefreshButton, selects and search fields. */
+  min-height: $size-36;
+  border-radius: $radius-6;
+  padding: $space-7 $space-12;
+  font-size: $font-size-13;
+  font-weight: $font-weight-600;
   cursor: pointer;
   transition: all $transition-fast;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
 
+  /* Icon + label children share one span; give them a consistent gap and optical alignment. */
+  > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-6;
+    min-width: 0;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
   &.btn-primary {
     background-color: var(--primary-color);
-    color: var(--primary-contrast, #fff);
+    color: var(--primary-contrast);
     border-color: var(--primary-color);
 
     &:hover {
@@ -27,14 +41,27 @@
     }
   }
 
+  /* One outlined secondary style everywhere, shared with RefreshButton (--control-outline). */
   &.btn-secondary {
-    background-color: var(--bg-tertiary);
-    border-color: var(--border-color);
+    background-color: var(--bg-primary);
+    border-color: var(--control-outline);
     color: var(--text-primary);
 
-    &:hover {
-      background-color: var(--bg-hover, var(--bg-tertiary));
+    &:hover:not(:disabled) {
+      background-color: var(--bg-tertiary);
       border-color: var(--border-hover);
+    }
+  }
+
+  /* Destructive but not primary: outlined so it never outweighs the page's main task. */
+  &.btn-danger-outline {
+    background-color: var(--bg-primary);
+    border-color: color-mix(in srgb, var(--error-color) $tint-0-55, var(--control-outline));
+    color: var(--error-color);
+
+    &:hover:not(:disabled) {
+      background-color: var(--bg-error-light);
+      border-color: var(--error-color);
     }
   }
 
@@ -55,7 +82,7 @@
     color: var(--danger-contrast);
 
     &:hover {
-      background-color: color-mix(in srgb, var(--error-color) 90%, var(--text-primary));
+      background-color: color-mix(in srgb, var(--error-color) $tint-0-9, var(--text-primary));
     }
   }
 
@@ -63,38 +90,62 @@
     width: 100%;
   }
 
+  /* Compact, but still a 32px pointer target. */
   &.btn-sm {
-    min-height: 30px;
-    padding: 5px 10px;
-    font-size: 12px;
+    min-height: $size-32;
+    padding: $space-5 $space-10;
+    font-size: $font-size-12;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+    outline: $border-width-2 solid var(--focus-ring);
+    outline-offset: $space-2;
   }
 
-  @media (pointer: coarse) {
+  /* Phones and touch screens get a 44px hit region regardless of the visual size variant. */
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
     &,
     &.btn-sm {
-      min-width: 44px;
-      min-height: 44px;
+      min-width: $size-touch-target;
+      min-height: $size-touch-target;
     }
   }
 
+  /*
+   * Disabled reads as unavailable, not as a grey primary: neutral fill, muted text and a visible
+   * outline for every variant. Placed after the variant hovers so it wins at equal specificity.
+   * A loading button (aria-busy) keeps its variant colours and only dims.
+   */
   &:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  &:disabled:not([aria-busy='true']) {
+    background-color: var(--bg-tertiary);
+    border-color: var(--control-outline);
+    color: var(--text-tertiary);
+    box-shadow: none;
+  }
+
+  /* Ghost buttons (menu items, icon actions) stay chromeless, so they dim to read as unavailable. */
+  &.btn-ghost:disabled:not([aria-busy='true']) {
+    background: transparent;
+    border-color: transparent;
+    opacity: $opacity-0-6;
+  }
+
+  &[aria-busy='true']:disabled {
+    opacity: $opacity-0-75;
   }
 }
 
 .input,
 textarea {
   width: 100%;
-  min-height: 36px;
-  border: 1px solid var(--border-primary);
-  border-radius: 6px;
-  padding: 8px 10px;
+  min-height: $size-36;
+  border: $border-width-1 solid var(--border-primary);
+  border-radius: $radius-6;
+  padding: $space-8 $space-10;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition:
@@ -104,47 +155,51 @@ textarea {
   &:focus {
     outline: none;
     border-color: var(--focus-ring);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring) 28%, transparent);
+    box-shadow: $shadow-focus-ring-soft;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: #{$breakpoint-mobile}), (pointer: coarse) {
+    min-height: $size-touch-target;
   }
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
-  margin-bottom: $spacing-md;
+  gap: $space-4;
+  margin-bottom: $space-16;
 
   label {
-    font-weight: 600;
+    font-weight: $font-weight-600;
     color: var(--text-primary);
   }
 
   .hint {
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: $font-size-13;
   }
 }
 
 .card {
   background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
   box-shadow: var(--shadow);
-  padding: 16px;
+  padding: $space-16;
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-sm;
+  gap: $space-8;
   flex-wrap: wrap;
-  margin-bottom: $spacing-md;
+  margin-bottom: $space-16;
 
   > * {
     min-width: 0;
@@ -153,8 +208,8 @@ textarea {
   .title {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: $font-size-15;
+    font-weight: $font-weight-600;
     color: var(--text-primary);
   }
 }
@@ -162,12 +217,12 @@ textarea {
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: $radius-full;
-  font-size: 13px;
-  border: 1px solid var(--border-color);
-  margin-bottom: $spacing-md;
+  gap: $space-6;
+  padding: $space-4 $space-10;
+  border-radius: $radius-9999;
+  font-size: $font-size-13;
+  border: $border-width-1 solid var(--border-color);
+  margin-bottom: $space-16;
 
   // 确保后续内容换行显示
   + * {
@@ -176,20 +231,20 @@ textarea {
 
   &.success {
     color: var(--success-color);
-    border-color: color-mix(in srgb, var(--success-color) 35%, transparent);
-    background: color-mix(in srgb, var(--success-color) 8%, transparent);
+    border-color: color-mix(in srgb, var(--success-color) $tint-0-35, transparent);
+    background: color-mix(in srgb, var(--success-color) $tint-0-08, transparent);
   }
 
   &.warning {
     color: var(--warning-color);
-    border-color: color-mix(in srgb, var(--warning-color) 35%, transparent);
-    background: color-mix(in srgb, var(--warning-color) 8%, transparent);
+    border-color: color-mix(in srgb, var(--warning-color) $tint-0-35, transparent);
+    background: color-mix(in srgb, var(--warning-color) $tint-0-08, transparent);
   }
 
   &.error {
     color: var(--error-color);
-    border-color: color-mix(in srgb, var(--error-color) 35%, transparent);
-    background: color-mix(in srgb, var(--error-color) 8%, transparent);
+    border-color: color-mix(in srgb, var(--error-color) $tint-0-35, transparent);
+    background: color-mix(in srgb, var(--error-color) $tint-0-08, transparent);
   }
 
   &.muted {
@@ -198,27 +253,27 @@ textarea {
 }
 
 .pill {
-  padding: 4px 10px;
-  border-radius: $radius-full;
+  padding: $space-4 $space-10;
+  border-radius: $radius-9999;
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  font-size: 12px;
+  border: $border-width-1 solid var(--border-color);
+  font-size: $font-size-12;
 }
 
 .loading-spinner {
   // Fallback: legacy white spinner (in case color-mix is unsupported)
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #fff;
+  border: $border-width-3 solid rgba($color-base-white, $opacity-0-2);
+  border-top-color: $color-base-white;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  animation: spin 0.8s linear infinite;
+  width: $size-16;
+  height: $size-16;
+  animation: spin $duration-800 $ease-linear infinite;
 }
 
 @supports (color: color-mix(in srgb, currentColor 22%, transparent)) {
   .loading-spinner {
-    border-color: color-mix(in srgb, currentColor 22%, transparent);
+    border-color: color-mix(in srgb, currentColor $tint-0-22, transparent);
     border-top-color: currentColor;
   }
 }
@@ -235,19 +290,19 @@ textarea {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba($color-base-black, $opacity-0-35);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: $z-modal;
-  padding: $spacing-lg;
+  padding: $space-24;
 
   &.modal-overlay-entering {
-    animation: modal-overlay-fade-in 0.25s ease-out forwards;
+    animation: modal-overlay-fade-in $duration-250 $ease-out forwards;
   }
 
   &.modal-overlay-closing {
-    animation: modal-overlay-fade-out 0.35s ease-in forwards;
+    animation: modal-overlay-fade-out $duration-modal-exit $ease-in forwards;
   }
 }
 
@@ -271,8 +326,8 @@ textarea {
 
 .modal {
   background: var(--bg-primary);
-  border-radius: $radius-lg;
-  border: 1px solid var(--border-color);
+  border-radius: $radius-12;
+  border: $border-width-1 solid var(--border-color);
   box-shadow: $shadow-lg;
   max-width: 100%;
   max-height: 90vh;
@@ -281,21 +336,21 @@ textarea {
   flex-direction: column;
   position: relative;
   // 关闭按钮中心位置: right 12px + 16px = 28px, top 12px + 16px = 28px
-  transform-origin: calc(100% - 28px) 28px;
+  transform-origin: calc(100% - #{$space-28}) $space-28;
 
   &.modal-entering {
-    animation: modal-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation: modal-scale-in $duration-300 $ease-out-back forwards;
   }
 
   &.modal-closing {
-    animation: modal-collapse-to-close 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: modal-collapse-to-close $duration-modal-exit $ease-standard forwards;
   }
 }
 
 @keyframes modal-scale-in {
   from {
     opacity: 0;
-    transform: scale(0.85) translateY(20px);
+    transform: scale($motion-scale-0-85) translateY($distance-20);
   }
   to {
     opacity: 1;
@@ -316,24 +371,24 @@ textarea {
 
 .modal-close-floating {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
+  top: $space-12;
+  right: $space-12;
+  width: $size-32;
+  height: $size-32;
   padding: 0;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border: $border-width-1 solid var(--border-color);
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: $radius-full;
+  border-radius: $radius-9999;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    transform 0.15s ease;
-  z-index: 10;
+    color $duration-150 $ease-default,
+    background-color $duration-150 $ease-default,
+    transform $duration-150 $ease-default;
+  z-index: $z-stack-10;
 
   svg {
     display: block;
@@ -342,16 +397,16 @@ textarea {
   &:hover {
     color: var(--text-primary);
     background: var(--bg-tertiary);
-    transform: scale(1.1);
+    transform: scale($motion-scale-1-1);
   }
 
   &:active {
-    transform: scale(0.95);
+    transform: scale($motion-scale-0-95);
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: $opacity-0-6;
     transform: none;
   }
 
@@ -365,65 +420,65 @@ textarea {
 .modal-header {
   display: flex;
   align-items: center;
-  padding: $spacing-md $spacing-lg;
-  border-bottom: 1px solid var(--border-color);
+  padding: $space-16 $space-24;
+  border-bottom: $border-width-1 solid var(--border-color);
 
   .modal-title {
-    font-weight: 700;
-    font-size: 18px;
+    font-weight: $font-weight-700;
+    font-size: $font-size-18;
     color: var(--text-primary);
   }
 }
 
 .modal-body {
-  padding: $spacing-lg;
+  padding: $space-24;
   overflow: auto;
   max-height: 65vh;
 }
 
 .modal-footer {
-  padding: $spacing-md $spacing-lg;
-  border-top: 1px solid var(--border-color);
+  padding: $space-16 $space-24;
+  border-top: $border-width-1 solid var(--border-color);
   display: flex;
   justify-content: flex-end;
-  gap: $spacing-sm;
+  gap: $space-8;
   background: var(--bg-primary);
 }
 
 @media (max-width: $breakpoint-mobile) {
   .modal-overlay {
-    padding: $spacing-md;
+    padding: $space-16;
   }
 
   .modal {
-    max-height: calc(100vh - #{$spacing-md * 2});
-    border-radius: $radius-md;
+    max-height: calc(100vh - #{$space-16 * 2});
+    border-radius: $radius-8;
   }
 
   @supports (height: 100dvh) {
     .modal {
-      max-height: calc(100dvh - #{$spacing-md * 2});
+      max-height: calc(100dvh - #{$space-16 * 2});
     }
   }
 
   .modal-header {
-    padding: $spacing-md;
-    padding-right: 52px;
+    padding: $space-16;
+    padding-right: $space-52;
   }
 
   .modal-body {
-    padding: $spacing-md;
-    max-height: min(60vh, calc(100vh - 180px));
+    padding: $space-16;
+    max-height: min(60vh, calc(100vh - $size-180));
   }
 
   @supports (height: 100dvh) {
     .modal-body {
-      max-height: min(60dvh, calc(100dvh - 180px));
+      max-height: min(60dvh, calc(100dvh - $size-180));
     }
   }
 
   .modal-footer {
-    padding: $spacing-md;
+    padding: $space-16;
     flex-direction: column-reverse;
     align-items: stretch;
   }
@@ -437,7 +492,7 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: $spacing-md;
+  gap: $space-16;
 
   .status-badge {
     margin-bottom: 0;
@@ -445,27 +500,45 @@ textarea {
 }
 
 .empty-state {
-  border: 1px dashed var(--border-color);
-  border-radius: $radius-lg;
-  padding: $spacing-lg;
+  border: $border-width-1 dashed var(--border-color);
+  border-radius: $radius-12;
+  padding: $space-24;
   background: var(--bg-secondary);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: $spacing-md;
+  gap: $space-16;
   align-items: center;
 
   .empty-content {
     display: flex;
+    flex: 1 1 $size-280;
+    min-width: 0;
     align-items: center;
-    gap: $spacing-md;
+    gap: $space-16;
+  }
+
+  /* Phones: copy gets the full row; the action sits under it, aligned with the copy. */
+  @media (max-width: #{$breakpoint-600}) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .empty-content {
+      flex-basis: auto;
+      align-items: flex-start;
+    }
+
+    .empty-action {
+      padding-left: calc($space-42 + #{$space-16});
+    }
   }
 
   .empty-icon {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 42px;
-    border-radius: $radius-full;
-    border: 2px solid var(--border-color);
+    width: $size-42;
+    height: $size-42;
+    flex: 0 0 $size-42;
+    border-radius: $radius-9999;
+    border: $border-width-2 solid var(--border-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -474,27 +547,27 @@ textarea {
 
     svg {
       display: block;
-      width: 20px;
-      height: 20px;
+      width: $size-20;
+      height: $size-20;
       flex-shrink: 0;
     }
   }
 
   .empty-title {
-    font-weight: 700;
+    font-weight: $font-weight-700;
     color: var(--text-primary);
   }
 
   .empty-desc {
     color: var(--text-secondary);
-    margin-top: 4px;
+    margin-top: $space-4;
   }
 
   .empty-action .btn > span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: $space-8;
     line-height: 1;
   }
 
@@ -507,57 +580,55 @@ textarea {
 .item-list {
   display: flex;
   flex-direction: column;
-  gap: $spacing-sm;
+  gap: $space-8;
 }
 
 .item-row {
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
-  padding: $spacing-md;
+  border: $border-width-1 solid var(--border-color);
+  border-radius: $radius-8;
+  padding: $space-16;
   background: var(--bg-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $spacing-md;
+  gap: $space-16;
   flex-wrap: wrap;
 
   .item-meta {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: $space-6;
   }
 
   .item-title {
-    font-weight: 700;
+    font-weight: $font-weight-700;
     color: var(--text-primary);
   }
 
   .item-subtitle {
     color: var(--text-secondary);
-    font-family:
-      ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-      'Courier New', monospace;
+    font-family: $font-family-metadata-mono;
     word-break: break-all;
   }
 
   .item-actions {
     display: flex;
-    gap: $spacing-sm;
+    gap: $space-8;
   }
 }
 
 .error-box {
-  background: rgba($error-color, 0.1);
-  border: 1px solid rgba($error-color, 0.4);
-  border-radius: $radius-md;
-  padding: $spacing-sm $spacing-md;
-  color: $error-color;
+  background: rgba($color-legacy-error, $opacity-0-1);
+  border: $border-width-1 solid rgba($color-legacy-error, $opacity-0-4);
+  border-radius: $radius-8;
+  padding: $space-8 $space-16;
+  color: $color-legacy-error;
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: $spacing-lg;
+  gap: $space-24;
 }
 
 .hint {

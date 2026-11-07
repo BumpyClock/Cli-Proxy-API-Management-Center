@@ -14,7 +14,7 @@
   &__layer {
     display: flex;
     flex-direction: column;
-    gap: $spacing-lg;
+    gap: $space-24;
     min-height: 0;
     flex: 1;
     background: var(--bg-secondary);

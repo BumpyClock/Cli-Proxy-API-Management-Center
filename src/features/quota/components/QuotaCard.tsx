@@ -15,6 +15,7 @@ import { QUOTA_ADAPTERS, type QuotaCardState } from '../providers';
 import { isQuotaRefreshDisabled, type QuotaFileEntry } from '../logic';
 import bodyStyles from './QuotaBody.module.scss';
 import styles from './QuotaCard.module.scss';
+import { iconSize } from '@/design-system';
 
 /** 额度页全页外衣：QuotaBody 模块绑定成类型化契约（缺键在模块初始化即抛）。 */
 const quotaClasses = bindQuotaClasses(bodyStyles, 'QuotaBody.module.scss');
@@ -108,7 +109,7 @@ export function QuotaCard(props: QuotaCardProps) {
             onClick={onRefresh}
             disabled={!canRefresh}
           >
-            <IconRefreshCw size={15} aria-hidden="true" className={styles.idleGlyph} />
+            <IconRefreshCw size={iconSize['15']} aria-hidden="true" className={styles.idleGlyph} />
             <span className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</span>
           </button>
         ) : status === 'loading' ? (
@@ -142,7 +143,10 @@ export function QuotaCard(props: QuotaCardProps) {
               disabled={!canRefresh || loading || resetting}
               title={t('codex_quota.reset_button')}
             >
-              <IconRefreshCw size={13} className={resetting ? styles.spinning : undefined} />
+              <IconRefreshCw
+                size={iconSize['13']}
+                className={resetting ? styles.spinning : undefined}
+              />
               {t('codex_quota.reset_button')}
             </button>
           )}
@@ -153,7 +157,10 @@ export function QuotaCard(props: QuotaCardProps) {
             disabled={isQuotaRefreshDisabled(canRefresh, loading, resetting)}
             title={t('auth_files.quota_refresh_hint')}
           >
-            <IconRefreshCw size={13} className={loading ? styles.spinning : undefined} />
+            <IconRefreshCw
+              size={iconSize['13']}
+              className={loading ? styles.spinning : undefined}
+            />
             {t('auth_files.quota_refresh_single')}
           </button>
         </footer>

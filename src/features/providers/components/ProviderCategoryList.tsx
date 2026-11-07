@@ -1,19 +1,46 @@
+import { useId, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { IconChevronDown } from '@/components/ui/icons';
 import { PROVIDER_LOGOS } from '../brandLogos';
 import type { ProviderBrand, ProviderGroup } from '../types';
+import { shouldExpandUnconfigured } from '../workbenchLayout';
 import styles from './ProviderCategoryList.module.scss';
+import { iconSize } from '@/design-system';
 
 interface ProviderCategoryListProps {
   groups: ProviderGroup[];
   activeBrand: ProviderBrand;
   onSelect: (brand: ProviderBrand) => void;
+  /**
+   * The selected provider's detail. It sits between the configured and not-configured groups in
+   * DOM order, so the one-column layout reads configured list, detail, then the long catalog.
+   * Phones swap the configured list for a native provider select, so the detail comes first.
+   */
+  detail?: ReactNode;
 }
 
-export function ProviderCategoryList({ groups, activeBrand, onSelect }: ProviderCategoryListProps) {
+export function ProviderCategoryList({
+  groups,
+  activeBrand,
+  onSelect,
+  detail,
+}: ProviderCategoryListProps) {
   const { t } = useTranslation();
+  const pickerId = useId();
 
   const configured = groups.filter((group) => group.resources.length > 0);
   const unconfigured = groups.filter((group) => group.resources.length === 0);
+  const activeIsConfigured = configured.some((group) => group.id === activeBrand);
+
+  const [unconfiguredOpen, setUnconfiguredOpen] = useState(() =>
+    shouldExpandUnconfigured({ configuredCount: configured.length, activeIsConfigured })
+  );
+  // Selecting (or deep-linking to) a not-configured provider must never leave it hidden.
+  const [shownBrand, setShownBrand] = useState(activeBrand);
+  if (shownBrand !== activeBrand) {
+    setShownBrand(activeBrand);
+    if (!activeIsConfigured) setUnconfiguredOpen(true);
+  }
 
   const renderGroups = (items: ProviderGroup[]) => (
     <div className={styles.list}>
@@ -64,7 +91,10 @@ export function ProviderCategoryList({ groups, activeBrand, onSelect }: Provider
                 </>
               ) : null}
               <span className={styles.itemText}>
-                <span className={styles.itemTitle}>
+                <span
+                  className={styles.itemTitle}
+                  title={t(`providersPage.providerNames.${group.id}`)}
+                >
                   {t(`providersPage.providerNames.${group.id}`)}
                 </span>
                 <span className={styles.itemSubtitle}>
@@ -81,19 +111,75 @@ export function ProviderCategoryList({ groups, activeBrand, onSelect }: Provider
     </div>
   );
 
+  const layoutClassName = [styles.workbench, configured.length === 0 ? styles.noConfigured : '']
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={styles.stack}>
+    <div className={layoutClassName}>
       {configured.length > 0 && (
-        <aside className={styles.aside}>
+        <aside className={`${styles.aside} ${styles.configuredArea}`}>
           <h2 className={styles.eyebrow}>{t('redesign.providers.configured')}</h2>
           {renderGroups(configured)}
         </aside>
       )}
+      <div className={styles.pickerArea}>
+        <label className={styles.pickerLabel} htmlFor={pickerId}>
+          {t('providersPage.categories.pickerLabel')}
+        </label>
+        <span className={styles.pickerWrap}>
+          <select
+            id={pickerId}
+            className={styles.picker}
+            value={activeBrand}
+            onChange={(event) => onSelect(event.target.value as ProviderBrand)}
+          >
+            {configured.length > 0 ? (
+              <optgroup label={t('redesign.providers.configured')}>
+                {configured.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {`${t(`providersPage.providerNames.${group.id}`)} · ${t(
+                      'providersPage.categories.activeCount',
+                      {
+                        active: group.resources.filter((r) => !r.disabled).length,
+                        total: group.resources.length,
+                      }
+                    )}`}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+            {unconfigured.length > 0 ? (
+              <optgroup label={t('providersPage.status.notConfigured')}>
+                {unconfigured.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {t(`providersPage.providerNames.${group.id}`)}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+          </select>
+          <IconChevronDown
+            size={iconSize['16']}
+            aria-hidden="true"
+            className={styles.pickerChevron}
+          />
+        </span>
+      </div>
+      {detail ? <div className={styles.detailArea}>{detail}</div> : null}
       {unconfigured.length > 0 && (
-        <aside className={styles.aside}>
-          <h2 className={styles.eyebrow}>{t('providersPage.status.notConfigured')}</h2>
+        <details
+          className={`${styles.aside} ${styles.unconfiguredArea}`}
+          open={unconfiguredOpen}
+          onToggle={(event) => setUnconfiguredOpen(event.currentTarget.open)}
+        >
+          <summary className={styles.summary}>
+            <h2 className={styles.summaryTitle}>{t('providersPage.status.notConfigured')}</h2>
+            <span className={styles.badge}>{unconfigured.length}</span>
+          </summary>
+          <p className={styles.summaryHint}>{t('redesign.providers.notConfiguredHint')}</p>
           {renderGroups(unconfigured)}
-        </aside>
+        </details>
       )}
     </div>
   );

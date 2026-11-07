@@ -8,6 +8,7 @@ import { SectionCard } from '../SectionCard';
 import { FieldAnchor, FieldStack } from '../fields/FieldPrimitives';
 import { PayloadFilterRulesEditor } from '../blocks/PayloadFilterRulesEditor';
 import { PayloadRulesEditor } from '../blocks/PayloadRulesEditor';
+import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.payload;
 
@@ -51,7 +52,7 @@ export function SectionPayload({
   return (
     <SectionCard
       indexLabel={SECTION_INDEX_LABELS.payload}
-      icon={<Icon size={16} />}
+      icon={<Icon size={iconSize['16']} />}
       title={t('config_management.visual.sections.payload.title')}
       description={t('config_management.visual.sections.payload.description')}
       animateIn={animateIn}

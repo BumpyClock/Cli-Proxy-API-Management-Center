@@ -5,7 +5,7 @@ import { resolveQuotaErrorMessage } from '@/utils/quota';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
 import { isRuntimeOnlyAuthFile, type QuotaProviderType } from '@/features/authFiles/constants';
 import { Button } from '@/components/ui/Button';
-import { IconRefreshCw } from '@/components/ui/icons';
+import { IconChevronDown, IconRefreshCw } from '@/components/ui/icons';
 import { useNow } from '@/hooks/useNow';
 import { bindQuotaClasses } from '@/features/quota/types';
 import { QUOTA_ADAPTERS } from '@/features/quota/providers';
@@ -13,6 +13,7 @@ import { getQuotaObservations } from '@/features/quota/providers/registry';
 import { selectQuotaWindow } from '@/features/quota/providers/observations';
 import { useQuotaActions } from '@/features/quota/hooks/useQuotaActions';
 import styles from './AuthFileQuota.module.scss';
+import { iconSize } from '@/design-system';
 
 const compactQuotaClasses = bindQuotaClasses(styles, 'AuthFileQuota.module.scss');
 
@@ -123,7 +124,7 @@ export function AuthFileQuotaSection({
               title={t('codex_quota.reset_button')}
               aria-label={t('codex_quota.reset_button')}
             >
-              {!resettingQuota && <IconRefreshCw size={14} />}
+              {!resettingQuota && <IconRefreshCw size={iconSize['14']} />}
               {t('codex_quota.reset_button')}
             </Button>
           )}
@@ -138,7 +139,7 @@ export function AuthFileQuotaSection({
               loading={quotaStatus === 'loading' || quota?.refreshing}
               title={t('auth_files.quota_refresh_hint')}
             >
-              {quotaStatus !== 'loading' && <IconRefreshCw size={14} />}
+              {quotaStatus !== 'loading' && <IconRefreshCw size={iconSize['14']} />}
               {t('auth_files.quota_refresh_single')}
             </Button>
           )}
@@ -148,17 +149,25 @@ export function AuthFileQuotaSection({
   );
 
   if (!compact) return content;
+  // The summary names why no value is shown: never checked, checking, failed, or not reported.
+  const reported = (!expired && Boolean(window?.unlimited)) || remaining !== null;
   const summary =
     !expired && window?.unlimited
       ? t('redesign.authFiles.quotaUnlimited')
-      : remaining === null
-        ? t('redesign.authFiles.notReported')
-        : t('redesign.authFiles.quotaRemaining', {
+      : remaining !== null
+        ? t('redesign.authFiles.quotaRemaining', {
             value: new Intl.NumberFormat(i18n.language, {
               style: 'percent',
               maximumFractionDigits: 1,
             }).format(remaining / 100),
-          });
+          })
+        : quotaStatus === 'idle' && canObserveQuota
+          ? t('redesign.authFiles.quotaNotChecked')
+          : quotaStatus === 'loading'
+            ? t('redesign.quota.checking')
+            : quotaStatus === 'error'
+              ? t('redesign.authFiles.quotaCheckFailed')
+              : t('redesign.authFiles.notReported');
 
   return (
     <details className={styles.quotaDisclosure}>
@@ -172,7 +181,10 @@ export function AuthFileQuotaSection({
           .filter(Boolean)
           .join('. ')}
       >
-        <span className={styles.summaryValue}>{summary}</span>
+        <span className={styles.summaryLine}>
+          <span className={reported ? styles.summaryValue : styles.summaryMuted}>{summary}</span>
+          <IconChevronDown className={styles.summaryChevron} size={iconSize['14']} />
+        </span>
         {quota?.stale && <small>{t('redesign.quota.stale')}</small>}
         {quota?.refreshing && <small>{t('redesign.quota.checking')}</small>}
         {window?.recovers && window.resetAtMs !== null && !expired && (

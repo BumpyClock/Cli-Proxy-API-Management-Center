@@ -14,12 +14,14 @@ import type { SourceFreshness } from '../logic/freshness';
 import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from '../logic/links';
 import { redactSecrets } from '../logic/redact';
 import { evidenceAsOf, type EvidenceReceipts } from '../logic/evidence';
+import { setupNeeded } from '../logic/healthStatus';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
 import { formatAge } from './formatters';
 import { RecoveryDetails } from './RecoveryDetails';
 import { StatusText } from './StatusText';
 import styles from './AttentionPanel.module.scss';
+import { iconSize } from '@/design-system';
 
 const MAX_CREDENTIALS_PER_ITEM = 3;
 
@@ -247,7 +249,7 @@ function SourceItem({
           }
         >
           <IconRefreshCw
-            size={14}
+            size={iconSize['14']}
             className={retrying ? styles.spinning : undefined}
             aria-hidden="true"
           />
@@ -260,7 +262,8 @@ function SourceItem({
 
 /**
  * The first thing below the headline: every problem, its evidence, and the action that
- * resolves it. No panel is rendered when there is nothing to act on.
+ * resolves it. No panel is rendered when there is nothing to act on; the page shows its
+ * health status row instead.
  */
 export function AttentionPanel({
   items,
@@ -290,10 +293,11 @@ export function AttentionPanel({
   };
 
   if (items.length === 0) {
-    const pending = primaryFreshness === 'pending' || primaryReceivedAt === null;
     // A fresh install has nothing to check yet: point at the first step instead of "all clear".
-    const setupNeeded = !pending && checkedCredentials === 0 && checkedProviders === 0;
-    if (setupNeeded) {
+    // Every other empty state is the page's one-line health status row.
+    if (
+      setupNeeded({ primaryFreshness, primaryReceivedAt, checkedCredentials, checkedProviders })
+    ) {
       return (
         <section
           className={styles.allClear}
@@ -301,7 +305,7 @@ export function AttentionPanel({
           data-focus-rescue="dashboard-attention-title"
         >
           <span className={styles.setupIcon} aria-hidden="true">
-            <IconAlertTriangle size={18} />
+            <IconAlertTriangle size={iconSize['18']} />
           </span>
           <div className={styles.allClearCopy}>
             <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.allClearTitle}>
@@ -331,7 +335,7 @@ export function AttentionPanel({
     >
       <header className={styles.header}>
         <span className={styles.headerIcon} aria-hidden="true">
-          <IconAlertTriangle size={18} />
+          <IconAlertTriangle size={iconSize['18']} />
         </span>
         <h2 id="dashboard-attention-title" tabIndex={-1} className={styles.title}>
           {t('dashboard.attention_title', { count: items.length })}

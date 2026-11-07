@@ -84,6 +84,13 @@ describe('shared time-series chart', () => {
     expect(expandedEvidence()).toContain('<th scope="col">Time</th>');
   });
 
+  test('states the exact domain once under the plot instead of as edge tick labels', async () => {
+    await i18n.changeLanguage('en');
+    const markup = render();
+    expect(markup).toMatch(/<p[^>]*>time-1000 – time-2000<\/p>/);
+    expect(markup.match(/time-1000/g)?.length).toBe(1);
+  });
+
   test('an explicit legend summary does not replace the actual evidence values', async () => {
     await i18n.changeLanguage('en');
     const series = [{ ...props.series[0], legendValue: '156 total' }];

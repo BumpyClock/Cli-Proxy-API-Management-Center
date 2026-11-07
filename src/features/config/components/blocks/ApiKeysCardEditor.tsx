@@ -8,8 +8,10 @@ import { makeClientId } from '@/types/visualConfig';
 import { generateSecureApiKey } from '@/utils/apiKey';
 import { maskApiKey } from '@/utils/format';
 import { isValidApiKeyCharset } from '@/utils/validation';
+import { YamlKey } from '../fields/FieldPrimitives';
 import { ApiKeyStrengthMeter } from './ApiKeyStrengthMeter';
 import styles from './Blocks.module.scss';
+import { space } from '@/design-system';
 
 export const ApiKeysCardEditor = memo(function ApiKeysCardEditor({
   value,
@@ -122,8 +124,11 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor({
   return (
     <div className="form-group" style={{ marginBottom: 0 }}>
       <div className={styles.blockHeaderRow}>
-        <label style={{ margin: 0 }}>{t('config_management.visual.api_keys.label')}</label>
-        <Button size="sm" onClick={openAddModal} disabled={disabled}>
+        <label style={{ margin: 0 }}>
+          {t('config_management.visual.api_keys.label')}
+          <YamlKey name="api-keys" />
+        </label>
+        <Button variant="secondary" size="sm" onClick={openAddModal} disabled={disabled}>
           {t('config_management.visual.api_keys.add')}
         </Button>
       </div>
@@ -131,7 +136,7 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor({
       {apiKeys.length === 0 ? (
         <div className={styles.emptyState}>{t('config_management.visual.api_keys.empty')}</div>
       ) : (
-        <div className="item-list" style={{ marginTop: 4 }}>
+        <div className="item-list" style={{ marginTop: space['4'] }}>
           {apiKeys.map((key, index) => (
             <div key={renderApiKeyIds[index] ?? `${key}-${index}`} className="item-row">
               <div className="item-meta">
@@ -159,7 +164,7 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor({
                   {t('config_management.visual.common.edit')}
                 </Button>
                 <Button
-                  variant="danger"
+                  variant="danger-outline"
                   size="sm"
                   onClick={() => handleDelete(renderApiKeyIds[index] ?? '')}
                   disabled={disabled}
