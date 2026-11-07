@@ -1261,7 +1261,8 @@
     "active_filters_count_few": "{{count}} фильтра",
     "active_filters_count_many": "{{count}} фильтров",
     "active_filters_count_other": "{{count}} фильтра",
-    "remove_filter": "Убрать фильтр {{filter}}"
+    "remove_filter": "Убрать фильтр {{filter}}",
+    "wrap_lines": "Переносить длинные строки"
   },
   "config_management": {
     "title": "Панель конфигурации",

@@ -1205,7 +1205,8 @@
     "tabs_label": "日志视图",
     "active_filters_label": "已启用的筛选",
     "active_filters_count_other": "{{count}} 个筛选",
-    "remove_filter": "移除筛选 {{filter}}"
+    "remove_filter": "移除筛选 {{filter}}",
+    "wrap_lines": "长行自动换行"
   },
   "config_management": {
     "title": "配置面板",

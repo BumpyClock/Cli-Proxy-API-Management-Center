@@ -19,6 +19,7 @@ interface UseLogScrollerOptions {
   filteredLineCount: number;
   hasStructuredFilters: boolean;
   showRawLogs: boolean;
+  wrapLogs?: boolean;
 }
 
 interface UseLogScrollerReturn {
@@ -38,6 +39,7 @@ export function useLogScroller(options: UseLogScrollerOptions): UseLogScrollerRe
     filteredLineCount,
     hasStructuredFilters,
     showRawLogs,
+    wrapLogs = false,
   } = options;
 
   const logViewerRef = useRef<HTMLDivElement | null>(null);
@@ -133,6 +135,7 @@ export function useLogScroller(options: UseLogScrollerOptions): UseLogScrollerRe
     loading,
     logState.visibleFrom,
     showRawLogs,
+    wrapLogs,
     tryAutoLoadMoreUntilScrollable,
   ]);
 

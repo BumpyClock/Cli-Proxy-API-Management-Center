@@ -1223,7 +1223,8 @@
     "active_filters_label": "Active filters",
     "active_filters_count_one": "{{count}} filter",
     "active_filters_count_other": "{{count}} filters",
-    "remove_filter": "Remove filter {{filter}}"
+    "remove_filter": "Remove filter {{filter}}",
+    "wrap_lines": "Wrap long lines"
   },
   "config_management": {
     "title": "Config Panel",

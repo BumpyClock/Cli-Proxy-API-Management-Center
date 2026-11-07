@@ -52,6 +52,7 @@ import { createLogTimeFormatter } from './hooks/logFormat';
 import { parseLogLine } from './hooks/logParsing';
 import { createLogRequestGuard, createLogRequestQueue } from './hooks/logRequests';
 import { errorLogViewerReducer } from './hooks/errorLogViewer';
+import { shouldExitLogFullscreen } from './hooks/logFullscreen';
 import { useLogFilters } from './hooks/useLogFilters';
 import { isNearBottom, useLogScroller } from './hooks/useLogScroller';
 import { LogRowCells } from './LogRowCells';
@@ -157,11 +158,13 @@ const LOGS_TAB_PANEL_ID = 'logs-tabpanel';
 export interface LogDisplayState {
   hideManagementLogs: boolean;
   showRawLogs: boolean;
+  wrapLogs: boolean;
 }
 
 const DEFAULT_LOG_DISPLAY: LogDisplayState = {
   hideManagementLogs: true,
   showRawLogs: false,
+  wrapLogs: false,
 };
 
 /** Display switches that differ from their defaults; the closed Options trigger shows this. */
@@ -247,6 +250,7 @@ interface LogsOptionsProps {
   display: LogDisplayState;
   onHideManagementLogsChange: (value: boolean) => void;
   onShowRawLogsChange: (value: boolean) => void;
+  onWrapLogsChange: (value: boolean) => void;
   fullscreen: boolean;
   downloadDisabled: boolean;
   clearDisabled: boolean;
@@ -269,6 +273,7 @@ export function LogsOptions({
   display,
   onHideManagementLogsChange,
   onShowRawLogsChange,
+  onWrapLogsChange,
   fullscreen,
   downloadDisabled,
   clearDisabled,
@@ -365,6 +370,12 @@ export function LogsOptions({
             labelPosition="left"
             label={t('logs.show_raw_logs')}
           />
+          <ToggleSwitch
+            checked={display.wrapLogs}
+            onChange={onWrapLogsChange}
+            labelPosition="left"
+            label={t('logs.wrap_lines')}
+          />
         </div>
         <div className={styles.optionsSection} role="group" aria-label={t('logs.actions_group')}>
           <Button
@@ -433,6 +444,7 @@ export function LogsPage() {
     true
   );
   const [showRawLogs, setShowRawLogs] = useLocalStorage('logsPage.showRawLogs', false);
+  const [wrapLogs, setWrapLogs] = useLocalStorage('logsPage.wrapLogs', false);
   const [structuredFiltersExpanded, setStructuredFiltersExpanded] = useLocalStorage(
     'logsPage.structuredFiltersExpanded',
     false
@@ -913,6 +925,7 @@ export function LogsPage() {
     filteredLineCount: filteredLines.length,
     hasStructuredFilters: filters.hasStructuredFilters,
     showRawLogs,
+    wrapLogs,
   });
 
   const copyLogLine = async (raw: string) => {
@@ -1022,8 +1035,7 @@ export function LogsPage() {
     lockScroll();
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (document.querySelector('.modal-overlay')) return;
+      if (!shouldExitLogFullscreen(event, !!document.querySelector('.modal-overlay'))) return;
       setFullscreenLogs(false);
       window.requestAnimationFrame(() => optionsTriggerRef.current?.focus());
     };
@@ -1199,9 +1211,10 @@ export function LogsPage() {
                 open={optionsOpen}
                 onOpenChange={setOptionsOpen}
                 triggerRef={optionsTriggerRef}
-                display={{ hideManagementLogs, showRawLogs }}
+                display={{ hideManagementLogs, showRawLogs, wrapLogs }}
                 onHideManagementLogsChange={setHideManagementLogs}
                 onShowRawLogsChange={setShowRawLogs}
+                onWrapLogsChange={setWrapLogs}
                 fullscreen={fullscreenLogs}
                 downloadDisabled={logState.buffer.length === 0}
                 clearDisabled={clearDisabled}
@@ -1334,7 +1347,11 @@ export function LogsPage() {
             ) : logState.buffer.length > 0 && filteredLines.length > 0 ? (
               <div
                 ref={logViewerRef}
-                className={[styles.logPanel, fullscreenLogs ? styles.logPanelFullscreen : '']
+                className={[
+                  styles.logPanel,
+                  fullscreenLogs ? styles.logPanelFullscreen : '',
+                  wrapLogs ? styles.logPanelWrapped : '',
+                ]
                   .filter(Boolean)
                   .join(' ')}
                 onScroll={handleLogScroll}
