@@ -33,6 +33,8 @@ Design and motion tokens have one owner, `src/design-system/tokens.ts`; see [des
 
 Claude quota snapshots and timelines prefer the account-wide five-hour and seven-day windows over model-specific limits of the same duration. Provider observations own these preferences; consumers share the existing window selector.
 
+Quota timeline columns follow local calendar boundaries. Column widths reflect elapsed time, including 23-hour and 25-hour days, so date labels and quota bars stay aligned across daylight-saving changes.
+
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification
