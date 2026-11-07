@@ -37,6 +37,7 @@ import {
   isDisabledAuthFile,
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
+import { isRecord } from '@/utils/helpers';
 import type { QuotaProviderData } from '../types';
 import { observeQuota, observeWindow, resetCreditRowId } from '../observations';
 import { parseIsoToMs } from '@/utils/quota/resetInstants';
@@ -53,6 +54,8 @@ type CodexResetCreditsData = {
 export type CodexQuotaData = {
   planType: string | null;
   subscriptionActiveUntil: string | number | null;
+  creditBalance: string | null;
+  creditsUnlimited: boolean;
   rateLimitResetCreditsAvailableCount: number | null;
   rateLimitResetCreditsApplicableAvailableCount: number | null;
   rateLimitResetCredits: CodexRateLimitResetCredit[];
@@ -286,6 +289,22 @@ export const buildCodexQuotaWindows = (
   return windows;
 };
 
+export const normalizeCodexAccountCredits = (
+  credits: unknown
+): { balance: string | null; unlimited: boolean } => {
+  if (!isRecord(credits)) return { balance: null, unlimited: false };
+  const value = credits.balance;
+  const balance =
+    typeof value === 'number' ? String(value) : typeof value === 'string' ? value.trim() : null;
+  return {
+    balance:
+      balance && /^\d+(?:\.\d+)?$/.test(balance) && Number.isFinite(Number(balance))
+        ? balance
+        : null,
+    unlimited: credits.unlimited === true,
+  };
+};
+
 const buildCodexRequestHeader = (file: AuthFileItem): Record<string, string> => {
   const accountId = resolveCodexChatgptAccountId(file);
   const requestHeader: Record<string, string> = {
@@ -429,6 +448,7 @@ const fetchCodexQuota = async (file: AuthFileItem, t: TFunction): Promise<CodexQ
   }
 
   const planTypeFromUsage = normalizePlanType(payload.plan_type ?? payload.planType);
+  const accountCredits = normalizeCodexAccountCredits(payload.credits);
   const resetCredits = payload.rate_limit_reset_credits ?? payload.rateLimitResetCredits ?? null;
   const usageResetCreditsData = normalizeCodexResetCreditsPayload(resetCredits);
   const resetCreditsData = await fetchCodexResetCredits(authIndex, requestHeader, t);
@@ -448,6 +468,8 @@ const fetchCodexQuota = async (file: AuthFileItem, t: TFunction): Promise<CodexQ
   return {
     planType,
     subscriptionActiveUntil,
+    creditBalance: accountCredits.balance,
+    creditsUnlimited: accountCredits.unlimited,
     rateLimitResetCreditsAvailableCount,
     rateLimitResetCreditsApplicableAvailableCount,
     rateLimitResetCredits: resetCreditsData.credits,
@@ -555,6 +577,8 @@ export const CODEX_CONFIG: QuotaProviderData<CodexQuotaState, CodexQuotaData> = 
     windows: data.windows,
     planType: data.planType,
     subscriptionActiveUntil: data.subscriptionActiveUntil,
+    creditBalance: data.creditBalance,
+    creditsUnlimited: data.creditsUnlimited,
     rateLimitResetCreditsAvailableCount: data.rateLimitResetCreditsAvailableCount,
     rateLimitResetCreditsApplicableAvailableCount:
       data.rateLimitResetCreditsApplicableAvailableCount,

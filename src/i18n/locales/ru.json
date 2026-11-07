@@ -721,7 +721,9 @@
     "plan_free": "Free",
     "plan_pro": "Pro 20x",
     "plan_prolite": "Pro 5x",
-    "plan_business_premium": "Business Premium"
+    "plan_business_premium": "Business Premium",
+    "credit_balance_label": "Остаток кредитов",
+    "credit_unlimited": "Без ограничений"
   },
   "devin_quota": {
     "daily": "Остаток на день",
