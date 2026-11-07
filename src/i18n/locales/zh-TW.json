@@ -677,7 +677,9 @@
     "plan_free": "Free",
     "plan_pro": "Pro 20x",
     "plan_prolite": "Pro 5x",
-    "plan_business_premium": "Business Premium"
+    "plan_business_premium": "Business Premium",
+    "credit_balance_label": "Credit 餘額",
+    "credit_unlimited": "無限額"
   },
   "devin_quota": {
     "daily": "每日剩餘額度",
