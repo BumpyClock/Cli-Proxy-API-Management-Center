@@ -280,7 +280,6 @@ function kimiPeriodHours(
   const text = (label ?? '').toLowerCase();
   if (text.includes('daily') || text.includes('day')) return 24;
   if (text.includes('weekly') || text.includes('week')) return 24 * 7;
-  if (text.includes('monthly') || text.includes('month')) return 24 * 30;
   if (text.includes('5h') || text.includes('hour')) return 5;
   return null;
 }
@@ -366,6 +365,20 @@ export function buildKimiQuotaRows(payload: KimiUsagePayload): KimiQuotaRow[] {
     if (summary) {
       rows.push({ id: 'summary', ...summary });
     }
+  }
+
+  const monthly = payload.usages?.limit_month_total;
+  const monthlyRatio = normalizeNumberValue(monthly?.used_ratio);
+  if (monthlyRatio !== null) {
+    const row = toKimiUsageRow(
+      {
+        used: Math.round(Math.min(1, Math.max(0, monthlyRatio)) * 100),
+        limit: 100,
+        reset_time: monthly?.reset_time,
+      },
+      { labelKey: 'kimi_quota.monthly_limit' }
+    );
+    if (row) rows.push({ id: 'monthly', ...row });
   }
 
   return rows;
