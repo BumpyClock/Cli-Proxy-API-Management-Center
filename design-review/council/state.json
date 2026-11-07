@@ -1,0 +1,53 @@
+{
+  "target": 9,
+  "maxRounds": 6,
+  "completedRound": 6,
+  "phase": "pr-preparation",
+  "rounds": [
+    {
+      "round": 1,
+      "mean": 6.916666666666665,
+      "sol": 7.091666666666666,
+      "muse": 7.391666666666666,
+      "opus": 6.266666666666666
+    },
+    {
+      "round": 2,
+      "mean": 7.591666666666668,
+      "sol": 7.783333333333334,
+      "muse": 7.708333333333335,
+      "opus": 7.283333333333334
+    },
+    {
+      "round": 3,
+      "mean": 7.8,
+      "sol": 8.1,
+      "muse": 7.691666666666666,
+      "opus": 7.608333333333333
+    },
+    {
+      "round": 4,
+      "mean": 7.733333333333333,
+      "sol": 8.183333333333334,
+      "muse": 7.566666666666667,
+      "opus": 7.45
+    },
+    {
+      "round": 5,
+      "mean": 8.016666666666667,
+      "sol": 8.174999999999999,
+      "muse": 7.983333333333332,
+      "opus": 7.891666666666668
+    },
+    {
+      "round": 6,
+      "mean": 8.116666666666667,
+      "sol": 8.458333333333334,
+      "muse": 8.016666666666667,
+      "opus": 7.875
+    }
+  ],
+  "note": "Initial invalid capture packet excluded. Identical council prompt frozen in review-prompt.txt. Only round placeholder changes.",
+  "targetReached": false,
+  "stopReason": "Maximum six valid council rounds completed"
+}

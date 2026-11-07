@@ -17,7 +17,7 @@ describe('quota toolbar presentation contracts', () => {
 
   test('groups search and sorting separately from provider navigation', () => {
     const toolbarStart = source.indexOf('<div className={styles.toolbar}>');
-    const searchStart = source.indexOf('<div className={styles.search}>');
+    const searchStart = source.indexOf('<div className={styles.searchField}>');
     const sortStart = source.indexOf('<div className={styles.sort}>');
     expect(toolbarStart).toBeGreaterThan(source.indexOf('<ProviderTabs'));
     expect(searchStart).toBeGreaterThan(toolbarStart);

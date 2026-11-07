@@ -70,7 +70,7 @@
 }
 
 .iconFallback {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-secondary);
 }
@@ -145,7 +145,7 @@
 
 .idleHint {
   font-family: $font-mono;
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.5;
   text-align: center;
 }
@@ -216,7 +216,7 @@
 /* ---------- error ---------- */
 
 .errorStrip {
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--viz-failure);
   background: color-mix(in srgb, var(--viz-failure) 8%, transparent);
@@ -244,8 +244,9 @@
   border: 1px solid var(--border-color);
   border-radius: $radius-full;
   background: none;
-  padding: 5px 11px;
-  font-size: 11.5px;
+  min-height: 32px;
+  padding: 5px 12px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-secondary);
@@ -276,6 +277,13 @@
     border-color: var(--border-hover);
     background: color-mix(in srgb, var(--bg-tertiary) 55%, transparent);
     color: var(--text-primary);
+  }
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  .actionPill {
+    min-height: 44px;
+    padding-inline: 14px;
   }
 }
 

@@ -1,0 +1,115 @@
+@use '../../../styles/mixins' as *;
+
+/* Calm notices (status, info) share one bordered surface instead of stacking as banners. */
+.group {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: $radius-md;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* One notice layout for every severity; the tone classes below only change emphasis. */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 20px;
+
+  & + & {
+    border-top: 1px solid var(--border-color);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+
+.message {
+  flex: 1 1 260px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  font-weight: 650;
+}
+
+/* Blocking: plugins do nothing until the setting is on. Tinted, bordered and led by its fix. */
+.blocking {
+  border: 1px solid var(--warning-border);
+  border-left: 4px solid var(--warning-color);
+  border-radius: $radius-md;
+  background: var(--warning-bg);
+
+  .icon {
+    color: var(--warning-text);
+  }
+
+  .message {
+    font-weight: 600;
+  }
+}
+
+/* Advisory: a standing trust caveat. Bordered and never dismissed, but calmer than a blocker. */
+.security {
+  border: 1px solid var(--border-color);
+  border-radius: $radius-md;
+  background: var(--bg-secondary);
+
+  .icon {
+    color: var(--text-primary);
+  }
+}
+
+.action {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.configLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 32px;
+  /* The target grows into the notice padding instead of pushing the text line down. */
+  margin-block: -6px;
+  vertical-align: middle;
+  border-radius: 4px;
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+    margin-block: -12px;
+  }
+}
+
+@include mobile {
+  .notice {
+    padding: 10px 12px;
+  }
+}

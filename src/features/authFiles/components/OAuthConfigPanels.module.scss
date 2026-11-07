@@ -45,18 +45,6 @@
   min-width: 0;
 }
 
-/* ---------- 视图切换（列表/图谱） ---------- */
-
-.viewModeSwitch {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border-radius: $radius-md;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-}
-
 /* ---------- provider 行 ---------- */
 
 .list {
@@ -102,7 +90,7 @@
 }
 
 .itemCount {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-tertiary);
 }
 
@@ -132,7 +120,7 @@
 .aliasChartTitle {
   margin: 0;
   font-family: $font-mono;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -141,6 +129,131 @@
 
 .aliasChart {
   min-width: 0;
+}
+
+/* ---------- Credentials-tab summary ---------- */
+
+/* One compact row: title, per-section totals, toggle. Full panels open below on request. */
+.summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  padding: 4px 8px 4px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+}
+
+.summaryTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.summaryToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--primary-color));
+    outline-offset: 2px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .summaryToggle:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+  }
+}
+
+.summaryChevron {
+  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+}
+
+.summaryToggle[aria-expanded='true'] .summaryChevron {
+  transform: rotate(180deg);
+}
+
+.summaryList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  min-height: 36px;
+}
+
+.summaryLabel {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.summaryCount {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.summaryBody {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  .summaryToggle {
+    min-height: 44px;
+  }
+}
+
+/* Phones: title and toggle share the first line; each section's totals get their own line. */
+@include mobile {
+  .summary {
+    padding: 4px 4px 4px 12px;
+  }
+
+  .summaryList {
+    order: 1;
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 8px 8px 0;
+  }
+
+  /* Label above its totals, so long translations never wrap mid-row. */
+  .summaryRow {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+  }
 }
 
 /* ---------- 按压反馈 ---------- */
@@ -158,6 +271,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .summaryChevron {
+    transition: none;
+  }
+
   .panel :global(.btn) {
     transition: none;
   }

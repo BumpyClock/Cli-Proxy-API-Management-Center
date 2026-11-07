@@ -15,7 +15,7 @@
   border-radius: $radius-full;
   color: var(--text-primary);
   font-family: $font-mono;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -25,10 +25,12 @@
   white-space: nowrap;
 }
 
+/* Status prose beside the identifier, so sans rather than the chip's mono. */
 .detail {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  font-size: 10px;
+  font-family: $font-family;
+  font-size: 12px;
 }
 
 /* 显式勾选：实线 + primary 染色，读起来是「我选的」。 */
@@ -51,13 +53,17 @@
   color: var(--text-tertiary);
 }
 
+/* The visible circle stays 20px (::before); the button box is a 32px target (44px on touch)
+   whose negative margins keep the chip's size unchanged. */
 .remove {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
+  margin: -6px -6px -6px -2px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -69,13 +75,36 @@
     color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
     transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
 
+  &::before {
+    content: '';
+    position: absolute;
+    inset: calc(50% - 10px);
+    border-radius: 50%;
+    background: transparent;
+    transition: background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  }
+
+  svg {
+    position: relative;
+  }
+
   &:active:not(:disabled) {
     transform: scale(0.9);
   }
 
   &:focus-visible {
     outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline-offset: -6px;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    width: 44px;
+    height: 44px;
+    margin: -12px -12px -12px -8px;
+
+    &:focus-visible {
+      outline-offset: -12px;
+    }
   }
 
   &:disabled {
@@ -85,14 +114,24 @@
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled) {
-      background: var(--bg-tertiary);
       color: var(--text-primary);
+
+      &::before {
+        background: var(--bg-tertiary);
+      }
     }
   }
 }
 
+@media (max-width: 768px), (pointer: coarse) {
+  .chipRow {
+    gap: 8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .remove {
+  .remove,
+  .remove::before {
     transition: none;
   }
 

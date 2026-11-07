@@ -268,12 +268,12 @@ $diff-hunk-color: #388bfd;
   .lineNum {
     width: 36px;
     padding: 0 4px;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .linePrefix {
     width: 16px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .hunkGutter {
@@ -285,7 +285,7 @@ $diff-hunk-color: #388bfd;
   }
 
   .diffBody {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 18px;
   }
 
@@ -294,6 +294,6 @@ $diff-hunk-color: #388bfd;
   }
 
   .fileStats {
-    font-size: 11px;
+    font-size: 12px;
   }
 }

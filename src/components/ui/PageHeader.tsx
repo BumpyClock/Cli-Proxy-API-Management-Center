@@ -10,6 +10,11 @@ export interface PageHeaderProps {
   className?: string;
   titleId?: string;
   variant?: 'default' | 'hero';
+  /**
+   * Phones: always put actions on their own row under the title. For pages whose action count
+   * changes between tabs, so the content below keeps one position.
+   */
+  stackActionsOnPhone?: boolean;
 }
 
 export function PageHeader({
@@ -21,9 +26,19 @@ export function PageHeader({
   className,
   titleId,
   variant = 'default',
+  stackActionsOnPhone = false,
 }: PageHeaderProps) {
   return (
-    <header className={[styles.header, className].filter(Boolean).join(' ')}>
+    <header
+      className={[
+        styles.header,
+        variant === 'hero' ? styles.heroHeader : undefined,
+        stackActionsOnPhone ? styles.stackActions : undefined,
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className={styles.heading}>
         <h1 id={titleId} className={variant === 'hero' ? styles.hero : undefined} tabIndex={-1}>
           {title}

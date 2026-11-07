@@ -55,25 +55,23 @@
     "invalid_provider_index": "无效的提供商索引。",
     "unsaved_changes_title": "未保存的更改",
     "unsaved_changes_message": "你有未保存的更改，离开后将丢失这些更改。确定要离开吗？",
-    "skip_to_content": "跳到主要内容"
+    "skip_to_content": "跳到主要内容",
+    "refreshing": "正在刷新…"
   },
   "title": {
     "login": "CLI Proxy API Management Center",
     "abbr": "CPAMC"
   },
-  "splash": {
-    "title": "CLI Proxy API",
-    "subtitle": "管理中心"
-  },
   "login": {
     "subtitle": "请输入连接信息以访问管理界面",
+    "card_title": "连接",
     "connection_current": "当前地址",
     "connection_auto_hint": "系统将自动使用当前访问地址进行连接",
-    "custom_connection_label": "自定义连接地址:",
+    "custom_connection_label": "自定义连接地址",
     "custom_connection_placeholder": "例如: https://example.com:8317",
     "custom_connection_hint": "默认使用当前访问地址，若需要可手动输入其他地址。",
-    "remember_password_label": "记住密码",
-    "management_key_label": "管理密钥:",
+    "remember_password_label": "记住管理密钥",
+    "management_key_label": "管理密钥",
     "management_key_placeholder": "请输入管理密钥",
     "submit_button": "登录",
     "submitting": "连接中...",
@@ -92,11 +90,15 @@
     "hide_key": "隐藏管理密钥"
   },
   "header": {
-    "refresh_all": "刷新全部",
-    "logout": "登出"
+    "refresh_config_page": "刷新配置和页面",
+    "utilities": "工具",
+    "language_current": "语言：{{language}}",
+    "theme_current": "主题：{{theme}}",
+    "logout": "退出登录",
+    "back_to": "返回{{page}}"
   },
   "connection": {
-    "status": "连接状态:"
+    "status": "连接状态"
   },
   "nav": {
     "dashboard": "仪表盘",
@@ -109,7 +111,7 @@
     "plugin_store": "插件商店",
     "config_management": "配置面板",
     "logs": "日志查看",
-    "system_info": "中心信息",
+    "system_info": "系统",
     "usage_statistics": "使用统计"
   },
   "nav_groups": {
@@ -161,7 +163,7 @@
     "attention_last_traffic": "最后流量 {{range}}",
     "attention_more_credentials": "另有 {{count}} 个",
     "attention_no_working_credential": "没有可用凭证",
-    "attention_no_working_credential_keys_unknown": "没有可用的凭证文件；API 密钥情况需等 API 密钥流量加载后才能确定",
+    "attention_no_working_credential_keys_unknown": "没有可用的凭证文件；提供商密钥情况需等提供商密钥用量加载后才能确定",
     "attention_none": "暂无需要处理的问题",
     "attention_none_credentials": "{{count}} 个凭证",
     "attention_none_detail": "{{age}}检查：{{credentials}}，{{providers}}",
@@ -227,9 +229,12 @@
     "hero_verdict_down_one": "{{provider}} 不可用",
     "hero_verdict_down_stale_many": "{{count}} 个供应商最后报告为不可用",
     "hero_verdict_down_stale_one": "{{provider}} 最后报告为不可用",
-    "hero_verdict_good": "运行平稳",
-    "hero_verdict_idle": "静候流量",
-    "hero_verdict_idle_other_scope": "当前凭证没有流量",
+    "hero_verdict_good": "未发现凭证或供应商问题",
+    "hero_verdict_idle": "最近 {{window}}内没有请求",
+    "hero_verdict_idle_other_scope": "最近 {{window}}内没有经过当前凭证的请求",
+    "status_checked_at": "{{time}} 已检查 {{credentials}}、{{providers}}",
+    "status_credential_files": "{{count}} 个凭证文件",
+    "status_no_credential_problems": "未发现凭证问题",
     "hero_verdict_offline": "等待连接",
     "hero_verdict_unknown": "状态未知",
     "list_colon": "：",
@@ -247,7 +252,7 @@
     "provider_status_unknown": "未知",
     "provider_unknown": "未归类",
     "refresh": "刷新",
-    "refresh_now": "刷新仪表盘数据",
+    "refresh_now": "刷新仪表盘",
     "refreshing": "正在刷新…",
     "runtime_build": "构建日期",
     "runtime_client_keys": "客户端 API 密钥",
@@ -272,7 +277,7 @@
     "source_config": "配置",
     "source_credentials": "凭证",
     "source_models": "模型列表",
-    "source_traffic": "API 密钥流量",
+    "source_traffic": "提供商密钥用量",
     "source_usage": "使用统计",
     "stamp_every": "每 {{seconds}} 秒",
     "stamp_failed": "更新失败 · 数据来自 {{age}}",
@@ -292,8 +297,8 @@
     "traffic_table_window": "时间段",
     "traffic_time_zone": "时间为 {{zone}}",
     "traffic_title": "以 10 分钟为粒度的吞吐",
+    "traffic_all_zero": "每个 10 分钟区间均为 0",
     "traffic_unavailable": "暂无流量数据",
-    "traffic_unavailable_hint": "代理处理首个请求后即会出现计数。",
     "updated": "{{age}}更新",
     "usage_caption": "{{window}} 的热门模型（来自使用统计）",
     "usage_col_failed": "失败",
@@ -320,20 +325,30 @@
     "vitals_credentials_disabled": "{{count}} 个已禁用",
     "vitals_credentials_limited": "含 {{count}} 个受限",
     "vitals_credentials_none": "尚无凭证",
-    "vitals_credentials_ok": "所有已启用凭证均可用",
     "vitals_credentials_problems": "{{count}} 个需处理",
     "vitals_models": "模型",
-    "vitals_no_requests": "当前凭证没有请求",
     "vitals_of": "{{serving}} / {{total}}",
     "vitals_requests": "请求",
     "vitals_serving_unit": "可用",
     "vitals_split": "成功 {{success}} · 失败 {{failed}}",
     "vitals_success": "成功率",
-    "vitals_usage_differs": "使用统计在此窗口记录了 {{count}} 次请求，可能包含已移除的凭证",
-    "vitals_window": "最近 {{window}} · 当前凭证",
+    "vitals_usage_differs": "这是另一个数据来源。使用统计记录所有客户端 API 密钥的请求，包括已不在列表中的凭证；上方数字仅汇总当前的凭证文件和提供商密钥。",
     "window_h": "{{hours}} 小时",
     "window_hm": "{{hours}} 小时 {{minutes}} 分",
-    "window_m": "{{minutes}} 分钟"
+    "window_m": "{{minutes}} 分钟",
+    "vitals_usage_differs_short": "使用统计：同一窗口内 {{count}} 次",
+    "vitals_scope": "最近 {{window}} · {{scope}}",
+    "vitals_scope_partial": "最近 {{window}} · {{scope}}；{{missing}}",
+    "vitals_rate_scope": "统计范围：{{scope}}",
+    "vitals_success_unmeasured": "没有可计算的请求",
+    "vitals_unavailable": "不可用",
+    "scope_all": "当前凭证",
+    "scope_credential_files_only": "仅凭证文件",
+    "scope_provider_keys_only": "仅提供商密钥",
+    "scope_missing_provider_keys_failed": "提供商密钥用量不可用",
+    "scope_missing_provider_keys_loading": "提供商密钥用量加载中",
+    "scope_missing_credential_files_failed": "凭证文件不可用",
+    "scope_missing_credential_files_loading": "凭证文件加载中"
   },
   "basic_settings": {
     "debug_enable": "启用调试模式",
@@ -349,8 +364,7 @@
     "routing_strategy_fill_first": "fill-first (优先填充)"
   },
   "auth_files": {
-    "title": "认证文件管理",
-    "meta_total": "{{count}} 个凭证",
+    "title": "认证文件",
     "meta_active": "{{count}} 个启用",
     "meta_problem": "{{count}} 个异常",
     "empty_title": "还没有凭证",
@@ -359,6 +373,7 @@
     "no_results_clear": "清除筛选",
     "title_section": "认证文件",
     "upload_button": "上传文件",
+    "refresh_credentials": "刷新凭证",
     "delete_all_button": "删除全部",
     "search_empty_title": "没有匹配的配置文件",
     "search_empty_desc": "请调整筛选条件或清空搜索关键字再试一次。",
@@ -433,16 +448,16 @@
     "pagination_prev": "上一页",
     "pagination_next": "下一页",
     "pagination_info": "第 {{current}} / {{total}} 页 · 共 {{count}} 个文件",
-    "search_label": "搜索配置文件",
-    "search_placeholder": "输入名称、账号、类型或提供方关键字，支持 * 通配",
+    "search_label": "筛选凭证",
+    "search_placeholder": "筛选凭证",
     "problem_filter_label": "状态筛选",
     "problem_filter_all": "全部",
     "problem_filter_enabled": "启用",
     "problem_filter_problem": "问题",
     "problem_filter_disabled": "停用",
-    "display_options_label": "显示选项",
+    "display_options_label": "视图选项",
     "compact_mode_label": "简略模式",
-    "sort_label": "排序",
+    "sort_label": "排序方式",
     "sort_default": "默认",
     "sort_az": "A-Z 名称",
     "sort_priority": "优先级",
@@ -533,7 +548,19 @@
     "quota_refresh_single": "刷新额度",
     "quota_refresh_hint": "仅刷新该认证文件的额度",
     "quota_refresh_success": "已刷新 \"{{name}}\" 的额度",
-    "quota_refresh_failed": "刷新 \"{{name}}\" 的额度失败：{{message}}"
+    "quota_refresh_failed": "刷新 \"{{name}}\" 的额度失败：{{message}}",
+    "search_hint": "匹配名称、账号、类型或提供方。可用 * 作为通配符，例如 claude-*。",
+    "provider_filter_label": "按提供方筛选",
+    "provider_select_label": "提供商",
+    "view_options_changed_other": "已更改 {{count}} 项默认设置",
+    "meta_total_other": "{{count}} 个凭证",
+    "oauth_rules_title": "OAuth 模型规则",
+    "oauth_rules_show": "显示提供商规则详情",
+    "oauth_rules_hide": "隐藏提供商规则详情",
+    "oauth_rules_none": "未配置",
+    "oauth_rules_providers_other": "{{count}} 个提供商",
+    "warning_show_more": "展开",
+    "warning_show_less": "收起"
   },
   "antigravity_subscription": {
     "plan_unknown": "未知",
@@ -790,13 +817,10 @@
     "title": "OAuth 模型禁用",
     "description": "按提供商分列展示，点击卡片编辑或删除；支持 * 通配符，范围跟随上方的配置文件过滤标签。",
     "add": "新增禁用",
-    "add_title": "新增提供商模型禁用",
-    "edit_title": "编辑 {{provider}} 的模型禁用",
     "provider_label": "提供商",
     "provider_placeholder": "例如 codex / openai",
-    "provider_hint": "默认选中当前筛选的提供商，也可直接输入或选择其他名称。",
     "models_label": "禁用的模型",
-    "save": "保存/更新",
+    "save": "保存",
     "save_success": "模型禁用已更新",
     "save_failed": "更新模型禁用失败",
     "delete": "删除提供商",
@@ -804,12 +828,14 @@
     "delete_success": "已删除该提供商的模型禁用",
     "delete_failed": "删除模型禁用失败",
     "no_models": "未配置禁用模型",
-    "model_count": "禁用 {{count}} 个模型",
     "list_empty_all": "暂无任何提供商的模型禁用，点击“新增禁用”创建。",
     "provider_required": "请先填写提供商名称",
     "upgrade_required": "当前 CPA 版本不支持 OAuth 模型禁用，请升级 CPA 版本",
     "upgrade_required_title": "需要升级 CPA 版本",
-    "upgrade_required_desc": "当前服务器版本不支持获取 OAuth 模型禁用功能，请升级到最新版本的 CPA（CLI Proxy API）后重试。"
+    "upgrade_required_desc": "当前服务器版本不支持获取 OAuth 模型禁用功能，请升级到最新版本的 CPA（CLI Proxy API）后重试。",
+    "meta_editing": "正在编辑 {{provider}} 的现有规则",
+    "meta_new": "为 {{provider}} 新建规则",
+    "model_count_other": "禁用 {{count}} 个模型"
   },
   "excluded_models": {
     "trigger_summary": "已排除 {{excluded}} · {{available}} 可用",
@@ -845,16 +871,13 @@
   },
   "oauth_model_alias": {
     "editor_description": "为提供商的模型设置调用别名，统一客户端使用的模型名称。",
-    "edit_title": "编辑 {{provider}} 的模型别名",
     "mapping_hint": "选择原模型，并填写客户端使用的别名。",
     "mapping_row": "别名映射 {{number}}",
     "remove_mapping": "删除第 {{number}} 条别名映射",
     "title": "OAuth 模型别名",
     "add": "新增别名",
-    "add_title": "新增提供商模型别名",
     "provider_label": "提供商",
     "provider_placeholder": "例如 codex / vertex",
-    "provider_hint": "默认选中当前筛选的提供商，也可直接输入或选择其他名称。",
     "model_source_loading": "正在加载模型列表...",
     "model_source_unsupported": "当前 CPA 版本不支持获取模型列表（仍可手动输入）。",
     "model_source_loaded": "已加载 {{count}} 个模型，可在“原模型名称”中下拉选择；也可手动输入。留空保存将删除该提供商记录；开启“保留原名”会在保留原模型名的同时新增别名。",
@@ -864,7 +887,7 @@
     "duplicate_alias": "同一提供商下的别名不能重复。",
     "alias_fork_label": "保留原名",
     "add_alias": "添加别名",
-    "save": "保存/更新",
+    "save": "保存",
     "save_success": "模型别名已更新",
     "save_failed": "更新模型别名失败",
     "delete": "删除提供商",
@@ -876,7 +899,6 @@
     "delete_success": "已删除该提供商的模型别名",
     "delete_failed": "删除模型别名失败",
     "no_models": "未配置模型别名",
-    "model_count": "{{count}} 条别名",
     "list_empty_all": "暂无任何提供商的模型别名，点击“新增别名”创建。",
     "chart_title": "全部映射概览",
     "diagram_providers": "提供商",
@@ -908,7 +930,13 @@
     "provider_required": "请先填写提供商名称",
     "upgrade_required": "当前 CPA 版本不支持模型别名功能，请升级 CPA 版本",
     "upgrade_required_title": "需要升级 CPA 版本",
-    "upgrade_required_desc": "当前服务器版本不支持 OAuth 模型别名功能，请升级到最新版本的 CPA（CLI Proxy API）后重试。"
+    "upgrade_required_desc": "当前服务器版本不支持 OAuth 模型别名功能，请升级到最新版本的 CPA（CLI Proxy API）后重试。",
+    "source_model_input_placeholder": "选择或输入模型 ID",
+    "alias_input_placeholder": "客户端请求时使用的名称",
+    "meta_editing": "正在编辑 {{provider}} 的现有别名",
+    "meta_new": "为 {{provider}} 新建别名",
+    "view_mode_label": "别名视图",
+    "model_count_other": "{{count}} 条别名"
   },
   "auth_login": {
     "devin_oauth_cancel": "取消 Devin 登录",
@@ -916,7 +944,7 @@
     "devin_oauth_cancel_error": "取消 Devin 登录失败：",
     "devin_oauth_retry_hint": "服务器可能仍在等待授权。请先取消本次登录，再重新开始。",
     "devin_oauth_title": "Devin OAuth",
-    "devin_oauth_button": "开始 Devin 登录",
+    "devin_oauth_button": "使用 Devin 登录",
     "devin_oauth_hint": "通过浏览器 OAuth 登录 Devin / Cognition，自动保存认证文件。需要 CLI Proxy API v7.3.1 或更高版本，请在五分钟内完成授权。",
     "devin_oauth_url_label": "授权链接：",
     "devin_copy_link": "复制链接",
@@ -934,7 +962,7 @@
     "other_oauth_providers": "其他 OAuth 提供商",
     "other_login_methods": "其他登录方式",
     "codex_oauth_title": "Codex OAuth",
-    "codex_oauth_button": "开始 Codex 登录",
+    "codex_oauth_button": "使用 Codex 登录",
     "codex_oauth_hint": "通过 OAuth 流程登录 Codex 服务，自动获取并保存认证文件。",
     "codex_oauth_url_label": "授权链接:",
     "codex_open_link": "打开链接",
@@ -944,19 +972,19 @@
     "codex_oauth_status_error": "认证失败:",
     "codex_oauth_start_error": "启动 Codex OAuth 失败:",
     "codex_oauth_polling_error": "检查认证状态失败:",
-    "anthropic_oauth_title": "Anthropic OAuth",
-    "anthropic_oauth_button": "开始 Anthropic 登录",
-    "anthropic_oauth_hint": "通过 OAuth 流程登录 Anthropic (Claude) 服务，自动获取并保存认证文件。",
+    "anthropic_oauth_title": "Claude OAuth",
+    "anthropic_oauth_button": "使用 Claude 登录",
+    "anthropic_oauth_hint": "通过 OAuth 流程登录 Claude（Anthropic 账号）服务，自动获取并保存认证文件。",
     "anthropic_oauth_url_label": "授权链接:",
     "anthropic_open_link": "打开链接",
     "anthropic_copy_link": "复制链接",
     "anthropic_oauth_status_waiting": "等待认证中...",
     "anthropic_oauth_status_success": "认证成功！",
     "anthropic_oauth_status_error": "认证失败:",
-    "anthropic_oauth_start_error": "启动 Anthropic OAuth 失败:",
+    "anthropic_oauth_start_error": "启动 Claude OAuth 失败:",
     "anthropic_oauth_polling_error": "检查认证状态失败:",
     "antigravity_oauth_title": "Antigravity OAuth",
-    "antigravity_oauth_button": "开始 Antigravity 登录",
+    "antigravity_oauth_button": "使用 Antigravity 登录",
     "antigravity_oauth_hint": "通过 OAuth 流程登录 Antigravity（Google 账号）服务，自动获取并保存认证文件。",
     "antigravity_oauth_url_label": "授权链接:",
     "antigravity_open_link": "打开链接",
@@ -980,7 +1008,7 @@
     "device_code_label": "设备码:",
     "device_code_copy": "复制设备码",
     "kimi_ai_oauth_title": "Kimi 国际站（kimi.ai）",
-    "kimi_ai_oauth_button": "登录 Kimi 国际站",
+    "kimi_ai_oauth_button": "使用 Kimi 国际站登录",
     "kimi_ai_oauth_hint": "通过设备授权登录 kimi.ai 国际站，自动保存独立的 kimi-ai 认证文件。国内站与国际站账号不互通。",
     "kimi_ai_oauth_url_label": "授权链接:",
     "kimi_ai_open_link": "打开链接",
@@ -991,8 +1019,8 @@
     "kimi_ai_oauth_start_error": "启动 Kimi 国际站登录失败:",
     "kimi_ai_oauth_polling_error": "检查认证状态失败:",
     "kimi_oauth_title": "Kimi 国内站（kimi.com）",
-    "kimi_oauth_button": "登录 Kimi 国内站",
-    "kimi_sign_up_button": "立即注册",
+    "kimi_oauth_button": "使用 Kimi 国内站登录",
+    "kimi_sign_up_button": "注册账号",
     "kimi_oauth_hint": "通过设备授权登录 kimi.com 国内站，自动获取并保存认证文件。国际站账号请使用独立的 kimi.ai 登录入口。",
     "kimi_oauth_url_label": "授权链接:",
     "kimi_open_link": "打开链接",
@@ -1003,7 +1031,7 @@
     "kimi_oauth_start_error": "启动 Kimi OAuth 失败:",
     "kimi_oauth_polling_error": "检查认证状态失败:",
     "xai_oauth_title": "xAI OAuth",
-    "xai_oauth_button": "开始 xAI 登录",
+    "xai_oauth_button": "使用 xAI 登录",
     "xai_oauth_hint": "通过 OAuth 流程登录 xAI Grok 服务，自动获取并保存认证文件。",
     "xai_oauth_url_label": "授权链接:",
     "xai_open_link": "打开链接",
@@ -1014,7 +1042,7 @@
     "xai_oauth_start_error": "启动 xAI OAuth 失败:",
     "xai_oauth_polling_error": "检查认证状态失败:",
     "plugin_oauth_title": "{{name}} OAuth",
-    "plugin_oauth_button": "开始 {{name}} 登录",
+    "plugin_oauth_button": "使用 {{name}} 登录",
     "plugin_oauth_hint": "通过插件提供的 OAuth 流程登录 {{name}}，自动获取并保存认证文件。",
     "plugin_oauth_url_label": "授权链接:",
     "plugin_open_link": "打开链接",
@@ -1054,7 +1082,7 @@
     "iflow_oauth_polling_error": "检查认证状态失败:",
     "remote_access_disabled": "远程访问不支持此登录方式，请从本地 (localhost) 访问",
     "qoder_oauth_title": "Qoder OAuth",
-    "qoder_oauth_button": "开始 Qoder 登录",
+    "qoder_oauth_button": "使用 Qoder 登录",
     "qoder_oauth_hint": "通过设备授权流程登录 Qoder，自动获取并保存认证文件。",
     "qoder_oauth_url_label": "授权链接:",
     "qoder_open_link": "打开链接",
@@ -1062,7 +1090,17 @@
     "qoder_oauth_status_waiting": "等待认证中...",
     "qoder_oauth_status_success": "认证成功！",
     "qoder_oauth_status_error": "认证失败:",
-    "qoder_oauth_start_error": "启动 Qoder OAuth 失败:"
+    "qoder_oauth_start_error": "启动 Qoder OAuth 失败:",
+    "kimi_sign_up_label": "注册账号：Kimi 国内站（在新标签页中打开）",
+    "kimi_ai_sign_up_label": "注册账号：Kimi 国际站（在新标签页中打开）",
+    "family_kimi": "Kimi",
+    "kimi_region": "国内站 · kimi.com",
+    "kimi_ai_region": "国际站 · kimi.ai",
+    "provider_search_label": "查找登录方式",
+    "provider_search_placeholder": "按提供商、地区或域名查找",
+    "provider_search_clear": "清除搜索",
+    "provider_search_count": "显示 {{count}} / {{total}} 项",
+    "provider_search_empty": "没有与“{{query}}”匹配的登录方式。"
   },
   "stats": {
     "success": "成功",
@@ -1077,9 +1115,9 @@
     "title": "日志查看",
     "refresh_button": "刷新日志",
     "clear_button": "清空日志",
-    "fullscreen_button": "全屏显示",
+    "fullscreen_button": "全屏",
     "exit_fullscreen_button": "退出全屏",
-    "download_button": "下载日志",
+    "download_button": "下载",
     "error_logs_modal_title": "错误请求日志",
     "error_logs_description": "请选择要打开或下载的错误请求日志文件（仅在关闭请求日志时生成）。",
     "error_logs_request_log_enabled": "当前已开启请求日志，按接口约定错误请求日志列表会始终为空。关闭请求日志后再刷新即可查看。",
@@ -1108,7 +1146,7 @@
     "log_content": "日志内容",
     "loading": "正在加载日志...",
     "load_error": "加载日志失败",
-    "clear_confirm": "确定要清空所有日志吗？此操作不可恢复！",
+    "clear_confirm": "这将删除服务器上所有已轮转的主日志文件，并清空当前的 main.log。请求错误日志会保留。此操作无法撤销。",
     "clear_success": "日志已清空",
     "download_success": "日志下载成功",
     "auto_refresh": "自动刷新",
@@ -1119,7 +1157,7 @@
     "hide_management_logs": "屏蔽 {{prefix}} 日志",
     "show_raw_logs": "显示原始日志",
     "show_raw_logs_hint": "直接显示原始日志文本，方便多行复制",
-    "search_placeholder": "搜索日志内容或关键字",
+    "search_placeholder": "搜索日志",
     "filter_panel_title": "结构化筛选",
     "filter_panel_expand": "展开结构化筛选",
     "filter_panel_collapse": "收起结构化筛选",
@@ -1138,7 +1176,20 @@
     "double_click_copy_hint": "双击复制日志原文",
     "copy_success": "已复制日志原文",
     "copy_failed": "复制失败",
-    "copy_line_accessible": "复制日志行：{{line}}"
+    "copy_line_accessible": "复制日志行：{{line}}",
+    "display_options_group": "日志显示选项",
+    "actions_group": "日志操作",
+    "search_label": "按内容或关键字搜索日志",
+    "filter_panel_short": "筛选",
+    "download_hint": "将已加载的日志行下载为文本文件",
+    "clear_confirm_title": "清空服务器日志？",
+    "refresh_error_logs": "刷新错误日志",
+    "options_button": "选项",
+    "options_changed_count_other": "已更改 {{count}} 项设置",
+    "tabs_label": "日志视图",
+    "active_filters_label": "已启用的筛选",
+    "active_filters_count_other": "{{count}} 个筛选",
+    "remove_filter": "移除筛选 {{filter}}"
   },
   "config_management": {
     "title": "配置面板",
@@ -1147,6 +1198,7 @@
     "meta_dirty_source": "源码有未保存修改",
     "meta_errors": "{{count}} 项校验错误",
     "meta_synced": "已同步",
+    "meta_save_hint": "修改保存后生效",
     "actions": {
       "discard": "放弃更改",
       "save": "保存更改"
@@ -1218,7 +1270,8 @@
         },
         "server": {
           "host": "主机地址",
-          "port": "端口"
+          "port": "端口",
+          "host_placeholder": "留空则使用后端默认值"
         },
         "tls": {
           "title": "TLS/SSL 配置",
@@ -1242,7 +1295,7 @@
           "panel_repo": "面板仓库"
         },
         "auth": {
-          "auth_dir": "认证文件目录 (auth-dir)",
+          "auth_dir": "认证文件目录",
           "auth_dir_hint": "存放认证文件的目录路径（支持 ~）"
         },
         "system": {
@@ -1325,7 +1378,6 @@
           "title": "网络配置",
           "description": "代理、重试和路由设置",
           "proxy_url": "代理 URL",
-          "proxy_url_sponsor_hint": "没有合适的代理？",
           "request_retry": "请求重试次数",
           "max_retry_credentials": "最大重试凭据数",
           "max_retry_credentials_hint": "留空表示不设置；设为 0 或负整数表示尝试所有可用凭据。",
@@ -1393,11 +1445,11 @@
         }
       },
       "api_keys": {
-        "label": "API 密钥列表 (api-keys)",
+        "label": "API 密钥",
         "add": "添加 API 密钥",
         "generate": "生成",
         "empty": "暂无 API 密钥",
-        "hint": "每个条目代表一个 API 密钥（与 「API 密钥管理」 页面样式一致）",
+        "hint": "客户端应用和工具需携带其中一个密钥才能使用此代理。建议为每个客户端单独分配密钥，删除时不影响其他客户端。",
         "edit_title": "编辑 API 密钥",
         "add_title": "添加 API 密钥",
         "input_label": "API 密钥",
@@ -1439,15 +1491,15 @@
         "provider_antigravity": "Antigravity",
         "advanced": "高级",
         "hide_advanced": "收起高级",
-        "from_protocol": "来源协议 (from-protocol)",
+        "from_protocol": "来源协议",
         "headers": "请求 Header 匹配",
         "header_name": "Header 名称",
         "header_value": "Header 值",
         "add_header": "添加 Header",
-        "match": "必须匹配 (match)",
-        "notMatch": "不得匹配 (not-match)",
-        "exist": "必须存在 (exist)",
-        "notExist": "不得存在 (not-exist)",
+        "match": "必须匹配",
+        "notMatch": "不得匹配",
+        "exist": "必须存在",
+        "notExist": "不得存在",
         "condition_path": "匹配路径",
         "condition_value": "匹配值",
         "add_condition": "添加条件",
@@ -1481,7 +1533,9 @@
         "update": "更新",
         "add": "添加"
       }
-    }
+    },
+    "reload_config": "重新加载配置",
+    "reloading_config": "正在重新加载配置…"
   },
   "quota_management": {
     "pool_view": "配额视图",
@@ -1517,7 +1571,7 @@
     "search_clear": "清空搜索",
     "title": "配额管理",
     "description": "集中查看 OAuth 额度与剩余情况",
-    "refresh_all_credentials": "刷新全部凭证",
+    "refresh_all_credentials": "刷新全部额度",
     "sort_label": "排序",
     "sort_default": "默认",
     "sort_soonest": "最快恢复优先",
@@ -1554,20 +1608,19 @@
     "weekday_wed": "三",
     "weekday_thu": "四",
     "weekday_fri": "五",
-    "weekday_sat": "六"
+    "weekday_sat": "六",
+    "refresh_all_short": "刷新额度"
   },
   "plugin_management": {
     "title": "插件管理",
     "description": "查看已发现和已注册的插件，管理实例开关、配置字段和资源入口。",
-    "refresh": "刷新",
     "load_failed": "加载插件失败",
     "config_load_failed": "读取插件配置失败",
     "config_not_found": "无法读取插件配置，后端未找到该插件。",
     "unsupported_backend": "当前后端未暴露插件管理 API。请使用包含插件管理接口的新后端构建，并重启服务。",
     "global_status": "全局状态",
     "global_enabled": "已启用",
-    "global_disabled": "已停用",
-    "global_disabled_hint": "当前 plugins.enabled 为 false，插件实例即使启用也不会生效。",
+    "global_disabled_hint": "插件已在配置中禁用，所有插件均不会生效。",
     "plugins_dir": "插件目录",
     "discovered": "发现插件",
     "effective": "生效插件",
@@ -1613,7 +1666,13 @@
     "invalid_json": "请输入有效 JSON",
     "expected_array": "请输入 JSON 数组",
     "expected_object": "请输入 JSON 对象",
-    "invalid_enum": "请选择声明的枚举值"
+    "invalid_enum": "请选择声明的枚举值",
+    "refresh_plugins": "刷新插件",
+    "open_plugins_setting": "在配置面板中启用",
+    "browse_store": "浏览插件商店",
+    "no_matches": "没有匹配的插件",
+    "no_matches_desc": "当前搜索条件下没有插件。",
+    "clear_search": "清除搜索"
   },
   "plugin_store": {
     "title": "插件商店",
@@ -1622,15 +1681,13 @@
     "description_show_less": "收起描述",
     "source_name": "来源：{{source}}",
     "cli_proxy_api_source": "CLIProxyAPI源",
-    "refresh": "刷新",
     "retry": "重试",
     "load_failed": "插件商店加载失败",
     "unsupported_backend": "当前后端未暴露插件商店 API。请使用包含插件商店接口的新后端构建,并重启服务。",
     "registry_failed": "插件注册表请求失败",
     "global_status": "全局状态",
     "global_enabled": "已启用",
-    "global_disabled": "已停用",
-    "global_disabled_hint": "当前 plugins.enabled 为 false,已安装的插件不会生效。",
+    "global_disabled_hint": "插件已在配置中禁用，已安装的插件不会生效。",
     "plugins_dir": "插件目录",
     "stat_available": "可用插件",
     "search_placeholder": "搜索插件 ID、名称、作者或标签...",
@@ -1694,8 +1751,9 @@
     "no_matches": "没有匹配的插件",
     "no_matches_desc": "当前搜索或筛选条件下没有插件。",
     "clear_filters": "清除筛选",
-    "security_banner_title": "第三方插件以后端完整权限运行",
-    "security_banner_text": "插件会在代理服务内部执行代码，可读取你的凭据与流量。请仅安装你信任的插件——尤其要警惕任何并非由官方组织 router-for-me 发布的插件。",
+    "security_banner_title": "插件以后端完整权限运行，可读取你的凭据与流量。",
+    "security_banner_text": "请仅安装你信任其发布者的插件。",
+    "review_sources": "检查插件商店源",
     "badge_untrusted": "第三方",
     "gate_title": "安装 {{name}}",
     "gate_title_update": "更新 {{name}}",
@@ -1710,7 +1768,9 @@
     "gate_step2_action": "我已阅读并理解上述风险",
     "gate_step3_prompt": "如需确认，请在下方输入框中键入 “{{token}}”",
     "gate_step3_action": "安装此插件",
-    "gate_step3_hint": "请输入上方显示的完整标识以启用安装。"
+    "gate_step3_hint": "请输入上方显示的完整标识以启用安装。",
+    "refresh_registry": "刷新注册表",
+    "filter_select_label": "安装状态"
   },
   "plugin_resource": {
     "page_count": "{{count}} 个页面",
@@ -1720,17 +1780,16 @@
     "not_found_desc": "该插件页面未在当前后端插件列表中声明。",
     "empty_src": "插件页面地址为空",
     "empty_src_desc": "该插件菜单未提供可嵌入的页面地址。",
-    "open_in_new_tab": "在新标签页打开资源"
+    "open_in_new_tab": "在新标签页打开资源",
+    "refresh": "刷新插件页面"
   },
   "system_info": {
-    "title": "管理中心信息",
-    "about_title": "CLI Proxy API Management Center",
+    "title": "系统",
     "models_title": "可用模型列表",
     "models_desc": "展示 /models 返回的模型，并自动使用服务器保存的 API Key 进行鉴权。",
     "models_loading": "正在加载可用模型...",
     "models_empty": "未从 /models 获取到模型数据",
     "models_error": "获取模型列表失败",
-    "models_count": "可用模型 {{count}} 个",
     "version_check_button": "检查更新",
     "version_update_available": "有新版本可用：{{version}}",
     "version_is_latest": "当前已是最新版本",
@@ -1748,7 +1807,17 @@
     "clear_login_title": "本地登录信息",
     "clear_login_desc": "清理本地保存的登录信息并退出登录。",
     "clear_login_button": "清理登录信息",
-    "clear_login_confirm": "确认清理本地登录信息并退出登录？"
+    "clear_login_confirm": "确认清理本地登录信息并退出登录？",
+    "models_count_other": "可用模型 {{count}} 个",
+    "models_refresh": "刷新模型",
+    "copy_details": "复制版本信息",
+    "request_log_open": "配置请求日志…",
+    "resources_title": "可选资源",
+    "resources_desc": "第三方服务，运行 CLI Proxy API 不需要它们。",
+    "resources_sponsored": "赞助",
+    "resource_proxy_desc": "可用于“代理 URL”设置的代理服务器",
+    "resource_api_desc": "提供 Anthropic、OpenAI 和 Codex 端点的 API 服务",
+    "resource_new_tab": "（在新标签页中打开）"
   },
   "notification": {
     "region_label": "通知",
@@ -1773,7 +1842,7 @@
   },
   "language": {
     "switch": "语言",
-    "chinese": "中文",
+    "chinese": "简体中文",
     "chinese_tw": "繁體中文（台灣）",
     "english": "English",
     "russian": "Русский"
@@ -1788,9 +1857,6 @@
   "sidebar": {
     "toggle_expand": "展开侧边栏",
     "toggle_collapse": "收起侧边栏",
-    "expand": "展开",
-    "collapse": "收起",
-    "subtitle": "CLI Proxy API 管理控制台",
     "auth_files_count": "认证文件：{{count}} 个",
     "navigation": "导航",
     "close_navigation": "关闭导航"
@@ -1803,14 +1869,11 @@
   "providersPage": {
     "header": {
       "title": "AI 提供商",
-      "activeResources": "{{active}}/{{total}} 个活跃资源",
-      "providerFamilies": "{{count}} 个提供商家族",
-      "updatedAt": "更新于 {{time}}"
+      "refresh": "刷新提供商",
+      "updatedAt": "更新于 {{time}}",
+      "summary_other": "{{active}}/{{total}} 个已启用，共 {{count}} 个提供商"
     },
     "actions": {
-      "refresh": "刷新",
-      "syncing": "同步中",
-      "new": "新建",
       "edit": "编辑",
       "view": "查看",
       "delete": "删除",
@@ -1823,7 +1886,8 @@
     "categories": {
       "title": "提供商",
       "quickFill": "快速接入",
-      "activeCount": "{{active}}/{{total}} 活跃"
+      "activeCount": "{{active}}/{{total}} 活跃",
+      "pickerLabel": "提供商"
     },
     "providerNames": {
       "meta": "Muse (Meta)",
@@ -1854,9 +1918,11 @@
       "websocketsTag": "WebSockets",
       "cloakTag": "Cloak",
       "cliProfileTag": "CLI 指纹",
-      "empty": "尚未添加配置,点击右上角新建。",
+      "empty": "此提供商尚未添加任何配置。",
       "filterPlaceholder": "搜索密钥、地址、前缀…",
-      "description": "在 {{route}} 下管理资源"
+      "description": "在 {{route}} 下管理资源",
+      "requestSummary": "成功 {{success}} · 失败 {{failure}}",
+      "noRecentRequests": "近期无请求"
     },
     "sponsor": {
       "protocolSummary": "Anthropic / OpenAI / Gemini / Codex API (Responses)",
@@ -1865,7 +1931,6 @@
       "registerNow": "立即注册",
       "kimiPromo": "新用户首次成功充值，赠送充值金额 10% 的 API 额度，最高赠送 ¥1000，优惠截至 9 月 30 日",
       "dashboardLink": "控制面板",
-      "emptyRegisterHint": "尚未添加配置",
       "apiKeyHint": "此 Key 只会写入当前选择的分组/协议配置。",
       "usageCheck": "查询额度",
       "usageChecking": "查询中",
@@ -1928,7 +1993,8 @@
         "openai": "OpenAI 兼容",
         "gemini": "Gemini",
         "codexResponses": "Codex API (Responses)"
-      }
+      },
+      "sponsoredLabel": "赞助"
     },
     "status": {
       "active": "活跃",
@@ -1936,7 +2002,8 @@
       "notSet": "未设置",
       "none": "无",
       "notConfigured": "未配置",
-      "defaultSuffix": "(默认)"
+      "defaultSuffix": "(默认)",
+      "failing": "失败较多"
     },
     "detail": {
       "title": "详情",
@@ -2075,7 +2142,12 @@
         "priority": "优先级",
         "recentSuccess": "近期成功数",
         "directionAsc": "升序",
-        "directionDesc": "降序"
+        "directionDesc": "降序",
+        "dirAlphaAsc": "A–Z",
+        "dirAlphaDesc": "Z–A",
+        "dirValueAsc": "低→高",
+        "dirValueDesc": "高→低",
+        "directionButton": "{{field}}排序方向：{{direction}}"
       },
       "filter": {
         "allModels": "全部模型",
@@ -2083,16 +2155,24 @@
         "selectAll": "全选",
         "clear": "清空",
         "empty": "暂无已配置模型"
-      }
+      },
+      "controls": "搜索与排序",
+      "controlsNarrowed": "搜索与排序（已筛选）"
     },
     "modelCatalog": {
       "notLoaded": "未加载"
+    },
+    "quickStart": {
+      "optionalKeyTitle": "{{provider}} 密钥（可选）",
+      "optionalKeyHint": "如果你已在使用 {{provider}}，可在此添加其密钥；否则可跳过。",
+      "getKey": "获取密钥",
+      "newTab": "（在新标签页中打开）"
     }
   },
   "usage_stats": {
     "title": "使用统计",
     "subtitle": "来自代理运行时的请求和 Token 使用情况。",
-    "refresh": "刷新",
+    "refresh": "刷新使用统计",
     "last_updated": "最后更新",
     "load_failed": "无法加载使用统计",
     "total_requests": "总请求数",
@@ -2130,12 +2210,27 @@
       "shown": "显示 {{count}} 条，共 {{total}} 条",
       "quotaRemaining": "剩余 {{value}}",
       "quotaUnlimited": "无上限",
-      "quotaDetails": "{{name}} 的额度详情"
+      "quotaDetails": "{{name}} 的额度详情",
+      "details": "详情",
+      "detailsFor": "{{name}} 的详情",
+      "recentRate": "成功率 · 最近 {{minutes}} 分钟",
+      "recentNone": "最近 {{minutes}} 分钟无请求",
+      "quotaNotChecked": "未检查",
+      "quotaCheckFailed": "检查失败",
+      "requestsNone": "近期无请求",
+      "requestsOk": "{{count}} 成功",
+      "requestsFailed": "{{count}} 失败",
+      "requestsTotal": "请求总计：{{success}} 成功，{{failure}} 失败",
+      "section": "分区",
+      "providerShortcuts": "常用提供商",
+      "editorActions": "规则操作",
+      "selectedProvider": "已选提供商",
+      "status_ok": "无问题"
     },
     "dashboardQuota": {
       "title": "剩余额度",
-      "subtitle": "当前快照 · 未来 7 天",
-      "refresh": "检查额度",
+      "subtitle": "未来 7 天 · 上报快照，非实时用量",
+      "refresh": "刷新额度",
       "open_quota": "打开额度管理",
       "disconnected": "连接后可检查额度。",
       "waiting": "正在等待凭证文件。",
@@ -2145,13 +2240,17 @@
       "no_data": "没有报告剩余百分比。缺失或失败的数据不视为零。",
       "no_eligible": "没有符合条件的账户。已停用和不受支持的凭证会被跳过。",
       "coverage": "{{eligible}} 个符合条件的账户中，{{measured}} 个有测量值 · {{unavailable}} 个无百分比 · {{skipped}} 个已跳过",
-      "stale": "已过期",
-      "chart_label": "各账户从现在到未来 7 天的剩余额度。纵轴固定为 0 到 100%。虚线仅预测下一次重置，并非历史用量。",
-      "evidence": "圆点表示报告的快照。虚线阶梯仅预测下一次已报告的重置，并假设不再使用额度。每个账户使用供应商选定的一个窗口；额度相互独立。不提供历史用量。过期快照不预测重置。",
+      "chart_label": "各账户剩余配额，从现在到未来 7 天。固定 0 到 100% 刻度。虚线为下一次重置的预测，不是用量历史。",
+      "show_projection": "显示 7 天预测",
+      "lowest_shown": "显示剩余最低的 {{shown}} 个账户（共 {{total}} 个）",
+      "evidence": "圆点为上报快照。虚线预测仅在下一次上报的重置时跳变，并假设不再使用。每个账户仅一个由提供商选定的窗口，额度相互独立。没有用量历史。过期快照不预测重置。",
       "oldest_snapshot": "最早的显示快照 ·",
       "unknown_time": "快照时间不可用。",
       "no_snapshot": "暂无测量快照。",
-      "refresh_policy": "每次进入页面检查一次。不自动轮询额度。"
+      "refresh_policy": "每次进入页面检查一次。不自动轮询额度。",
+      "measured": "已测量 {{measured}}/{{eligible}} 个符合条件的账户",
+      "unmeasured": "{{count}} 个无百分比",
+      "skipped": "已跳过 {{count}} 个"
     },
     "chart": {
       "series": "图表数据系列",
@@ -2159,7 +2258,13 @@
       "keyboard": "使用方向键查看数据点。Home 和 End 键跳至首尾数据点。",
       "choose_series": "选择数据系列以显示数据。",
       "table": "查看数据表",
-      "time": "时间"
+      "time": "时间",
+      "shared": "{{numbers}} 重叠，合并为一条灰线",
+      "isolate_hint": "选择一个系列以仅显示它",
+      "show_all": "显示全部系列",
+      "guide": "图表说明",
+      "key_snapshot": "圆点：已报告的快照",
+      "key_projection": "虚线：预测，假设不再继续使用"
     },
     "dashboard": {
       "request_flow": "请求趋势",
@@ -2171,7 +2276,14 @@
       "setupProvider": "连接上游提供商",
       "setupOAuth": "如果提供商使用 OAuth，请添加 OAuth 凭据",
       "setupClient": "在配置面板中创建客户端 API 密钥",
-      "setupUsage": "从客户端发送请求，然后查看使用统计"
+      "setupUsage": "从客户端发送请求，然后查看使用统计",
+      "addKey": "添加 {{provider}} 密钥",
+      "addCompatibleProvider": "添加 OpenAI 兼容提供商",
+      "rowEnable": "启用 {{name}}",
+      "rowDisable": "停用 {{name}}",
+      "rowActions": "{{name}} 的操作",
+      "menuViewDetails": "查看详情",
+      "notConfiguredHint": "选择一个提供商以添加它的第一个密钥。"
     },
     "quota": {
       "checking": "正在检查额度…",
@@ -2184,14 +2296,25 @@
       "assumption": "虚线仅表示下次重置的预测，假设不再使用。",
       "series": "账户曲线",
       "stale": "过期快照",
-      "evidence": "快照为已报告的数值。虚线阶梯仅预测下次重置，假设不再使用。无历史消耗数据。各账户与套餐的额度相互独立。过期快照不预测重置。",
-      "breakdown": "账户明细",
-      "independent": "独立额度",
-      "account": "账户",
+      "evidence": "快照为上报值。虚线预测仅在下一次重置时跳变，并假设不再使用。没有历史消耗数据。账户和套餐的额度相互独立。过期快照不预测重置。",
       "snapshot": "快照",
       "failed": "检查失败",
       "refreshAccount": "刷新 {{name}}",
-      "method": "图表说明"
+      "projected_from_snapshot": "根据最新快照预测，假设不再使用",
+      "show_in_chart": "在图表中显示 {{name}}",
+      "checked_at": "检查于 {{time}}",
+      "not_checked": "尚未检查",
+      "low": "偏低",
+      "isolate_hint": "在列表中选择账户，图表只显示该账户的线。",
+      "reset_at": "重置 {{time}}",
+      "reset_some": "重置 {{numbers}} · {{time}}",
+      "view_label": "视图",
+      "window_label": "窗口",
+      "glance_label": "各账号剩余额度",
+      "resets": "{{time}} 重置",
+      "no_reset": "未报告重置时间",
+      "times_in": "时间均为 {{zone}}",
+      "group_label": "{{numbers}} · {{count}} 个账户"
     },
     "settings": {
       "section": "分区",
@@ -2202,11 +2325,12 @@
         "time": "时间",
         "level": "级别",
         "status": "状态",
-        "latency": "延迟",
+        "latency": "延迟 (ms)",
         "method": "方法",
         "path": "路径",
         "client": "客户端",
-        "source": "来源"
+        "source": "来源",
+        "message": "消息"
       },
       "official": "官方"
     },
@@ -2223,9 +2347,9 @@
       "off_detail": "此后端未记录使用情况。总数和图表已隐藏，因为零会被误解为没有流量，而实际是未记录。开启收集后仅记录后续请求，不会补录之前的流量。",
       "open_config": "前往配置开启",
       "unknown_title": "此后端未报告统计收集状态",
-      "unknown_detail": "无法获取 usage-statistics-enabled 标志，无法确认是否正在收集统计，因此隐藏总数和图表。请在管理中心信息中检查后端版本。",
-      "open_system": "打开管理中心信息",
-      "coverage": "使用统计保存在后端内存中，重启后清空。收集关闭期间的流量不会补录。后端未报告统计收集的开始时间。",
+      "unknown_detail": "无法获取 usage-statistics-enabled 标志，无法确认是否正在收集统计，因此隐藏总数和图表。请在“系统”页面检查后端版本。",
+      "open_system": "打开系统页面",
+      "coverage": "合计涵盖后端上次重启以来的所有客户端 API 密钥。使用统计保存在后端内存中；收集关闭期间的流量不会补录，后端也不报告收集开始时间。",
       "empty_detail": "统计收集已开启，但尚未记录任何请求。请通过代理发送请求，然后刷新。",
       "no_cached_data": "没有之前已确认的使用统计快照。请重试以加载使用统计。",
       "stale_error": "刷新失败，正在显示上次已确认的快照。",
@@ -2241,7 +2365,11 @@
       "unreported": "未报告",
       "p50": "p50 延迟",
       "p95": "p95 延迟",
-      "milliseconds": "{{value}} 毫秒"
+      "milliseconds": "{{value}} 毫秒",
+      "total_requests": "重启以来的请求",
+      "total_tokens": "重启以来的令牌",
+      "daily_title": "每日请求与令牌",
+      "no_dated_both": "后端未报告带日期的请求或令牌合计。提供日期后才会显示每日图表；按小时合计不是带日期的历史，缺失日期不会以零填充。"
     }
   }
 }

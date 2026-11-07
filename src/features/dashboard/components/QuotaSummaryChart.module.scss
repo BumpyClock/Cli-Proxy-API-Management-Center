@@ -1,3 +1,5 @@
+@use '@/styles/mixins' as *;
+
 .card {
   min-width: 0;
   border: 1px solid var(--border-color);
@@ -30,14 +32,14 @@
 
   button {
     flex-shrink: 0;
-    min-height: 36px;
   }
 }
 
 .status {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
   padding: 0 16px 12px;
   color: var(--text-secondary);
   font-size: 12px;
@@ -50,8 +52,29 @@
   color: var(--warning-color);
 }
 
+.accounts {
+  padding: 4px 16px 16px;
+}
+
+.more {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* The forecast is secondary to the per-account bars: closed until asked for. */
+.projection {
+  padding: 4px 16px 8px;
+  border-top: 1px solid var(--border-color);
+
+  summary {
+    @include disclosure-summary;
+  }
+}
+
 .chart {
-  padding: 0 16px;
+  padding-top: 8px;
 }
 
 .footer {
@@ -83,6 +106,10 @@
     min-height: 36px;
     color: var(--accent-color);
     text-decoration: none;
+
+    @media (max-width: 768px), (pointer: coarse) {
+      min-height: 44px;
+    }
   }
 
   a:hover {
@@ -104,8 +131,12 @@
     padding: 0 12px 12px;
   }
 
-  .chart {
-    padding: 0 8px;
+  .accounts {
+    padding: 4px 12px 12px;
+  }
+
+  .projection {
+    padding: 4px 12px 8px;
   }
 
   .footer {

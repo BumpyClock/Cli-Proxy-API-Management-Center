@@ -12,12 +12,13 @@
  * quotaTimeline.ts.)
  */
 
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatRelativeInstant, TYPE_COLORS } from '@/utils/quota';
 import { getQuotaCacheKey, getQuotaDisplayName } from '@/utils/quota/identity';
 import { useNow } from '@/hooks/useNow';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import type { ResolvedTheme, ThemeColors } from '@/types';
 import {
   buildTimelineLane,
@@ -74,6 +75,7 @@ export function QuotaTimeline({
   const { t } = useTranslation();
   const [mode, setMode] = useState<TimelineMode>(initialMode);
   const [offset, setOffset] = useState(initialOffset);
+  const modeLabelId = useId();
 
   // The clock has to advance on its own: bars are classified past/live/next
   // against it and the marker is positioned by it, so a long-lived tab would
@@ -131,11 +133,15 @@ export function QuotaTimeline({
   const cells = useMemo(() => {
     const zoomed = mode === 'session';
     const count = zoomed ? span.days * 4 : span.days;
-    const cellMs = (span.endMs - span.startMs) / count;
     const todayStart = new Date(now).setHours(0, 0, 0, 0);
 
     return Array.from({ length: count }, (_, index) => {
-      const at = span.startMs + index * cellMs;
+      // Calendar arithmetic: a DST change makes one day 23 or 25 hours, and fixed-length
+      // cells would label the same date twice.
+      const start = new Date(span.startMs);
+      const at = zoomed
+        ? start.setHours(start.getHours() + index * 6)
+        : start.setDate(start.getDate() + index);
       const date = new Date(at);
       const isDayStart = !zoomed || date.getHours() === 0;
       return {
@@ -204,22 +210,28 @@ export function QuotaTimeline({
             </button>
           </div>
 
-          <div className={styles.modes} role="group">
-            {(['weekly', 'session'] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={mode === value}
-                onClick={() => {
-                  setMode(value);
-                  setOffset(0); // spans differ in size; an old offset means nothing
-                }}
-              >
-                {value === 'weekly'
-                  ? t('quota_management.windows_mode_weekly', { defaultValue: 'Weekly' })
-                  : t('quota_management.windows_mode_session', { defaultValue: '5-hour' })}
-              </button>
-            ))}
+          <div className={styles.modes}>
+            <span id={modeLabelId} className={styles.modesLabel}>
+              {t('redesign.quota.window_label')}
+            </span>
+            <SegmentedControl<TimelineMode>
+              ariaLabelledBy={modeLabelId}
+              value={mode}
+              onChange={(value) => {
+                setMode(value);
+                setOffset(0); // spans differ in size; an old offset means nothing
+              }}
+              options={[
+                {
+                  value: 'weekly',
+                  label: t('quota_management.windows_mode_weekly', { defaultValue: 'Weekly' }),
+                },
+                {
+                  value: 'session',
+                  label: t('quota_management.windows_mode_session', { defaultValue: '5-hour' }),
+                },
+              ]}
+            />
           </div>
         </div>
       </header>
@@ -357,8 +369,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
         <div className={styles.laneLimits}>
           {lane.limits.map((limit) => (
             <span key={limit.label} className={styles.laneLimit}>
-              {lane.provider === 'meta' ? t(limit.label) : limit.label}{' '}
-              <b>{limit.remaining}%</b>
+              {lane.provider === 'meta' ? t(limit.label) : limit.label} <b>{limit.remaining}%</b>
             </span>
           ))}
         </div>

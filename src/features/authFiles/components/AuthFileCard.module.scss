@@ -4,7 +4,7 @@
   background: var(--bg-primary);
   color: var(--text-primary);
   > td {
-    padding: 16px 12px;
+    padding: 12px;
     border-top: 1px solid var(--border-color);
     vertical-align: top;
   }
@@ -13,7 +13,7 @@
   }
 }
 .rowCompact > td {
-  padding-block: 10px;
+  padding-block: 8px;
 }
 .rowSelected {
   background: color-mix(in srgb, var(--accent-color, var(--primary-color)) 8%, var(--bg-primary));
@@ -21,31 +21,46 @@
 .selectCell {
   width: 36px;
 }
-.head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Phones and coarse pointers: the 22px checkbox gets a 44px hit region. */
+@media (max-width: 768px), (pointer: coarse) {
+  .selectCell > label {
+    position: relative;
+  }
+  .selectCell > label::after {
+    content: '';
+    position: absolute;
+    inset: -11px;
+  }
 }
 .identity {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
   margin: 0;
+  min-width: 0;
   font-size: 13px;
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 600;
+  line-height: 20px;
 }
 .account {
-  order: -1;
-  font-weight: 600;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 .accountMono {
   font-family: $font-mono;
 }
+/* Provider, runtime marker and file name share one line under the account. */
+.subline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  margin: 2px 0 0;
+  min-width: 0;
+  line-height: 20px;
+}
 .providerBadge {
-  font-size: 11px;
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 16px;
   padding: 1px 5px;
   border-radius: 4px;
 }
@@ -54,9 +69,14 @@
   color: var(--text-secondary);
   font-size: 12px;
 }
+.quotaUnreported {
+  /* Aligns with the quota disclosure summary text in neighbouring rows. */
+  display: block;
+  padding: 4px 0;
+}
 .fileName,
 .note {
-  margin: 4px 0 0;
+  min-width: 0;
   color: var(--text-secondary);
   font-size: 12px;
   overflow-wrap: anywhere;
@@ -64,26 +84,111 @@
 .fileName {
   font-family: $font-mono;
 }
+.note {
+  margin: 2px 0 0;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Exceptions are pills (icon, word, tint, edge); healthy rows stay a quiet word. */
 .state {
-  display: inline-block;
-  color: var(--text-secondary);
-  background: var(--bg-tertiary);
-  padding: 2px 7px;
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px 1px 6px;
+  border: 1px solid;
+  border-radius: 999px;
   font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+.stateDisabled {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
 }
 .stateProblem {
-  color: var(--danger-color);
-  background: var(--bg-error-light);
+  color: var(--failure-badge-text);
+  background: var(--failure-badge-bg);
+  border-color: var(--failure-badge-border);
+}
+.stateQuiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.stateQuietIcon {
+  flex: 0 0 auto;
+  color: var(--success-color);
+}
+.cardUpdated {
+  display: none;
 }
 .warning {
   display: flex;
   align-items: flex-start;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 12px;
+  line-height: 16px;
   color: var(--warning-text);
   overflow-wrap: anywhere;
+  /* Desktop rows stay compact: two lines, with a toggle for the rest (see .warningToggle). */
+  > span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  > .warningFull {
+    display: block;
+  }
+}
+.warningToggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 0 0 18px;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--primary-color));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .warningToggle:hover {
+    color: var(--text-primary);
+  }
+}
+@media (pointer: coarse) {
+  .warningToggle {
+    min-height: 44px;
+  }
 }
 .warningIcon {
   flex-shrink: 0;
@@ -92,90 +197,166 @@
 .health {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
-.healthHead {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.healthLabel {
-  display: none;
-}
-.healthCounts {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-family: $font-mono;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.countOk,
-.countFail {
+/* One inline figure ("12 ok · 1 failed") or one muted "No recent requests". */
+.requestsFigure,
+.requestsIdle {
+  font-size: 13px;
+  line-height: 20px;
   color: var(--text-secondary);
 }
-.countLive.countFail {
+.requestsFigure {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.requestsSep {
+  color: var(--text-tertiary);
+}
+.countFailLive {
   color: var(--danger-color);
+}
+
+/* Request history strip renders only when the recent window has traffic. */
+.recent {
+  min-width: 0;
+  max-width: 180px;
 }
 .metaRow {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font: 11px/1.5 $font-mono;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 20px;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
 }
-.metaDivider {
-  display: none;
+.modified {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
-.metaPriority,
-.metaWeight {
+.metaMetric {
   display: inline-flex;
   gap: 4px;
+  white-space: nowrap;
 }
 .metaMetricLabel {
   color: var(--text-secondary);
 }
+
+/* ---------- Row actions menu ---------- */
+
+/* One labelled menu button at every width; the menu floats over the table. */
 .rowActions {
-  min-width: 70px;
-  summary {
-    cursor: pointer;
-    color: var(--accent-color, var(--primary-color));
-    padding: 4px 0;
-    font-size: 12px;
-  }
-  summary:focus-visible {
+  position: relative;
+  display: inline-flex;
+}
+.actionsTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--control-outline, var(--border-color));
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
+    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+  &:focus-visible {
     outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
+  &[aria-expanded='true'] {
+    border-color: var(--border-hover);
+    background: var(--bg-tertiary);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .actionsTrigger:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-tertiary);
+  }
+}
+.disclosureChevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
+}
+.actionsTrigger[aria-expanded='true'] .disclosureChevron,
+.detailsToggle[aria-expanded='true'] .disclosureChevron {
+  transform: rotate(180deg);
+}
+
+/* The menu floats over the table instead of stretching the narrow actions column. */
+.actions {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: $z-dropdown;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(300px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--floating-surface);
+  box-shadow: var(--floating-shadow);
 }
 .actions {
-  padding-top: 8px;
-}
-.actionsMain,
-.utilityActions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  align-items: stretch;
+  gap: 2px;
+  &[hidden] {
+    display: none;
+  }
 }
 .actions :global(.btn) {
+  justify-content: flex-start;
   width: 100%;
-  min-height: 32px;
+  min-height: 36px;
+  padding-inline: 10px;
+  border: 0;
+  font-size: 13px;
+  font-weight: 500;
   text-align: left;
   white-space: normal;
 }
 .actions :global(.btn > span) {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+.actions :global(.btn:focus-visible) {
+  outline: 2px solid var(--focus-ring, var(--primary-color));
+  outline-offset: -2px;
 }
 .actions :global(svg) {
   flex-shrink: 0;
 }
-.iconButton {
-  font-size: 12px;
+.menuDanger:not(:disabled) {
+  color: var(--danger-color);
+}
+.menuSeparator {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border-color);
+}
+
+/* Details disclosure exists only in the compact card layout. */
+.detailsToggle {
+  display: none;
 }
 
 .statusBar {
@@ -213,7 +394,7 @@
 
 .statusRate {
   font-family: $font-mono;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   color: var(--text-quaternary);
@@ -250,7 +431,7 @@
   box-shadow: var(--floating-shadow);
   pointer-events: none;
   font-family: $font-mono;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -289,68 +470,195 @@
   color: var(--text-secondary);
 }
 
+/* The desktop table's "Enabled" header names the column; the state word is for cards only. */
+.toggleWithState {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toggleState {
+  display: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 @media (max-width: 1100px) {
+  /* The state word sits under the switch so the credential name keeps the row's width. */
+  .toggleWithState {
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+  .toggleState {
+    display: block;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
   .row {
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr);
+    /* Requests sizes to its short value so "No recent requests" stays on one line. */
+    grid-template-columns: 36px fit-content(60%) minmax(0, 1fr) auto;
+    grid-template-areas:
+      'select credential credential toggle'
+      '.      status     status     status'
+      '.      requests   quota      quota'
+      '.      actions    actions    actions'
+      '.      updated    updated    updated';
+    column-gap: 20px;
     padding: 12px;
     border-top: 1px solid var(--border-color);
     > td {
       display: block;
       border: 0;
-      padding: 8px 0;
+      padding: 4px 0;
       min-width: 0;
-      grid-column: 2;
     }
     > td::before {
       content: attr(data-label);
       display: block;
       color: var(--text-secondary);
       font-size: 12px;
-      margin-bottom: 5px;
+      line-height: 1.4;
+      margin-bottom: 2px;
     }
-    > .selectCell {
-      grid-column: 1;
-      grid-row: 1;
+    > td:nth-child(1) {
+      grid-area: select;
     }
     > td:nth-child(2) {
-      grid-row: 1;
+      grid-area: credential;
     }
-    > td:nth-child(-n + 2)::before {
+    > td:nth-child(3) {
+      grid-area: status;
+    }
+    > td:nth-child(4) {
+      grid-area: requests;
+    }
+    > td:nth-child(5) {
+      grid-area: quota;
+    }
+    > td:nth-child(6) {
+      grid-area: updated;
+    }
+    > td:nth-child(7) {
+      grid-area: toggle;
+    }
+    > td:nth-child(8) {
+      grid-area: actions;
+    }
+    > td:nth-child(-n + 2)::before,
+    > td:nth-child(7)::before,
+    > .actionsCell::before {
+      display: none;
+    }
+    /* Healthy cards, and disabled ones the switch state already names, keep one unlabelled
+       line: the quiet status word (healthy only) and the update time. */
+    > .statusQuiet,
+    > .statusRepeatsSwitch {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 12px;
+    }
+    > .statusQuiet::before,
+    > .statusRepeatsSwitch::before,
+    > .statusRepeatsSwitch .state {
       display: none;
     }
   }
-  .rowCompact > td {
-    padding-block: 6px;
+  .cardUpdated {
+    display: block;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 18px;
   }
-  .healthCounts {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
+  .state + .cardUpdated,
+  .warning ~ .cardUpdated {
+    margin-top: 4px;
+  }
+  /* Details opens the full Updated cell, so the card line does not repeat it. */
+  .rowExpanded .cardUpdated {
+    display: none;
+  }
+  .rowCompact > td {
+    padding-block: 2px;
+  }
+
+  .warning > span {
+    display: block;
+  }
+
+  /* Collapsed card: file metadata waits behind Details. */
+  .row:not(.rowExpanded) > .detailCell {
+    display: none;
   }
   .metaRow {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    align-items: baseline;
+    gap: 4px 16px;
   }
-  .actionsMain,
-  .utilityActions {
-    flex-direction: row;
+
+  .row > .actionsCell {
+    display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 8px;
+  }
+  .actionsTrigger,
+  .detailsToggle {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+  .actions {
+    right: auto;
+    left: 0;
+    /* Opens from the card's left content edge; keep it inside the phone viewport. */
+    max-width: min(300px, calc(100vw - 104px));
   }
   .actions :global(.btn) {
-    min-height: 40px;
-    width: auto;
+    min-height: 44px;
   }
-  .rowActions summary {
-    min-height: 32px;
+  .detailsToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: none;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    &:focus-visible {
+      outline: 2px solid var(--focus-ring, var(--primary-color));
+      outline-offset: 2px;
+    }
+  }
+}
+
+@media (max-width: 1100px) and (hover: hover) and (pointer: fine) {
+  .detailsToggle:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
   }
 }
 
 @media (pointer: coarse) {
   .actions :global(.btn),
-  .rowActions summary {
+  .actionsTrigger {
     min-width: 44px;
     min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosureChevron,
+  .actionsTrigger {
+    transition: none;
   }
 }

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/Button';
+import { formatDateTimeValue, isoTitle } from '@/utils/format';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { TimeSeriesChart, type TimeSeriesPoint } from '@/components/ui/TimeSeriesChart';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { usageApi } from '@/services/api';
@@ -85,6 +86,11 @@ export function UsagePageContent({
   const apiRows = useMemo(() => buildUsageRows(usage), [usage]);
   const topModels = useMemo(() => buildTopModelRows(apiRows), [apiRows]);
   const points = useMemo(() => dailyPoints(usage), [usage]);
+  const dailyKinds = ['requests', 'tokens'] as const;
+  const reportedKinds = dailyKinds.filter((kind) =>
+    points.some((point) => point.values[kind] !== null)
+  );
+  const unreportedKinds = dailyKinds.filter((kind) => !reportedKinds.includes(kind));
   const ageStale = lastUpdated !== null && now - lastUpdated >= STALE_AFTER_MS;
   const state = loading
     ? 'loading'
@@ -132,17 +138,19 @@ export function UsagePageContent({
             {lastUpdated !== null && showData && (
               <span>
                 {t('usage_stats.last_updated')}{' '}
-                <time dateTime={new Date(lastUpdated).toISOString()}>
-                  {new Date(lastUpdated).toLocaleString(i18n.language)}
+                <time dateTime={isoTitle(lastUpdated)} title={isoTitle(lastUpdated)}>
+                  {formatDateTimeValue(lastUpdated, i18n.language)}
                 </time>
               </span>
             )}
           </div>
         }
         actions={
-          <Button variant="secondary" size="sm" onClick={onRefresh} loading={loading}>
-            {t(error || ageStale ? 'redesign.usage.retry' : 'usage_stats.refresh')}
-          </Button>
+          <RefreshButton
+            onClick={onRefresh}
+            label={t(error || ageStale ? 'redesign.usage.retry' : 'usage_stats.refresh')}
+            refreshing={loading}
+          />
         }
       />
 
@@ -192,47 +200,51 @@ export function UsagePageContent({
             {state === 'empty' && <p>{t('redesign.usage.empty_detail')}</p>}
           </div>
           <dl className={styles.statGrid} aria-busy={loading}>
-            <Stat label={t('usage_stats.total_requests')} value={usage?.total_requests} />
-            <Stat label={t('usage_stats.total_tokens')} value={usage?.total_tokens} />
+            <Stat label={t('redesign.usage.total_requests')} value={usage?.total_requests} />
+            <Stat label={t('redesign.usage.total_tokens')} value={usage?.total_tokens} />
             <Stat label={t('usage_stats.success')} value={usage?.success_count} />
             <Stat label={t('usage_stats.failure')} value={usage?.failure_count} />
           </dl>
 
-          <div className={styles.chartGrid}>
-            {(['requests', 'tokens'] as const).map((kind) => {
-              const title = t(`redesign.usage.${kind}_by_day`);
-              return (
-                <section
-                  key={kind}
-                  className={styles.panel}
-                  aria-labelledby={`usage-${kind}-title`}
-                >
-                  <div className={styles.panelHeader}>
-                    <h2 id={`usage-${kind}-title`}>{title}</h2>
-                  </div>
-                  <TimeSeriesChart
-                    id={`usage-${kind}`}
-                    data={points.some((point) => point.values[kind] !== null) ? points : []}
-                    series={[
-                      {
-                        id: kind,
-                        label: t(`usage_stats.${kind}`),
-                        color: kind === 'requests' ? 'var(--chart-1)' : 'var(--chart-5)',
-                        number: 1,
-                      },
-                    ]}
-                    xDomain={xDomain}
-                    formatX={formatDate}
-                    formatY={number}
-                    ariaLabel={title}
-                    description={t('redesign.usage.daily_evidence')}
-                    emptyText={t('redesign.usage.no_dated_data')}
-                    height={220}
-                  />
-                </section>
-              );
-            })}
-          </div>
+          {reportedKinds.length > 0 && (
+            <div className={styles.chartGrid}>
+              {reportedKinds.map((kind) => {
+                const title = t(`redesign.usage.${kind}_by_day`);
+                return (
+                  <section
+                    key={kind}
+                    className={styles.panel}
+                    aria-labelledby={`usage-${kind}-title`}
+                  >
+                    <div className={styles.panelHeader}>
+                      <h2 id={`usage-${kind}-title`}>{title}</h2>
+                    </div>
+                    <TimeSeriesChart
+                      id={`usage-${kind}`}
+                      data={points}
+                      series={[
+                        {
+                          id: kind,
+                          label: t(`usage_stats.${kind}`),
+                          color: kind === 'requests' ? 'var(--chart-1)' : 'var(--chart-5)',
+                          number: 1,
+                        },
+                      ]}
+                      xDomain={xDomain}
+                      timeZone="UTC"
+                      dayTicks="points"
+                      formatX={formatDate}
+                      formatY={number}
+                      ariaLabel={title}
+                      description={t('redesign.usage.daily_evidence')}
+                      emptyText={t('redesign.usage.no_dated_data')}
+                      height={220}
+                    />
+                  </section>
+                );
+              })}
+            </div>
+          )}
 
           <section className={styles.panel} aria-labelledby="usage-models-title">
             <div className={styles.panelHeader}>
@@ -248,7 +260,7 @@ export function UsagePageContent({
                 role="region"
                 aria-label={t('usage_stats.top_models')}
               >
-                <table className={styles.table}>
+                <table className={`${styles.table} ${styles.stackTable}`}>
                   <caption className={styles.srOnly}>{t('usage_stats.top_models')}</caption>
                   <thead>
                     <tr>
@@ -284,19 +296,29 @@ export function UsagePageContent({
                         .sort((a, b) => a - b);
                       return (
                         <tr key={`${row.apiName}:${row.modelName}`}>
-                          <td className={styles.mono}>{row.displayApiName}</td>
+                          <td className={styles.mono} data-label={t('usage_stats.api')}>
+                            {row.displayApiName}
+                          </td>
                           <th scope="row" className={styles.mono}>
                             {row.modelName}
                           </th>
-                          <td className={styles.numberCell}>{number(row.requests)}</td>
-                          <td className={styles.numberCell}>{number(row.tokens)}</td>
-                          <td className={styles.numberCell} data-failed={row.failures > 0}>
+                          <td className={styles.numberCell} data-label={t('usage_stats.requests')}>
+                            {number(row.requests)}
+                          </td>
+                          <td className={styles.numberCell} data-label={t('usage_stats.tokens')}>
+                            {number(row.tokens)}
+                          </td>
+                          <td
+                            className={styles.numberCell}
+                            data-failed={row.failures > 0}
+                            data-label={t('usage_stats.failures')}
+                          >
                             {number(row.failures)}
                           </td>
-                          <td className={styles.numberCell}>
+                          <td className={styles.numberCell} data-label={t('redesign.usage.p50')}>
                             {latency(latencies[Math.ceil(latencies.length * 0.5) - 1])}
                           </td>
-                          <td className={styles.numberCell}>
+                          <td className={styles.numberCell} data-label={t('redesign.usage.p95')}>
                             {latency(latencies[Math.ceil(latencies.length * 0.95) - 1])}
                           </td>
                         </tr>
@@ -307,6 +329,29 @@ export function UsagePageContent({
               </div>
             )}
           </section>
+
+          {/* Unreported daily history is one compact status, never empty plots or zeros. */}
+          {unreportedKinds.length > 0 && (
+            <section
+              className={`${styles.panel} ${styles.unreportedPanel}`}
+              aria-labelledby="usage-daily-title"
+              data-daily-history="unreported"
+            >
+              <div className={styles.unreportedHeader}>
+                <h2 id="usage-daily-title">
+                  {unreportedKinds.length === 2
+                    ? t('redesign.usage.daily_title')
+                    : t(`redesign.usage.${unreportedKinds[0]}_by_day`)}
+                </h2>
+                <span className={styles.unreportedBadge}>{t('redesign.usage.unreported')}</span>
+              </div>
+              <p>
+                {unreportedKinds.length === 2
+                  ? t('redesign.usage.no_dated_both')
+                  : t('redesign.usage.no_dated_data')}
+              </p>
+            </section>
+          )}
 
           <section className={styles.panel} aria-labelledby="usage-apis-title">
             <div className={styles.panelHeader}>
@@ -321,7 +366,7 @@ export function UsagePageContent({
                 role="region"
                 aria-label={t('usage_stats.api_breakdown')}
               >
-                <table className={styles.table}>
+                <table className={`${styles.table} ${styles.stackTable}`}>
                   <caption className={styles.srOnly}>{t('usage_stats.api_breakdown')}</caption>
                   <thead>
                     <tr>
@@ -343,9 +388,15 @@ export function UsagePageContent({
                         <th scope="row" className={styles.mono}>
                           {row.displayApiName}
                         </th>
-                        <td className={styles.numberCell}>{number(row.requests)}</td>
-                        <td className={styles.numberCell}>{number(row.tokens)}</td>
-                        <td className={styles.numberCell}>{number(row.models.length)}</td>
+                        <td className={styles.numberCell} data-label={t('usage_stats.requests')}>
+                          {number(row.requests)}
+                        </td>
+                        <td className={styles.numberCell} data-label={t('usage_stats.tokens')}>
+                          {number(row.tokens)}
+                        </td>
+                        <td className={styles.numberCell} data-label={t('usage_stats.models')}>
+                          {number(row.models.length)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

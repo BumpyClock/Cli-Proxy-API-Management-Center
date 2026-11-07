@@ -1,0 +1,48 @@
+The premise was false, and the material outcomes are now in place and gated. All rendered gates, native-input checks and `bun run verify` (local and Boat) pass on the final tree. Nothing is committed and `design-review/council/**` is untouched; my captures went to `/tmp`.
+
+**Premise.** "Changing shared tokens and common button classes unifies the selected states and the mobile toolbars." The rendered census showed tokens only feed colors. The selected-state shape was declared in eight local stylesheets: ProviderTabs, the Auth Files status filter, Config ModeSwitch, Quota View/Window (a descendant selector whose comment claimed it was "the same control as Config"), Quota timeline modes, the alias view switch, Plugin Store and Logs chips. Mobile position was set by page markup, not tokens. The census also found undefined CSS variables. The verdict is recorded in `docs/workspace-redesign.md`.
+
+**Fix.** One owner, `src/components/ui/SegmentedControl.tsx`, plus a labelled phone select, `src/components/ui/NativeSelect.tsx`. All local single-select callers were migrated and their selected-state CSS deleted; `ModeSwitch` itself is gone. Role differences stay: route tabs keep the underline, Logs filter chips are multi-select toggles with a check mark, and chart series toggles are unchanged.
+
+**Measured before → after** (census at 390×844 / 1440×1000):
+- Logs first row at 390: 506 → 249; at 1440: 332 → 286.
+- Auth Files first record at 390: 464 → 337. The gate is ≤340, so the margin is only 3px.
+- Quota at 390: the plot started at 659; a "Remaining by account" list now starts at 462, with the plot at 774.
+- Providers selected resource at 390: 542 → 377.
+- Single-select styles across the audited pages: 6 → 1. Controls below 32px desktop / 44px phone: many → 0.
+
+**Checks run:**
+- `bun run verify`: 1401 pass, 0 fail, ESLint and build OK, locally. The same on Boat Linux (sandbox `bx_kkyn2fr8`, no secrets, deleted after the run).
+- `node tests/visual-audit/census.mjs <dir> --assert`: 36/36 gates pass.
+- `node tests/visual-audit/interactions.mjs`: 21/21 pass with real keyboard, mouse and touch. It covers Logs Options (Escape returns focus; Clear logs then Cancel sends no write), Auth Files View options and the phone provider select, the Providers Actions menu and delete Cancel, OAuth search, editor reload, and the Quota last tick sitting exactly on the plot edge at 390 and 1440.
+- OAuth deep link: the provider was really lost on reload (`?provider=claude` → `#/auth-files/oauth-excluded`). Login now returns to the full saved location, including the query. Confirmed in the browser for both editors, with a test in `tests/loginRedirectTarget.test.ts`.
+- New `tests/themeTokens.test.ts`: every `var()` must name a declared property.
+- I looked at all 34 screens from two `/tmp` captures, the final one at `/tmp/cpamc-cap/design-review/council/round-final/screenshots`.
+
+**Delegation.** Seven subagents worked on separate files; I merged their work, fixed the tests their changes broke, and moved one duplicated menu helper into `src/utils/menuFocus.ts`. Per-area browser checks beyond the ones listed above are their reports and I did not re-run them. That includes the Providers dark-theme computed colors and the Dashboard label with `/api-key-usage` failing ("credential files only; provider key usage unavailable").
+
+**Deviations from the brief:**
+- **Logs:** Refresh and Auto refresh moved into the page header. Two 44px toolbar rows cannot reach y≤270, and ten other pages already put Refresh there.
+- **Auth Files Credentials tab:** the disablement and alias cards now sit behind a "Show provider rules" toggle, under a counts block that links to the tabs. They were not deleted: the provider overview, the alias Diagram and Delete Provider exist only there.
+- **Quick Start:** I reverted a subagent change, so the H1 shows "APIKEY.FUN" once a key is configured. That matches the sidebar and the existing integration. It is the one place a sponsor name is still a page title.
+- **Sponsors:** the promotional card is gone from Quick Start. The required links now sit in a System "Optional resources (Sponsored)" section.
+- **Global sizes:** `.btn-sm` is now 32px, small selects 32px, and inputs 44px on phones. Side effect: the first Config card at 390 moved 333 → 356, which no gate covers.
+- **Host Address:** the placeholder now reads "Empty uses the backend default". Nothing in the frontend supports a 0.0.0.0 default.
+
+**Known remaining issues:**
+- `AuthFilesPage.module.scss` reaches into `NativeSelect` internals to stack its label. A `stacked` prop would remove that override.
+- Gates check English only. Russian at 390 puts the Logs first row at 281 and the Auth Files first record at 349.
+- Logs full screen at 390 wraps the toolbar. The hidden search text in full screen was there before this pass.
+- The Quota Account breakdown table still scrolls sideways on phones.
+- `ProviderStatusBar.tsx` block colors are hard-coded RGB values, not theme tokens.
+- `logs.show_raw_logs_hint` is now unused.
+- The census cannot tell multi-select chips from single-select ones. It passes because the Logs filter panel is closed at load.
+- Fixture limits, not product defects: the `/api-key-usage` fixture shape creates a fake "Usage" row in Provider health, all quota series sit at 62%, and dark mode is captured on 4 pages only.
+
+**For the PR.** Make sure the untracked new files get staged. The main ones are:
+- `SegmentedControl`, `NativeSelect`, `QuotaGlanceList`, `OAuthRulesSummary`, `ProviderRowActions`
+- `src/router/redirectTarget.ts`, `src/pages/oauthProviderSearch.ts`, `HeaderBackLink.module.scss`, `src/utils/menuFocus.ts`
+- `src/features/dashboard/logic/{requestScope,vitals}.ts`, `src/features/quota/quotaChartFormat.ts`
+- `tests/visual-audit/{census,interactions,fixtures}.mjs` and the new test files
+
+`ModeSwitch.tsx` and `ModeSwitch.module.scss` are deleted.

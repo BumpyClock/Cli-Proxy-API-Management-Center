@@ -52,6 +52,7 @@ export function SourceSearchBar({ search, disabled }: SourceSearchBarProps) {
                 onClick={() => executeSearch('next')}
                 disabled={!searchQuery || disabled}
                 title={t('config_management.search_button')}
+                aria-label={t('config_management.search_button')}
               >
                 <IconSearch size={16} />
               </button>
@@ -67,6 +68,7 @@ export function SourceSearchBar({ search, disabled }: SourceSearchBarProps) {
           onClick={handlePrevMatch}
           disabled={!searchQuery || lastSearchedQuery !== searchQuery || searchResults.total === 0}
           title={t('config_management.search_prev')}
+          aria-label={t('config_management.search_prev')}
         >
           <IconChevronUp size={16} />
         </Button>
@@ -76,6 +78,7 @@ export function SourceSearchBar({ search, disabled }: SourceSearchBarProps) {
           onClick={handleNextMatch}
           disabled={!searchQuery || lastSearchedQuery !== searchQuery || searchResults.total === 0}
           title={t('config_management.search_next')}
+          aria-label={t('config_management.search_next')}
         >
           <IconChevronDown size={16} />
         </Button>

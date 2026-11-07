@@ -1,9 +1,10 @@
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
@@ -11,7 +12,6 @@ import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import {
   IconGithub,
   IconPlug,
-  IconRefreshCw,
   IconSearch,
   IconSettings,
   IconSidebarStore,
@@ -34,6 +34,7 @@ import {
   resolvePluginAssetURL,
 } from './pluginResources';
 import { waitForPluginState } from './pluginPolling';
+import { PluginsDisabledNotice } from './components/PluginNotices';
 import styles from './PluginsPage.module.scss';
 
 type PluginRuntimeWaitStatus = 'ready' | 'globalDisabled' | 'timeout';
@@ -455,33 +456,46 @@ export function PluginsPage() {
       <PageHeader
         title={t('plugin_management.title')}
         description={t('plugin_management.description')}
+        actions={
+          <>
+            <RefreshButton
+              onClick={() => void loadPlugins()}
+              label={t('plugin_management.refresh_plugins')}
+              refreshing={loading}
+              disabled={!connected || Boolean(mutatingID || deletingID)}
+            />
+            <Button variant="secondary" onClick={() => navigate('/plugin-store')}>
+              <IconSidebarStore size={16} />
+              {t('plugin_store.title')}
+            </Button>
+          </>
+        }
       />
 
       {/* ── Alerts ── */}
       {error ? <div className={styles.errorBox}>{error}</div> : null}
 
       {data && !data.pluginsEnabled ? (
-        <div className={styles.warningBox}>{t('plugin_management.global_disabled_hint')}</div>
+        <PluginsDisabledNotice message={t('plugin_management.global_disabled_hint')} />
       ) : null}
 
       {/* ── Status Bar ── */}
       {data ? (
         <div className={styles.statusBar}>
-          <div className={styles.statusPill}>
-            <span
-              className={`${styles.statusDot} ${
-                data.pluginsEnabled ? styles.statusDotOn : styles.statusDotOff
-              }`}
-            />
-            <span className={styles.statusLabel}>{t('plugin_management.global_status')}</span>
-            <span className={styles.statusValue}>
-              {data.pluginsEnabled
-                ? t('plugin_management.global_enabled')
-                : t('plugin_management.global_disabled')}
-            </span>
-          </div>
+          {/* When plugins are off, the disabled notice above already says so. */}
+          {data.pluginsEnabled ? (
+            <>
+              <div className={styles.statusPill}>
+                <span className={`${styles.statusDot} ${styles.statusDotOn}`} />
+                <span className={styles.statusLabel}>{t('plugin_management.global_status')}</span>
+                <span className={styles.statusValue}>{t('plugin_management.global_enabled')}</span>
+              </div>
 
-          <span className={styles.statusDivider} />
+              <span className={styles.statusDivider} aria-hidden="true">
+                ·
+              </span>
+            </>
+          ) : null}
 
           <div className={styles.statusPill}>
             <span className={styles.statusLabel}>{t('plugin_management.plugins_dir')}</span>
@@ -493,14 +507,18 @@ export function PluginsPage() {
             </span>
           </div>
 
-          <span className={styles.statusDivider} />
+          <span className={styles.statusDivider} aria-hidden="true">
+            ·
+          </span>
 
           <div className={styles.statusPill}>
             <span className={styles.statusLabel}>{t('plugin_management.discovered')}</span>
             <span className={styles.statusValue}>{pluginStats.discovered}</span>
           </div>
 
-          <span className={styles.statusDivider} />
+          <span className={styles.statusDivider} aria-hidden="true">
+            ·
+          </span>
 
           <div className={styles.statusPill}>
             <span className={styles.statusLabel}>{t('plugin_management.effective')}</span>
@@ -521,20 +539,6 @@ export function PluginsPage() {
           aria-label={t('plugin_management.search_label')}
           rightElement={<IconSearch size={16} />}
         />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={loadPlugins}
-          disabled={!connected || loading || Boolean(mutatingID || deletingID)}
-          loading={loading}
-        >
-          <IconRefreshCw size={16} />
-          {t('plugin_management.refresh')}
-        </Button>
-        <Button variant="secondary" size="sm" onClick={() => navigate('/plugin-store')}>
-          <IconSidebarStore size={16} />
-          {t('plugin_store.title')}
-        </Button>
       </div>
 
       {/* ── Plugin List ── */}
@@ -551,16 +555,31 @@ export function PluginsPage() {
           ))}
         </div>
       ) : visiblePlugins.length === 0 ? (
-        <EmptyState
-          title={t('plugin_management.no_plugins')}
-          description={t('plugin_management.no_plugins_desc')}
-          action={
-            <Button variant="secondary" size="sm" onClick={loadPlugins} disabled={!connected}>
-              <IconRefreshCw size={16} />
-              {t('plugin_management.refresh')}
-            </Button>
-          }
-        />
+        filter.trim() && (data?.plugins.length ?? 0) > 0 ? (
+          <EmptyState
+            title={t('plugin_management.no_matches')}
+            description={t('plugin_management.no_matches_desc')}
+            action={
+              <Button variant="secondary" size="sm" onClick={() => setFilter('')}>
+                {t('plugin_management.clear_search')}
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            title={t('plugin_management.no_plugins')}
+            description={t('plugin_management.no_plugins_desc')}
+            action={
+              // Navigation only: installing always goes through the store's trust gate.
+              <Link className="btn btn-secondary btn-sm" to="/plugin-store">
+                <span>
+                  <IconSidebarStore size={16} aria-hidden="true" />
+                  {t('plugin_management.browse_store')}
+                </span>
+              </Link>
+            }
+          />
+        )
       ) : (
         <div className={styles.pluginList}>
           {visiblePlugins.map((plugin) => {
@@ -656,7 +675,7 @@ export function PluginsPage() {
                     {t('plugin_management.edit_config')}
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="danger-outline"
                     size="sm"
                     onClick={() => handleDeletePlugin(plugin)}
                     disabled={!connected || actionBusy}

@@ -119,23 +119,25 @@ describe('ageParts', () => {
 });
 
 describe('formatClock', () => {
-  test('uses a 24-hour clock', () => {
-    const label = formatClock(new Date(2026, 0, 1, 15, 4).getTime(), 'en-US');
-    expect(label).toBe('15:04');
+  test("follows the locale's hour cycle, like every other timestamp in the app", () => {
+    const at = new Date(2026, 0, 1, 15, 4).getTime();
+    expect(formatClock(at, 'en-US')).toBe('3:04 PM');
+    expect(formatClock(at, 'zh-CN')).toBe('15:04');
+    expect(formatClock(at, 'ru')).toBe('15:04');
   });
 });
 
 describe('formatInstant', () => {
   test('shows only the clock for instants later today', () => {
     const now = new Date(2026, 0, 1, 8, 0).getTime();
-    expect(formatInstant(new Date(2026, 0, 1, 18, 5).getTime(), now, 'en-US')).toBe('18:05');
+    expect(formatInstant(new Date(2026, 0, 1, 18, 5).getTime(), now, 'en-US')).toBe('6:05 PM');
   });
 
   test('adds the date for instants on another day', () => {
     const now = new Date(2026, 0, 1, 22, 0).getTime();
     const label = formatInstant(new Date(2026, 0, 2, 9, 30).getTime(), now, 'en-US');
-    expect(label).toContain('01/02');
-    expect(label).toContain('09:30');
+    expect(label).toContain('Jan 2');
+    expect(label).toContain('9:30 AM');
   });
 });
 

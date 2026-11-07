@@ -116,9 +116,11 @@ describe('Usage production states', () => {
     expect(markup).toContain('data-usage-state="empty"');
     expect(markup.match(/<data value="0"/g)).toHaveLength(4);
     expect(markup).toContain('Collection is on. No requests have been recorded yet.');
-    expect(markup).toContain('resets on restart');
+    expect(markup).toContain('since the backend last restarted');
     expect(markup).toContain('not backfilled');
-    expect(markup).toContain('does not report the collection start time');
+    expect(markup).toContain('does not report when collection started');
+    // Totals name their scope: since the last restart, not all time.
+    expect(markup).toContain('<dt>Requests since restart</dt>');
     expect(markup).not.toContain('since 07:12');
   });
 
@@ -220,7 +222,9 @@ describe('Usage dated evidence', () => {
         },
       },
     });
-    expect(markup.match(/No dated totals reported/g)).toHaveLength(2);
+    // Both daily series are unreported: one combined notice, never two duplicate panels.
+    expect(markup.match(/data-daily-history="unreported"/g)).toHaveLength(1);
+    expect(markup).toContain('reported no dated request or token totals');
     expect(markup).not.toContain('<td>999</td>');
     expect(markup).not.toContain('<td>555</td>');
     expect(markup).not.toContain('<td>777</td>');
@@ -239,7 +243,10 @@ describe('Usage dated evidence', () => {
     });
     expect(markup.match(/No dated totals reported/g)).toHaveLength(1);
     expect(markup).toContain('<strong>8</strong>');
-    expect(markup).toContain('<strong>Not reported</strong>');
+    expect(markup.match(/data-daily-history="unreported"/g)).toHaveLength(1);
+    const tokens = markup.slice(markup.indexOf('id="usage-daily-title"'));
+    expect(tokens.slice(0, tokens.indexOf('</section>'))).toContain('Tokens by day');
+    expect(tokens.slice(0, tokens.indexOf('</section>'))).toContain('>Not reported</span>');
     expect(markup.match(/<summary>View data table<\/summary>/g)).toHaveLength(1);
     expect(markup).not.toContain('<strong>0</strong>');
   });

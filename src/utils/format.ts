@@ -124,8 +124,24 @@ export function formatDateValue(value: unknown, locale?: string): string {
   return locale ? date.toLocaleDateString(locale) : date.toLocaleDateString();
 }
 
+/**
+ * The app's one human timestamp format for metadata ("Nov 6, 2026, 8:32 PM" in en).
+ * Pair it with `isoTitle` so the exact instant stays available on hover. Raw log lines and
+ * exports keep their original text.
+ */
 export function formatDateTimeValue(value: unknown, locale?: string): string {
   const date = parseDateValue(value);
   if (!date) return '';
-  return locale ? date.toLocaleString(locale) : date.toLocaleString();
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+/** Exact ISO 8601 instant for a `title` or `dateTime` attribute; empty when unparseable. */
+export function isoTitle(value: unknown): string {
+  return parseDateValue(value)?.toISOString() ?? '';
 }

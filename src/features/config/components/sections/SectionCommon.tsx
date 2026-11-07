@@ -47,7 +47,7 @@ export function SectionCommon({
 
         <ApiKeysField values={values} disabled={disabled} onChange={onChange} />
 
-        <FieldGrid>
+        <FieldGrid pairs>
           <DebugToggle values={values} disabled={disabled} onChange={onChange} />
           <LoggingToFileToggle values={values} disabled={disabled} onChange={onChange} />
           <QuotaSwitchProjectToggle values={values} disabled={disabled} onChange={onChange} />

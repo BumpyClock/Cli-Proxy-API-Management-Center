@@ -48,3 +48,61 @@
     outline-offset: 2px;
   }
 }
+
+// Disclosure summary: one affordance for every <details> toggle. A chevron that turns when
+// open, a hover tint, a focus ring and a 32px (44px on phones and touch screens) target.
+// Use on the `summary` element; the parent <details> keeps native keyboard behaviour.
+@mixin disclosure-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 8px 4px 4px;
+  margin-left: -4px;
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: '';
+    flex: none;
+    width: 7px;
+    height: 7px;
+    margin: 0 3px 0 2px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+  }
+
+  &:is([open] > *)::before {
+    transform: rotate(45deg);
+  }
+
+  &:hover {
+    background: var(--bg-hover, var(--bg-secondary));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      transition: none;
+    }
+  }
+}

@@ -129,7 +129,7 @@ export function ExcludedModelsPanel({
         <input
           ref={inputRef}
           type="text"
-          className={styles.search}
+          className={styles.searchField}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);

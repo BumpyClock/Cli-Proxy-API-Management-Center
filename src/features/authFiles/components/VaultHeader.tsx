@@ -1,9 +1,20 @@
+import { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { IconRefreshCw, IconUpload } from '@/components/ui/icons';
+import { IconUpload } from '@/components/ui/icons';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import styles from './VaultHeader.module.scss';
+
+const PHONE_QUERY = '(max-width: 768px)';
+const subscribePhone = (onChange: () => void) => {
+  const media = window.matchMedia(PHONE_QUERY);
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
+};
+const readPhone = () => window.matchMedia(PHONE_QUERY).matches;
+const readPhoneOnServer = () => false;
 
 export type VaultHeaderProps = {
   totalCount: number;
@@ -30,6 +41,9 @@ export function VaultHeader(props: VaultHeaderProps) {
     onRefresh,
   } = props;
   const { t } = useTranslation();
+  // Phones already show the top bar's refresh, which runs this page's refresh; dropping the
+  // duplicate lets Upload share the title row.
+  const isPhone = useSyncExternalStore(subscribePhone, readPhone, readPhoneOnServer);
 
   return (
     <PageHeader
@@ -59,16 +73,15 @@ export function VaultHeader(props: VaultHeaderProps) {
       }
       actions={
         <div className={styles.actions}>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onRefresh}
-            disabled={loading || refreshing}
-          >
-            <IconRefreshCw size={14} className={refreshing ? styles.spinning : undefined} />
-            {t('common.refresh')}
-          </Button>
-          <Button size="sm" onClick={onUpload} disabled={disableControls || uploading}>
+          {!isPhone && (
+            <RefreshButton
+              onClick={onRefresh}
+              label={t('auth_files.refresh_credentials')}
+              refreshing={refreshing}
+              disabled={loading}
+            />
+          )}
+          <Button onClick={onUpload} disabled={disableControls || uploading}>
             {uploading ? <LoadingSpinner size={14} /> : <IconUpload size={15} />}
             {t('auth_files.upload_button')}
           </Button>

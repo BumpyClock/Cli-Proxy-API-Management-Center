@@ -41,7 +41,7 @@ export function OAuthAliasMappingRow({
           label={t('oauth_model_alias.alias_name_placeholder')}
           wrapperClassName={styles.modelField}
           className={styles.modelInput}
-          placeholder={t('oauth_model_alias.alias_name_placeholder')}
+          placeholder={t('oauth_model_alias.source_model_input_placeholder')}
           value={entry.name}
           onChange={(value) => onChange('name', value)}
           disabled={disabled}
@@ -55,7 +55,7 @@ export function OAuthAliasMappingRow({
           <input
             id={`${id}-alias`}
             className={`input ${styles.modelInput}`}
-            placeholder={t('oauth_model_alias.alias_placeholder')}
+            placeholder={t('oauth_model_alias.alias_input_placeholder')}
             value={entry.alias}
             onChange={(event) => onChange('alias', event.target.value)}
             disabled={disabled}
@@ -68,21 +68,24 @@ export function OAuthAliasMappingRow({
         <ToggleSwitch
           label={t('oauth_model_alias.alias_fork_label')}
           labelPosition="left"
+          labelVariant="field"
           checked={Boolean(entry.fork)}
           onChange={(value) => onChange('fork', value)}
           disabled={disabled}
         />
-        <Button
-          variant="ghost"
-          size="sm"
-          className={styles.removeMapping}
-          onClick={onRemove}
-          disabled={disabled || !canRemove}
-          title={t('oauth_model_alias.remove_mapping', { number: index + 1 })}
-          aria-label={t('oauth_model_alias.remove_mapping', { number: index + 1 })}
-        >
-          <IconTrash2 size={15} aria-hidden="true" />
-        </Button>
+        {canRemove && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className={styles.removeMapping}
+            onClick={onRemove}
+            disabled={disabled}
+            title={t('oauth_model_alias.remove_mapping', { number: index + 1 })}
+            aria-label={t('oauth_model_alias.remove_mapping', { number: index + 1 })}
+          >
+            <IconTrash2 size={15} aria-hidden="true" />
+          </Button>
+        )}
       </div>
     </div>
   );

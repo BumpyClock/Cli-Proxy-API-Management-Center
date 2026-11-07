@@ -14,25 +14,36 @@ function rules(css: string, selector: string) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return [...css.matchAll(new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\{([^}]+)}`, 'g'))].map(
     ([, body]) =>
-      Object.fromEntries([...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]]))
+      Object.fromEntries(
+        [...body.matchAll(/([\w-]+):\s*([^;]+);/g)].map((m) => [
+          m[1],
+          // Custom properties keep source whitespace; compare the value, not the formatting.
+          m[2].replace(/\s+/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')'),
+        ])
+      )
   );
 }
 
 describe('OAuth editor shared shell styles', () => {
-  test('keeps redesigned desktop and narrow spacing, card shape and focus color', () => {
+  test('inherits the shell page gutter, card shape and focus color', () => {
+    // The layout's .main-content owns page gutters; editors must not add a second, wider inset.
     expect(rules(shared, '.pageContent')).toEqual([
       {
         display: 'flex',
         'flex-direction': 'column',
         gap: '16px',
-        padding: '32px',
         'min-width': '0',
         width: '100%',
-        'box-sizing': 'border-box',
+        // Room for the floating Back/Save bar (OAuthEditorActions): height, offset, clearance.
+        '--oauth-editor-bar-room':
+          'calc(var(--oauth-editor-actions-height, 0px) + 28px + env(safe-area-inset-bottom, 0px))',
+        'padding-bottom': 'var(--oauth-editor-bar-room)',
       },
-      { padding: '16px' },
     ]);
-    expect(shared).toContain('@media (max-width: 768px)');
+    // An open model list gets its 200px + offset of scroll room below the last row.
+    expect(rules(shared, '.pageContent:has(:global(.autocomplete-dropdown))')).toEqual([
+      { 'padding-bottom': 'calc(var(--oauth-editor-bar-room) + 216px)' },
+    ]);
     expect(rules(shared, '.pageContent > :global(.card)')).toEqual([
       { 'box-shadow': 'none', 'border-radius': '8px' },
     ]);
@@ -61,11 +72,14 @@ describe('OAuth editor shared shell styles', () => {
       'font-weight': '600',
       margin: '0 0 4px',
     });
-    expect(rules(shared, '.editorStepNumber')[0]).toMatchObject({ 'border-radius': '6px' });
-    expect(rules(shared, '.editorStepNumber')[0].font).toStartWith('12px ');
-    expect(rules(shared, '.description')[0]['line-height']).toBe('1.65');
-    expect(rules(shared, '.sectionTitle')[0]['font-size']).toBe('15px');
-    expect(rules(shared, '.stepNumber')[0]['font-size']).toBe('11px');
+    // Both steps share one badge (12px metadata floor) and one 14px/600 title size.
+    expect(rules(shared, '.editorStepNumber')).toEqual([]);
+    expect(rules(shared, '.stepNumber')[0]['font-size']).toBe('12px');
+    expect(rules(shared, '.stepNumber')[0].color).toBe('var(--text-secondary)');
+    expect(rules(shared, '.sectionTitle')[0]['font-size']).toBe('14px');
+    expect(rules(shared, '.sectionTitle')[0]['font-weight']).toBe('600');
+    // The provider step dropped its intro paragraph.
+    expect(rules(shared, '.description')).toEqual([]);
   });
 
   test('both pages import one shell owner and keep only unique body rules locally', () => {
@@ -78,7 +92,7 @@ describe('OAuth editor shared shell styles', () => {
       'editorHeader',
       'sectionHeading',
       'headingCopy',
-      'editorStepNumber',
+      'stepNumber',
       'editorSectionTitle',
     ];
     for (const page of pages) {
@@ -96,7 +110,8 @@ describe('OAuth editor shared shell styles', () => {
     const aliases = compileModule('src/pages/AuthFilesOAuthModelAliasEditPage.module.scss');
     expect(rules(excluded, '.editorBody')).toEqual([{ padding: '16px' }]);
     expect(rules(excluded, '.countBadge')[0].padding).toBe('3px 8px');
-    expect(rules(excluded, '.emptyModels')[0].padding).toBe('32px 16px');
+    // No model-section placeholder: the provider requirement lives in step 01 only.
+    expect(rules(excluded, '.emptyModels')).toEqual([]);
     expect(rules(aliases, '.catalogHint')[0].padding).toBe('12px 16px');
     expect(rules(aliases, '.mappingsBody')[0].padding).toBe('12px');
   });

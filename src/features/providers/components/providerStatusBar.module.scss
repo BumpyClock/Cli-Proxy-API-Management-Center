@@ -120,11 +120,11 @@
 }
 
 .tooltipSuccess {
-  color: var(--success-color, #22c55e);
+  color: var(--success-color);
 }
 
 .tooltipFailure {
-  color: var(--danger-color, #ef4444);
+  color: var(--danger-color);
 }
 
 .tooltipRate {
@@ -148,13 +148,13 @@
 }
 
 .statusRateHigh {
-  color: var(--success-badge-text, #065f46);
-  background: var(--success-badge-bg, #d1fae5);
+  color: var(--success-badge-text);
+  background: var(--success-badge-bg);
 }
 
 .statusRateMedium {
-  color: var(--warning-text, #92400e);
-  background: var(--warning-bg, #fef3c7);
+  color: var(--warning-text);
+  background: var(--warning-bg);
 }
 
 .statusRateLow {

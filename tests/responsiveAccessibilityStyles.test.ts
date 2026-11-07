@@ -43,11 +43,12 @@ describe('responsive accessibility styles', () => {
   test('reserves action content and cell padding without expanding the fixed table', () => {
     const page = moduleCss('src/features/authFiles/AuthFilesPage.module.scss');
     const card = moduleCss('src/features/authFiles/components/AuthFileCard.module.scss');
-    expect(declarations(page, '.table th:last-child')[0].width).toBe('94px');
-    expect(declarations(page, '.table th:nth-child(2)')[0].width).toBe('calc(29% - 94px)');
-    expect(declarations(card, '.rowActions')[0]['min-width']).toBe('70px');
-    expect(declarations(card, '.row > td')[0].padding).toBe('16px 12px');
-    expect(94 - 2 * 12).toBeGreaterThanOrEqual(70);
+    expect(declarations(page, '.table th:last-child')[0].width).toBe('124px');
+    expect(declarations(page, '.table th:nth-child(2)')[0].width).toBe('calc(30% - 124px)');
+    expect(declarations(card, '.row > td')[0].padding).toBe('12px');
+    // The labelled trigger (measured 85px en, 99px ru at 1440) fits the column content box.
+    expect(declarations(card, '.actionsTrigger')[0]['white-space']).toBe('nowrap');
+    expect(124 - 2 * 12).toBeGreaterThanOrEqual(99);
   });
 
   test('keeps narrow table headings visually hidden rather than display none', () => {
@@ -68,7 +69,7 @@ describe('responsive accessibility styles', () => {
 
   test('enlarges row actions and header controls for coarse pointers at all widths', () => {
     const card = moduleCss('src/features/authFiles/components/AuthFileCard.module.scss');
-    for (const selector of ['.actions :global(.btn)', '.rowActions summary']) {
+    for (const selector of ['.actions :global(.btn)', '.actionsTrigger']) {
       expect(declarations(card, selector, '(pointer: coarse)')[0]).toMatchObject({
         'min-width': '44px',
         'min-height': '44px',

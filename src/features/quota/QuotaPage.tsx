@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatDateTimeValue } from '@/utils/format';
 import { authFilesApi } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -390,7 +391,7 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
             ? t('redesign.quota.stale')
             : checkResult &&
               t('redesign.quota.checked', {
-                time: new Date(checkResult.checkedAt).toLocaleTimeString(i18n.language),
+                time: formatDateTimeValue(checkResult.checkedAt, i18n.language),
                 ...checkResult,
               })}
       </p>
@@ -403,14 +404,13 @@ function QuotaPageContent({ sessionGeneration }: { sessionGeneration: number }) 
               types={TAB_IDS}
               counts={tabCounts}
               active={tab}
-              variant="pills"
               resolvedTheme={resolvedTheme}
               onChange={handleTabChange}
             />
           </div>
 
           <div className={styles.toolbar}>
-            <div className={styles.search}>
+            <div className={styles.searchField}>
               <IconSearch size={16} className={styles.searchIcon} aria-hidden="true" />
               <input
                 ref={searchInputRef}

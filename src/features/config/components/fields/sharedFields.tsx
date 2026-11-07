@@ -5,10 +5,8 @@
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import type { VisualConfigValues } from '@/types/visualConfig';
-import { SPONSORS } from '../../sponsors';
 import { ApiKeysCardEditor } from '../blocks/ApiKeysCardEditor';
 import { FieldAnchor, FieldGroup, ToggleRow } from './FieldPrimitives';
-import fieldStyles from './Field.module.scss';
 
 export type SharedFieldProps = {
   values: VisualConfigValues;
@@ -22,7 +20,7 @@ export function HostField({ values, disabled, onChange }: SharedFieldProps) {
     <FieldAnchor fieldId="host">
       <Input
         label={t('config_management.visual.sections.server.host')}
-        placeholder="0.0.0.0"
+        placeholder={t('config_management.visual.sections.server.host_placeholder')}
         value={values.host}
         onChange={(e) => onChange({ host: e.target.value })}
         disabled={disabled}
@@ -55,8 +53,7 @@ export function PortField({
 
 export function ProxyUrlField({ values, disabled, onChange }: SharedFieldProps) {
   const { t } = useTranslation();
-  // 代理 URL 较长，字段跨两列；标签下方挂赞助跳转行（数据见 sponsors.ts，空则不渲染）。
-  const sponsor = SPONSORS[0];
+  // Proxy URLs are long, so the field spans both grid columns.
   return (
     <FieldAnchor fieldId="proxyUrl" wide>
       <Input
@@ -66,22 +63,6 @@ export function ProxyUrlField({ values, disabled, onChange }: SharedFieldProps) 
         onChange={(e) => onChange({ proxyUrl: e.target.value })}
         disabled={disabled}
       />
-      {sponsor ? (
-        <p className={fieldStyles.fieldSponsorHint}>
-          {t('config_management.visual.sections.network.proxy_url_sponsor_hint')}{' '}
-          <a
-            className={fieldStyles.fieldSponsorLink}
-            href={sponsor.url}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-          >
-            {sponsor.logo ? (
-              <img className={fieldStyles.fieldSponsorLogo} src={sponsor.logo} alt="" />
-            ) : null}
-            {sponsor.name}
-          </a>
-        </p>
-      ) : null}
     </FieldAnchor>
   );
 }

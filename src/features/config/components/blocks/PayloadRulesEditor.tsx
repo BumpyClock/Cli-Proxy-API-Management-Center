@@ -14,7 +14,7 @@ import {
   getPayloadParamValidationError,
   VISUAL_CONFIG_PAYLOAD_VALUE_TYPE_OPTIONS,
 } from '@/hooks/useVisualConfig';
-import { FieldShell } from '../fields/FieldPrimitives';
+import { FieldShell, YamlKey } from '../fields/FieldPrimitives';
 import { ExpandableInput } from './ExpandableInput';
 import { StringListEditor } from './StringListEditor';
 import { buildProtocolOptions, getValidationMessage } from './shared';
@@ -465,7 +465,12 @@ export const PayloadRulesEditor = memo(function PayloadRulesEditor({
                     <div className={styles.payloadModelAdvanced}>
                       <div className={styles.payloadAdvancedGrid}>
                         <FieldShell
-                          label={t('config_management.visual.payload_rules.from_protocol')}
+                          label={
+                            <>
+                              {t('config_management.visual.payload_rules.from_protocol')}
+                              <YamlKey name="from-protocol" />
+                            </>
+                          }
                         >
                           <Select
                             value={model.fromProtocol ?? ''}
@@ -537,6 +542,7 @@ export const PayloadRulesEditor = memo(function PayloadRulesEditor({
                         <div key={conditionKey} className={styles.blockStack}>
                           <div className={styles.blockLabel}>
                             {t(`config_management.visual.payload_rules.${conditionKey}`)}
+                            <YamlKey name={conditionKey === 'match' ? 'match' : 'not-match'} />
                           </div>
                           {(model[conditionKey] ?? []).map((condition, conditionIndex) => {
                             const conditionError = getValidationMessage(
@@ -641,6 +647,7 @@ export const PayloadRulesEditor = memo(function PayloadRulesEditor({
                         <div className={styles.blockStack}>
                           <div className={styles.blockLabel}>
                             {t('config_management.visual.payload_rules.exist')}
+                            <YamlKey name="exist" />
                           </div>
                           <StringListEditor
                             value={model.exist ?? []}
@@ -655,6 +662,7 @@ export const PayloadRulesEditor = memo(function PayloadRulesEditor({
                         <div className={styles.blockStack}>
                           <div className={styles.blockLabel}>
                             {t('config_management.visual.payload_rules.notExist')}
+                            <YamlKey name="not-exist" />
                           </div>
                           <StringListEditor
                             value={model.notExist ?? []}

@@ -8,6 +8,10 @@ interface ToggleSwitchProps {
   ariaLabel?: string;
   disabled?: boolean;
   labelPosition?: 'left' | 'right';
+  /** `field` matches neighbouring form-field labels (13px, medium, secondary) inside forms. */
+  labelVariant?: 'emphasis' | 'field';
+  /** Visible tooltip, e.g. naming the item the switch enables. */
+  title?: string;
 }
 
 export function ToggleSwitch({
@@ -17,6 +21,8 @@ export function ToggleSwitch({
   ariaLabel,
   disabled = false,
   labelPosition = 'right',
+  labelVariant = 'emphasis',
+  title,
 }: ToggleSwitchProps) {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.checked);
@@ -25,15 +31,17 @@ export function ToggleSwitch({
   const className = [
     styles.root,
     labelPosition === 'left' ? styles.labelLeft : '',
+    labelVariant === 'field' ? styles.fieldLabel : '',
     disabled ? styles.disabled : '',
   ]
     .filter(Boolean)
     .join(' ');
 
   return (
-    <label className={className}>
+    <label className={className} title={title}>
       <input
         type="checkbox"
+        role="switch"
         checked={checked}
         onChange={handleChange}
         disabled={disabled}

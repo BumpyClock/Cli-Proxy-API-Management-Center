@@ -1,0 +1,111 @@
+{
+  "round": 4,
+  "scores": {
+    "design_coherence": 8.6,
+    "typography": 8.1,
+    "cleanliness": 8.7,
+    "visual_design": 8.3,
+    "ease_of_use": 8.0,
+    "information_hierarchy": 8.0,
+    "spacing_alignment": 8.4,
+    "navigation_wayfinding": 8.7,
+    "responsive_mobile": 8.0,
+    "accessibility_visible": 7.9,
+    "data_visualization": 7.4,
+    "interaction_affordance": 8.1
+  },
+  "overall": 8.18,
+  "metric_evidence": {
+    "design_coherence": "Observed across all 34 captures. Shared navigation, restrained cyan/blue accents, borders, buttons and dark-mode surfaces form a coherent professional system. Remaining inconsistency includes Claude versus Anthropic naming across Providers and OAuth Login, plus duplicated OAuth-rule navigation on Auth Files.",
+    "typography": "Page titles, section headings and numeric summaries are clearly differentiated. Monospace identifiers suit technical content. Logs, quota legends and secondary metadata use notably small text; the long quota legend strings require more reading effort than the surrounding summaries.",
+    "cleanliness": "Most screens are calm and task-focused, without decorative distractions. Providers and Quick Start remain appropriately sparse. Quota repeats account identity and percentage across the summary list, boxed legends and breakdown; Config adds several nested border layers.",
+    "visual_design": "Neutral surfaces, controlled accents and consistent iconography fit developer operations. Dark mode preserves the same visual hierarchy. Quota's diagonal hatching, dashed lines, grid and boxed legends create a visibly busier treatment than the otherwise restrained interface.",
+    "ease_of_use": "Visible searches, filters, contextual add actions and Quick Start links support direct task entry. Remaining friction includes the unlabeled enabled switches on mobile Auth Files and the mobile alias editor placing substantial setup content before the actual mapping fields. Interaction success was not exercised.",
+    "information_hierarchy": "Desktop headings, status summaries and primary actions are generally well ordered. Usage separates totals from detailed models effectively. On mobile OAuth Model Aliases, the required alias input only begins at the bottom of the viewport after introductory and provider-selection content. Mobile Plugin Store gives two warning panels substantial prominence before browsing controls.",
+    "spacing_alignment": "Desktop tables, card edges and form columns align consistently. Mobile controls generally retain comfortable separation. Quota leaves a comparatively large gap between its collapsed filter and view controls, while mobile alias setup consumes considerable vertical space before editable content.",
+    "navigation_wayfinding": "Grouped desktop navigation, active indicators, breadcrumbs and mobile parent links clearly establish location. Remaining rough edges are duplicated OAuth-rule entry points on Auth Files and inconsistent Claude/Anthropic naming between configuration and login surfaces. The mobile navigation drawer was not shown.",
+    "responsive_mobile": "Tables become readable cards, provider navigation becomes a select, and action buttons generally expand appropriately. No page-edge overflow is visible; evidence.json also reports none. Remaining issues include truncated dashboard quota legends, unlabeled credential switches and long setup stacks before alias editing. Content below the viewport was not assessed.",
+    "accessibility_visible": "Strong primary text, visible form labels, textual statuses and the captured login focus ring are positives. Small chart labels and log text reduce comfortable readability. Mobile credential switches lack an adjacent visible Enabled label, and global utility controls are icon-only. Contrast ratios, hit areas and accessible names were not measured.",
+    "data_visualization": "Quota shows units, timezone, reset timing, percentages and an explicit explanation for overlapping series. Snapshot and projection language avoids presenting the plot as live consumption. Remaining weaknesses are visually competing hatching and gridlines, lengthy repeated legends and small labels. Missing daily usage data is explicitly explained and is not scored as a production defect.",
+    "interaction_affordance": "Buttons, segmented controls, selects, disclosure arrows and disabled Save states generally communicate action and state well. Provider-specific add labels are especially clear. Mobile Auth Files switches lose the desktop Enabled heading, row menus remain generically labeled Actions, and Remember password does not match the Management Key field."
+  },
+  "top_fixes": [
+    {
+      "rank": 1,
+      "severity": "medium",
+      "screen": "dashboard-1440.png, dashboard-dark-1440.png, quota-1440.png, quota-dark-1440.png",
+      "evidence": "Observed readability issue. The quota plots combine diagonal hatching, horizontal gridlines, dashed series and a reset marker. Four long boxed legend entries accompany a single overlapping grey line. Quota Management also repeats those account identities and percentages in an adjacent list.",
+      "user_impact": "Operators must separate several competing visual encodings to read a simple current allowance and reset projection.",
+      "concrete_fix": "Reduce hatch prominence, make the plotted allowance and reset marker dominant, and use compact numbered legend entries. Put full account names and percentages in one authoritative list. Preserve the overlap explanation and explicit projection semantics."
+    },
+    {
+      "rank": 2,
+      "severity": "medium",
+      "screen": "auth-files-390.png",
+      "evidence": "Observed affordance gap. Each credential card has a prominent switch at its upper-right edge, but the desktop Enabled column label is absent. Requests and Quota retain explicit labels.",
+      "user_impact": "A mobile operator must infer whether the switch means enabled, healthy or selected before changing a credential's availability.",
+      "concrete_fix": "Add a compact visible Enabled label beside each switch, or pair it with explicit Enabled/Disabled state text. Preserve separation from the selection checkbox."
+    },
+    {
+      "rank": 3,
+      "severity": "medium",
+      "screen": "oauth-model-alias-390.png, oauth-excluded-390.png",
+      "evidence": "Observed hierarchy issue. The alias screen stacks description, disabled Save, prerequisite text, a tall provider card, a second section introduction and another prerequisite message before its mapping fields. The required alias field only begins at the viewport's bottom.",
+      "user_impact": "The mobile editor gives setup explanation more initial space than the mapping task. This does not establish that below-fold content is inaccessible.",
+      "concrete_fix": "Compact the provider section and consolidate prerequisite messages near its select. Keep Add alias with the mapping controls. Preserve the numbered workflow without repeating the same prerequisite in multiple regions."
+    },
+    {
+      "rank": 4,
+      "severity": "medium",
+      "screen": "logs-1440.png, logs-390.png, quota-1440.png, quota-dark-1440.png",
+      "evidence": "Observed typography issue. Log records, quota reset annotations and legend metadata are substantially smaller than ordinary form and card text. Dark quota labels are additionally muted against a textured plotting area.",
+      "user_impact": "Operators reading timestamps, model identifiers and reset details face a denser, less comfortable reading surface than elsewhere in the product.",
+      "concrete_fix": "Increase diagnostic and chart label sizes modestly, preserve monospace alignment, and strengthen secondary-text contrast. Recover space by shortening repeated legend content rather than shrinking text."
+    },
+    {
+      "rank": 5,
+      "severity": "low",
+      "screen": "login-1440.png, login-390.png",
+      "evidence": "Observed terminology inconsistency. The credential input is labeled Management Key, while its persistence checkbox says Remember password.",
+      "user_impact": "The login screen uses two credential terms for the same value, weakening clarity about what is stored.",
+      "concrete_fix": "Rename the checkbox to Remember management key. Preserve the explicit browser-storage explanation."
+    },
+    {
+      "rank": 6,
+      "severity": "low",
+      "screen": "auth-files-1440.png, providers-1440.png, oauth-1440.png",
+      "evidence": "Observed consistency issue. Auth Files offers OAuth Model Disablement and OAuth Model Aliases both as top tabs and as lower rule links. Providers uses Claude while OAuth Login leads with Anthropic OAuth.",
+      "user_impact": "Operators encounter redundant destinations and must reconcile provider naming between related workflows.",
+      "concrete_fix": "Use one primary navigation pattern for OAuth rules, retaining lower summaries only when they add distinct information. Use a consistent Claude/Anthropic naming convention across related screens."
+    },
+    {
+      "rank": 7,
+      "severity": "low",
+      "screen": "plugin-store-390.png",
+      "evidence": "Observed hierarchy tradeoff. The trust notice and disabled-plugin notice occupy roughly the upper third of the viewport before status, search, refresh and filtering controls. Their content is relevant; the empty registry is fixture coverage, not a demonstrated defect.",
+      "user_impact": "Mobile browsing controls compete with two large explanatory panels.",
+      "concrete_fix": "Keep the trust warning prominent but tighten its wording. Present the global-disabled state as a compact actionable status row, without concealing either consequence."
+    }
+  ],
+  "strengths": [
+    "All 34 supplied screenshots were inspected directly. Desktop and mobile layouts show a coherent, restrained developer-operations identity.",
+    "Desktop navigation has meaningful groups, strong active states and useful breadcrumbs. Mobile subpages retain a visible parent destination.",
+    "Providers, Auth Files, Usage and Logs adapt their dense desktop content into readable mobile structures rather than retaining compressed desktop tables.",
+    "Quick Start provides concrete task sequencing and direct destinations without unnecessary onboarding decoration.",
+    "Operational summaries distinguish collection state, time scope, snapshot freshness, skipped accounts and unavailable data.",
+    "Dark mode preserves the established layout and action hierarchy without introducing a separate visual language.",
+    "Login explains credential persistence plainly. Plugin warnings name consequential backend access and provide a configuration destination."
+  ],
+  "unverified": [
+    "Assessment covers frozen viewport screenshots only, not full-page content or exercised workflows.",
+    "No browser state was changed, no captures were run and no files were edited.",
+    "Keyboard operation, screen-reader output, accessible names, focus order, target hit areas and measured contrast compliance were not verified.",
+    "Search, filtering, sorting, menus, disclosures, mobile navigation, toggles, saving and destructive-action safeguards were not exercised.",
+    "Loading, request failures, validation, recovery, unsaved-change protection and completion feedback were not demonstrated by these captures.",
+    "Dark mode was inspected only for desktop Dashboard, Providers, Quota and Config. Mobile dark mode and other dark routes remain unverified.",
+    "Quota and plugin fixture coverage is partial. Empty plugin results, skipped quota accounts, identical quota series and synthetic metrics are not treated as production defects.",
+    "Chart hover behavior, expanded data tables, non-overlapping series and populated daily usage charts were not inspected.",
+    "Reduced-motion capture facts do not verify animation behavior or reduced-motion implementation.",
+    "Mobbin references were not inspected because authentication was blocked. Comparison uses professional dashboard craft principles, not claimed usability studies or external reference inspection."
+  ]
+}

@@ -1,0 +1,43 @@
+The round-2 fix pass is finished and integrated. `bun run verify` passes locally and in a Boat Linux sandbox on the final tree: 1326 tests pass, 0 fail, lint has 0 problems, and the single-file build works. Nothing is committed, and nothing under `design-review/**` was changed. Three parallel agents did their own areas and all have finished; I owned the shared parts, the charts, Dashboard, Quota and Usage, and put the pieces together.
+
+**Priority checks:**
+1. **Empty request chart.** It was about 440px tall because the legend, plot, readout, hint and table toggle all still rendered. Now the window shows one line instead: "No requests in this window · 17:40–21:00 · 20 ten-minute buckets, all zero", plus the "View data table" toggle. The card measures 222px, with no plot lines, legend buttons or markers.
+   - Overlapping quota accounts are drawn as one grey line, with the note "1–4 overlap, drawn as one grey line". Each account still appears in the legend with its exact value.
+   - The forecast range is shaded and labeled "Projection", and the reset time is labeled on the plot, for example "Reset Nov 9, 9:25 PM".
+   - **Behaviour change:** clicking a legend item now shows only that account. Later clicks add or remove one account, and "Show all series" restores the rest.
+   - On phones the legend is one row per account, so names aren't cut off. The time axis sits at 828px, inside the 844px screen.
+2. **Duplicate notices.** Usage shows one "Daily requests and tokens · Not reported" notice, placed below Top Models. The Dashboard quota card now has one short status line, and the method text sits behind a "How to read this chart" toggle.
+3. **Request counts.** I traced each number in the code; they measure different things, so only the labels changed.
+   - Dashboard "Requests" counts the credential files and provider keys configured now, over the last 3h 20m.
+   - "Usage statistics: N in the same window" is now a neutral note, not amber. It explains the difference and links to Usage.
+   - The Usage totals now read "Requests since restart" and "Tokens since restart".
+4. **Controls.** There is one outlined secondary button style. Every page-header button now measures 36px; before this, Refresh was 34px and the others 35.5px. Row and toolbar delete actions, including Clear logs, use a red outline; confirm dialogs keep the solid red. Every Quota phone control I checked is at least 44px. The Providers sort direction is now a labeled "A–Z" toggle, 66×44 on phones.
+5. **Phone layout.** On the OAuth editors the provider search comes first, and the shortcut buttons sit under "Common providers", collapsed on phones. The chosen provider stays visible. Auth Files uses a "Section" select on phones. A single header button now sits beside the page title. The top bar uses short names for the OAuth editors ("Disabled models", "Model aliases").
+6. **Dense tables.** Auth Files rows are 67px instead of about 128px. With no traffic the Requests cell reads "No recent requests", and every row has a labeled "Actions" menu at both widths. The Providers status shows the switch, one health word, and a request count. Logs has its own latency column, labeled buttons on phones, and a Clear logs confirmation that says what gets deleted.
+7. **Copy and navigation.** "Management Center Info" is now "System". Page titles match the navigation in all four languages, including a Russian mismatch I fixed. Metadata timestamps use one format, with the exact ISO time on hover. Both sponsor blocks keep their links but are labeled "Sponsored": BestProxy moved away from the Proxy URL field, and the APIKEY.FUN button is now a secondary button. The user notes are updated in `docs/workspace-redesign.md`.
+
+**Measured contrast** (my script, plus the agents' input measurements):
+
+| Pair | White theme | Dark theme |
+|---|---|---|
+| Secondary text | 5.98:1 | 6.89:1 |
+| Placeholders | 5.09:1 | 4.95:1 |
+| Field borders | 3.19:1 | 3.57:1 (was 2.94:1) |
+| Config inputs | 3.19:1 | 3.81:1 (was 1.33:1) |
+| Clear logs red | 5.71:1 | not measured |
+
+**How I checked it:**
+- **Tests.** I added a `tests/round2*.test.ts` suite for each area and updated the older tests whose expected behaviour changed on purpose.
+- **Browser.** I used a temporary copy of your capture script with the same local fixtures, writing only to `/tmp/cpamc/scratch/`. My 18 checks all pass: chart keys, legend isolation by click and keyboard, the empty-chart data table opened with Enter, toggles, phone tap sizes, and the short top-bar names. The agents' checks also pass: the Actions menu keys, the selects, the providers toggle, the sort toggle, and Clear logs, where Cancel sent no DELETE.
+- **Captures.** A full 34-screen run had no page errors and no sideways scrolling. The screenshots are in `/tmp/cpamc/scratch/lead/final/`.
+- **Type check.** No LSP was available, so `tsc --noEmit` stood in.
+
+**Still open:**
+- Reloading `#/auth-files/oauth-excluded?provider=…` loses the provider. This was already the case and I didn't change it.
+- Long Auth Files warnings are cut to two lines on desktop, and the full text is only in the hover tooltip.
+- The provider status bar uses fallback colours because two colour names it needs aren't defined in the shared theme. You only see this when there is traffic, which the fixtures don't have.
+- On phones, the Kimi International buttons still stack, and the Providers "All models" filter wraps onto a second row.
+- In the Logs structured view, times are shown in local time with the zone in the column header (for example "Time · GMT-8"), while raw lines keep `Z`. The header is hidden on phones, so there the zone is only in the hover tooltip.
+- The Dashboard label says "credential files and provider keys". If the provider-key usage endpoint fails, the count covers credential files only.
+- I checked dark mode only on the four council routes plus the agents' Logs and Config screenshots.
+- `../CLIProxyAPI` isn't on this machine. The Logs agent took the Clear logs wording from the `CLIProxyAPIPlus` source instead, and the "Default (0.0.0.0)" host hint is unverified against the backend.

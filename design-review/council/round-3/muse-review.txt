@@ -1,0 +1,119 @@
+{
+  "round": 3,
+  "scores": {
+    "design_coherence": 8.2,
+    "typography": 7.8,
+    "cleanliness": 7.6,
+    "visual_design": 7.9,
+    "ease_of_use": 7.7,
+    "information_hierarchy": 7.8,
+    "spacing_alignment": 8.0,
+    "navigation_wayfinding": 8.1,
+    "responsive_mobile": 7.8,
+    "accessibility_visible": 7.1,
+    "data_visualization": 6.7,
+    "interaction_affordance": 7.6
+  },
+  "overall": 7.69,
+  "metric_evidence": {
+    "design_coherence": "Strong shared shell across all 34 views. Same sidebar groups, breadcrumb, H1 plus meta line, card radius, toggle, and Refresh placement recur predictably. Held back by variant segmented-control styles, black primary buttons on OAuth versus outline Refresh elsewhere, grey disabled Save on OAuth subpages, and two differently styled sponsored blocks in Config and Quick Start.",
+    "typography": "Page titles and stat numerals carry clear weight contrast. Secondary copy is the weak tier. Meta lines, helper sentences, placeholders, and table subtext set small and pale, for example Dashboard credential subtext and OAuth row descriptions. Monospace is used inconsistently for counts and timestamps on some pages and prose on others.",
+    "cleanliness": "Desktop surfaces are restrained and uncluttered. Sparse states waste the viewport. Providers, Plugins, and Plugin Store leave roughly half the 1440x1000 frame empty, and Logs shows three rows inside a near full-height empty box. Sponsored content in Quick Start and the Config footer competes with operator tasks in a credential-handling tool.",
+    "visual_design": "Neutral palette with a teal active edge reads as a credible developer console, and dark mode preserves the system without inversion errors. Craft is flat rather than refined. Card borders, inactive nav labels, and chart ink are all similar light greys, so state and structure separate weakly, especially in dark quota and dashboard charts.",
+    "ease_of_use": "Primary actions usually sit top right with verbs. Auth Files stacks three filter layers plus sort and display options before any credential. OAuth presents nine or more equally weighted black login buttons with no search or grouping. Dashboard reports 0 requests while a collapsed disclosure notes 128 to 135 usage statistics in the same window.",
+    "information_hierarchy": "H1, status meta, summary stat band, then detail is a sound repeated order. Empty or negative states receive the largest visual weight on Dashboard, including an em dash for success rate. Quota places a hard-to-read projection chart before the per-account breakdown operators need to act on. Plugin pages repeat the disabled warning and the global status line.",
+    "spacing_alignment": "Desktop grids, table columns, and card padding align consistently, notably Usage and Config. Mobile shows specific breaks. Usage Top Models label-value pairs form ragged columns, Auth Files provider chips orphan Gemini on a second row, OAuth Kimi buttons sit side by side for China but stack for International, and Logs action buttons wrap unevenly.",
+    "navigation_wayfinding": "Grouped sidebar with OPERATE, GATEWAY, OBSERVE, and CONTROL plus a clear active pill answers location well on desktop. Breadcrumb repeats the H1 on every page. On mobile the top bar title duplicates the H1 directly below it, and the OAuth exclusions top bar reads Disabled models while the H1 reads OAuth Model Disablement. The chevron beside the breadcrumb has no visible label.",
+    "responsive_mobile": "No horizontal overflow is recorded, and tables genuinely reflow into cards on Providers, Auth Files, Usage, and Logs. Quota loses its View and Window group labels, leaving two adjacent unlabelled pill groups. Chart date labels reduce to two crowded ticks. Top bar icon buttons, row icon actions, and text-only Details controls look below comfortable touch size.",
+    "accessibility_visible": "Login shows a strong double teal focus ring, and status pairs a dot with the word Active. Against that, inactive sidebar labels, helper text, placeholders, and No recent requests subtext are pale grey on white or light grey, and dimmer still on dark surfaces. Checkboxes render as small faint squares. Four top bar actions and row view, edit, and delete actions are icon only with no visible text. Selected versus unselected quota pills differ only subtly.",
+    "data_visualization": "Weakest area. Four quota series render as one grey line labelled 1-4, requiring legend chips and a sentence of explanation, with the projection shading barely distinguishable and a step to 100 percent at reset that reads as a data spike. Fixture values are identical, which exaggerates overlap, but the single-grey encoding is the observed design choice. Request flow is an empty text box, Usage is tables only with a Not reported chart placeholder, and no trend or sparkline appears anywhere.",
+    "interaction_affordance": "Buttons, toggles, tabs, and search fields are clearly controls. Disclosures such as View data table, How to read this chart, Filter accounts, and the dashboard usage note render as plain small text with a triangle. Quota legend chips look like static badges although copy says to select a series. Quick Start rows and Not configured 8 rely on a trailing chevron alone. Unselected provider rows do not obviously read as selectable."
+  },
+  "top_fixes": [
+    {
+      "severity": "high",
+      "screen": "Quota Management and Dashboard remaining quota, desktop, mobile, and dark",
+      "evidence": "Four accounts draw as one grey line labelled 1-4. The reset step jumps to 100 percent. Projection shading is nearly invisible. Mobile retains only two date ticks.",
+      "user_impact": "An operator cannot tell which credential exhausts first without decoding legend chips and a paragraph, which defeats the glanceable purpose of the chart.",
+      "concrete_fix": "Give each series a distinct color plus dash pattern and a direct end label. Render exact overlaps as a stacked multi-line with a count badge. Shade the projection region with a visible hatch or stronger tint and label the reset as an annotation, not a data step. On mobile show a per-account remaining bar list first and keep the time chart second."
+    },
+    {
+      "severity": "high",
+      "screen": "Global, all pages",
+      "evidence": "Inactive nav labels, meta lines, helper text, placeholders, and table subtext use pale grey on white and on dark surfaces. Checkboxes are small faint squares.",
+      "user_impact": "Status, timestamps, and per-credential detail are the content operators scan under time pressure. Low visible contrast slows reading and risks missed state.",
+      "concrete_fix": "Raise secondary text to a token that meets 4.5 to 1 on both themes and reserve the palest grey for disabled text only. Increase checkbox size and border contrast. Re-check sidebar, stat subtext, and chart axis labels in dark mode."
+    },
+    {
+      "severity": "high",
+      "screen": "Quota 390, Providers 390, Auth Files 390, global mobile top bar",
+      "evidence": "Quota drops the View and Window labels shown on desktop. Top bar carries four icon-only buttons beside a hamburger. Row eye, edit, and delete icons and text-only Details controls are small.",
+      "user_impact": "Mobile operators must guess what the two pill groups switch and can miss small targets during incident checks.",
+      "concrete_fix": "Keep short group labels above each pill group on mobile. Enforce a 44px minimum hit area for icon and text actions. Add visible text or a labelled overflow menu for the top bar actions."
+    },
+    {
+      "severity": "medium",
+      "screen": "Dashboard desktop and mobile",
+      "evidence": "Requests shows 0 and success rate shows an em dash, while a collapsed disclosure states 128 to 135 usage statistics in the same window. Request flow is an empty bordered box.",
+      "user_impact": "The landing screen appears to contradict itself. An operator cannot tell whether the proxy is idle, uninstrumented, or broken.",
+      "concrete_fix": "State one reconciled status sentence in the stat band naming the two sources and why they differ. Replace the empty request flow box with a compact zero-state that links to Usage Statistics and shrinks vertical height."
+    },
+    {
+      "severity": "medium",
+      "screen": "Auth Files desktop and mobile",
+      "evidence": "Provider chips, filter search, sort select, All Enabled Disabled Problem segmented control, and Display options all precede the first credential. Mobile orphans the Gemini chip.",
+      "user_impact": "Filtering a credential list requires learning three overlapping mechanisms before scanning any row.",
+      "concrete_fix": "Merge provider chips and status segmented control into one filter bar with counts, keep search primary, and move sort and display options into one menu. Use a horizontally scrollable single chip row on mobile."
+    },
+    {
+      "severity": "medium",
+      "screen": "OAuth Login desktop and mobile",
+      "evidence": "Nine or more providers each carry an equal black primary button in one long undifferentiated list. Mobile Kimi China buttons sit side by side while Kimi International buttons stack.",
+      "user_impact": "Finding one provider is a linear scan, and every row competes as the primary action.",
+      "concrete_fix": "Add provider search and group by already connected versus available. Demote unconnected rows to outline buttons so at most one emphasis level dominates. Use one consistent button wrapping rule on mobile."
+    },
+    {
+      "severity": "medium",
+      "screen": "Quick Start and Config Panel",
+      "evidence": "A sponsored APIKEY.FUN card occupies the second position on Quick Start, and a BestProxy.com sponsored line closes the Config form.",
+      "user_impact": "Third-party promotion inside a credential and configuration surface undermines trust and interrupts setup tasks. This is an observed placement defect, not a taste preference.",
+      "concrete_fix": "Remove sponsored blocks from task flows. If sponsorship is mandatory, move it to the System page below version information and keep it out of setup and settings forms."
+    },
+    {
+      "severity": "medium",
+      "screen": "Providers, Plugins, Plugin Store, and Logs desktop sparse states",
+      "evidence": "A single provider row, empty plugin states, and three log lines each leave about half the viewport blank inside full-height bordered areas.",
+      "user_impact": "Sparse screens read as unfinished or still loading, and the next useful action sits far from the empty region.",
+      "concrete_fix": "Size containers to content in sparse states and place one next action inside the empty region, for example add a key, open the plugin store, or enable plugins in Config. Cap the log viewport height when few lines exist."
+    },
+    {
+      "severity": "low",
+      "screen": "Global navigation, mobile top bar, OAuth Model Disablement 390",
+      "evidence": "Breadcrumb repeats the H1 on desktop. Mobile top bar title duplicates the H1 below it. The exclusions mobile top bar says Disabled models while the H1 says OAuth Model Disablement.",
+      "user_impact": "Duplicated and mismatched titles waste the scarcest mobile space and weaken confidence in current location.",
+      "concrete_fix": "Drop the breadcrumb leaf when it equals the H1, hide the mobile top bar title when the H1 is visible, and use one page name in both places."
+    }
+  ],
+  "strengths": [
+    "Consistent shell, grouped sidebar, active state, and page header pattern across all 14 authenticated pages and both themes.",
+    "Tables genuinely reflow into readable cards on mobile instead of squeezing columns, with no recorded horizontal overflow.",
+    "Honest status copy throughout, for example snapshot versus live usage, collection memory limits, and the third-party plugin trust warning.",
+    "Login is focused and legible with a prominent focus ring, clear primary action, and an explicit reversible-obfuscation warning.",
+    "Usage Statistics pairs totals with a well-aligned latency table and explains retained-sample limits beside the data.",
+    "Dark mode preserves hierarchy and component identity without broken surfaces in the four captured pages."
+  ],
+  "unverified": [
+    "Keyboard navigation order, focus visibility beyond the login field, and chart arrow-key inspection behavior.",
+    "Screen-reader names for icon-only buttons, toggles, disclosures, and chart alternatives.",
+    "Hover, pressed, loading, saving, toast, and error-recovery states for all actions.",
+    "Whether quota legend chips, Quick Start rows, and provider rows respond as controls, and their feedback.",
+    "Form validation in Config, OAuth alias and disablement save flows, and unsaved-change handling.",
+    "Mobile drawer navigation content, behavior, and dismissal.",
+    "Full-page content below the viewport on every page, including dashboard lower sections and account breakdown.",
+    "Populated plugin, plugin store, request-flow, and daily-usage states, since fixture coverage is partial.",
+    "Motion, reduced-motion behavior, and refresh or auto-refresh feedback.",
+    "Zoom, text scaling, and contrast ratios measured programmatically rather than judged from pixels."
+  ]
+}
+
+Notes. All 34 screenshots and the capture record were inspected. No Mobbin references were inspected. Identical fixture quota values and empty plugin fixtures were treated as fixture limits. They were scored only where the chosen encoding or sparse-state treatment is itself visible. The product reads as a competent, coherent operator console. It sits below the 9 anchor because chart encoding, secondary-text contrast, mobile control labelling, and sparse-state handling still need concrete work across several screens.

@@ -1,3 +1,5 @@
+@use '@/styles/mixins' as *;
+
 .chart {
   min-width: 0;
   margin: 0;
@@ -6,15 +8,73 @@
 .description {
   margin-bottom: 12px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
+}
+
+/* Whole-plot projection: one direct label above the plot instead of a region fill. */
+.projectionNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.swatch {
+  flex: 0 0 auto;
+}
+
+/* Shared-trace explanation and the isolate hint: one quiet line under the legend. */
+.legendNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.showAll {
+  min-height: 28px;
+  padding: 2px 10px;
+  border: 1px solid var(--control-outline);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-tertiary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+  }
 }
 
 .series {
@@ -23,6 +83,7 @@
   gap: 8px;
   min-height: 36px;
   min-width: 0;
+  max-width: 100%;
   padding: 6px 10px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -34,14 +95,32 @@
   cursor: pointer;
 
   strong {
+    flex: 0 0 auto;
     margin-left: auto;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--bg-tertiary);
+    }
+  }
+
+  /* Hidden series: dashed outline, muted text, struck value; the swatch fades. */
   &[aria-pressed='false'] {
     color: var(--text-secondary);
     border-style: dashed;
+
+    .swatch {
+      opacity: 0.35;
+    }
+
+    strong {
+      font-weight: 400;
+      text-decoration: line-through;
+    }
   }
 
   &:focus-visible {
@@ -59,13 +138,17 @@
   border: 1px solid var(--border-primary);
   border-radius: 4px;
   font-family: $font-mono;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
+/* One line: words never break mid-word; the title, accessible name, and table keep the full identity. */
 .name {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .plot {
@@ -78,13 +161,35 @@
   }
 }
 
+/* The light grid stays on --border-color; on the dark surface that token nearly vanishes. */
+:global([data-theme='dark']) .plot :global(.recharts-cartesian-grid-horizontal line),
+:global([data-theme='dark']) .plot .rule line {
+  stroke: color-mix(in srgb, var(--border-color) 72%, var(--border-primary));
+}
+
+/* The exact domain, stated once under the axis instead of as crowded edge tick labels. */
+.range {
+  margin: 0;
+  padding-left: 58px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
 .readout {
   min-height: 36px;
   padding-top: 8px;
   color: var(--text-secondary);
-  font-family: $font-mono;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
+
+  /* Guided charts print nothing here until a point is inspected. */
+  &:empty {
+    min-height: 0;
+    padding-top: 4px;
+  }
 }
 
 .empty {
@@ -93,20 +198,33 @@
   text-align: center;
 }
 
-.tableDisclosure {
+.tableDisclosure,
+.guide {
   margin-top: 8px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 13px;
 
   summary {
-    min-height: 36px;
-    padding: 8px 0;
-    cursor: pointer;
+    @include disclosure-summary;
   }
+}
 
-  summary:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
+.guide p {
+  max-width: 72ch;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+/* Encoding key: the snapshot dot and the projected dash, as drawn on the plot. */
+.guideKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 }
 
@@ -149,18 +267,40 @@
   white-space: nowrap;
 }
 
+/* Short chips share a row; a long account name takes its own row and ellipsizes. */
 @media (max-width: 768px) {
   .legend {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
 
   .series {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) auto;
+    flex: 1 1 auto;
     gap: 6px;
     min-height: 44px;
-    padding: 6px;
+    padding: 6px 8px;
+  }
+}
+
+/* Phones: one full-width row per series so names stay readable (never half-width truncation). */
+@media (max-width: 600px) {
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .series {
+    width: 100%;
+    min-height: 44px;
+    padding: 4px 10px;
+  }
+
+  /* No hover on phones; the pressed/dashed state already shows what selection does. */
+  .isolateHint {
+    display: none;
+  }
+
+  .legendNote:not(:has(> :not(.isolateHint))) {
+    display: none;
   }
 }

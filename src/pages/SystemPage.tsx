@@ -6,8 +6,15 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
-import { IconGithub, IconBookOpen, IconExternalLink, IconCode } from '@/components/ui/icons';
+import {
+  IconGithub,
+  IconBookOpen,
+  IconExternalLink,
+  IconCode,
+  IconDownload,
+} from '@/components/ui/icons';
 import {
   useAuthStore,
   useConfigStore,
@@ -17,10 +24,13 @@ import {
 } from '@/stores';
 import { configApi, versionApi } from '@/services/api';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
-import { formatDateTimeValue } from '@/utils/format';
+import { formatDateTimeValue, isoTitle } from '@/utils/format';
 import { classifyModels } from '@/utils/models';
 import { clearAllAuthStorage } from '@/services/storage/secureStorage';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
+import { SPONSORS } from '@/features/config/sponsors';
+import { PROVIDER_LOGOS } from '@/features/providers/brandLogos';
+import { APIKEY_FUN_AFFILIATE_URL, APIKEY_FUN_DISPLAY_NAME } from '@/features/providers/sponsor';
 import iconGemini from '@/assets/icons/gemini.svg';
 import iconClaude from '@/assets/icons/claude.svg';
 import iconMeta from '@/assets/icons/meta.svg';
@@ -80,6 +90,59 @@ const compareVersions = (latest?: string | null, current?: string | null) => {
   return 0;
 };
 
+type OptionalResource = { name: string; url: string; logo?: string; descriptionKey: string };
+
+const OPTIONAL_RESOURCES: readonly OptionalResource[] = [
+  ...SPONSORS.map((sponsor) => ({ ...sponsor, descriptionKey: 'system_info.resource_proxy_desc' })),
+  {
+    name: APIKEY_FUN_DISPLAY_NAME,
+    url: APIKEY_FUN_AFFILIATE_URL,
+    logo: PROVIDER_LOGOS.apikeyFun.src,
+    descriptionKey: 'system_info.resource_api_desc',
+  },
+];
+
+/** Sponsored third-party links, kept apart from settings and labeled as sponsored. */
+export function OptionalResources() {
+  const { t } = useTranslation();
+  if (OPTIONAL_RESOURCES.length === 0) return null;
+  return (
+    <section className={`card ${styles.resourcesCard}`} aria-labelledby="system-optional-resources">
+      <div className={styles.resourcesHeader}>
+        <h2 id="system-optional-resources" className={styles.resourcesTitle}>
+          {t('system_info.resources_title')}
+        </h2>
+        <span className={styles.sponsoredLabel}>{t('system_info.resources_sponsored')}</span>
+      </div>
+      <p className={styles.sectionDescription}>{t('system_info.resources_desc')}</p>
+      <ul className={styles.resourceList}>
+        {OPTIONAL_RESOURCES.map((resource) => (
+          <li key={resource.url}>
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className={styles.resourceLink}
+            >
+              {resource.logo ? (
+                <img src={resource.logo} alt="" className={styles.resourceLogo} />
+              ) : null}
+              <span className={styles.resourceText}>
+                <span className={styles.resourceName}>
+                  {resource.name}
+                  <IconExternalLink size={13} aria-hidden="true" />
+                  <span className={styles.visuallyHidden}>{t('system_info.resource_new_tab')}</span>
+                </span>
+                <span className={styles.resourceDesc}>{t(resource.descriptionKey)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function SystemPage() {
   const { t, i18n } = useTranslation();
   const { showNotification, showConfirmation } = useNotificationStore();
@@ -133,6 +196,22 @@ export function SystemPage() {
   const apiVersion = auth.serverVersion || t('system_info.version_unknown');
   const buildTime =
     formatDateTimeValue(auth.serverBuildDate, i18n.language) || t('system_info.version_unknown');
+  const buildTimeIso = isoTitle(auth.serverBuildDate);
+  const connectionLabel = t(`common.${auth.connectionStatus}_status`);
+  const versionDetails = [
+    `${t('footer.version')}: ${appVersion}`,
+    `${t('footer.api_version')}: ${apiVersion}`,
+    `${t('footer.build_date')}: ${buildTime}`,
+    `${t('connection.status')}: ${connectionLabel}`,
+    auth.apiBase,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  // Success already shows as the plain count line; muted is the loading hint below.
+  const modelStatusNotice =
+    modelStatus && (modelStatus.type === 'warning' || modelStatus.type === 'error')
+      ? modelStatus
+      : undefined;
 
   const getIconForCategory = (categoryId: string): string | null => {
     const iconEntry = MODEL_CATEGORY_ICONS[categoryId];
@@ -312,14 +391,14 @@ export function SystemPage() {
     <div className={styles.container}>
       <PageHeader
         title={t('system_info.title')}
-        meta={auth.apiBase || t(`common.${auth.connectionStatus}_status`)}
         actions={
           <Button
             variant="secondary"
-            size="sm"
             onClick={() => void handleVersionCheck()}
             loading={checkingVersion}
           >
+            {/* Header actions carry an icon; while checking, the spinner takes its place. */}
+            {!checkingVersion && <IconDownload size={16} aria-hidden="true" />}
             {t('system_info.version_check_button')}
           </Button>
         }
@@ -328,7 +407,7 @@ export function SystemPage() {
         <Card className={styles.aboutCard}>
           <div className={styles.aboutHeader}>
             <img src={INLINE_LOGO_JPEG} alt="CPAMC" className={styles.aboutLogo} />
-            <div className={styles.aboutTitle}>{t('system_info.about_title')}</div>
+            <div className={styles.aboutTitle}>{t('title.login')}</div>
           </div>
 
           <div className={styles.aboutInfoGrid}>
@@ -340,45 +419,50 @@ export function SystemPage() {
               <div className={styles.tileHeader}>
                 <div className={styles.tileLabel}>{t('footer.version')}</div>
               </div>
-              <div className={styles.tileValue}>{appVersion}</div>
+              <div className={`${styles.tileValue} ${styles.tileLiteral}`}>{appVersion}</div>
             </button>
 
             <div className={styles.infoTile}>
               <div className={styles.tileHeader}>
                 <div className={styles.tileLabel}>{t('footer.api_version')}</div>
               </div>
-              <div className={styles.tileValue}>{apiVersion}</div>
+              <div className={`${styles.tileValue} ${styles.tileLiteral}`}>{apiVersion}</div>
             </div>
 
             <div className={styles.infoTile}>
               <div className={styles.tileLabel}>{t('footer.build_date')}</div>
-              <div className={styles.tileValue}>{buildTime}</div>
+              <div className={styles.tileValue}>
+                {buildTimeIso ? (
+                  <time dateTime={buildTimeIso} title={buildTimeIso}>
+                    {buildTime}
+                  </time>
+                ) : (
+                  buildTime
+                )}
+              </div>
             </div>
 
             <div className={styles.infoTile}>
               <div className={styles.tileLabel}>{t('connection.status')}</div>
-              <div className={styles.tileValue}>{t(`common.${auth.connectionStatus}_status`)}</div>
+              <div className={styles.tileValue}>{connectionLabel}</div>
               <div className={styles.tileSub}>{auth.apiBase || '-'}</div>
             </div>
           </div>
           <div className={styles.factActions}>
             <Button
               variant="secondary"
-              size="sm"
               onClick={async () => {
-                const copied = await copyToClipboard(
-                  `${t('footer.version')}: ${appVersion}\n${t('footer.api_version')}: ${apiVersion}\n${t('footer.build_date')}: ${buildTime}\n${t('connection.status')}: ${auth.connectionStatus}\n${auth.apiBase}`
-                );
+                const copied = await copyToClipboard(versionDetails);
                 showNotification(
                   t(copied ? 'logs.copy_success' : 'logs.copy_failed'),
                   copied ? 'success' : 'error'
                 );
               }}
             >
-              {t('common.copy')}
+              {t('system_info.copy_details')}
             </Button>
-            <Button variant="secondary" size="sm" onClick={openRequestLogModal}>
-              {t('basic_settings.request_log_title')}
+            <Button variant="secondary" onClick={openRequestLogModal} aria-haspopup="dialog">
+              {t('system_info.request_log_open')}
             </Button>
           </div>
         </Card>
@@ -445,14 +529,11 @@ export function SystemPage() {
         <Card
           title={t('system_info.models_title')}
           extra={
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => fetchModels({ forceRefresh: true })}
-              loading={modelsLoading}
-            >
-              {t('common.refresh')}
-            </Button>
+            <RefreshButton
+              onClick={() => void fetchModels({ forceRefresh: true })}
+              label={t('system_info.models_refresh')}
+              refreshing={modelsLoading}
+            />
           }
         >
           <Input
@@ -462,17 +543,23 @@ export function SystemPage() {
             placeholder={t('redesign.settings.modelSearch')}
             aria-label={t('redesign.settings.modelSearch')}
           />
-          <p className={styles.sectionDescription}>
-            {t('system_info.models_count', { count: models.length })}
-          </p>
-          {modelStatus && (
-            <div className={`status-badge ${modelStatus.type}`}>{modelStatus.message}</div>
+          {!modelsLoading && models.length > 0 && (
+            <p className={styles.sectionDescription}>
+              {t('system_info.models_count', { count: models.length })}
+            </p>
           )}
-          {modelsError && <div className="error-box">{modelsError}</div>}
+          {modelStatusNotice && (
+            <div className={`status-badge ${modelStatusNotice.type}`}>
+              {modelStatusNotice.message}
+            </div>
+          )}
+          {modelsError && !modelStatusNotice && <div className="error-box">{modelsError}</div>}
           {modelsLoading ? (
             <div className="hint">{t('common.loading')}</div>
           ) : models.length === 0 ? (
-            <div className="hint">{t('system_info.models_empty')}</div>
+            modelStatusNotice ? null : (
+              <div className="hint">{t('system_info.models_empty')}</div>
+            )
           ) : (
             <div className="item-list">
               {groupedModels.length === 0 && <p role="status">{t('redesign.settings.noModels')}</p>}
@@ -484,14 +571,14 @@ export function SystemPage() {
                     className={styles.modelGroup}
                     open={modelSearch.trim() ? true : undefined}
                   >
-                    <summary>
-                      <div className={styles.groupTitle}>
+                    <summary className={styles.groupSummary}>
+                      <span className={styles.groupIconSlot} aria-hidden="true">
                         {iconSrc && <img src={iconSrc} alt="" className={styles.groupIcon} />}
-                        <span className="item-title">{group.label}</span>
-                      </div>
-                      <div className="item-subtitle">
+                      </span>
+                      <span className={styles.groupLabel}>{group.label}</span>
+                      <span className={styles.groupCount}>
                         {t('system_info.models_count', { count: group.items.length })}
-                      </div>
+                      </span>
                     </summary>
                     <div className={styles.modelTags}>
                       {group.items.map((model) => (
@@ -515,11 +602,13 @@ export function SystemPage() {
         <Card title={t('system_info.clear_login_title')}>
           <p className={styles.sectionDescription}>{t('system_info.clear_login_desc')}</p>
           <div className={styles.clearLoginActions}>
-            <Button variant="danger" onClick={handleClearLoginStorage}>
+            <Button variant="danger-outline" onClick={handleClearLoginStorage}>
               {t('system_info.clear_login_button')}
             </Button>
           </div>
         </Card>
+
+        <OptionalResources />
       </div>
 
       <Modal

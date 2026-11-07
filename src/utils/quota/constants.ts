@@ -12,14 +12,14 @@ export const TYPE_COLORS: Record<string, TypeColorSet> = {
   },
   gemini: {
     light: { bg: '#e3f2fd', text: '#1565c0' },
-    dark: { bg: '#0d47a1', text: '#64b5f6' },
+    dark: { bg: '#0d47a1', text: '#90caf9' },
   },
   aistudio: {
     light: { bg: '#f0f2f5', text: '#2f343c' },
     dark: { bg: '#373c42', text: '#cfd3db' },
   },
   claude: {
-    light: { bg: '#fbece4', text: '#c05621' },
+    light: { bg: '#fbece4', text: '#a8481b' },
     dark: { bg: '#5e2c14', text: '#e8a882' },
   },
   codex: {
@@ -32,7 +32,7 @@ export const TYPE_COLORS: Record<string, TypeColorSet> = {
   },
   meta: {
     light: { bg: '#e3f2fd', text: '#1565c0' },
-    dark: { bg: '#0d47a1', text: '#64b5f6' },
+    dark: { bg: '#0d47a1', text: '#90caf9' },
   },
   kimi: {
     light: { bg: '#dce8ff', text: '#0560cf' },

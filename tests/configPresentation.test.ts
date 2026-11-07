@@ -3,7 +3,8 @@ import { createElement, type ReactElement } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ConfigHeader } from '@/features/config/components/ConfigHeader';
-import { ProxyUrlField } from '@/features/config/components/fields/sharedFields';
+import { SectionCommon } from '@/features/config/components/sections/SectionCommon';
+import { SectionNetwork } from '@/features/config/components/sections/SectionNetwork';
 import { DEFAULT_VISUAL_VALUES } from '@/types/visualConfig';
 import { SPONSORS } from '@/features/config/sponsors';
 import { createTestI18n, localeParityIssues, productionLocales } from './helpers/locales';
@@ -27,24 +28,40 @@ describe('config presentation', () => {
     expect(markup.match(/<h1[ >]/g)).toHaveLength(1);
     expect(markup).toContain(i18n.t('config_management.title'));
     expect(markup).toContain('61');
-    expect(markup).toMatch(/<button[^>]*disabled=""/);
-    expect(markup).toContain(i18n.t('config_management.reload'));
+    // RefreshButton keeps focus while busy: aria-disabled instead of native disabled.
+    expect(markup).toMatch(/<button[^>]*aria-disabled="true"/);
+    expect(markup).toMatch(/<button[^>]*aria-busy="true"/);
+    expect(markup).toContain(i18n.t('config_management.reloading_config'));
   });
 
-  test('proxy field keeps sponsor links outside the input label', () => {
+  test('idle header reload names its scope', () => {
     const markup = render(
-      createElement(ProxyUrlField, {
-        values: DEFAULT_VISUAL_VALUES,
-        disabled: false,
-        onChange: () => {},
+      createElement(ConfigHeader, {
+        meta: [],
+        reloadDisabled: false,
+        reloading: false,
+        onReload: () => {},
       })
     );
-    const label = markup.match(/<label[\s\S]*?<\/label>/)?.[0];
-    expect(label).toContain(i18n.t('config_management.visual.sections.network.proxy_url'));
-    expect(label).not.toContain('<a');
-    for (const sponsor of SPONSORS.slice(0, 1)) {
-      expect(markup).toContain(sponsor.url.replaceAll('&', '&amp;'));
-      expect(markup).toContain('noopener noreferrer sponsored');
+    expect(markup).toContain(i18n.t('config_management.reload_config'));
+    expect(markup).not.toContain('aria-disabled');
+  });
+
+  test('config sections that hold proxy settings render no sponsored links', () => {
+    for (const Section of [SectionCommon, SectionNetwork]) {
+      const markup = render(
+        createElement(Section, {
+          values: DEFAULT_VISUAL_VALUES,
+          disabled: false,
+          onChange: () => {},
+        })
+      );
+      expect(markup).toContain(i18n.t('config_management.visual.sections.network.proxy_url'));
+      expect(markup).not.toContain('sponsored');
+      for (const sponsor of SPONSORS) {
+        expect(markup).not.toContain(sponsor.name);
+        expect(markup).not.toContain(sponsor.url.replaceAll('&', '&amp;'));
+      }
     }
   });
 

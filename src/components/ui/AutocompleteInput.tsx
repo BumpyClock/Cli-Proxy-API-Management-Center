@@ -21,6 +21,8 @@ interface AutocompleteInputProps {
   wrapperClassName?: string;
   wrapperStyle?: React.CSSProperties;
   id?: string;
+  /** Ids of helper or validation text that describes the field. */
+  ariaDescribedBy?: string;
   rightElement?: ReactNode;
 }
 
@@ -37,6 +39,7 @@ export function AutocompleteInput({
   wrapperClassName = '',
   wrapperStyle,
   id,
+  ariaDescribedBy,
   rightElement,
 }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -118,6 +121,7 @@ export function AutocompleteInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
+          aria-describedby={ariaDescribedBy}
           autoComplete="off"
           style={{ paddingRight: 32 }}
         />
