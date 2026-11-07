@@ -31,6 +31,8 @@ Place the custom `management.html` before the first panel request. A missing fil
 
 Design and motion tokens have one owner, `src/design-system/tokens.ts`; see [design-tokens.md](design-tokens.md). `SegmentedControl`, `NativeSelect`, `RefreshButton` and `PageHeader` own shared control patterns. Route tabs remain distinct from mode switches and multi-select filters. `menuFocus.ts` owns shared menu focus behavior. `useFloatingMenuPosition` owns viewport clamping, flipping and scroll/resize positioning for Auth Files and Provider row menus. Open menus portal to the document body; oversized menus scroll within the available viewport. Theme tokens cover referenced custom properties, and regression tests enforce the 12px typography floor.
 
+Claude quota snapshots and timelines prefer the account-wide five-hour and seven-day windows over model-specific limits of the same duration. Provider observations own these preferences; consumers share the existing window selector.
+
 Quota chart stroke selection and account-list swatches share one resolver. Chart tables mount when opened. Keyboard inspection, account isolation, snapshot provenance and failed-refresh evidence remain available. Existing request ownership and session-isolation guards are preserved.
 
 ## Verification

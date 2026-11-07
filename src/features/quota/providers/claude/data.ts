@@ -205,6 +205,11 @@ const fetchClaudeQuota = async (file: AuthFileItem, t: TFunction): Promise<Claud
   return { windows, extraUsage: payload.extra_usage, planType };
 };
 
+const ACCOUNT_WINDOW_PREFERENCES: Partial<Record<string, 'session' | 'weekly'>> = {
+  'five-hour': 'session',
+  'seven-day': 'weekly',
+};
+
 export const CLAUDE_CONFIG: QuotaProviderData<ClaudeQuotaState, ClaudeQuotaData> = {
   type: 'claude',
   i18nPrefix: 'claude_quota',
@@ -220,6 +225,10 @@ export const CLAUDE_CONFIG: QuotaProviderData<ClaudeQuotaState, ClaudeQuotaData>
             remainingPercent: window.usedPercent == null ? null : 100 - window.usedPercent,
             resetAtMs: window.resetAtMs ?? null,
             periodHours: window.periodHours ?? null,
+            preferredFor:
+              (window.periodHours ?? 0) > 0
+                ? (ACCOUNT_WINDOW_PREFERENCES[window.id] ?? null)
+                : null,
           })
         )
         .filter((window) => window.resetAtMs !== null)
