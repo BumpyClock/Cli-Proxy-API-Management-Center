@@ -680,6 +680,17 @@
   }
 }
 
+.logPanelWrapped {
+  .rawLog,
+  .path,
+  .client,
+  .source {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+  }
+}
+
 /* Parsed table. `buildLogGrid` supplies one template shared by the header and every row:
    Time | Level | structured columns with data | Message. */
 .logList {

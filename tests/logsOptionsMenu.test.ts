@@ -24,9 +24,10 @@ const renderOptions = (overrides: Partial<Parameters<typeof LogsOptions>[0]> = {
       open: false,
       onOpenChange: noop,
       triggerRef: createRef<HTMLButtonElement>(),
-      display: { hideManagementLogs: true, showRawLogs: false },
+      display: { hideManagementLogs: true, showRawLogs: false, wrapLogs: false },
       onHideManagementLogsChange: noop,
       onShowRawLogsChange: noop,
+      onWrapLogsChange: noop,
       fullscreen: false,
       downloadDisabled: false,
       clearDisabled: false,
@@ -49,7 +50,7 @@ const textOf = (html: string) =>
 describe('display state shown on the Options trigger', () => {
   test('counts only switches that differ from their defaults', () => {
     const countOf = (hideManagementLogs: boolean, showRawLogs: boolean) =>
-      renderOptions({ display: { hideManagementLogs, showRawLogs } }).match(
+      renderOptions({ display: { hideManagementLogs, showRawLogs, wrapLogs: false } }).match(
         /<span class="filterPanelCount" aria-hidden="true">(\d+)<\/span>/
       )?.[1] ?? '0';
     expect(countOf(true, false)).toBe('0');
@@ -64,7 +65,9 @@ describe('display state shown on the Options trigger', () => {
     expect(textOf(defaults)).toStartWith('Options');
     expect(defaults).not.toContain('setting changed');
 
-    const changed = renderOptions({ display: { hideManagementLogs: true, showRawLogs: true } });
+    const changed = renderOptions({
+      display: { hideManagementLogs: true, showRawLogs: true, wrapLogs: false },
+    });
     expect(changed).toContain('<span class="filterPanelCount" aria-hidden="true">1</span>');
     expect(changed).toContain('1 setting changed');
   });
@@ -82,9 +85,9 @@ describe('Options disclosure', () => {
     expect(open).not.toMatch(/id="logs-options-panel"[^>]*hidden/);
   });
 
-  test('holds both display switches and the routine actions as real controls', () => {
+  test('holds the display switches and routine actions as real controls', () => {
     const panel = panelOf(renderOptions({ open: true }));
-    expect(panel.match(/role="switch"/g)).toHaveLength(2);
+    expect(panel.match(/role="switch"/g)).toHaveLength(3);
     expect(panel).toContain('aria-label="Log display options"');
     expect(panel).toContain('aria-label="Log actions"');
     expect(textOf(panel)).toContain('Hide /v0/management logs');

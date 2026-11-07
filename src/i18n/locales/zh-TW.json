@@ -1231,7 +1231,8 @@
     "tabs_label": "日誌檢視",
     "active_filters_label": "已啟用的篩選",
     "active_filters_count_other": "{{count}} 個篩選",
-    "remove_filter": "移除篩選 {{filter}}"
+    "remove_filter": "移除篩選 {{filter}}",
+    "wrap_lines": "長行自動換行"
   },
   "config_management": {
     "title": "設定面板",
