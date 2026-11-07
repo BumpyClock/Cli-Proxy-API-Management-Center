@@ -44,7 +44,8 @@ describe('OAuth attempt lifecycle', () => {
     const response = deferred<string>();
     let requests = 0;
     const results: string[] = [];
-    attempts.begin('codex').poll(
+    const attempt = attempts.begin('codex');
+    attempt.poll(
       () => {
         requests++;
         return response.promise;
@@ -57,15 +58,18 @@ describe('OAuth attempt lifecycle', () => {
       3000
     );
     expect([...tasks.values()][0].delay).toBe(3000);
+    expect(attempt.isPolling()).toBe(true);
     tick();
     tick();
     tick();
     expect(requests).toBe(1);
     expect(tasks.size).toBe(0);
+    expect(attempt.isPolling()).toBe(true);
     response.resolve('wait');
     await flush();
     expect(results).toEqual(['wait']);
     expect(tasks.size).toBe(1);
+    expect(attempt.isPolling()).toBe(true);
     tick();
     expect(requests).toBe(2);
   });
@@ -210,12 +214,71 @@ describe('OAuth attempt lifecycle', () => {
     }
   });
 
+  test('a failed status request ends polling and the same attempt can resume it', async () => {
+    const { attempts, tasks, tick } = setup();
+    const responses: Array<() => Promise<string>> = [
+      async () => {
+        throw new Error('Request failed with status code 502');
+      },
+      async () => 'wait',
+      async () => 'ok',
+    ];
+    const results: string[] = [];
+    let errors = 0;
+    const attempt = attempts.begin('codex');
+    const poll = () =>
+      attempt.poll(
+        () => responses.shift()!(),
+        (result) => {
+          results.push(result);
+          return result === 'wait';
+        },
+        () => errors++,
+        3000
+      );
+    expect(attempt.isPolling()).toBe(false);
+    poll();
+    expect(attempt.isPolling()).toBe(true);
+    tick();
+    await flush();
+    expect(errors).toBe(1);
+    expect(attempt.isPolling()).toBe(false);
+    expect(tasks.size).toBe(0);
+
+    poll();
+    expect(attempt.isPolling()).toBe(true);
+    tick();
+    await flush();
+    expect(attempt.isPolling()).toBe(true);
+    tick();
+    await flush();
+    expect(results).toEqual(['wait', 'ok']);
+    expect(attempt.isPolling()).toBe(false);
+    expect(tasks.size).toBe(0);
+  });
+
+  test('an invalidated attempt never reports an active poll', () => {
+    const { attempts } = setup();
+    const old = attempts.begin('codex');
+    old.poll(
+      async () => 'wait',
+      () => true,
+      () => {},
+      3000
+    );
+    expect(old.isPolling()).toBe(true);
+    const next = attempts.begin('codex');
+    expect(old.isPolling()).toBe(false);
+    expect(next.isPolling()).toBe(false);
+  });
+
   test('terminal results and request errors do not schedule another poll', async () => {
     for (const fail of [false, true]) {
       const { attempts, tasks, tick } = setup();
       let results = 0;
       let errors = 0;
-      attempts.begin('codex').poll(
+      const attempt = attempts.begin('codex');
+      attempt.poll(
         async () => {
           if (fail) throw new Error('timeout');
           return 'ok';
@@ -231,6 +294,7 @@ describe('OAuth attempt lifecycle', () => {
       await flush();
       expect(results).toBe(fail ? 0 : 1);
       expect(errors).toBe(fail ? 1 : 0);
+      expect(attempt.isPolling()).toBe(false);
       expect(tasks.size).toBe(0);
     }
   });

@@ -1,6 +1,8 @@
 export interface OAuthAttempt {
   readonly signal: AbortSignal;
   isCurrent: () => boolean;
+  /** True from poll() until a terminal result, a request error or invalidation. */
+  isPolling: () => boolean;
   invalidate: () => void;
   schedule: (callback: () => void, delay: number) => void;
   poll: <T>(
@@ -16,18 +18,23 @@ interface Scheduler {
   clearTimeout: (timer: number) => void;
 }
 
-// A provider owns one attempt and at most one scheduled task. Invalidating an
-// attempt also makes already-dispatched requests inert when they settle.
+/**
+ * Own one current attempt and at most one scheduled task per provider.
+ * Polling stays active through scheduled and in-flight requests until a terminal
+ * result or request error. Invalidation aborts requests and makes late results inert.
+ */
 export function createOAuthAttempts(scheduler: Scheduler) {
   const attempts = new Map<string, OAuthAttempt>();
 
   const begin = (provider: string): OAuthAttempt => {
     attempts.get(provider)?.invalidate();
     let timer: number | undefined;
+    let polling = false;
     const controller = new AbortController();
     const attempt: OAuthAttempt = {
       signal: controller.signal,
       isCurrent: () => attempts.get(provider) === attempt,
+      isPolling: () => polling && attempt.isCurrent(),
       invalidate: () => {
         if (timer !== undefined) scheduler.clearTimeout(timer);
         timer = undefined;
@@ -43,13 +50,17 @@ export function createOAuthAttempts(scheduler: Scheduler) {
         }, delay);
       },
       poll: (request, onResult, onError, delay) => {
+        polling = true;
         const tick = async () => {
           try {
             const result = await request();
             if (!attempt.isCurrent()) return;
             if (onResult(result)) attempt.schedule(() => void tick(), delay);
+            else polling = false;
           } catch (error: unknown) {
-            if (attempt.isCurrent()) onError(error);
+            if (!attempt.isCurrent()) return;
+            polling = false;
+            onError(error);
           }
         };
         attempt.schedule(() => void tick(), delay);
