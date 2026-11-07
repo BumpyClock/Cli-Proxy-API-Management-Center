@@ -47,4 +47,4 @@ node design-review/council/summarize.mjs 6
 python3 design-review/council/build-comparisons.py
 ```
 
-The screenshot capture requires an installed Playwright Core and Chromium. The comparison builder requires Pillow. These review tools are not production dependencies. Raw reviewer text files must exist before summarization. Rerunning captures replaces the local images; preserve the reviewed revision before doing so.
+The screenshot capture requires an installed Playwright Core and Chromium. The comparison builder requires Pillow. These review tools are not production dependencies. Each round’s `reviews.json` preserves all three exact raw reviewer transcripts and must exist before summarization. Rerunning captures replaces the local images; preserve the reviewed revision before doing so.
