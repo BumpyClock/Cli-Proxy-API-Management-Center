@@ -1,0 +1,386 @@
+{
+  "round": 2,
+  "councilMean": 7.591666666666668,
+  "metricMeans": {
+    "design_coherence": 7.8999999999999995,
+    "typography": 7.666666666666667,
+    "cleanliness": 7.666666666666667,
+    "visual_design": 7.866666666666667,
+    "ease_of_use": 7.533333333333334,
+    "information_hierarchy": 7.366666666666667,
+    "spacing_alignment": 7.899999999999999,
+    "navigation_wayfinding": 8.2,
+    "responsive_mobile": 7.433333333333334,
+    "accessibility_visible": 7.266666666666667,
+    "data_visualization": 6.866666666666667,
+    "interaction_affordance": 7.433333333333334
+  },
+  "reviews": [
+    {
+      "model": "sol",
+      "round": 2,
+      "scores": {
+        "design_coherence": 8.3,
+        "typography": 7.8,
+        "cleanliness": 8.4,
+        "visual_design": 8,
+        "ease_of_use": 7.7,
+        "information_hierarchy": 7.5,
+        "spacing_alignment": 8.2,
+        "navigation_wayfinding": 8.1,
+        "responsive_mobile": 7.4,
+        "accessibility_visible": 7.4,
+        "data_visualization": 7,
+        "interaction_affordance": 7.6
+      },
+      "overall": 7.78,
+      "metric_evidence": {
+        "design_coherence": "Observed across all 34 images. Shared navigation, neutral surfaces, cyan-blue selection accents, borders, and restrained headings create a coherent developer console. Remaining inconsistency appears in control treatments. Auth Files combines rectangular provider tabs, pill filters, outlined controls, and an icon-only display control in one toolbar. Equivalent provider selection uses different patterns across Providers and OAuth editors.",
+        "typography": "Page titles, section headings, and metric values are clearly differentiated. Monospace suits identifiers and log output. Small secondary text dominates Auth Files request summaries, quota legends, and dark-mode metadata. OAuth instructions repeatedly form long text blocks, especially on mobile.",
+        "cleanliness": "Desktop tables, setup steps, and settings groups are orderly and free of decorative clutter. Remaining clutter is concentrated in repetitive explanation. Usage repeats nearly identical missing-history explanations in two panels. Dashboard combines several timestamp, scope, and explanatory lines around an empty request chart.",
+        "visual_design": "Light and dark captures preserve a practical, professional identity. Provider logos aid recognition without overwhelming the interface. Remaining rough edges include the crowded Providers status cell and weak differentiation between dark Config fields, boundaries, and surrounding surfaces.",
+        "ease_of_use": "Visible Upload File, Add Gemini key, login, and configuration actions are specific. Disabled OAuth Save controls explain their prerequisite. Mobile OAuth editors place ten provider shortcuts before the model work area. Mobile logs remove text labels from download, clear, and fullscreen actions.",
+        "information_hierarchy": "Desktop pages generally establish title, status, controls, and content clearly. Mobile OAuth editor model sections begin near the bottom of the viewport after a large provider chooser. Mobile Usage shows two explanatory panels before model analysis. Mobile quota devotes substantial height to metadata and legends before the plot.",
+        "spacing_alignment": "Desktop gutters, card edges, table columns, and form fields align consistently. Mobile cards retain usable outer margins. Remaining imbalance appears in Providers, where the sort-direction control is squeezed between larger controls, and Config mobile, where the section icon occupies a separate line above its heading.",
+        "navigation_wayfinding": "Grouped desktop navigation, clear active states, and nested Auth Files breadcrumbs provide strong location cues. Mobile retains the current section title. Auth Files mobile truncates the model-alias tab and uses a separate overflow treatment for provider tabs. Long mobile header titles also truncate, although body headings restore context.",
+        "responsive_mobile": "All 14 authenticated mobile routes and mobile login were inspected. Metrics become two-column grids, records become cards, logs wrap, and Config navigation becomes a selector. Remaining friction includes clipped Auth Files tabs, the narrow Providers sort control, and tall OAuth provider lists that push the actual editor below the first viewport.",
+        "accessibility_visible": "Main text is readable, login shows a prominent focus outline, and statuses include words rather than color alone. Many mobile buttons have generous visible bounds. Remaining concerns are the extremely narrow Providers sort-direction control, small unlabeled provider action icons, and subdued dark Config placeholders and boundaries. Contrast ratios and actual hit areas were not measured.",
+        "data_visualization": "Quota explicitly distinguishes snapshots from next-reset projections. Numbered legends and grouped point labels acknowledge overlapping series. However, the four coincident quota traces are visually inseparable, and Dashboard renders a full zero-valued chart despite saying there are no requests. Mobile quota's visible plot begins low enough that its time axis is outside the capture. Identical values and absent dated Usage totals are fixture conditions, not production defects.",
+        "interaction_affordance": "Buttons, switches, disclosures, tabs, and selected states generally look actionable. Specific labels make primary actions predictable. Remaining ambiguity comes from icon-only mobile log actions, the caret-only Providers sort-direction control, and chart legend chips whose button-like styling does not clearly distinguish identification from filtering."
+      },
+      "top_fixes": [
+        {
+          "rank": 1,
+          "severity": "medium",
+          "screen": "providers-390.png, logs-390.png, auth-files-390.png",
+          "evidence": "Observed control compression and label loss. Providers has a very narrow caret-only sort-direction control. Logs reduces three desktop actions to icons. Auth Files clips the model-alias tab.",
+          "user_impact": "Mobile operators must interpret compressed controls and partially hidden destinations while performing administrative tasks.",
+          "concrete_fix": "Give sort direction a full-size labeled control. Keep short labels for log actions, especially Clear. Use a section selector or a consistently signposted scrollable tab strip for Auth Files."
+        },
+        {
+          "rank": 2,
+          "severity": "medium",
+          "screen": "oauth-excluded-390.png, oauth-model-alias-390.png",
+          "evidence": "Observed hierarchy issue. The provider card contains introductory text, a selector, and five rows of shortcuts. The model work area begins around the bottom quarter of the viewport, with alias fields outside the capture.",
+          "user_impact": "The provider-selection prerequisite visually dominates the task users came to perform.",
+          "concrete_fix": "Keep the searchable provider selector primary. Move the complete shortcut list into an optional disclosure or compact picker. Preserve the selected provider beside the model editor."
+        },
+        {
+          "rank": 3,
+          "severity": "medium",
+          "screen": "quota-1440.png, quota-dark-1440.png, quota-390.png",
+          "evidence": "Observed readability limitation under the supplied equal-value fixture. Four quota series occupy one trace. Numbered legends and the 1–4 point label help, but do not make individual paths distinguishable. Mobile legends precede a plot whose time axis is below the captured viewport.",
+          "user_impact": "Account comparison depends heavily on reading the legend rather than the visualization.",
+          "concrete_fix": "Offer compact account rows showing remaining percentage and next reset before the projection. Aggregate coincident traces with an explicit shared-values label. Reduce mobile legend height and provide a clearly labeled account-isolation control."
+        },
+        {
+          "rank": 4,
+          "severity": "medium",
+          "screen": "dashboard-1440.png, dashboard-dark-1440.png, dashboard-390.png, usage-390.png",
+          "evidence": "Observed redundant composition. Dashboard allocates a large panel to an empty request plot. Usage repeats missing-history explanations in separate Requests and Tokens cards.",
+          "user_impact": "Empty-state explanation consumes attention and mobile viewport space before other operational information.",
+          "concrete_fix": "Use a compact no-requests state with its time window and optional chart expansion. Consolidate the two missing-history explanations into one shared notice. Preserve the distinction between unavailable history and zero traffic."
+        },
+        {
+          "rank": 5,
+          "severity": "medium",
+          "screen": "config-dark-1440.png, providers-dark-1440.png, auth-files-1440.png",
+          "evidence": "Observed visual weakness, not a measured compliance failure. Dark Config placeholders and input boundaries are subdued. Auth Files packs request details and timestamps into small secondary type. Providers stacks a toggle, status badge, counts, and activity marks within one cell.",
+          "user_impact": "Secondary information requires more visual effort to distinguish and scan.",
+          "concrete_fix": "Strengthen dark field boundaries and placeholder contrast. Increase the smallest operational text. Simplify the Providers status cell to one state indicator and a compact request summary."
+        },
+        {
+          "rank": 6,
+          "severity": "low",
+          "screen": "auth-files-390.png, providers-390.png, config-390.png",
+          "evidence": "Observed cross-screen inconsistency. Related selectors use several competing shapes and overflow treatments. Config places its section icon on a separate line, adding height without additional information.",
+          "user_impact": "Users encounter different visual rules for similar choices. Maintainers inherit several toolbar patterns.",
+          "concrete_fix": "Standardize selection, filtering, and overflow treatments by purpose. Align section icons with headings. Preserve the existing neutral surfaces and blue selection accent."
+        }
+      ],
+      "strengths": [
+        "Observed desktop shell is coherent and appropriately restrained for developer operations. No rebrand or decorative redesign is needed.",
+        "Tables preserve useful technical density, with clear headers, separators, identifiers, and aligned numeric columns.",
+        "Mobile layouts perform meaningful adaptation rather than merely shrinking desktop tables.",
+        "Quota copy clearly labels projection assumptions. Usage distinguishes missing history from reported totals.",
+        "Plugin screens expose global-disabled status and a direct configuration action. The store visibly explains third-party access risk.",
+        "Login provides clear connection context, a visible focus treatment, and an explicit explanation of remembered-key storage.",
+        "Dark mode preserves the same hierarchy and restrained identity across the four supplied routes."
+      ],
+      "unverified": [
+        "All 34 supplied screenshot images were inspected. Assessment is limited to captured viewports, not full pages.",
+        "No interactions were exercised. Save, refresh, upload, deletion, filtering, sorting, disclosures, chart inspection, and navigation behavior remain unverified.",
+        "Screen-reader semantics, keyboard operation, focus order, actual touch hit areas, and measured contrast compliance remain unverified.",
+        "Capture facts specify reduced motion. Animation and ordinary-motion behavior were not assessed.",
+        "No live backend was used. Synthetic account names, credentials, metrics, and repeated values do not establish production data defects.",
+        "Quota fixture coverage is partial. Plugin evidence covers disabled and empty states, not populated plugin management or installation flows.",
+        "Populated dated Usage charts, nonzero request-flow patterns, validation errors, loading states, and recovery flows were not supplied.",
+        "Mobile navigation was captured closed. Its open state and route discoverability remain unverified.",
+        "Dark-mode evidence covers desktop Dashboard, Providers, Quota, and Config only.",
+        "Mobbin was authentication-blocked. No Mobbin references were inspected. Comparison reflects professional dashboard design judgment, not usability-study evidence.",
+        "No files were edited. No browser state was changed. No captures were run."
+      ],
+      "overallCalculated": 7.783333333333334
+    },
+    {
+      "model": "muse",
+      "round": 2,
+      "scores": {
+        "design_coherence": 8.2,
+        "typography": 7.8,
+        "cleanliness": 7.6,
+        "visual_design": 8,
+        "ease_of_use": 7.7,
+        "information_hierarchy": 7.5,
+        "spacing_alignment": 8.1,
+        "navigation_wayfinding": 8.3,
+        "responsive_mobile": 7.9,
+        "accessibility_visible": 7.2,
+        "data_visualization": 6.8,
+        "interaction_affordance": 7.4
+      },
+      "overall": 7.71,
+      "metric_evidence": {
+        "design_coherence": "Observed: one consistent shell, card radius, border and black primary button system across all 14 desktop pages and dark mode. Drift remains in button variants (white Refresh, grey-filled Check for updates and Download Logs, solid red Clear Logs), in four different tab and segmented-control styles, and in sponsored BestProxy and APIKEY.FUN blocks that break the neutral operations identity.",
+        "typography": "Observed: clear page titles, large readable summary numbers, and appropriate monospace for keys, model ids and timestamps. Page metadata is inconsistently monospace on Dashboard, Providers and Config but sans on Plugins and OAuth subpages. Run-together small grey mono metadata such as '3/3 active resources 3 provider families Updated...' on providers-1440 has weak internal hierarchy.",
+        "cleanliness": "Observed: restrained surfaces and little decoration. Cleanliness is reduced by repeated caveat copy before data on dashboard-1440 Remaining quota, duplicated Not reported explanations on usage-1440, sponsor content on quick-start-1440 and config-1440, and large unresolved empty areas below the single-row Providers table and inside Logs.",
+        "visual_design": "Observed: credible mature developer-dashboard restraint, coherent dark mode, and no gratuitous color. Cards on near-white and near-black backgrounds have very low separation. Provider icons vary sharply in optical size and weight in Providers and OAuth lists, and the rainbow product mark sits uneasily against the otherwise neutral system. The result is professional but flat and generic.",
+        "ease_of_use": "Observed: primary tasks are usually named directly, including Upload File, Add Gemini key, Refresh all credentials and per-provider Log in buttons. Friction comes from hidden Auth Files actions behind '...', icon-only Provider actions, duplicate header-icon and page Refresh controls, an OAuth list with no visible search, and disabled Save reasoning placed away from the Provider field on oauth-excluded-1440.",
+        "information_hierarchy": "Observed: page title, status metadata and summary stats establish a good first scan on Dashboard and Usage. Explanatory caveats routinely outrank the data they qualify, pushing quota values and Top Models down. Quick Start gives the APIKEY.FUN promotion the second position and similar visual weight to setup. Providers splits attention between a long provider rail and a mostly empty detail panel.",
+        "spacing_alignment": "Observed: page grids, sidebar rhythm and form alignment are generally precise, especially Config and OAuth Model Aliases. Auth Files rows are bloated and vertically uneven because the tick strip and two-line 'No requests' caption sit inside Requests. Providers Status stacks toggle, pills and dots awkwardly. Logs desktop puts 842ms visually at the start of Message rather than cleanly under Latency.",
+        "navigation_wayfinding": "Observed: grouped OPERATE, GATEWAY, OBSERVE and CONTROL sidebar, persistent active state, breadcrumbs and an Auth Files count badge make location clear. The chevron before the breadcrumb and the four unlabeled top-right icons are ambiguous. Mobile truncates header titles on system-390 and oauth-excluded-390, and Auth Files tabs clip to 'OAuth Mo' on auth-files-390 without a clear scroll cue.",
+        "responsive_mobile": "Observed: no captured overflow, statistics become two-column grids, Provider and Auth File tables become cards, Config sections become a select, and login remains focused. Mobile still requires long scanning: four full-width quota legends push the chart down on quota-390, OAuth actions stack into very tall provider blocks, the Providers detail begins below the configured list, and the Logs search placeholder truncates.",
+        "accessibility_visible": "Observed strengths: strong visible focus ring on the Management Key field, numbered chart legends rather than color alone, a data-table alternative on Dashboard, and labelled toggles in Config. Visible risks are extensive small pale-grey helper, axis and placeholder text, faint unchecked checkboxes, pale provider and status pills, and small icon-only targets in header, tables and mobile Logs actions. Exact contrast ratios and target dimensions were not measured.",
+        "data_visualization": "Observed: numbered legends, explicit snapshot and projection caveats, and a data-table fallback show unusual data honesty. The charts themselves are weak in the captured states: Dashboard uses a 0 to 1 axis for an empty window with overlapping dashed zero lines and a cryptic '1,2' endpoint. Quota collapses four series into one '1-4' line and devotes most width to a flat 100 percent projection. Usage presents two chart positions as duplicated text-only Not reported cards. Auth Files tick strips communicate almost nothing when empty.",
+        "interaction_affordance": "Observed: filled primary buttons, toggles, search fields and segmented controls are recognizable. Text-like disclosures such as 'Filter accounts', 'View data table', 'How to read this chart' and System model expanders have weak affordance. Provider rail rows, Quick Start rows and Structured Filters look partly informational rather than clearly actionable. Desktop and mobile Auth Files expose different action patterns."
+      },
+      "top_fixes": [
+        {
+          "severity": "high",
+          "screen": "Dashboard and Quota Management, desktop and mobile, light and dark",
+          "evidence": "Dashboard Request flow shows only 0 and 1 on the y-axis, overlapping dashed series at zero and a cryptic '1,2' endpoint. Quota collapses four accounts into one line labelled '1-4', then a long flat 100 percent projection dominates the chart; mobile crops the visible y-range to roughly 50 to 100 percent.",
+          "user_impact": "Operators cannot quickly distinguish accounts or judge whether the chart shows measured history, an empty window or a speculative reset. The most operationally important visual evidence requires reading several caveats first.",
+          "concrete_fix": "Use a true empty state instead of a scaled chart when the window has no requests. For quota, separate measured points from the reset projection with a shaded or clearly bounded projection region, label the reset step directly, keep a 0 to 100 percent axis on mobile, and let legend selection isolate one account. Keep the numbered legend and data-table alternative."
+        },
+        {
+          "severity": "high",
+          "screen": "Dashboard, Usage Statistics and Quota Management",
+          "evidence": "Dashboard Remaining quota shows four lines of definitions before the first quota value. Usage repeats two nearly identical Not reported paragraphs in adjacent cards before Top Models. Quota repeats snapshot qualifications in header, chart subtitle and help disclosure.",
+          "user_impact": "The interface is honest, but the operator must read documentation prose before reaching the values needed for a decision. Repetition also makes important warnings easier to ignore.",
+          "concrete_fix": "Put the value, status and freshness first. Reduce each caveat to one short line such as 'Snapshot only. Updated 8:32 PM.' Move definitions into one shared info disclosure or tooltip per panel, and do not repeat the same Not reported explanation in both Usage cards."
+        },
+        {
+          "severity": "high",
+          "screen": "Auth Files Management, desktop and mobile",
+          "evidence": "Every desktop row repeats Success 0, Failure 0, a pale tick strip and 'No requests in the last 200 min' over two lines. Actions are hidden behind '...' on desktop but become Actions and Details menus on mobile. Mobile tabs clip 'OAuth Model Aliases' to 'OAuth Mo'.",
+          "user_impact": "Credential scanning is slower than the data density requires, repeated empty microcharts create visual noise, and users must relearn where actions live across breakpoints.",
+          "concrete_fix": "Collapse empty request history to a single muted 'No recent requests' value and show the tick strip only when it contains signal. Use one labelled Actions menu pattern at both widths. Give the mobile tab row a fade, scroll buttons or a select so the third tab is discoverable."
+        },
+        {
+          "severity": "high",
+          "screen": "Cross-screen small text and icon controls",
+          "evidence": "Small pale-grey text is used for helper copy, chart axes, placeholders, table metadata and secondary labels in both themes. Examples include Dashboard chart instructions, Providers 'Not configured' rows, Usage explanatory paragraphs and Config field help. Header icons, table eye, edit and delete icons, password visibility and mobile Logs icon buttons are visibly compact.",
+          "user_impact": "Low-vision users and users in bright environments must work harder to read operational qualifications and hit frequent controls. This assessment is visible-risk evidence only; no contrast ratio was measured.",
+          "concrete_fix": "Audit every secondary text token against WCAG AA at its actual size, raise the minimum body and helper size, and reserve the palest grey for non-essential metadata. Give icon buttons a minimum 40 to 44 px hit area on touch layouts while keeping the glyph size restrained."
+        },
+        {
+          "severity": "medium-high",
+          "screen": "AI Providers, desktop and mobile",
+          "evidence": "The desktop detail panel contains one key row followed by a large empty field while the left rail continues through eight Not configured providers. Status combines a toggle, Active pill, Success and Failure pills and dots in one crowded cell. Row actions are three unlabeled icons. On mobile the detail card starts after the configured-provider list and its status continues below the viewport.",
+          "user_impact": "The page makes provider inventory look more important than the selected provider's keys, and the status cell mixes control, state and metrics so none scans cleanly.",
+          "concrete_fix": "Keep configured providers prominent but collapse Not configured by default with its count. Split Status into Enabled control, health state and request counts in aligned rows or columns. Add text labels or tooltips with persistent accessible names to view, edit and delete, and increase their hit areas."
+        },
+        {
+          "severity": "medium-high",
+          "screen": "Quick Start and Config Panel",
+          "evidence": "APIKEY.FUN occupies the second major card on Quick Start with a primary-looking Add key button. Config Proxy URL includes 'Sponsor: BestProxy.com' directly under a credential-bearing proxy field placeholder.",
+          "user_impact": "Commercial content competes with first-run setup and with a sensitive network setting. In an operations console this weakens perceived neutrality and trust, even when sponsorship is disclosed.",
+          "concrete_fix": "Move sponsored offers below completed setup guidance, label the entire block Sponsored, and use secondary button styling. Remove the sponsor link from the Proxy URL field itself or place it in a separate clearly labelled resources area away from credential input."
+        },
+        {
+          "severity": "medium",
+          "screen": "Mobile navigation and long lists",
+          "evidence": "The mobile header truncates Management Center Info and OAuth Model Disablement while repeating the same title as the page H1 below. OAuth stacks Log in and Create account vertically for each provider. Quota uses four full-width legend rows before the chart. Providers requires passing the configured list before reaching key details.",
+          "user_impact": "Mobile remains usable, but routine checks become scroll-heavy and the sticky header wastes space without adding wayfinding beyond the H1.",
+          "concrete_fix": "Shorten sticky header labels intentionally, for example System and Model Disablement, rather than truncating full titles. Add OAuth search or provider jump links, place Create account beside Log in when width permits, make quota legends a compact two-column wrap, and collapse the provider selector after selection."
+        },
+        {
+          "severity": "medium",
+          "screen": "Logs Viewer, desktop and mobile",
+          "evidence": "Desktop column spacing makes 842ms appear attached to Message on the completed-request row. Structured Filters reads as muted text with a chevron. Mobile reduces Download, Clear and Full Screen to icons, with destructive Clear shown as a red bin between non-destructive actions, and truncates the search placeholder.",
+          "user_impact": "Operators may misread latency placement, miss filtering, or hesitate over an unlabeled destructive control during incident work.",
+          "concrete_fix": "Align latency in its own fixed tabular column with a header and unit. Style Structured Filters as a button with active-filter count. Retain short text labels for Download, Clear logs and Full screen on mobile, and separate Clear logs from routine actions."
+        },
+        {
+          "severity": "medium",
+          "screen": "Cross-screen header and disclosure affordances",
+          "evidence": "Most pages show both an unlabeled refresh icon in the global header and a labelled Refresh button in the page header. Disclosures such as Filter accounts, View data table, How to read this chart and model expanders are plain grey text with small triangles. Quick Start destinations are grey text at row ends.",
+          "user_impact": "Users cannot tell whether the two refresh controls differ, and useful secondary tools look like captions rather than controls.",
+          "concrete_fix": "Keep one refresh action per page and name any global action distinctly. Give disclosures a consistent button treatment, visible hover and focus states, and expanded-state rotation. Make whole Quick Start rows visibly actionable with a clear chevron target."
+        },
+        {
+          "severity": "medium",
+          "screen": "Usage Statistics and Management Center Info",
+          "evidence": "Usage gives Requests by day and Tokens by day equal prominence although both are unavailable, then presents useful model data only as dense tables. System repeats the connection URL in metadata, version card and status row, and model groups are plain text disclosures.",
+          "user_impact": "Unavailable history receives more visual weight than the available latency and failure evidence. Repetition makes the System page feel less edited than Config and Providers.",
+          "concrete_fix": "Combine unavailable daily history into one compact status panel and elevate Top Models. Add simple in-table bars for request share and failure emphasis without adding decorative charts. Show the connection URL once in the status card and style model groups as proper disclosure rows."
+        }
+      ],
+      "strengths": [
+        "Consistent grouped sidebar, breadcrumb, page-header and primary-action pattern gives the product a stable operational frame.",
+        "Neutral light and dark themes are restrained, coherent and appropriate for repeated developer-operations work.",
+        "Data limitations are stated unusually honestly, including snapshot-only quota, missing daily usage and in-memory usage reset behavior.",
+        "Charts include numbered legends, keyboard inspection instructions and a Dashboard data-table alternative rather than relying only on color.",
+        "Login is focused, explains reversible password storage plainly and shows a strong focus ring on the Management Key field.",
+        "Config combines search, section navigation, Visual and Source modes and labelled toggle cards in a clear settings model.",
+        "OAuth rows name the exact provider on every primary button and explain account incompatibilities where confusion is likely.",
+        "Plugin Store makes the full-backend-access risk prominent before installation actions.",
+        "Mobile layouts generally convert tables into readable cards without captured horizontal overflow."
+      ],
+      "unverified": [
+        "Keyboard order, focus visibility beyond the login field and chart hint text, screen-reader names and semantics, and reduced-motion behavior.",
+        "Actual contrast ratios, touch-target dimensions, zoom and text-resize behavior.",
+        "Hover, tooltip, menu, modal, drawer, disclosure and segmented-control interaction states.",
+        "Loading, saving, validation, error, retry, undo and destructive-confirmation flows.",
+        "Live refresh behavior, stale-data handling and success or failure feedback after actions.",
+        "Below-fold and full-page content because evidence is viewport-only.",
+        "Populated quota and plugin states because fixture coverage is partial; empty fixture content was not treated as proof of a production data defect.",
+        "Dark-mode quality on pages other than Dashboard, Providers, Quota and Config.",
+        "Dense real-world data, long names, localization expansion, large credential lists and high-volume logs.",
+        "Whether duplicate global and page Refresh controls perform different operations.",
+        "Mobbin references were not inspected because Mobbin MCP is authentication-blocked."
+      ],
+      "overallCalculated": 7.708333333333335
+    },
+    {
+      "model": "opus",
+      "round": 2,
+      "scores": {
+        "design_coherence": 7.2,
+        "typography": 7.4,
+        "cleanliness": 7,
+        "visual_design": 7.6,
+        "ease_of_use": 7.2,
+        "information_hierarchy": 7.1,
+        "spacing_alignment": 7.4,
+        "navigation_wayfinding": 8.2,
+        "responsive_mobile": 7,
+        "accessibility_visible": 7.2,
+        "data_visualization": 6.8,
+        "interaction_affordance": 7.3
+      },
+      "overall": 7.28,
+      "metric_evidence": {
+        "design_coherence": "Observed. Every page shares one shell: the sidebar, the breadcrumb bar, the H1 with action on the right, and the card containers. Shared components drift in four ways. (1) Secondary buttons come in at least four styles: outline 'Refresh' on most pages; gray-filled 'Check for updates', 'Copy version info' and 'Request Logging' on System; small gray-filled 'Back'/'Save' on the OAuth exclusion and alias pages; small solid 'Add API Key' on Config. (2) Four patterns do the same filter or switch job: underline tabs (Auth Files, Logs), a rounded pill segmented control (Auth Files status, Config Visual/Source), a boxed segmented control (Quota Remaining/Accounts, Weekly/5-hour), and bordered chips with counts (Plugin Store). (3) Timestamps use four formats: '2026-10-20T09:42:10Z' on Logs, 'Nov 6, 2026 08:27 PM' on Auth Files, 'Nov 6, 2026, 8:32 PM' on Providers, '11/6/2026, 8:32:36 PM' on Usage. (4) The page metadata row uses mono with '·' (Dashboard, Auth Files, Config), mono with double spaces (Providers), mono plus a second sans line ending in a period (Quota), and mono with pipe dividers (Plugins).",
+        "typography": "Observed. H1, card title and body sizes form a clear and consistent scale. Tabular numerals in the KPI strip and the Usage tables read well. Monospace is overused. It sets metadata ('Updated just now'), status words ('Unknown', 'Connected'), and some placeholders ('Select or type a model ID' on the alias form), while the provider combobox next to it uses a sans placeholder. Weights are inconsistent. The Logs toggle labels ('Hide /v0/management logs', 'Show Raw Logs', 'Auto Refresh') are bold and dark, but 'Structured Filters' in the same toolbar is light gray. 'Keep original' on the alias form is bolder and larger than its sibling field labels. All eight Config section-nav items are semibold, so only a background tint marks the active one.",
+        "cleanliness": "Observed. Quick Start, Plugins and Usage tables are clean. Explanatory copy piles up in places. The Dashboard 'Remaining quota' card runs three separate caveat lines ('Reported snapshots, not live usage.' / '4 of 4 eligible…' / 'Dots are reported snapshots. Dashed steps…') before any data appears. Each Usage 'by day' card carries two near-duplicate caveat sentences, and both cards repeat them word for word. Logs packs a search field, filters, two toggles, a third toggle and four buttons into two ragged rows. Auth Files repeats 'No requests in the last 200 min' on every row. The 'Enabled' status chip duplicates the Enabled toggle on the same row.",
+        "visual_design": "Observed. The neutral palette with a teal-blue accent is restrained and fits a dev-ops tool. Provider logos give quick recognition. Dark mode on the 4 captured pages keeps the hierarchy intact. The Plugin Store trust banner uses a calm warning tint, which is appropriate. Rough edges: the solid red 'Clear Logs' button is the strongest color on the Logs page and outweighs the primary task (reading logs). Provider type chips (Claude orange, Codex violet, Gemini blue) are small, low-weight tags. The Config page embeds a sponsor link ('BestProxy.com') inside a settings field hint, which reads as advertising in an admin surface.",
+        "ease_of_use": "Observed. Quick Start's numbered steps with destination links work well. OAuth gives one clear CTA per provider. The disabled Save shows its reason ('Please enter a provider first'). Friction points: the Auth Files sort select shows only 'Default' with no visible label. The Providers sort-direction button is an unlabeled chevron. The Quota segmented controls ('Remaining | Accounts', 'Weekly | 5-hour') have no group labels, so what they switch is inferred, not stated. On Dashboard, 'Requests 0', the amber disclosure 'Usage statistics: 129', and the Usage page's 'Total Requests 480' are three different request counts, and no label explains their different scopes. That is a label-scope problem, not a proven data defect, because the values are fixtures.",
+        "information_hierarchy": "Observed. The KPI strips (Dashboard, Usage) lead each page correctly. The H1 plus metadata row orients the user. Weaknesses: on Dashboard, an empty 'Request flow' chart (flat lines at 0 on a 0 to 1 axis) takes about 440px above the fold while its own text says 'No requests in this window'. The Providers Status cell stacks a toggle, an 'Active' chip, a 'Success: 0' pill, a 'Failure: 0' pill and a dot-bar in one narrow column, while the Base URL and Prefix columns stay mostly empty. Auth Files rows are about 128px tall for 6 credentials, so only about 5 fit at 1440x1000.",
+        "spacing_alignment": "Observed. Card padding, gutters and the sidebar rhythm are consistent across pages. Defects: Logs table headers 'Latency' and 'Message' nearly touch, and right-aligned latency values sit against left-aligned messages. System 'Available Models' uses native ▶ triangles that sit lower than the provider icon and label baseline. Button heights vary in the same header slot: about 30px for OAuth exclusion 'Back'/'Save' and System 'Check for updates', about 36px for 'Refresh' elsewhere. The Providers detail panel leaves about 550px of empty space below a one-row table, while the left list runs past the fold.",
+        "navigation_wayfinding": "Observed. The sidebar is grouped (Operate, Gateway, Observe, Control), the active item has an accent bar and fill, the Auth Files count badge and the breadcrumbs with a back chevron answer 'where am I'. Quick Start links to destinations. Issues: H1 'Add provider model disablement' does not match the breadcrumb and tab 'OAuth Model Disablement'. The H1 'Auth Files Management' does not match the sidebar label 'Auth Files'. 'Management Center Info' (H1 and nav) is a vague label for a system and version page. On mobile the topbar repeats the H1 and truncates it ('OAuth Model Disable…', 'Management Center I…').",
+        "responsive_mobile": "Observed at 390. No horizontal overflow. KPI grids reflow to 2x2. Tables become cards on Auth Files and Providers. Config swaps its section nav for a labeled select, which is good. Defects: the Auth Files tab strip clips mid-word ('OAuth Mo') with no visible scroll affordance. On Logs, Download, Clear and Full Screen become icon-only, including the destructive red Clear. Every page puts a standalone 'Refresh' button on its own row before content, which pushes data down by about 50px. The Providers sort-direction button is a thin sliver next to a full-height select. OAuth cards with stacked CTAs make the provider list about 3x as long as on desktop. The navigation drawer was not captured.",
+        "accessibility_visible": "Observed. Body text contrast looks adequate in both themes. Form fields have visible labels. The login focus ring is clearly visible. The chart keyboard hint and the 'View data table' fallback are present. Concerns: the mobile Logs icon-only buttons have no visible text. The Providers sort-direction button is about 18px wide on desktop. The Quota segmented options are about 30px tall. Native disclosure triangles (Filter accounts, How to read this chart, Available Models) are small text-sized targets. In dark mode, the off toggles on Config are a gray knob on a dark track with low visible contrast. Config shows Host Address '0.0.0.0' as placeholder text (sharedFields.tsx:26), so an unset value looks almost the same as a configured one.",
+        "data_visualization": "Mixed. Fixture data limits what can be judged. Usage tables right-align numbers with thousands separators, and failures are tinted red, which is good. Quota labels each overlapping series ('1–4') and offers a data table. App-owned weaknesses: the empty Dashboard chart still draws a flat 0 to 1 axis instead of a compact empty state. Legend items use boxed index numbers ('1', '2') as the main key instead of a color swatch, so the reader must map numbers to the lines. The dashed projection on Quota blends four series colors into one stroke. The Quota x-axis has only 3 ticks across 7 days. The Auth Files and Providers per-row status dot-bars have no scale or legend. The Usage day charts are fixture-empty ('Not reported'), so their rendering is unverified.",
+        "interaction_affordance": "Observed. Primary actions are solid dark, secondary actions outlined, Quick Start rows have chevrons, row actions have a kebab menu, and external links have an icon. Ambiguities: toggle on/off depends on track fill (black versus gray) with no on/off text. Status chip and toggle sit side by side on Auth Files and Providers, so the reader cannot tell which one controls state. Native ▶ disclosures look like plain text. The gray-filled 'Add alias' on mobile looks disabled. The 'Default' sort select and the sort-direction chevron do not say what they sort."
+      },
+      "top_fixes": [
+        {
+          "severity": "high",
+          "screen": "Cross-screen (System, OAuth exclusion/alias, Config, Logs, Plugin Store, Quota, Auth Files)",
+          "evidence": "At least 4 secondary-button styles and 4 filter/segment patterns doing the same jobs. Button heights of about 30px and about 36px in the same header-action slot.",
+          "user_impact": "Users cannot predict how a control behaves from its look. The product reads as assembled from parts. The next maintainer has no single component to extend.",
+          "concrete_fix": "Standardize on one secondary variant (outline, 36px) for header actions. Use one segmented control for mode switches and one count-chip style for filters, and keep underline tabs for sub-pages only. Replace the System and OAuth form gray-filled buttons."
+        },
+        {
+          "severity": "high",
+          "screen": "Logs 390",
+          "evidence": "Download, Clear (solid red) and Full Screen render as icon-only squares. Clear sits next to Download at the same size.",
+          "user_impact": "An operator on a phone can tap a destructive control without a text label. Whether a confirmation dialog follows is unverified.",
+          "concrete_fix": "Keep text labels on mobile or move secondary actions into an overflow menu. Render Clear as an outline-danger button set apart from Download. Confirm Clear in a dialog that names the scope."
+        },
+        {
+          "severity": "high",
+          "screen": "Dashboard (both widths, both themes) and Usage",
+          "evidence": "'Requests 0' next to amber 'Usage statistics: 129', while Usage shows 'Total Requests 480'. No visible label states the scope of each.",
+          "user_impact": "An operator checking traffic sees conflicting totals and cannot tell which number to trust.",
+          "concrete_fix": "Put a scope label on each count ('Current credentials, last 3h', 'All-time since backend start'). Replace the amber disclosure with a neutral secondary metric that links to Usage."
+        },
+        {
+          "severity": "medium",
+          "screen": "Dashboard Request flow, Quota chart",
+          "evidence": "The empty chart draws flat lines on a 0 to 1 axis below 'No requests in this window'. Legends lead with boxed numbers. The Quota x-axis has 3 ticks over 7 days. The blended dashed stroke merges series colors.",
+          "user_impact": "Space above the fold goes to a chart with no data. Mapping series to lines takes extra effort.",
+          "concrete_fix": "Collapse the chart to a compact empty state when the window has zero requests. Lead legends with a color swatch plus label, and keep the index as secondary text. Add daily ticks on the Quota axis. Draw overlapping series as one neutral line labeled 'N accounts'."
+        },
+        {
+          "severity": "medium",
+          "screen": "Auth Files 1440, Providers 1440",
+          "evidence": "Auth rows are about 128px tall with wrapped 'No requests in the last 200 min' and a duplicate 'Enabled' chip plus toggle. The Providers Status cell stacks 5 elements while Base URL and Prefix stay mostly empty.",
+          "user_impact": "Fewer credentials per screen and a slower scan for the one field that matters: is it healthy.",
+          "concrete_fix": "Merge the status chip into the toggle row. Show Success/Failure as one compact 'S 0 · F 0' figure with the dot-bar inline. Move 'no recent requests' to a tooltip or a muted bar state. Target about 64 to 72px rows."
+        },
+        {
+          "severity": "medium",
+          "screen": "Mobile (all pages)",
+          "evidence": "Every page puts a standalone 'Refresh' row before content. The Auth Files tabs clip to 'OAuth Mo'. The topbar truncates titles that the H1 already shows. The Providers sort button is a thin sliver.",
+          "user_impact": "Content starts lower, wayfinding text is cut off, and some controls are hard to hit.",
+          "concrete_fix": "Move Refresh into the topbar (an icon already exists there) or next to the H1. Show the section or parent name in the topbar instead of a duplicate title. Add an edge fade and scroll affordance to tab strips. Give the sort-direction button a 44x44 target."
+        },
+        {
+          "severity": "medium",
+          "screen": "Dashboard Remaining quota, Usage by-day cards",
+          "evidence": "Three caveat lines before the quota data. Two near-identical caveat sentences per Usage card, repeated across both cards.",
+          "user_impact": "Operators must read disclaimers to reach numbers. The repetition hides the one caveat that matters.",
+          "concrete_fix": "Keep one sentence per card. Move the methodology into the existing 'How to read this chart' disclosure. Merge the two Usage empty cards into one 'Daily totals not reported' notice."
+        },
+        {
+          "severity": "low",
+          "screen": "Cross-screen timestamps and metadata rows",
+          "evidence": "Four timestamp formats and four metadata-row separator styles (see design_coherence).",
+          "user_impact": "Comparing times across Logs, Auth Files and Usage takes mental conversion.",
+          "concrete_fix": "Use one formatter, such as 'Nov 6, 20:32' plus the full value on hover, and ISO only in raw logs. Use one metadata row component with '·' separators."
+        },
+        {
+          "severity": "low",
+          "screen": "OAuth Model Disablement, Auth Files, System",
+          "evidence": "The H1 'Add provider model disablement' does not match the breadcrumb and tab 'OAuth Model Disablement'. 'Auth Files Management' does not match the sidebar 'Auth Files'. 'Management Center Info' is vague.",
+          "user_impact": "Small wayfinding mismatches. Users cannot confirm they landed where they clicked.",
+          "concrete_fix": "Make the H1 match the nav and breadcrumb label. Rename 'Management Center Info' to 'System' or 'About & Models'."
+        },
+        {
+          "severity": "low",
+          "screen": "Config",
+          "evidence": "Host Address shows a '0.0.0.0' placeholder in near-value styling. Sponsor link inside the Proxy URL hint. Dark-mode off toggles have low contrast.",
+          "user_impact": "Users cannot tell whether a field is unset or set to the default. Promotional content appears in a settings form.",
+          "concrete_fix": "Use an explicit 'Default: 0.0.0.0' hint or show an 'unset' state. Move the sponsor link out of the field help. Raise the contrast of the off-track and knob in dark mode."
+        }
+      ],
+      "strengths": [
+        "Consistent shell: the grouped sidebar with section labels, the active accent bar, breadcrumbs with a back control, and one page-header pattern on all 14 pages.",
+        "A neutral, restrained palette that keeps the practical blue/teal identity. Dark mode on the captured pages keeps hierarchy and contrast.",
+        "The KPI strips on Dashboard and Usage lead with the right numbers and use tabular figures.",
+        "Usage tables are well built: right-aligned numerics, thousands separators, and a red tint on failures only.",
+        "Quick Start numbered steps link directly to their destination pages.",
+        "OAuth gives one clear primary CTA per provider, with secondary 'Create account' where relevant.",
+        "Disabled Save shows its reason ('Please enter a provider first') instead of failing silently.",
+        "The Plugin Store trust warning names the risk plainly.",
+        "Charts provide a keyboard hint and a 'View data table' or 'How to read' fallback.",
+        "Mobile reflow has no horizontal overflow. Tables convert to cards. The Config section nav becomes a labeled select."
+      ],
+      "unverified": [
+        "Hover, focus-visible, pressed and disabled states beyond the login focus ring and the disabled Save.",
+        "Keyboard order, screen-reader names, and the chart arrow-key inspection.",
+        "Mobile navigation drawer (never captured).",
+        "Content below the viewport on every page, including Quota Account breakdown, OAuth 'Other login methods', and System Local Login Data.",
+        "Chart tooltips, the expanded 'View data table' and 'How to read this chart', and what the 'Remaining/Accounts' and 'Weekly/5-hour' controls switch to.",
+        "Toasts, loading, error and confirmation states, including whether Clear Logs and Delete ask for confirmation.",
+        "Dark mode on the 10 pages not captured in dark.",
+        "Rendering of Usage daily charts, populated plugin lists, and distinct quota series. Fixtures were empty or identical.",
+        "Row action menus (kebab, mobile 'Actions' and 'Details') and the provider combobox dropdown.",
+        "Reduced-motion behavior and live update behavior (Auto Refresh, 'every 60s')."
+      ],
+      "overallCalculated": 7.283333333333334
+    }
+  ]
+}

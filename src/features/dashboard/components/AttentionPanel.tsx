@@ -14,6 +14,7 @@ import type { SourceFreshness } from '../logic/freshness';
 import { providerCredentialsHref, providerLogsHref, providerSettingsHref } from '../logic/links';
 import { redactSecrets } from '../logic/redact';
 import { evidenceAsOf, type EvidenceReceipts } from '../logic/evidence';
+import { setupNeeded } from '../logic/healthStatus';
 import { formatClockRange } from '../logic/time';
 import { providerLabel } from '../utils';
 import { formatAge } from './formatters';
@@ -260,7 +261,8 @@ function SourceItem({
 
 /**
  * The first thing below the headline: every problem, its evidence, and the action that
- * resolves it. No panel is rendered when there is nothing to act on.
+ * resolves it. No panel is rendered when there is nothing to act on; the page shows its
+ * health status row instead.
  */
 export function AttentionPanel({
   items,
@@ -290,10 +292,11 @@ export function AttentionPanel({
   };
 
   if (items.length === 0) {
-    const pending = primaryFreshness === 'pending' || primaryReceivedAt === null;
     // A fresh install has nothing to check yet: point at the first step instead of "all clear".
-    const setupNeeded = !pending && checkedCredentials === 0 && checkedProviders === 0;
-    if (setupNeeded) {
+    // Every other empty state is the page's one-line health status row.
+    if (
+      setupNeeded({ primaryFreshness, primaryReceivedAt, checkedCredentials, checkedProviders })
+    ) {
       return (
         <section
           className={styles.allClear}

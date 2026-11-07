@@ -50,11 +50,13 @@ describe('quota overview rendering', () => {
           }
         : undefined
     );
-    expect(markup).toContain('75%');
-    expect(markup).toContain('<table');
-    expect(markup).toContain('scope="row"');
+    expect(markup).toContain('<strong>75%</strong>');
+    // Exact values stay reachable through the chart's own collapsed data table.
+    expect(markup).toContain(i18n.t('redesign.chart.table'));
+    expect(markup).not.toContain('<table');
+    expect(markup).toContain('aria-details="quota-accounts-list"');
     expect(markup).toContain(i18n.t('redesign.quota.evidence'));
-    expect(markup).toContain(i18n.t('redesign.quota.independent'));
+    expect(markup).toContain(i18n.t('redesign.quota.projected_from_snapshot'));
     expect(markup).toContain('private-email@example.invalid');
     expect(markup).toContain('Account-only details');
     expect(markup).toContain('aria-pressed="true"');
@@ -75,11 +77,13 @@ describe('quota overview rendering', () => {
       () => undefined,
       (entry) => entry === entries[1]
     );
-    const rows = markup.match(/<tr>[\s\S]*?<\/tr>/g) ?? [];
+    const rows = markup.match(/<li[\s\S]*?<\/li>/g) ?? [];
     const unsupported = rows.find((row) => row.includes('private-email@example.invalid'));
     const supported = rows.find((row) => row.includes('not-loaded'));
     expect(unsupported).toContain('disabled=""');
+    expect(unsupported).toContain('aria-label="Refresh private-email@example.invalid.json"');
     expect(supported).toBeDefined();
+    expect(supported).toContain('aria-label="Refresh not-loaded.json"');
     expect(supported).not.toContain('disabled=""');
   });
 

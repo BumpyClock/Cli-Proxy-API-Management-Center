@@ -21,7 +21,23 @@
 .workbench {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Section nav, provider filter and the search/status/options row read as one filter group. */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Desktop: section underline tabs, then the provider strip that filters this section. */
+.pickers {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -63,31 +79,33 @@
     width: 4%;
   }
   th:nth-child(2) {
-    width: calc(29% - 94px);
+    width: calc(30% - 124px);
   }
   th:nth-child(3) {
-    width: 16%;
+    width: 11%;
   }
   th:nth-child(4) {
-    width: 14%;
+    width: 16%;
   }
   th:nth-child(5) {
-    width: 19%;
+    width: 18%;
   }
   th:nth-child(6) {
-    width: 12%;
+    width: 15%;
   }
   th:nth-child(7) {
     width: 6%;
   }
   th:last-child {
-    width: 94px;
+    width: 124px;
   }
 }
 .tableFoot {
   padding: 12px 16px;
   border-top: 1px solid var(--border-color);
-  font: 12px/1.5 $font-mono;
+  font-size: 12px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
 }
 .srOnly {
@@ -98,28 +116,6 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-.subnav {
-  display: flex;
-  gap: 24px;
-  border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
-  a {
-    padding: 12px 0;
-    border-bottom: 2px solid transparent;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    font-size: 14px;
-    text-decoration: none;
-  }
-  a[aria-current='page'] {
-    border-bottom-color: var(--accent-color, var(--primary-color));
-    color: var(--text-primary);
-  }
-  a:focus-visible {
-    outline: 2px solid var(--focus-ring, var(--primary-color));
-    outline-offset: -2px;
-  }
 }
 @media (max-width: 1100px) {
   .table,
@@ -136,9 +132,6 @@
   }
   .table thead th:first-child label {
     display: none;
-  }
-  .subnav {
-    gap: 20px;
   }
 }
 
@@ -169,20 +162,29 @@
   white-space: nowrap;
 }
 
-/* ---------- OAuth 配置双卡 ---------- */
+/* ---------- OAuth rule summary ---------- */
 
-.configGrid {
-  display: grid;
+.oauthRules {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr);
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  min-width: 0;
 }
 
 @include mobile {
   .page {
-    gap: 16px;
+    gap: 12px;
+  }
+
+  /* One 8px rhythm from the filter rows into the list keeps the first record in view. */
+  .workbench {
+    gap: 8px;
+  }
+
+  /* Phones: section and provider selects share one row (each is a stacked NativeSelect). */
+  .pickers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 }

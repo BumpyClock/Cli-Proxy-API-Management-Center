@@ -83,7 +83,7 @@ describe('auth files comparison surface', () => {
     expect(page).toContain('<tbody>');
     expect(page).not.toContain('<VaultPulse');
     expect(source).toContain('<tr');
-    expect(source.match(/<td[ >]/g)).toHaveLength(8);
+    expect(source.match(/<td[\s>]/g)).toHaveLength(8);
     expect(source).toContain('<AuthFileQuotaSection');
     expect(source).not.toContain('&& !compact');
     expect(source).toContain('<AuthFileCooldownSection');

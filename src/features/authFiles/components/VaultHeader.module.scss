@@ -6,11 +6,9 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px 8px;
-  font-family: $font-mono;
   font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
   color: var(--text-secondary);
 }
 
@@ -40,20 +38,4 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.spinning {
-  animation: vault-spin 0.8s linear infinite;
-}
-
-@keyframes vault-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinning {
-    animation: none;
-  }
 }

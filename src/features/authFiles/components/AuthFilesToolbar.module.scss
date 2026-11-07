@@ -11,9 +11,10 @@
 
 /* ---------- 搜索 ---------- */
 
-.search {
-  flex: 1 1 220px;
-  min-width: 180px;
+.searchField {
+  position: relative;
+  flex: 1 1 160px;
+  min-width: 0;
   max-width: 340px;
 
   /* Input 组件外层是 .form-group，去掉其默认下边距 */
@@ -23,114 +24,87 @@
 
   :global(.input) {
     height: 36px;
+    /* Reserve room for the trailing search icon so text and placeholder never run under it. */
+    padding-right: 34px;
     border-radius: 10px;
     font-size: 13px;
+    text-overflow: ellipsis;
   }
 }
 
 .searchIcon {
+  display: block;
   color: var(--text-quaternary);
+  pointer-events: none;
 }
 
-/* ---------- 状态分段控件 ---------- */
-
-.segmented {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
-  background: var(--bg-tertiary);
-}
-
-.segment {
-  border: 0;
-  background: none;
-  cursor: pointer;
-  padding: 5px 12px;
-  border-radius: $radius-full;
-  font-size: 12px;
-  font-weight: 550;
-  line-height: 1.3;
-  color: var(--text-secondary);
+/* Wildcard help: always the input's accessible description; shown visually while it has focus. */
+.searchHint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
-  transition:
-    color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    box-shadow var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
-
-  &:active {
-    transform: scale(0.96);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: -1px;
-  }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .segment:hover:not(.segmentActive) {
-    color: var(--text-primary);
-  }
+.searchField:focus-within .searchHint {
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: $z-dropdown;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  height: auto;
+  padding: 6px 10px;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--floating-surface);
+  box-shadow: var(--floating-shadow);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
 }
 
-.segmentActive {
-  color: var(--text-primary);
-  font-weight: 650;
-  background: var(--floating-surface, var(--bg-primary));
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.08);
+/* ---------- Status filter ---------- */
+
+.status {
+  flex: 0 0 auto;
 }
 
-.segmentProblem.segmentActive {
-  color: var(--danger-color);
-  background: color-mix(
-    in srgb,
-    var(--danger-color) 12%,
-    var(--floating-surface, var(--bg-primary))
-  );
-  box-shadow:
-    0 1px 3px color-mix(in srgb, var(--danger-color) 20%, transparent),
-    0 1px 2px rgba(0, 0, 0, 0.06);
-}
+/* ---------- View options ---------- */
 
-/* ---------- 排序 ---------- */
-
-.sort {
-  min-width: 120px;
-}
-
-/* ---------- 显示设置 ---------- */
-
-.display {
+.options {
   position: relative;
+  margin-left: auto;
 }
 
-.displayButton {
+.optionsTrigger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
+  height: 36px;
   padding: 0 12px;
-  border-radius: $radius-full;
+  border-radius: $radius-md;
   border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   cursor: pointer;
-  font-size: 12px;
+  font: inherit;
+  font-size: 13px;
   font-weight: 550;
   color: var(--text-secondary);
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
   transition:
     color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
+    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out);
 
-  &:active {
-    transform: scale(0.96);
+  &[aria-expanded='true'] {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
   }
 
   &:focus-visible {
@@ -140,19 +114,37 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .displayButton:hover {
+  .optionsTrigger:hover {
     color: var(--text-primary);
     border-color: var(--border-hover);
   }
 }
 
-.displayButtonActive {
-  color: var(--text-primary);
-  border-color: var(--border-hover);
-  background: var(--bg-primary);
+/* Count of options that differ from their defaults. */
+.changedBadge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: $radius-full;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
-.popover {
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.panel {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -160,135 +152,108 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 216px;
+  width: min(300px, calc(100vw - 32px));
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--border-color);
   background: var(--floating-surface);
   box-shadow: var(--floating-shadow);
   transform-origin: top right;
-  animation: toolbar-popover-in var(--dur-hover, 200ms) var(--ease-out-strong, ease-out) both;
-}
+  animation: toolbar-panel-in var(--dur-hover, 200ms) var(--ease-out-strong, ease-out) both;
 
-@keyframes toolbar-popover-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+  &[hidden] {
+    display: none;
   }
 }
 
-.popoverRow {
+@keyframes toolbar-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.panelRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
 .pageSizeInput {
-  width: 64px;
-  height: 30px;
-  padding: 0 8px;
-  border-radius: 8px;
+  width: 72px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: $radius-md;
   border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: $font-mono;
-  font-size: 12.5px;
+  font: inherit;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   text-align: right;
 
-  &:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-10);
-  }
-}
-
-/* ---------- 删除筛选结果（工具栏右端的 ghost danger） ---------- */
-
-.deleteAction {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: $radius-full;
-  border: 1px solid transparent;
-  background: none;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 550;
-  color: var(--danger-color);
-  white-space: nowrap;
-  transition:
-    background-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    border-color var(--dur-hover, 200ms) var(--ease-out-strong, ease-out),
-    transform var(--dur-press, 160ms) var(--ease-out-strong, ease-out);
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.96);
-  }
-
   &:focus-visible {
-    outline: 2px solid var(--danger-color);
+    outline: 2px solid var(--primary-color);
     outline-offset: 1px;
   }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .deleteAction:hover:not(:disabled) {
-    background: var(--destructive-10);
-    border-color: var(--destructive-30);
-  }
-}
-
-/* ---------- 响应式 ---------- */
+/* ---------- Responsive ---------- */
 
 @media (max-width: 900px) {
-  .search {
-    flex-basis: 100%;
+  .searchField {
     max-width: none;
-  }
-
-  .deleteAction {
-    margin-left: 0;
   }
 }
 
+/* Phones: search and View options share the first row; the status filter spans the second. */
 @include mobile {
-  .segmented {
-    overflow-x: auto;
-    max-width: 100%;
-    scrollbar-width: none;
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'search options'
+      'status status';
+    gap: 8px;
+  }
 
-    &::-webkit-scrollbar {
-      display: none;
-    }
+  .searchField {
+    grid-area: search;
+  }
+
+  .options {
+    grid-area: options;
+    margin-left: 0;
+  }
+
+  .status {
+    grid-area: status;
+    min-width: 0;
+  }
+
+  .searchField :global(.input),
+  .optionsTrigger,
+  .pageSizeInput {
+    height: 44px;
+  }
+}
+
+@media (pointer: coarse) {
+  .optionsTrigger,
+  .pageSizeInput {
+    min-height: 44px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .segment,
-  .displayButton,
-  .deleteAction {
+  .optionsTrigger {
     transition: none;
   }
 
-  .segment:active,
-  .displayButton:active,
-  .deleteAction:active:not(:disabled) {
-    transform: none;
-  }
-
-  .popover {
+  .panel {
     animation: none;
   }
 }

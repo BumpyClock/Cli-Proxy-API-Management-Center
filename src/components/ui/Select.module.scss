@@ -50,10 +50,18 @@
 }
 
 .triggerSm {
-  height: 28px;
+  height: 32px;
   padding: 0 10px;
   font-size: 12px;
   box-shadow: none;
+}
+
+/* Same 44px touch target rule as .btn on phones and touch screens. */
+@media (max-width: 768px), (pointer: coarse) {
+  .trigger,
+  .triggerSm {
+    height: 44px;
+  }
 }
 
 .triggerText {

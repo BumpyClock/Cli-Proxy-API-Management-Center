@@ -116,7 +116,10 @@ export function ageParts(sinceMs: number, nowMs: number): AgeParts {
 
 const clockFormatters = new Map<string, Intl.DateTimeFormat>();
 
-/** 24-hour `HH:mm` in the browser's timezone. */
+/**
+ * Clock time in the browser's timezone, in the locale's own hour cycle ("8:32 PM" in en-US,
+ * "20:32" in zh-CN and ru), matching the date-time format used across the app.
+ */
 export function formatClock(ms: number, locale?: string): string {
   if (!Number.isFinite(ms)) return '-';
   const key = locale ?? '';
@@ -124,15 +127,13 @@ export function formatClock(ms: number, locale?: string): string {
   if (!formatter) {
     try {
       formatter = new Intl.DateTimeFormat(locale, {
-        hour: '2-digit',
+        hour: 'numeric',
         minute: '2-digit',
-        hourCycle: 'h23',
       });
     } catch {
       formatter = new Intl.DateTimeFormat(undefined, {
-        hour: '2-digit',
+        hour: 'numeric',
         minute: '2-digit',
-        hourCycle: 'h23',
       });
     }
     clockFormatters.set(key, formatter);
@@ -143,7 +144,7 @@ export function formatClock(ms: number, locale?: string): string {
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 
 /**
- * `HH:mm` for instants on the viewer's current day, `MM/DD HH:mm` (locale order) otherwise,
+ * Clock time for instants on the viewer's current day, "Nov 6, 8:32 PM" (locale order) otherwise,
  * so a retry ten hours away is never mistaken for one later today.
  */
 export function formatInstant(ms: number, nowMs: number, locale?: string): string {
@@ -154,11 +155,10 @@ export function formatInstant(ms: number, nowMs: number, locale?: string): strin
   let formatter = dateTimeFormatters.get(key);
   if (!formatter) {
     const options: Intl.DateTimeFormatOptions = {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
       minute: '2-digit',
-      hourCycle: 'h23',
     };
     try {
       formatter = new Intl.DateTimeFormat(locale, options);
@@ -170,7 +170,7 @@ export function formatInstant(ms: number, nowMs: number, locale?: string): strin
   return formatter.format(ms);
 }
 
-/** `13:40-13:50` in the browser's timezone. */
+/** `1:40 PM–1:50 PM` (locale hour cycle) in the browser's timezone. */
 export function formatClockRange(startMs: number, endMs: number, locale?: string): string {
   return `${formatClock(startMs, locale)}–${formatClock(endMs, locale)}`;
 }

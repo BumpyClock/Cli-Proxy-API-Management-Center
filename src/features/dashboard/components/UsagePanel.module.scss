@@ -29,13 +29,15 @@
 .moreLink {
   align-self: flex-start;
 
-  @media (pointer: coarse) {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  min-height: 32px;
+
+  @media (max-width: 768px), (pointer: coarse) {
     min-height: 44px;
   }
 
-  margin-top: 4px;
   font-size: 13px;
   font-weight: 600;
   color: var(--primary-active);
@@ -73,7 +75,7 @@
 
   thead th {
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;

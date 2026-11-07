@@ -255,3 +255,27 @@ export function getOpenAIProviderRecentStatusData(
     collectOpenAIProviderRecentBuckets(provider, usageByProvider)
   );
 }
+
+export type StatusRateTone = 'high' | 'medium' | 'low';
+
+/** Rate badge band: >= 90% high, >= 50% medium, below that low. No requests, no badge. */
+/**
+ * Status block fill for a success rate (0–1), blended from theme tokens so both themes follow
+ * their own palette: failure → warning over 0–0.5, then warning → success over 0.5–1.
+ */
+export function statusRateColor(rate: number): string {
+  const t = Math.max(0, Math.min(1, rate));
+  if (t < 0.5) {
+    return `color-mix(in srgb, var(--warning-color) ${Math.round(t * 200)}%, var(--viz-failure))`;
+  }
+  return `color-mix(in srgb, var(--viz-success) ${Math.round((t - 0.5) * 200)}%, var(--warning-color))`;
+}
+
+export function getStatusRateTone(
+  statusData: Pick<StatusBarData, 'totalSuccess' | 'totalFailure' | 'successRate'>
+): StatusRateTone | null {
+  if (statusData.totalSuccess + statusData.totalFailure <= 0) return null;
+  if (statusData.successRate >= 90) return 'high';
+  if (statusData.successRate >= 50) return 'medium';
+  return 'low';
+}

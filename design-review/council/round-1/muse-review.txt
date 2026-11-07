@@ -1,0 +1,120 @@
+```json
+{
+  "round": 1,
+  "scores": {
+    "design_coherence": 7.8,
+    "typography": 7.6,
+    "cleanliness": 7.9,
+    "visual_design": 7.7,
+    "ease_of_use": 7.2,
+    "information_hierarchy": 7.3,
+    "spacing_alignment": 7.4,
+    "navigation_wayfinding": 8.0,
+    "responsive_mobile": 6.8,
+    "accessibility_visible": 7.0,
+    "data_visualization": 6.9,
+    "interaction_affordance": 7.1
+  },
+  "overall": 7.39,
+  "metric_evidence": {
+    "design_coherence": "Observed. Shared shell, hairline cards, black primary buttons, teal focus/active accent, and grouped sidebar repeat across all 14 pages in light and dark. Refresh is rendered four ways (outlined button on Dashboard, plain text on Usage, Reload text on Config, icon-only on mobile Quota), and off-system promo badges break the system (below).",
+    "typography": "Observed. Clear sans H1/section scale and appropriate mono for keys, versions, timestamps, and log lines. Counter-evidence: very small light-gray metadata and chart hints throughout, 'Requests' wrapping mid-word as 'Requ/ests' in the Usage 390 legend chip, Auth Files Updated values wrapping to 3 lines with an orphaned dash, and truncated labels ('OpenAI Compa...', 'Management Center I...').",
+    "cleanliness": "Observed. Restrained surfaces and generous whitespace keep dense pages calm. Detractors are duplicated content (System '3 available models' as both text and pill, alias helper text repeated twice, duplicate Refresh buttons on Plugins/Plugin Store), stacked beige banners on Plugin Store, and large empty chart cards on Usage.",
+    "visual_design": "Observed. Practical neutral identity with black primaries reads as a credible ops console, and dark mode is consistently executed on Dashboard/Providers/Quota/Config. Third-party promo elements (APIKEY.FUN card on Quick Start, BestProxy.com badge inside Config) and beige warning fills sit outside the neutral system and lower perceived professionalism versus mature developer dashboards.",
+    "ease_of_use": "Observed. Primary actions are findable on desktop list pages. Friction: on Providers 390 the selected provider's key table is buried below the full Configured/Not-configured list and is absent from the first viewport; Quick Start setup steps 1-4 show no navigation affordance; Save/Update appears fully active on Add-disablement while the body says 'Please enter a provider first'; top-bar actions are icon-only.",
+    "information_hierarchy": "Observed. H1, status line, then stat row order is consistent and scannable on Dashboard/Usage/Auth Files. Hierarchy failures: the APIKEY.FUN card precedes the actual Setup steps on Quick Start; on OAuth desktop descriptions sit in a distant right column detached from their buttons; near-empty charts receive the largest visual weight on Dashboard and Usage.",
+    "spacing_alignment": "Observed. Card padding, radius, and column alignment are mostly consistent, and Usage numeric columns are cleanly right-aligned. Failures: Providers table content collides and clips at 1440 in light and dark, the OAuth desktop two-column gap is excessive, Config toggle cards end in a 3-plus-1 orphan row, and filter/tab rows clip on Auth Files 390.",
+    "navigation_wayfinding": "Observed. Strongest area. Desktop sidebar groups (Operate/Gateway/Observe/Control), left-bar plus fill active state, count badge on Auth Files, and CPAMC/Page breadcrumbs make location unambiguous. Mobile keeps a labeled header but loses breadcrumbs, truncates 'Management Center I...', and sub-pages such as Add-disablement show only 'Auth Files' in the mobile header.",
+    "responsive_mobile": "Observed. No page-level horizontal overflow in the capture facts, and Config, Quota, Usage stats, and OAuth stack sensibly at 390. Material defects remain: Logs table and Auth Files tab/filter rows clip horizontally with no visible scroll cue, one Auth Files credential card fills the viewport with its toggle below the fold, and Providers detail is pushed far down the page. Mobile is adapted, not yet equally usable.",
+    "accessibility_visible": "Observed (visible scope only). Login shows a strong teal focus ring, fields have visible labels, status chips pair color with text, and most touch targets look at least roughly 40px. Visible risks: small low-contrast gray metadata/axis text in both themes, small amber warning text on Dashboard, icon-only top-bar and providers row actions, tiny count badges, and chart series distinguished mainly by small numbered color chips.",
+    "data_visualization": "Observed. Honest caveats, legends with values, timezone/bucket notes, and a 'View data table' disclosure are better than typical. Readability limits: the Dashboard request-flow chart is a near-flat zero line occupying a full card with tiny axis labels; in this fixture all four Quota series share 62% and overplot into one indistinguishable dashed line; Usage daily charts are empty placeholders; Auth Files mini bar strips with '--' have no visible scale or legend.",
+    "interaction_affordance": "Observed (visible affordance only). Filled black primaries, toggles, tabs, segmented controls, and search fields generally read as interactive. Weak affordances: Quick Start steps and OAuth 'Sign Up Now' read as plain text, provider chips on the alias/disablement forms have no visible selected state alongside a redundant provider input, 'Not reported' has a disclosure triangle for Claude/Codex rows but not Gemini rows, and System 'Copy' does not say what it copies."
+  },
+  "top_fixes": [
+    {
+      "severity": "high",
+      "screen": "AI Providers 1440 light and dark (providers-1440.png, providers-dark-1440.png)",
+      "evidence": "Status chips are cut mid-word ('Act', 'Succes', 'Failure:'), the Prefix pill 'workspace' overlaps the Models/Headers column, and row content is clipped at the card's right edge in both themes.",
+      "user_impact": "Operators cannot read credential status or reliably hit row actions on a core management screen at standard desktop width.",
+      "concrete_fix": "Give the table a defined column budget that fits its container. Shorten or stack Status into compact labeled values, cap Prefix with ellipsis inside its own cell, and verify no cell crosses column boundaries at 1440 before release."
+    },
+    {
+      "severity": "high",
+      "screen": "Logs Viewer 390 and Auth Files 390 (logs-390.png, auth-files-390.png)",
+      "evidence": "Logs columns and message text clip mid-word at the right edge ('Z INFO Management', header cut at 'L'). Auth Files clips the third tab ('OAuth Moc'), the provider filter row, and the filter placeholder under the search icon. No scroll fade, shadow, or other cue is visible.",
+      "user_impact": "On mobile, log lines are unreadable and Auth Files destinations/filters appear missing rather than scrollable.",
+      "concrete_fix": "Convert Logs to a stacked mobile row (time, level/status, wrapped message) instead of a clipped table. Add an edge fade or visible scroll affordance to Auth Files tab/filter strips, and shorten the filter placeholder on small widths."
+    },
+    {
+      "severity": "high",
+      "screen": "AI Providers 390 (providers-390.png)",
+      "evidence": "The first mobile viewport shows only the Configured/Not-configured provider list. The selected Gemini key table that sits beside the list on desktop is not visible and must be reached by scrolling past the long unconfigured list.",
+      "user_impact": "The main mobile task, inspecting or editing the selected provider's keys, is buried under low-value zero-count entries.",
+      "concrete_fix": "On mobile, render the selected provider's detail directly under the Configured group or make Not configured a collapsed disclosure. Keep the selected detail within the first scroll region."
+    },
+    {
+      "severity": "medium",
+      "screen": "Quick Start 1440/390 and Config Panel 1440/390/dark",
+      "evidence": "An APIKEY.FUN card with New/Register now appears above Setup steps, and a 'No suitable proxy? BestProxy.com' badge sits inside the Config form under Proxy URL in all themes. Setup steps 1-4 are plain text rows with no visible link or button affordance.",
+      "user_impact": "Third-party promotion outranks the onboarding task and erodes trust in a credential-handling console. New users read the steps but get no visible path to act on them.",
+      "concrete_fix": "Remove or clearly demote/label third-party promotions below task content. Make each setup step a labeled row action that deep-links to AI Providers, OAuth Login, Config Panel, and Usage Statistics, with completion state where detectable."
+    },
+    {
+      "severity": "medium",
+      "screen": "Dashboard 1440/390/dark and Quota Management 1440/390/dark",
+      "evidence": "Request flow shows Success 0 / Failure 0 chips above a flat zero line filling a tall card, with small gray axis labels. In the Quota fixture, four series all at 62% overplot into a single dashed line distinguishable only by tiny numbered legend chips. This identical-values state may be fixture-driven, but the overplot handling is what is visible.",
+      "user_impact": "At a glance, users cannot tell accounts apart on Quota, and the Dashboard devotes its largest element to a chart conveying almost no information.",
+      "concrete_fix": "Add end-of-line or legend-linked series emphasis and a visible treatment for exactly overlapping series (for example a combined-series note). Reduce empty/zero-state chart height, enlarge axis labels, and keep the existing data-table disclosure."
+    },
+    {
+      "severity": "medium",
+      "screen": "OAuth Login 1440 (oauth-1440.png)",
+      "evidence": "Each provider's name and login button occupy a left column while its description sits far right across a wide empty gap. 'Sign Up Now' is plain gray text next to filled black buttons. Button wording alternates between 'Log in', 'Log in to', and 'Start X Login' for equivalent actions.",
+      "user_impact": "Eye travel between action and explanation is long, the secondary signup path is easy to miss, and inconsistent verbs slow scanning of an 8-plus provider list.",
+      "concrete_fix": "Use one row layout: icon and name, one-line description directly beneath, actions grouped at the row end. Standardize the primary verb, and render Sign Up Now as a consistent secondary button or clearly styled link. Consider search/filter once the list exceeds one screen."
+    },
+    {
+      "severity": "medium",
+      "screen": "Cross-screen: Dashboard, Usage, Config, Quota, Plugins (desktop and mobile)",
+      "evidence": "The same refresh concept appears as an outlined Refresh button, plain Refresh text, Reload text, an icon-only button, and 'Refresh all credentials'. Plugins and Plugin Store show two Refresh buttons on one screen (toolbar plus empty state). Top-bar refresh/language/theme/logout are icon-only everywhere.",
+      "user_impact": "Equivalent actions look unrelated, duplicate actions create doubt about scope, and icon-only global controls depend on guessing or tooltips that screenshots cannot confirm.",
+      "concrete_fix": "Adopt one labeled refresh pattern with scope in the label where it differs, keep a single refresh per view, and add visible labels or text-accompanied controls for language, theme, and logout at least on desktop."
+    },
+    {
+      "severity": "medium",
+      "screen": "Add provider model disablement / aliases 1440/390 (oauth-excluded, oauth-model-alias)",
+      "evidence": "Save/Update renders as an enabled black primary while the disablement body states 'Please enter a provider first'. A provider text input and a set of provider chips are both presented with no visible selected state. The alias page repeats 'Defaults to the current filter...' verbatim in two places, including under Model aliases where it describes the wrong field.",
+      "user_impact": "Users can attempt to save an incomplete form, cannot tell which provider selection method is authoritative, and read duplicated guidance that does not match the section.",
+      "concrete_fix": "Disable Save/Update visibly until required selections exist, with the blocking reason adjacent. Make chips show a selected state synced with the input, and remove or rewrite the duplicated helper text per section."
+    },
+    {
+      "severity": "low",
+      "screen": "Auth Files 1440, Usage Statistics 390, Management Center Info 1440",
+      "evidence": "Auth Files Updated values wrap over 3 lines with an orphaned dash, and the Requests mini bar strip ends in an unexplained '--'. Usage 390 wraps 'Requests' mid-word in its legend chip. System shows '3 available models' as text and again as a pill, with '1 available models' grammar in groups.",
+      "user_impact": "Small defects accumulate into an unfinished impression and leave data marks unexplained on otherwise polished pages.",
+      "concrete_fix": "Widen or reformat the Updated column (single-line date, time beneath), label or tooltip the request strip and its empty value, prevent mid-word legend wrapping, and de-duplicate/fix the model-count copy."
+    }
+  ],
+  "strengths": [
+    "Consistent desktop shell: grouped sidebar, unambiguous active state, breadcrumbs, and uniform card/button language across 14 pages.",
+    "Dark mode holds together on all four captured screens, including charts, toggles, and warning text, without obvious surface or border breakage.",
+    "Data honesty is unusually good: fixture-independent caveats about snapshot vs live data, non-backfilled usage, dashed quota projections, and credentials no longer listed are stated next to the numbers.",
+    "Sensible empty states with a next action on Quick Start, Plugins, Plugin Store, and Config API keys, plus a prominent third-party plugin trust warning on Plugin Store.",
+    "Login is clean at both widths, with a clearly visible focus ring and an explicit warning that remembered keys use reversible obfuscation.",
+    "Mobile adaptation is real, not squeezed desktop, on Config (section select), Quota, Usage stats, OAuth, and System, with no page-level horizontal overflow in the capture facts."
+  ],
+  "unverified": [
+    "All interaction behavior: hover, focus order, keyboard operation (including the chart arrow-key hint), menus, modals, toasts, form validation, save flows, OAuth flows, upload, and destructive confirmations were not exercised; affordance was judged from static screenshots only.",
+    "Screen-reader semantics, accessible names for icon-only controls, live regions, and measured contrast ratios were not verified; accessibility_visible covers only visible contrast, labels, and target sizing.",
+    "Content below the viewport on every screen, since captures are viewport-only, including the rest of Dashboard quota detail, Auth Files actions on mobile, and lower Config sections.",
+    "Loading, error, offline, unauthorized, and long-content states; behavior with production-scale data volumes, long names, and non-English locales.",
+    "Whether horizontally clipped mobile regions (Logs, Auth Files tabs/filters) are scrollable in practice; screenshots show clipping without a visible scroll cue.",
+    "Quota and plugin rendering with complete production data; fixture coverage is partial per evidence.json, so empty or identical-value states were not treated as proven production defects.",
+    "Motion and reduced-motion behavior in real use, and performance or responsiveness under load."
+  ]
+}
+```
+
+Notes. Evidence base is the 34 frozen screenshots plus [evidence.json](/Users/adityasharma/Projects/Cli-Proxy-API-Management-Center/design-review/council/round-1/evidence.json). Mobbin references were not inspected. Comparison is against general craft expectations for mature developer-operations dashboards.
+
+Overall read. This is a competent, mostly polished console held back from the 8 range by concrete defects, not taste. The Providers table collision in both themes, mobile clipping on Logs/Auth Files, and buried mobile provider detail are release-grade issues. Fix those plus the promo-above-task hierarchy on Quick Start/Config, and the next round should move materially.

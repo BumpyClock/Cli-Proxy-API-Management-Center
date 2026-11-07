@@ -19,6 +19,8 @@
   --border-secondary: var(--border-color);
   --border-primary: #938d84;
   --border-hover: #817b72;
+  /* Outlined secondary controls: visibly bounded without the weight of a field border. */
+  --control-outline: color-mix(in srgb, var(--border-primary) 45%, var(--border-color));
 
   --primary-color: #1d1b18;
   --primary-hover: #35312b;
@@ -118,7 +120,8 @@
   --text-tertiary: #80878f;
   --text-quaternary: #80878f;
   --border-color: #252a2f;
-  --border-primary: #59636e;
+  /* 3.57:1 on --bg-primary, so field and switch boundaries clear the 3:1 non-text minimum. */
+  --border-primary: #66707b;
   --border-hover: #747f8c;
   --primary-color: #eceef0;
   --primary-hover: #d5d9de;

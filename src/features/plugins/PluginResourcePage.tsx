@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Button } from '@/components/ui/Button';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -98,7 +98,17 @@ export function PluginResourcePage() {
     <div className={styles.page}>
       <PageHeader
         title={resource?.label || t('plugin_resource.unavailable')}
-        meta={resource ? `${resource.pluginTitle} · ${resource.menu.path}` : pluginID}
+        meta={
+          resource ? (
+            <>
+              <span>{resource.pluginTitle}</span>
+              <span aria-hidden="true">·</span>
+              <span className={styles.literal}>{resource.menu.path}</span>
+            </>
+          ) : (
+            <span className={styles.literal}>{pluginID}</span>
+          )
+        }
         actions={
           <>
             <Link to="/plugins">{t('plugin_management.title')}</Link>
@@ -107,14 +117,11 @@ export function PluginResourcePage() {
                 {t('plugin_resource.open_in_new_tab')}
               </a>
             )}
-            <Button
-              variant="secondary"
-              size="sm"
+            <RefreshButton
               onClick={() => void loadResource()}
-              disabled={loading}
-            >
-              {t('common.refresh')}
-            </Button>
+              label={t('plugin_resource.refresh')}
+              refreshing={loading}
+            />
           </>
         }
       />

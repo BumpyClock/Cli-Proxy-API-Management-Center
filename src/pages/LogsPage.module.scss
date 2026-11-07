@@ -1,35 +1,31 @@
 @use '../styles/mixins' as *;
 
+// Keep the record pane dominant; advanced filters expand in place.
 .container {
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: $spacing-md;
   min-height: 0;
 
+  // Phones size the page to its rows; it still reaches the viewport bottom, because the page
+  // transition wrapper clips overflow and would cut off the Options overlay under a short log.
   @include mobile {
-    min-height: auto;
+    min-height: calc(100dvh - var(--header-height) - #{$spacing-md + $spacing-lg});
     overflow: visible;
   }
-}
-
-.pageTitle {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 $spacing-lg 0;
 }
 
 .tabBar {
   display: flex;
   gap: $spacing-xs;
-  margin-bottom: $spacing-lg;
   border-bottom: 1px solid var(--border-color);
 }
 
 .tabItem {
   @include button-reset;
-  padding: 12px 20px;
+  padding: 10px 12px;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
@@ -45,16 +41,24 @@
     color: var(--text-primary);
   }
 
-  &:focus,
-  &:focus-visible {
+  &:focus {
     outline: none;
     box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
   }
 }
 
 .tabActive {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-color);
 }
 
 .content {
@@ -76,34 +80,36 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding: 12px;
 
+  // Phones drop the card chrome: the log panel keeps its own frame and the toolbar gains width.
   @include mobile {
     flex: 0 0 auto;
     min-height: auto;
     overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  margin-left: auto;
-
-  @include mobile {
-    align-items: flex-start;
-    margin-left: 0;
-    width: 100%;
-  }
+// Load errors and the file-logging notice sit above the toolbar with the same spacing.
+.logCard > :global(.error-box),
+.logCard > :global(.status-badge) {
+  margin-bottom: $spacing-sm;
 }
 
+/* Toolbar: search, structured filters and Options (phones: search takes its own full-width row).
+   Refresh and auto refresh sit in the page header; the filter panel and summary wrap below. */
 .filters {
   display: flex;
   align-items: center;
-  gap: $spacing-md;
   flex-wrap: wrap;
-  margin-bottom: $spacing-md;
+  gap: 10px 12px;
+  flex: 0 0 auto;
+  margin-bottom: 12px;
 
   :global(.form-group) {
     margin: 0;
@@ -111,149 +117,37 @@
 
   @include mobile {
     gap: $spacing-sm;
-    margin-bottom: $spacing-sm;
   }
 }
 
 .searchWrapper {
-  flex: 1;
-  min-width: 220px;
-  max-width: 420px;
-}
+  flex: 1 1 320px;
+  min-width: 0;
+  max-width: 520px;
 
-.filterPanelHeader {
-  display: flex;
-  align-items: center;
-  flex: 1 1 100%;
-}
-
-.filterPanelToggle {
-  white-space: nowrap;
-}
-
-.filterPanelButtonContent {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.filterPanelCount {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  background: rgba($primary-color, 0.12);
-  color: var(--primary-color);
-  font-size: 12px;
-  line-height: 1.2;
-}
-
-.structuredFilters {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1 1 100%;
-  padding: 8px 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
-}
-
-.filterChipGroup {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.filterChipLabel {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 700;
-  line-height: 28px;
-  min-width: 68px;
-}
-
-.filterChipList {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.filterChip {
-  @include button-reset;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: $radius-full;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.3;
-  cursor: pointer;
-  max-width: 280px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
-
-  &:hover:not(:disabled) {
-    color: var(--text-primary);
-    border-color: var(--primary-color);
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+  @include mobile {
+    flex: 1 1 100%;
+    max-width: none;
   }
 }
 
-.filterChipActive {
-  color: var(--primary-color);
-  border-color: rgba($primary-color, 0.45);
-  background: rgba($primary-color, 0.14);
-}
-
-.filterChipHint {
-  font-size: 12px;
-  color: var(--text-tertiary);
-}
-
-@include mobile {
-  .filterPanelHeader {
-    width: 100%;
-  }
-
-  .filterPanelToggle {
-    width: 100%;
-  }
-
-  .filterPanelButtonContent {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-
-  .filterChipGroup {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .filterChipLabel {
-    min-width: 0;
-    line-height: 1.2;
-  }
-}
-
+// Same height as the toolbar buttons: 36px on desktop, the 44px touch height on phones.
 .searchInput {
+  height: 36px;
+  min-height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
   padding-right: 44px !important;
+
+  @include mobile {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  @media (pointer: coarse) {
+    height: 44px;
+    min-height: 44px;
+  }
 }
 
 .searchIcon {
@@ -266,32 +160,410 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   width: 28px;
   height: 28px;
   border-radius: $radius-full;
   color: var(--text-secondary);
 
+  /* Invisible extension: 44px touch target without enlarging the glyph inside the input. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
   &:hover {
     background: var(--bg-secondary);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
 }
 
-.filterStats {
-  margin-left: auto;
+.filterPanelToggle,
+.optionsTrigger {
+  white-space: nowrap;
+
+  &[aria-expanded='true'] {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-hover);
+  }
+}
+
+// Phones: Filters and Options split the row under the search field, so the Options panel,
+// anchored to its trigger's right edge, stays inside the viewport.
+@include mobile {
+  .filterPanelToggle,
+  .filterPanelToggle + .options {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .filterPanelToggle + .options > .optionsTrigger {
+    width: 100%;
+  }
+}
+
+// Phones keep a short visible label; the full name stays in the accessible name.
+.labelShort {
+  display: none;
+}
+
+@include mobile {
+  .labelFull {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .labelShort {
+    display: inline;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.filterPanelChevron {
+  transition: transform var(--dur-hover) var(--ease-out-strong);
+
+  [aria-expanded='true'] & {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.filterPanelCount {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: $radius-full;
+  background: var(--primary-color);
+  color: var(--primary-contrast, #fff);
   font-size: 12px;
-  color: var(--text-secondary);
-  white-space: nowrap;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
-.removedCount {
+.structuredFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: $radius-md;
+}
+
+.structuredFilters > :global(.btn) {
+  align-self: flex-start;
+}
+
+.structuredFilters[hidden] {
+  display: none;
+}
+
+.filterChipGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  @include mobile {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.filterChipLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  line-height: 32px;
+  min-width: 68px;
+
+  @include mobile {
+    min-width: 0;
+    line-height: 1.2;
+  }
+}
+
+.filterChipList {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Multi-select toggle chips: pressed adds a check mark, an accent outline and tint. */
+.filterChip {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  max-width: 280px;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--primary-color);
+    border-color: rgba($primary-color, 0.45);
+    background: rgba($primary-color, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.filterChipText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filterChipHint {
+  font-size: 12px;
   color: var(--text-tertiary);
 }
 
-.actionButton {
+/* Active structured filters stay visible while the panel is closed. */
+.activeFilters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1 1 100%;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.activeFiltersCount {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.activeFilterChip {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  max-width: 240px;
+  padding: 4px 8px 4px 10px;
+  border: 1px solid rgba($primary-color, 0.45);
+  border-radius: $radius-full;
+  background: rgba($primary-color, 0.14);
+  color: var(--primary-color);
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.activeFilterText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.activeFiltersClear {
+  margin-left: auto;
+}
+
+/* Options disclosure: an overlay panel so opening it never pushes the records down. */
+.options {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.optionsPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  padding: 4px 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.optionsSection,
+.optionsDanger {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.optionsSection + .optionsSection,
+.optionsDanger {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Switch rows span the panel: label left, switch right, the whole row is the hit area. */
+.optionsSection > label {
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+  gap: 12px;
+  font-size: 13px;
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.optionsAction {
+  justify-content: flex-start;
+  width: 100%;
+  white-space: nowrap;
+}
+
+/* Full screen: search and Options keep their row; refresh, auto refresh and Exit sit at the
+   end on desktop and take their own first row on phones, so nothing wraps unpredictably. */
+.fullscreenBar {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  margin-left: auto;
+
+  @include mobile {
+    order: -1;
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+}
+
+.exitFullscreen {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+// Refresh and its auto-refresh switch read as one page-level pair in the header.
+.refreshGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+
+  @include mobile {
+    column-gap: 8px;
+  }
+}
+
+.refreshGroup > label {
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.switchLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  @include mobile {
+    font-size: 14px;
+    line-height: 1.25;
+
+    svg {
+      display: none;
+    }
+  }
 }
 
 .buttonContent {
@@ -304,44 +576,313 @@
   }
 }
 
-.switchLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  svg {
-    flex: 0 0 auto;
-  }
-}
-
+/* Log panel */
 .logPanel {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: $radius-md;
+  position: relative;
   flex: 1 1 auto;
-  min-height: 280px;
-  max-height: calc(100vh - 320px);
+  min-height: 320px;
   height: auto;
   overflow: auto;
   resize: vertical;
-  position: relative;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: $radius-md;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
   overscroll-behavior: contain;
 
-  @include tablet {
-    min-height: 240px;
-    max-height: calc(100vh - 300px);
-  }
-
+  /* Phones: a short log sizes to its rows; a long one scrolls inside a bounded panel. */
   @include mobile {
-    min-height: 360px;
-    height: 420px;
-    max-height: 480px;
     flex: 0 0 auto;
+    min-height: 160px;
+    height: auto;
+    max-height: 480px;
   }
 }
 
+.logPanelFullscreen {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  resize: none;
+
+  @include mobile {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+}
+
+.loadMoreBanner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: $spacing-xs;
+
+    > span {
+      width: 100%;
+    }
+  }
+}
+
+.loadMoreCount {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.loadMoreStats {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  @include mobile {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+
+    > span {
+      white-space: nowrap;
+    }
+  }
+}
+
+.rawLog {
+  margin: 0;
+  padding: 10px 12px;
+  cursor: text;
+  user-select: text;
+  white-space: pre;
+  color: var(--text-primary);
+  font-family: $font-mono;
+  font-size: 12.5px;
+  line-height: 1.45;
+
+  @include mobile {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+
+/* Parsed table. `buildLogGrid` supplies one template shared by the header and every row:
+   Time | Level | structured columns with data | Message. */
+.logList {
+  display: flex;
+  flex-direction: column;
+  // Same font as the rows so the `ch` part of the computed minimum width matches.
+  min-width: var(--log-grid-min-width, 0);
+  font-family: $font-mono;
+  font-size: 12px;
+}
+
+.logRow,
+.columnHeader {
+  display: grid;
+  grid-template-columns: var(--log-grid-columns);
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-color);
+  border-left: 3px solid transparent;
+  font-family: $font-mono;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.columnHeader {
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+.logRow {
+  color: var(--text-primary);
+  cursor: copy;
+
+  &:hover {
+    background: rgba($primary-color, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+  }
+}
+
+.rowWarn {
+  border-left-color: var(--warning-color);
+}
+
+.rowError {
+  border-left-color: var(--error-color);
+}
+
+.cell {
+  min-width: 0;
+}
+
+.timestamp {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.levelCell {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.levelInfo {
+  color: var(--info-color);
+}
+
+.levelWarn {
+  color: var(--warning-text);
+}
+
+.levelError {
+  color: var(--error-color);
+}
+
+.levelDebug,
+.levelTrace {
+  color: var(--text-secondary);
+}
+
+.statusCell {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusSuccess {
+  color: var(--success-badge-text);
+}
+
+.statusInfo {
+  color: var(--info-color);
+}
+
+.statusWarn {
+  color: var(--warning-text);
+}
+
+.statusError {
+  color: var(--failure-badge-text);
+}
+
+.latency {
+  justify-self: end;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// The desktop header reads `Latency (ms)`; the inline unit only shows when the header is hidden.
+.latencyUnit {
+  display: none;
+}
+
+.methodCell {
+  font-weight: 700;
+}
+
+.path,
+.client,
+.source {
+  @include text-ellipsis;
+}
+
+.client,
+.source {
+  color: var(--text-secondary);
+}
+
+.message {
+  // Break at spaces first; only split a token when it cannot fit on its own line.
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.requestIdBadge {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 0 6px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  color: #0891b2;
+  background: rgba(8, 145, 178, 0.1);
+  border: 1px solid rgba(8, 145, 178, 0.25);
+}
+
+// Phones stack each record: time, level, status, latency and method on one line, then the
+// wrapping message, then path/client/source as muted metadata. The row is a single labelled
+// button, so visual order does not change what assistive technology announces.
+@include mobile {
+  .logList {
+    min-width: 0;
+  }
+
+  .columnHeader {
+    display: none;
+  }
+
+  .logRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .cell:empty {
+    display: none;
+  }
+
+  .latency {
+    justify-self: auto;
+  }
+
+  .latencyUnit {
+    display: inline;
+  }
+
+  .message {
+    order: 1;
+    flex: 1 1 100%;
+  }
+
+  .path,
+  .client,
+  .source {
+    order: 2;
+    max-width: 100%;
+    color: var(--text-tertiary);
+  }
+
+  .path {
+    flex: 1 1 100%;
+  }
+}
+
+/* Error request logs */
 .errorPanel {
   height: 480px;
   overflow: auto;
@@ -387,347 +928,45 @@
   border-radius: $radius-md;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
+  font-family: $font-mono;
   font-size: 12px;
   line-height: 1.5;
   white-space: pre;
   -webkit-overflow-scrolling: touch;
 }
 
-.loadMoreBanner {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-sm;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 12px;
-
-  @include mobile {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: $spacing-xs;
-
-    > span {
-      width: 100%;
-    }
-  }
-}
-
-.loadMoreCount {
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.loadMoreStats {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-
-  @include mobile {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: $spacing-sm;
-
-    > span {
-      white-space: nowrap;
-    }
-  }
-}
-
-.logList {
-  display: flex;
-  flex-direction: column;
-}
-
-.rawLog {
-  margin: 0;
-  padding: 10px 12px;
-  cursor: text;
-  user-select: text;
-  white-space: pre;
-  color: var(--text-primary);
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
-  font-size: 12.5px;
-  line-height: 1.45;
-
-  @include tablet {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  @include mobile {
-    padding: 8px 10px;
-    font-size: 11.5px;
-  }
-}
-
-.logRow {
-  display: grid;
-  grid-template-columns: 170px 1fr;
-  gap: $spacing-md;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
-  border-left: 3px solid transparent;
-  cursor: copy;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--text-primary);
-
-  &:hover {
-    background: rgba($primary-color, 0.06);
-  }
-
-  @include tablet {
-    grid-template-columns: 140px 1fr;
-    gap: $spacing-sm;
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  @include mobile {
-    grid-template-columns: 1fr;
-    gap: $spacing-xs;
-    padding: 8px 10px;
-    font-size: 11.5px;
-  }
-}
-
-.rowWarn {
-  border-left-color: var(--warning-color);
-}
-
-.rowError {
-  border-left-color: var(--error-color);
-}
-
-.timestamp {
-  color: var(--text-tertiary);
-  white-space: nowrap;
-  padding-top: 2px;
-
-  @include mobile {
-    white-space: normal;
-  }
-}
-
-.rowMain {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  font-size: 12px;
-  font-weight: 800;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.source {
-  color: var(--text-secondary);
-  max-width: 240px;
-  @include text-ellipsis;
-
-  @include mobile {
-    max-width: 100%;
-  }
-}
-
-.requestIdBadge {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
-  font-size: 11px;
-  color: #0891b2;
-  background: rgba(8, 145, 178, 0.1);
-  border-color: rgba(8, 145, 178, 0.25);
-}
-
-.statusBadge {
-  font-variant-numeric: tabular-nums;
-}
-
-.statusSuccess {
-  color: var(--success-badge-text);
-  background: var(--success-badge-bg);
-  border-color: var(--success-badge-border);
-}
-
-.statusInfo {
-  color: var(--info-color);
-  background: rgba($primary-color, 0.12);
-  border-color: rgba($primary-color, 0.25);
-}
-
-.statusWarn {
-  color: var(--warning-text);
-  background: var(--warning-bg);
-  border-color: var(--warning-border);
-}
-
-.statusError {
-  color: var(--failure-badge-text);
-  background: var(--failure-badge-bg);
-  border-color: var(--failure-badge-border);
-}
-
-.levelInfo {
-  color: var(--info-color);
-  background: rgba($primary-color, 0.12);
-  border-color: rgba($primary-color, 0.25);
-}
-
-.levelWarn {
-  color: var(--warning-text);
-  background: var(--warning-bg);
-  border-color: var(--warning-border);
-}
-
-.levelError {
-  color: var(--error-color);
-  background: rgba($error-color, 0.12);
-  border-color: rgba($error-color, 0.25);
-}
-
-.levelDebug,
-.levelTrace {
-  color: var(--text-secondary);
-  background: rgba(107, 114, 128, 0.12);
-  border-color: rgba(107, 114, 128, 0.25);
-}
-
-.methodBadge {
-  color: var(--text-primary);
-  background: rgba($primary-color, 0.08);
-  border-color: rgba($primary-color, 0.22);
-}
-
-.path {
-  color: var(--text-primary);
-  font-weight: 700;
-  max-width: 520px;
-  @include text-ellipsis;
-
-  @include mobile {
-    max-width: 100%;
-    flex-basis: 100%;
-  }
-}
-
-.message {
-  color: var(--text-secondary);
-  word-break: break-word;
-
-  @include mobile {
-    flex-basis: 100%;
-  }
-}
-
-@media (max-height: 960px) {
-  @media (min-width: 769px) {
-    .logPanel {
-      min-height: 160px;
-      max-height: calc(100vh - 300px);
-    }
-  }
-}
-
+/* Short viewports */
 @media (max-height: 820px) {
-  .pageTitle {
-    font-size: 24px;
-    margin-bottom: $spacing-md;
-  }
-
-  .tabBar {
-    margin-bottom: $spacing-md;
-  }
-
   .tabItem {
-    padding: 10px 16px;
+    padding: 8px 12px;
   }
 
   .content {
     gap: $spacing-md;
   }
 
-  @media (min-width: 769px) {
-    .filters {
-      flex: 0 0 auto;
-      gap: $spacing-sm;
-      margin-bottom: $spacing-sm;
-      max-height: 260px;
-      overflow: auto;
-      padding-right: 4px;
-      overscroll-behavior: contain;
-    }
-
-    .logPanel {
-      min-height: 0;
-      max-height: calc(100vh - 280px);
-    }
-  }
-
   .logCard {
-    padding: $spacing-md;
-  }
-
-  .logRow {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: 10px;
   }
 
   .errorPanel {
     height: 360px;
   }
+
+  @media (min-width: 769px) {
+    .filters {
+      gap: $spacing-sm 12px;
+      margin-bottom: $spacing-sm;
+    }
+
+    .logPanel {
+      min-height: 160px;
+    }
+  }
 }
 
 @media (max-height: 600px) {
-  .pageTitle {
-    font-size: 20px;
-    margin-bottom: $spacing-sm;
-  }
-
-  .tabBar {
-    margin-bottom: $spacing-sm;
-  }
-
   .tabItem {
-    padding: 8px 12px;
     font-size: 13px;
   }
 
@@ -735,42 +974,28 @@
     gap: $spacing-sm;
   }
 
-  .filters {
-    margin-bottom: $spacing-sm;
-    gap: $spacing-sm;
-  }
-
-  @media (min-width: 769px) {
-    .filters {
-      max-height: 180px;
-    }
-
-    .logPanel {
-      min-height: 0;
-      max-height: calc(100vh - 220px);
-    }
-  }
-
   .logCard {
     padding: $spacing-sm;
   }
 
-  .logRow {
-    padding: 6px 8px;
-    font-size: 11px;
-    grid-template-columns: 130px 1fr;
-    gap: $spacing-xs;
-  }
-
-  .loadMoreBanner {
-    padding: 6px 10px;
+  .logRow,
+  .columnHeader {
+    padding: 5px 8px;
+    font-size: 12px;
   }
 
   .errorPanel {
     height: 280px;
   }
+
+  @media (min-width: 769px) {
+    .logPanel {
+      min-height: 0;
+    }
+  }
 }
 
+/* Fullscreen */
 .logCardFullscreen {
   position: fixed;
   inset: 0;
@@ -795,183 +1020,6 @@
   transform: none !important;
 }
 
-.logPanelFullscreen {
-  flex: 1 1 auto;
-  min-height: 0;
-  height: auto;
-  max-height: none;
-  resize: none;
-
-  @include tablet {
-    min-height: 0;
-    max-height: none;
-  }
-
-  @include mobile {
-    flex: 1 1 auto;
-    min-height: 0;
-    height: auto;
-    max-height: none;
-  }
-}
-
-/* Keep the record pane dominant; advanced filters expand in place. */
-.container {
-  gap: 16px;
-}
-.tabBar {
-  margin-bottom: 0;
-}
-.tabItem {
-  padding: 10px 12px;
-}
-.tabItem:focus-visible,
-.logRow:focus-visible,
-.filterDisclosure summary:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: -2px;
-}
-.tabActive {
-  color: var(--text-primary);
-  border-bottom-color: var(--accent-color);
-}
-.logCard {
-  padding: 12px;
-}
-.filters {
-  gap: 10px 16px;
-  max-height: none;
-  overflow: visible;
-  padding: 0;
-  flex: 0 0 auto;
-}
-.searchWrapper {
-  flex: 1 1 360px;
-  min-width: 0;
-  max-width: 520px;
-}
-.filterDisclosure {
-  flex: 0 1 auto;
-}
-.filterDisclosure[open] {
-  flex: 1 1 100%;
-}
-.filterPanelToggle {
-  cursor: pointer;
-  font-size: 13px;
-  padding: 8px;
-  color: var(--text-secondary);
-}
-.filterPanelCount {
-  margin-left: 8px;
-}
-.structuredFilters {
-  margin-top: 8px;
-}
-.logPanel {
-  max-height: none;
-  flex: 1 1 auto;
-  min-height: 320px;
-}
-.logList {
-  min-width: 1050px;
-}
-.logRow,
-.columnHeader {
-  display: grid;
-  grid-template-columns: 170px 56px 48px 64px 64px minmax(200px, 1fr) 112px 160px;
-  gap: 4px 10px;
-  padding: 7px 10px;
-  font-family: $font-mono;
-  font-size: 12px;
-  line-height: 1.5;
-  border-bottom: 1px solid var(--border-color);
-}
-.columnHeader {
-  color: var(--text-secondary);
-  background: var(--bg-secondary);
-}
-.rowMain {
-  display: contents;
-}
-.timestamp {
-  grid-column: 1;
-  grid-row: 1;
-  font-size: inherit;
-  white-space: nowrap;
-}
-.levelCell {
-  grid-column: 2;
-  grid-row: 1;
-}
-.statusBadge {
-  grid-column: 3;
-  grid-row: 1;
-}
-.latency {
-  grid-column: 4;
-  grid-row: 1;
-  font-variant-numeric: tabular-nums;
-}
-.methodBadge {
-  grid-column: 5;
-  grid-row: 1;
-}
-.path {
-  grid-column: 6;
-  grid-row: 1;
-  font-weight: 400;
-  max-width: none;
-}
-.client {
-  grid-column: 7;
-  grid-row: 1;
-  color: var(--text-secondary);
-}
-.source {
-  grid-column: 8;
-  grid-row: 1;
-  max-width: none;
-}
-.requestIdBadge {
-  grid-column: 2 / -1;
-  justify-self: start;
-}
-.message {
-  grid-column: 2 / -1;
-  color: var(--text-primary);
-}
-.logRow .badge {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-size: inherit;
-  line-height: inherit;
-  border-radius: 0;
-  justify-content: start;
-}
-.logPanelFullscreen {
-  min-height: 0;
-  max-height: none;
-}
-@media (max-width: 768px) {
-  .filters {
-    align-items: center;
-  }
-  .searchWrapper {
-    flex-basis: 100%;
-    max-width: none;
-  }
-  .toolbar {
-    gap: 8px;
-  }
-  .logPanel {
-    min-height: 360px;
-  }
-  .logPanelFullscreen {
-    min-height: 0;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .tabItem {
     transition: none;

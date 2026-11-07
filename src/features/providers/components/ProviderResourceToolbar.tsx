@@ -1,10 +1,50 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { IconChevronDown, IconChevronUp, IconSlidersHorizontal } from '@/components/ui/icons';
+import { IconChevronDown, IconSlidersHorizontal } from '@/components/ui/icons';
 import { Select } from '@/components/ui/Select';
 import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
 import type { ProviderSortBy, SortDir } from '../types';
 import styles from './ProviderResourceToolbar.module.scss';
+
+/** Short visible direction words: alphabetical for names, low/high for numeric sorts. */
+const DIRECTION_LABEL_KEYS: Record<'alpha' | 'value', Record<SortDir, string>> = {
+  alpha: {
+    asc: 'providersPage.toolbar.sort.dirAlphaAsc',
+    desc: 'providersPage.toolbar.sort.dirAlphaDesc',
+  },
+  value: {
+    asc: 'providersPage.toolbar.sort.dirValueAsc',
+    desc: 'providersPage.toolbar.sort.dirValueDesc',
+  },
+};
+
+const getSortDirectionLabelKey = (sortBy: ProviderSortBy, sortDir: SortDir): string =>
+  DIRECTION_LABEL_KEYS[sortBy === 'name' ? 'alpha' : 'value'][sortDir];
+
+function SortDirectionIcon({ dir }: { dir: SortDir }) {
+  const paths =
+    dir === 'asc'
+      ? ['m3 8 4-4 4 4', 'M7 4v16', 'M11 12h4', 'M11 16h7', 'M11 20h10']
+      : ['m3 16 4 4 4-4', 'M7 20V4', 'M11 4h10', 'M11 8h7', 'M11 12h4'];
+  return (
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {paths.map((d) => (
+        <path key={d} d={d} />
+      ))}
+    </svg>
+  );
+}
 
 interface ProviderResourceToolbarProps {
   sortBy: ProviderSortBy;
@@ -27,6 +67,7 @@ export function ProviderResourceToolbar({
 }: ProviderResourceToolbarProps) {
   const { t } = useTranslation();
   const [filterOpen, setFilterOpen] = useState(false);
+  const sortLabelId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const sortOptions = useMemo(
@@ -70,33 +111,39 @@ export function ProviderResourceToolbar({
           total: availableModels.length,
         });
 
+  const sortFieldLabel =
+    sortOptions.find((option) => option.value === sortBy)?.label ?? sortOptions[0].label;
+  const directionName = t('providersPage.toolbar.sort.directionButton', {
+    field: sortFieldLabel,
+    direction:
+      sortDir === 'asc'
+        ? t('providersPage.toolbar.sort.directionAsc')
+        : t('providersPage.toolbar.sort.directionDesc'),
+  });
+
   return (
     <div className={styles.root}>
       <div className={styles.sortGroup}>
-        <span className={styles.label}>{t('providersPage.toolbar.sortBy')}</span>
+        <span className={styles.label} id={sortLabelId}>
+          {t('providersPage.toolbar.sortBy')}
+        </span>
         <Select
           value={sortBy}
           options={sortOptions}
           onChange={(value) => onSortBy(value as ProviderSortBy)}
-          ariaLabel={t('providersPage.toolbar.sortBy')}
+          ariaLabelledBy={sortLabelId}
           size="sm"
         />
         <button
           type="button"
           className={styles.dirBtn}
           onClick={() => onSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
-          aria-label={
-            sortDir === 'asc'
-              ? t('providersPage.toolbar.sort.directionAsc')
-              : t('providersPage.toolbar.sort.directionDesc')
-          }
-          title={
-            sortDir === 'asc'
-              ? t('providersPage.toolbar.sort.directionAsc')
-              : t('providersPage.toolbar.sort.directionDesc')
-          }
+          aria-label={directionName}
+          title={directionName}
+          data-sort-dir={sortDir}
         >
-          {sortDir === 'asc' ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+          <SortDirectionIcon dir={sortDir} />
+          <span>{t(getSortDirectionLabelKey(sortBy, sortDir))}</span>
         </button>
       </div>
 

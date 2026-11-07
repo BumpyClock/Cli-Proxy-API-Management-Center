@@ -6,7 +6,8 @@
   justify-content: center;
   gap: $spacing-sm;
   border: 1px solid transparent;
-  min-height: 34px;
+  /* One control height (36px) shared with RefreshButton, selects and search fields. */
+  min-height: 36px;
   border-radius: 6px;
   padding: 7px 12px;
   font-size: 13px;
@@ -15,6 +16,19 @@
   transition: all $transition-fast;
   background-color: var(--bg-secondary);
   color: var(--text-primary);
+
+  /* Icon + label children share one span; give them a consistent gap and optical alignment. */
+  > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
 
   &.btn-primary {
     background-color: var(--primary-color);
@@ -27,14 +41,27 @@
     }
   }
 
+  /* One outlined secondary style everywhere, shared with RefreshButton (--control-outline). */
   &.btn-secondary {
-    background-color: var(--bg-tertiary);
-    border-color: var(--border-color);
+    background-color: var(--bg-primary);
+    border-color: var(--control-outline);
     color: var(--text-primary);
 
-    &:hover {
-      background-color: var(--bg-hover, var(--bg-tertiary));
+    &:hover:not(:disabled) {
+      background-color: var(--bg-tertiary);
       border-color: var(--border-hover);
+    }
+  }
+
+  /* Destructive but not primary: outlined so it never outweighs the page's main task. */
+  &.btn-danger-outline {
+    background-color: var(--bg-primary);
+    border-color: color-mix(in srgb, var(--error-color) 55%, var(--control-outline));
+    color: var(--error-color);
+
+    &:hover:not(:disabled) {
+      background-color: var(--bg-error-light);
+      border-color: var(--error-color);
     }
   }
 
@@ -63,8 +90,9 @@
     width: 100%;
   }
 
+  /* Compact, but still a 32px pointer target. */
   &.btn-sm {
-    min-height: 30px;
+    min-height: 32px;
     padding: 5px 10px;
     font-size: 12px;
   }
@@ -74,7 +102,8 @@
     outline-offset: 2px;
   }
 
-  @media (pointer: coarse) {
+  /* Phones and touch screens get a 44px hit region regardless of the visual size variant. */
+  @media (max-width: 768px), (pointer: coarse) {
     &,
     &.btn-sm {
       min-width: 44px;
@@ -82,9 +111,31 @@
     }
   }
 
+  /*
+   * Disabled reads as unavailable, not as a grey primary: neutral fill, muted text and a visible
+   * outline for every variant. Placed after the variant hovers so it wins at equal specificity.
+   * A loading button (aria-busy) keeps its variant colours and only dims.
+   */
   &:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  &:disabled:not([aria-busy='true']) {
+    background-color: var(--bg-tertiary);
+    border-color: var(--control-outline);
+    color: var(--text-tertiary);
+    box-shadow: none;
+  }
+
+  /* Ghost buttons (menu items, icon actions) stay chromeless, so they dim to read as unavailable. */
+  &.btn-ghost:disabled:not([aria-busy='true']) {
+    background: transparent;
+    border-color: transparent;
+    opacity: 0.6;
+  }
+
+  &[aria-busy='true']:disabled {
+    opacity: 0.75;
   }
 }
 
@@ -110,6 +161,10 @@ textarea {
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px), (pointer: coarse) {
+    min-height: 44px;
   }
 }
 
@@ -450,14 +505,32 @@ textarea {
   padding: $spacing-lg;
   background: var(--bg-secondary);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: $spacing-md;
   align-items: center;
 
   .empty-content {
     display: flex;
+    flex: 1 1 280px;
+    min-width: 0;
     align-items: center;
     gap: $spacing-md;
+  }
+
+  /* Phones: copy gets the full row; the action sits under it, aligned with the copy. */
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .empty-content {
+      flex-basis: auto;
+      align-items: flex-start;
+    }
+
+    .empty-action {
+      padding-left: calc(42px + #{$spacing-md});
+    }
   }
 
   .empty-icon {

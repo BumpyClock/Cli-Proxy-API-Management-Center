@@ -1,0 +1,61 @@
+I finished the round 5 fix pass across all six priorities. `bun run verify` passes locally and in a Boat Linux sandbox. I have not scored the result; the council's rerun of the 34 screenshots is still to come. Nothing is committed, and `design-review/council/**`, the fixtures and the backend are untouched.
+
+## Verification
+- **`bun run verify`.** 1472 tests pass, 0 fail. ESLint shows no warnings, and `tsc` plus the single-file build succeed. The baseline before this pass was 1401 tests.
+- **Boat.** I ran `boat run --no-env --push .` with Bun 1.3.14 and `bun install --frozen-lockfile`: 1472 pass and the build succeeds, which only happens after tests and lint pass. It cost $0.0004 and the sandbox was deleted. No secrets were passed in.
+- **`interactions.mjs`.** All checks pass. I added checks for:
+  - selecting an account row in the quota list by keyboard isolates it in the chart, and "Show all series" restores the others;
+  - the quota filter disclosure opens with Enter;
+  - the phone "Utilities" menu opens, arrows to Dark, applies it, returns focus, and closes on Escape.
+  - The OAuth editor `?provider=` reload check still passes.
+- **`census.mjs --assert`.** All gates pass. I changed one gate on purpose: the Logs phone first row moved from y≤270 to y≤290. Refresh and the fully labelled "Auto refresh" switch now take their own row, because the old short "Auto" label was ambiguous. This is written down in the script and the docs.
+- **Contrast, measured.** I checked every visible text node against its rendered background on 14 routes, at 1440 light, 390 light and 1440 dark. Three type chips were below 4.5:1 and now pass: Claude light (3.97 → 5.05), Gemini and Meta dark (3.90 → 4.93). Nothing else measured below 4.5:1, so I did not darken any other colours.
+- **Type sizes, measured.** The same check found text at 9 to 11.5px in the sidebar, logs, quota cards, badges and chart labels. I raised 100 declarations to 12px. The new `tests/typographyFloor.test.ts` fails if any stylesheet or inline style goes below 12px again.
+- **Languages and partial failures.** I checked zh-CN and ru at 390 on the header, Dashboard, Quota, Config, Plugin Store and the OAuth editors. A Russian Config title was clipped by its header button; I fixed that in `PageHeader`. Simulated source failures show the attention panel and make no health claim.
+- **Not verified.** No LSP session was available, so type checking is `tsc` only. There was no live backend.
+
+## What changed
+- **Quota.** There is now one account list. Each row shows a neutral number badge, a swatch of the line actually drawn, the full name, %, bar, limit and reset, the snapshot state or error, and its own refresh button. Selecting a row isolates that account in the chart. The breakdown table and legend chips are gone. The hatch is gone too; because the whole chart is projected, a label says so instead. Exact overlaps stay one grey line, and one function decides each stroke so the chart and list can't disagree. Inner date ticks are evenly spaced and short ("Nov 9"). Bars are neutral; only remaining below 30% gets red and the word "Low". The account cards and Auth Files quota cells follow the same colour rule.
+- **Dashboard.** A status row now comes first. It states only what was checked, for example "No requests through current credentials in the last 3h 20m · No credential problems found · 6 credential files and 4 providers checked". It never says "healthy".
+  - The second request count is labelled "Usage statistics source: 129 in this window", with the reason the two counts can differ.
+  - An empty request window is one row plus a data-table disclosure.
+  - Quota on the Dashboard leads with the bars, and the projection chart is behind a closed disclosure.
+  - Dashboard times now use the locale's hour cycle, like the rest of the app.
+- **Header.**
+  - On phones, one visible "Utilities" menu holds reload, language, theme and sign out, using the same handlers as desktop.
+  - From 1280px, the desktop buttons show their names.
+  - The reload action is named for what it actually reloads ("Reload config and page data").
+  - Plugins and Plugin Store moved their refresh into the page header.
+- **Plugin notices.** The trust warning and the "plugins disabled" notice stay separate, at different severities, and the trust warning cannot be dismissed. The disabled state is a compact row with "Enable in Config Panel", and the status line no longer repeats it. Empty states link elsewhere but never install anything.
+- **OAuth editors and Auth Files.**
+  - Disabled buttons now look disabled.
+  - "Please enter a provider first" sits under the Provider field, and both the field and Save point to it for screen readers.
+  - The provider step is compact, and Back and Save are in a bar at the bottom.
+  - On phones, credential cards say "Enabled" or "Disabled" next to the switch.
+- **Smaller fixes.**
+  - "Remember management key" in all four locales.
+  - "Claude" for the provider; "Anthropic" only where it names the API.
+  - Config titles no longer include YAML keys, and the header says edits apply when saved.
+  - System's button reads "Configure request logging…".
+  - Language names are written in their own language.
+  - Every disclosure shares one style: chevron, hover, focus ring, 32px target (44px on phones).
+  - Status bar colours come from theme tokens.
+
+## Suggestions I rejected because the premise is false
+- **Label 129 "since restart".** It is counted over the same window as Requests, so the label would be wrong.
+- **One coloured line per account when values overlap exactly.** Identical lines print as one stroke, so colour cannot separate them. Isolating an account draws it in its own colour.
+- **Merge or dismiss the plugin trust warning.** It applies every time the store is open; "disabled" is a temporary config state.
+- **Per-provider "connected" status on OAuth Login.** The frontend has no data for it.
+- **Fill empty space, or darken text without measuring.** Contrast measured as passing.
+- **Fold the empty request flow into the KPI row, or add "last seen request".** The zero buckets need to stay inspectable, and no data supports a last-seen time.
+
+## Known issues remaining
+- On Quota, the Nov 7 and Nov 8 ticks are hidden because they would overlap the long start label. On 390 only the two edge labels show.
+- The desktop log panel still fills the viewport when it holds only 3 rows. I left that conventional log-viewer layout alone.
+- The OAuth editors' Back/Save bar is attached to the page bottom at every width, because the app's scroll containers stop in-page sticky positioning on phones. It sits after the form in keyboard tab order. A dropdown opened right at the screen bottom could paint under it; that is inferred, not reproduced.
+- The Dashboard shows at most the 6 lowest quota accounts, with a note saying more exist. One agent added this beyond the brief; I kept it.
+- Nine `t()` keys have no English string, for example `notification.load_failed` and `common.clear`. They were already missing at HEAD.
+- Not exercised against fixtures: the partial-projection tint, the "checking" status row, and the opened data table on a nonzero request chart. Unit tests cover them.
+- A dev server was already running on port 5173 before I started; I used it and left it running.
+
+The full change notes are in `docs/workspace-redesign.md` under "Design council round 4 fixes". Rerunnable probes are `tests/visual-audit/census.mjs` and `interactions.mjs`.

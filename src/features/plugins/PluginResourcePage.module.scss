@@ -12,6 +12,11 @@
   background: var(--bg-secondary);
 }
 
+.literal {
+  font-family: $font-mono;
+  overflow-wrap: anywhere;
+}
+
 .frame {
   display: block;
   flex: 1 1 auto;

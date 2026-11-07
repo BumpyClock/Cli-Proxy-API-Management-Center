@@ -13,11 +13,11 @@ import { isSupportedLanguage } from '@/utils/language';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
 import type { ApiError } from '@/types';
 import styles from './LoginPage.module.scss';
+import { redirectTargetFrom } from '@/router/redirectTarget';
 
 /**
  * 将 API 错误转换为本地化的用户友好消息
  */
-type RedirectState = { from?: { pathname?: string } };
 
 function getLocalizedErrorMessage(error: unknown, t: (key: string) => string): string {
   const apiError = error as Partial<ApiError>;
@@ -132,7 +132,7 @@ export function LoginPage() {
           setAutoLoginSuccess(true);
           // 延迟跳转，让用户看到成功动画
           setTimeout(() => {
-            const redirect = (location.state as RedirectState | null)?.from?.pathname || '/';
+            const redirect = redirectTargetFrom(location.state);
             navigate(redirect, { replace: true });
           }, 1500);
         } else {
@@ -166,7 +166,7 @@ export function LoginPage() {
         rememberPassword,
       });
       showNotification(t('common.connected_status'), 'success');
-      navigate('/', { replace: true });
+      navigate(redirectTargetFrom(location.state), { replace: true });
     } catch (err: unknown) {
       const message = getLocalizedErrorMessage(err, t);
       setError(message);
@@ -177,6 +177,7 @@ export function LoginPage() {
   }, [
     apiBase,
     detectedBase,
+    location.state,
     login,
     managementKey,
     navigate,
@@ -186,7 +187,7 @@ export function LoginPage() {
   ]);
 
   if (isAuthenticated && !autoLoading && !autoLoginSuccess) {
-    const redirect = (location.state as RedirectState | null)?.from?.pathname || '/';
+    const redirect = redirectTargetFrom(location.state);
     return <Navigate to={redirect} replace />;
   }
 
@@ -201,8 +202,7 @@ export function LoginPage() {
           /* 启动动画 */
           <div className={styles.splashContent}>
             <img src={INLINE_LOGO_JPEG} alt="CPAMC" className={styles.splashLogo} />
-            <h1 className={styles.splashTitle}>{t('splash.title')}</h1>
-            <p className={styles.splashSubtitle}>{t('splash.subtitle')}</p>
+            <h1 className={styles.splashTitle}>{t('title.login')}</h1>
             <div className={styles.splashLoader}>
               <div className={styles.splashLoaderBar} />
             </div>
@@ -214,7 +214,7 @@ export function LoginPage() {
             <div className={styles.identity}>
               <img src={INLINE_LOGO_JPEG} alt="" className={styles.logo} />
               <div>
-                <h1>{t('splash.title')}</h1>
+                <h1>{t('title.login')}</h1>
                 <p>{t('login.subtitle')}</p>
               </div>
             </div>
@@ -227,19 +227,16 @@ export function LoginPage() {
                 if (!loading) void handleSubmit();
               }}
             >
-              <div className={styles.loginHeader}>
-                <div className={styles.titleRow}>
-                  <div className={styles.title}>{t('title.login')}</div>
-                  <Select
-                    className={styles.languageSelect}
-                    value={language}
-                    options={languageOptions}
-                    onChange={handleLanguageChange}
-                    fullWidth={false}
-                    ariaLabel={t('language.switch')}
-                  />
-                </div>
-                <div className={styles.subtitle}>{t('login.subtitle')}</div>
+              <div className={styles.titleRow}>
+                <h2 className={styles.title}>{t('login.card_title')}</h2>
+                <Select
+                  className={styles.languageSelect}
+                  value={language}
+                  options={languageOptions}
+                  onChange={handleLanguageChange}
+                  fullWidth={false}
+                  ariaLabel={t('language.switch')}
+                />
               </div>
 
               <div className={styles.connectionBox}>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTransitionLayer } from '@/components/common/PageTransitionLayer';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
@@ -18,6 +18,8 @@ import { ProviderCategoryList } from './components/ProviderCategoryList';
 import { ProviderResourcePanel } from './components/ProviderResourcePanel';
 import type { ProviderPanelControls } from './components/ProviderResourcePanel';
 import { SponsorQuickStartPanel } from './components/SponsorQuickStartPanel';
+import { QuickStartSteps } from './components/QuickStartSteps';
+import { getProviderCreateLabel } from './createLabel';
 import { ProviderSheet, type ProviderSheetHandle } from './sheets/ProviderSheet';
 import { APIKEY_FUN_DISPLAY_NAME } from './sponsor';
 import { isMultiProtocolSponsorBrand } from './sponsorDefinitions';
@@ -48,19 +50,6 @@ interface SheetState {
 interface ProvidersWorkbenchPageProps {
   fixedBrand?: ProviderBrand;
 }
-
-const formatDateTime = (iso: string, locale?: string) => {
-  try {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
-  } catch {
-    return iso;
-  }
-};
 
 const matchesFilter = (r: ProviderResource, normalized: string): boolean => {
   if (!normalized) return true;
@@ -102,7 +91,7 @@ const getResourceRecentSuccess = (
 };
 
 export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPageProps = {}) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const connectionStatus = useAuthStore((s) => s.connectionStatus);
   const { showNotification, showConfirmation } = useNotificationStore();
 
@@ -305,9 +294,8 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
     [activeGroup, fixedBrand]
   );
 
-  const updatedAtLabel = workbench.snapshot
-    ? formatDateTime(workbench.snapshot.fetchedAt, i18n.language)
-    : t('providersPage.modelCatalog.notLoaded');
+  const updatedAt = workbench.snapshot?.fetchedAt ?? null;
+  // Matches the sidebar: once a key exists the route is that provider's page.
   const headerTitle =
     fixedBrand === 'apikeyFun'
       ? quickStartResource
@@ -422,18 +410,38 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
           totalActive={0}
           totalResources={0}
           providerFamilies={0}
-          updatedAtLabel={updatedAtLabel}
+          updatedAt={updatedAt}
           isFetching={workbench.isFetching}
           onRefresh={() => void handleRefresh()}
           onNew={() => {}}
           isNewDisabled
-          showNewAction={!fixedBrand}
+          showNewAction={false}
           showSummary={fixedBrand !== 'apikeyFun'}
         />
         {errorBanner}
+        {fixedBrand === 'apikeyFun' ? <QuickStartSteps /> : null}
       </div>
     );
   }
+
+  const resourcePanel = (
+    <ProviderResourcePanel
+      panelRef={resourcePanelRef}
+      group={activeGroup}
+      filter={filter}
+      onFilterChange={(value) => updateActiveFilterState({ filter: value })}
+      filteredResources={visibleResources}
+      selectedId={sheetState.open ? (sheetState.resource?.id ?? null) : null}
+      disableMutations={disableMutations}
+      usageByProvider={usageByProvider}
+      toolbarControls={toolbarControls}
+      onView={openView}
+      onEdit={openEdit}
+      onDelete={handleDelete}
+      onToggleDisabled={handleToggleDisabled}
+      onCreate={openCreate}
+    />
+  );
 
   return (
     <div className={styles.page}>
@@ -442,12 +450,12 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
         totalActive={totalActive}
         totalResources={totalResources}
         providerFamilies={providerFamilies}
-        updatedAtLabel={updatedAtLabel}
+        updatedAt={updatedAt}
         isFetching={workbench.isFetching}
         isNewDisabled={disableMutations}
         showNewAction={!fixedBrand}
         showSummary={fixedBrand !== 'apikeyFun'}
-        newLabel={t('providersPage.actions.new')}
+        newLabel={getProviderCreateLabel(t, activeGroup.id)}
         variant={fixedBrand === 'apikeyFun' ? 'quickStart' : undefined}
         onRefresh={() => void handleRefresh()}
         onNew={openCreate}
@@ -455,72 +463,37 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
 
       {errorBanner}
 
-      <div className={`${styles.layout} ${fixedBrand ? styles.layoutSingle : ''}`.trim()}>
-        {!fixedBrand ? (
-          <ProviderCategoryList
-            groups={groups}
-            activeBrand={activeGroup.id}
-            onSelect={(brand) => {
-              const isSwitching = sheetState.open && sheetState.brand !== brand;
-              const proceed =
-                isSwitching && sheetRef.current
-                  ? sheetRef.current.confirmDiscardIfDirty()
-                  : Promise.resolve(true);
-              void proceed.then((ok) => {
-                if (!ok) return;
-                setActiveBrand(brand);
-                if (isSwitching) {
-                  closeSheet();
-                }
-              });
-            }}
-          />
-        ) : null}
-        {fixedBrand === 'apikeyFun' ? (
-          <SponsorQuickStartPanel
-            resource={quickStartResource}
-            workbench={workbench}
-            mutationDisabled={disableMutations}
-          />
-        ) : (
-          <ProviderResourcePanel
-            panelRef={resourcePanelRef}
-            group={activeGroup}
-            filter={filter}
-            onFilterChange={(value) => updateActiveFilterState({ filter: value })}
-            filteredResources={visibleResources}
-            selectedId={sheetState.open ? (sheetState.resource?.id ?? null) : null}
-            disableMutations={disableMutations}
-            usageByProvider={usageByProvider}
-            toolbarControls={toolbarControls}
-            onView={openView}
-            onEdit={openEdit}
-            onDelete={handleDelete}
-            onToggleDisabled={handleToggleDisabled}
-            onCreate={openCreate}
-          />
-        )}
-      </div>
+      {fixedBrand === 'apikeyFun' ? <QuickStartSteps /> : null}
 
       {fixedBrand === 'apikeyFun' ? (
-        <section className={styles.setup} aria-labelledby="quick-start-steps">
-          <h2 id="quick-start-steps">{t('redesign.providers.setupTitle')}</h2>
-          <ol>
-            <li>
-              <Link to="/ai-providers">{t('redesign.providers.setupProvider')}</Link>
-            </li>
-            <li>
-              <Link to="/oauth">{t('redesign.providers.setupOAuth')}</Link>
-            </li>
-            <li>
-              <Link to="/config">{t('redesign.providers.setupClient')}</Link>
-            </li>
-            <li>
-              <Link to="/usage">{t('redesign.providers.setupUsage')}</Link>
-            </li>
-          </ol>
-        </section>
-      ) : null}
+        <SponsorQuickStartPanel
+          resource={quickStartResource}
+          workbench={workbench}
+          mutationDisabled={disableMutations}
+        />
+      ) : fixedBrand ? (
+        resourcePanel
+      ) : (
+        <ProviderCategoryList
+          groups={groups}
+          activeBrand={activeGroup.id}
+          onSelect={(brand) => {
+            const isSwitching = sheetState.open && sheetState.brand !== brand;
+            const proceed =
+              isSwitching && sheetRef.current
+                ? sheetRef.current.confirmDiscardIfDirty()
+                : Promise.resolve(true);
+            void proceed.then((ok) => {
+              if (!ok) return;
+              setActiveBrand(brand);
+              if (isSwitching) {
+                closeSheet();
+              }
+            });
+          }}
+          detail={resourcePanel}
+        />
+      )}
 
       {!fixedBrand ? (
         <ProviderSheet

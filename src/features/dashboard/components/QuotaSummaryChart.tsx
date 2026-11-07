@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { Button } from '@/components/ui/Button';
+import { RefreshButton } from '@/components/ui/RefreshButton';
 import { TimeSeriesChart } from '@/components/ui/TimeSeriesChart';
 import { useNow } from '@/hooks/useNow';
 import { useAuthStore, useQuotaStore } from '@/stores';
@@ -11,13 +11,28 @@ import { getQuotaCacheKey } from '@/utils/quota/identity';
 import { useQuotaBatchLoader } from '@/features/quota/hooks/useQuotaBatchLoader';
 import { classifyQuotaFiles } from '@/features/quota/logic';
 import { getQuotaDataAdapter } from '@/features/quota/providers/registry';
-import { buildAccountSeries } from '@/features/quota/quotaAccountSeries';
+import {
+  buildAccountSeries,
+  buildGlanceRows,
+  resetMarkers,
+} from '@/features/quota/quotaAccountSeries';
+import { QuotaGlanceList } from '@/features/quota/components/QuotaGlanceList';
+import {
+  quotaAccountLabel,
+  quotaTickFormat,
+  quotaTimeFormat,
+  quotaTimeZoneLabel,
+} from '@/features/quota/quotaChartFormat';
+import { formatSeriesNumbers, resolveSeriesStrokes } from '@/components/ui/TimeSeriesChart.model';
 import {
   observableQuotaEntries,
   resolveQuotaEntryCheck,
   resolveQuotaRefreshTargets,
 } from '@/features/quota/refreshScope';
 import styles from './QuotaSummaryChart.module.scss';
+
+/** Rows shown on the dashboard; Quota Management lists every account. */
+const DASHBOARD_ROW_LIMIT = 6;
 
 interface QuotaSummaryChartProps {
   files: readonly AuthFileItem[];
@@ -105,22 +120,24 @@ function QuotaSummaryChartContent({
   }, [observableEntries, quotas, now, end, numbers]);
 
   const measured = model.accounts.filter((account) => account.remaining !== null);
-  const series = model.series.map((item, index) => {
-    const account = measured[index];
-    const windowLabel = account.window
-      ? t(account.window.label, { defaultValue: account.window.label })
-      : '';
-    return {
-      ...item,
-      label: [
-        item.label,
-        windowLabel,
-        account.quota?.stale ? t('redesign.dashboardQuota.stale') : '',
-      ]
-        .filter(Boolean)
-        .join(' · '),
-    };
+  const series = model.series.map((item, index) => ({
+    ...item,
+    label: quotaAccountLabel(measured[index], t),
+  }));
+  const xDomain = [now, end] as const;
+  const forecast = measured.length
+    ? { from: now, label: t('redesign.quota.projected_from_snapshot') }
+    : undefined;
+  // Same stroke decision as the chart; rows show their line key only while the chart is open.
+  const { strokes } = resolveSeriesStrokes(series, model.data, {
+    xDomain,
+    yDomain: [0, 100],
+    forecast: forecast !== undefined,
   });
+  const glanceRows = buildGlanceRows(model.accounts, now);
+  // Least remaining first: the dashboard shows the accounts closest to running out.
+  const visibleRows = glanceRows.slice(0, DASHBOARD_ROW_LIMIT);
+  const [projectionOpen, setProjectionOpen] = useState(false);
   const failed = quotas.filter((quota) => quota?.status === 'error' || quota?.stale).length;
   const checking =
     batchLoading || quotas.some((quota) => quota?.refreshing || quota?.status === 'loading');
@@ -128,21 +145,13 @@ function QuotaSummaryChartContent({
     measured.length && measured.every((account) => account.quota?.checkedAt !== undefined)
       ? Math.min(...measured.map((account) => account.quota!.checkedAt!))
       : null;
-  const dateFormat = useMemo(
-    () =>
-      new Intl.DateTimeFormat(i18n.language, {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short',
-      }),
-    [i18n.language]
-  );
+  const dateFormat = useMemo(() => quotaTimeFormat(i18n.language), [i18n.language]);
+  const tickFormat = useMemo(() => quotaTickFormat(i18n.language), [i18n.language]);
   const percentFormat = useMemo(
     () => new Intl.NumberFormat(i18n.language, { style: 'percent', maximumFractionDigits: 1 }),
     [i18n.language]
   );
+  const resets = resetMarkers(model.accounts, now, end, (end - now) * 0.03);
   const status = !connected
     ? 'disconnected'
     : !filesReady
@@ -176,48 +185,113 @@ function QuotaSummaryChartContent({
       <header className={styles.header}>
         <div>
           <h2 id={`${id}-title`}>{t('redesign.dashboardQuota.title')}</h2>
-          <p>{t('redesign.dashboardQuota.subtitle')}</p>
+          <p>
+            {t('redesign.dashboardQuota.subtitle')} ·{' '}
+            {t('redesign.quota.times_in', { zone: quotaTimeZoneLabel(now) })}
+          </p>
         </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
+        <RefreshButton
           onClick={refresh}
-          disabled={!connected || !filesReady || observableEntries.length === 0 || checking}
-          loading={checking}
-        >
-          {t('redesign.dashboardQuota.refresh')}
-        </Button>
+          label={t('redesign.dashboardQuota.refresh')}
+          refreshing={checking}
+          disabled={!connected || !filesReady || observableEntries.length === 0}
+        />
       </header>
-      <div className={styles.status} role="status" aria-live="polite" aria-atomic="true">
-        <span className={failed ? styles.warning : undefined}>
-          {t(`redesign.dashboardQuota.${status}`, { count: failed })}
-        </span>
-        {filesReady && connected && (
-          <span>
-            {t('redesign.dashboardQuota.coverage', {
-              measured: measured.length,
-              eligible: observableEntries.length,
-              unavailable: observableEntries.length - measured.length,
-              skipped: files.length - observableEntries.length,
-            })}
+      {/* One short status line; methodology lives in the projection's reading guide. */}
+      <p className={styles.status} role="status" aria-live="polite" aria-atomic="true">
+        {status !== 'snapshots' && (
+          <span className={failed ? styles.warning : undefined}>
+            {t(`redesign.dashboardQuota.${status}`, { count: failed })}
           </span>
         )}
-      </div>
-      <TimeSeriesChart
-        id={`${id}-quota`}
-        data={model.data}
-        series={series}
-        xDomain={[now, end]}
-        yDomain={[0, 100]}
-        formatX={(timestamp) => dateFormat.format(timestamp)}
-        formatY={(value) => percentFormat.format(value / 100)}
-        ariaLabel={t('redesign.dashboardQuota.chart_label')}
-        emptyText={t(`redesign.dashboardQuota.${status}`, { count: failed })}
-        description={t('redesign.dashboardQuota.evidence')}
-        height={224}
-        className={styles.chart}
-      />
+        {filesReady && connected && (
+          <span>
+            {[
+              t('redesign.dashboardQuota.measured', {
+                measured: measured.length,
+                eligible: observableEntries.length,
+              }),
+              observableEntries.length > measured.length
+                ? t('redesign.dashboardQuota.unmeasured', {
+                    count: observableEntries.length - measured.length,
+                  })
+                : '',
+              files.length > observableEntries.length
+                ? t('redesign.dashboardQuota.skipped', {
+                    count: files.length - observableEntries.length,
+                  })
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        )}
+      </p>
+      {visibleRows.length > 0 && (
+        <div className={styles.accounts}>
+          <QuotaGlanceList
+            rows={visibleRows}
+            strokes={projectionOpen ? strokes : undefined}
+            formatTime={(timestamp) => dateFormat.format(timestamp)}
+            formatPercent={(value) => percentFormat.format(value / 100)}
+            layout="columns"
+          />
+          {glanceRows.length > visibleRows.length && (
+            <p className={styles.more}>
+              {t('redesign.dashboardQuota.lowest_shown', {
+                shown: visibleRows.length,
+                total: glanceRows.length,
+              })}
+            </p>
+          )}
+        </div>
+      )}
+      {series.length > 0 && (
+        <details
+          className={styles.projection}
+          onToggle={(event) => setProjectionOpen(event.currentTarget.open)}
+        >
+          <summary>{t('redesign.dashboardQuota.show_projection')}</summary>
+          {/* Mounted on demand: the plot measures its width only once the disclosure is open. */}
+          {projectionOpen && (
+            <TimeSeriesChart
+              id={`${id}-quota`}
+              data={model.data}
+              series={series}
+              xDomain={xDomain}
+              yDomain={[0, 100]}
+              forecast={forecast}
+              annotations={resets.map((reset) => ({
+                x: reset.atMs,
+                label: reset.all
+                  ? t('redesign.quota.reset_at', { time: dateFormat.format(reset.atMs) })
+                  : t('redesign.quota.reset_some', {
+                      numbers: formatSeriesNumbers(reset.numbers),
+                      time: dateFormat.format(reset.atMs),
+                    }),
+              }))}
+              formatX={(timestamp) => dateFormat.format(timestamp)}
+              formatXTick={tickFormat}
+              formatMarkerGroup={(numbers, count) =>
+                t('redesign.quota.group_label', { numbers, count })
+              }
+              formatY={(value) => percentFormat.format(value / 100)}
+              ariaLabel={t('redesign.dashboardQuota.chart_label')}
+              emptyText={t(`redesign.dashboardQuota.${status}`, { count: failed })}
+              height={224}
+              compactHeight={200}
+              legendPlacement="none"
+              guide={
+                <>
+                  <p>{t('redesign.dashboardQuota.evidence')}</p>
+                  <p>{t('redesign.dashboardQuota.refresh_policy')}</p>
+                </>
+              }
+              className={styles.chart}
+            />
+          )}
+        </details>
+      )}
       <footer className={styles.footer}>
         <div>
           {oldestSnapshot !== null ? (
@@ -232,7 +306,6 @@ function QuotaSummaryChartContent({
               {t(`redesign.dashboardQuota.${measured.length ? 'unknown_time' : 'no_snapshot'}`)}
             </span>
           )}
-          <span>{t('redesign.dashboardQuota.refresh_policy')}</span>
         </div>
         <Link to="/quota">{t('redesign.dashboardQuota.open_quota')} →</Link>
       </footer>

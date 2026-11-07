@@ -1,0 +1,77 @@
+@use '../../../styles/mixins' as *;
+
+/* Floating bar centred on the content column (--content-center-x), like the batch bar. */
+.container {
+  position: fixed;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  left: var(--content-center-x, 50%);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  z-index: $z-dropdown;
+  pointer-events: none;
+}
+
+/*
+ * Focus and scrollIntoView stop above the bar in both scrollers: .content on desktop, the
+ * document on phones. Bar height + its 12px offset + safe area + 16px clearance.
+ */
+:global(html):has(.container),
+:global(html):has(.container) :global(.content) {
+  scroll-padding-bottom: calc(
+    var(--oauth-editor-actions-height, 0px) + 28px + env(safe-area-inset-bottom, 0px)
+  );
+}
+
+.bar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  --glass-blur: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-backdrop-filter);
+  box-shadow: var(--shadow-lg);
+}
+
+.reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 320px;
+  margin: 0 4px 0 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+/* Phones: a full-width bar; Save takes the row (the top bar link is the way back). */
+@include mobile {
+  .container {
+    width: calc(100vw - 16px);
+    max-width: none;
+  }
+
+  .bar {
+    flex-wrap: wrap;
+  }
+
+  .reason {
+    flex-basis: 100%;
+    max-width: none;
+    margin: 0 4px;
+  }
+
+  .bar > :global(.btn) {
+    flex: 1;
+  }
+}

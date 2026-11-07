@@ -1,0 +1,10 @@
+{
+  "repository": "BumpyClock/Cli-Proxy-API-Management-Center",
+  "base": "main",
+  "branch": "feat/council-ui-polish",
+  "requested": "Create a ready PR after the council loop and verification, with before and after screenshots.",
+  "mergeAuthorized": false,
+  "beforeScreenshots": "design-review/council/round-1/screenshots",
+  "afterScreenshots": "Final completed round/screenshots; capture again if fixes follow final review.",
+  "privacy": "Use synthetic local-fixture captures only. Do not upload operational production screenshots."
+}

@@ -52,11 +52,6 @@
     margin-bottom: 0;
   }
 }
-.loginHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
 .titleRow {
   display: flex;
   justify-content: space-between;
@@ -64,11 +59,9 @@
   gap: 12px;
 }
 .title {
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
-}
-.subtitle {
-  display: none;
 }
 .languageSelect {
   min-width: 108px;
@@ -78,7 +71,11 @@
   flex-direction: column;
   gap: 6px;
 }
-.label,
+/* Same type as the form-group labels below it (Management Key). */
+.label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
 .toggleLabel {
   color: var(--text-primary);
   font-size: 13px;
@@ -126,10 +123,6 @@
   font-size: 22px;
   margin: 0;
   text-align: center;
-}
-.splashSubtitle {
-  font-size: 13px;
-  color: var(--text-secondary);
 }
 .splashLoader {
   width: 120px;

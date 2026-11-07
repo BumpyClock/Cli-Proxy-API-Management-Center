@@ -32,8 +32,11 @@ export function ToggleRow({ title, description, checked, disabled, onChange }: T
   );
 }
 
-export function FieldGrid({ children }: { children: ReactNode }) {
-  return <div className={styles.fieldGrid}>{children}</div>;
+/** `pairs` 固定两列，用于偶数个开关卡片，避免自适应列在宽屏下留下 3+1 孤行。 */
+export function FieldGrid({ children, pairs = false }: { children: ReactNode; pairs?: boolean }) {
+  return (
+    <div className={`${styles.fieldGrid} ${pairs ? styles.fieldGridPairs : ''}`}>{children}</div>
+  );
 }
 
 export function FieldStack({ children }: { children: ReactNode }) {
@@ -98,6 +101,11 @@ export function FieldGroupHeading({ title }: { title: string }) {
   );
 }
 
+/** Backend YAML key as secondary mono text beside a human label; the label itself stays plain. */
+export function YamlKey({ name }: { name: string }) {
+  return <code className={styles.yamlKey}>{name}</code>;
+}
+
 export function FieldShell({
   label,
   labelId,
@@ -108,7 +116,7 @@ export function FieldShell({
   errorId,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   labelId?: string;
   htmlFor?: string;
   hint?: string;
