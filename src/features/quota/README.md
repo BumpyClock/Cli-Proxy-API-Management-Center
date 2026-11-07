@@ -16,7 +16,7 @@ The Remaining view leads with a per-account glance list (`<ul aria-label="Remain
 
 Account series numbers are allocated by credential identity when a list is accepted and retained through filtering, sorting, pagination and subsequent list reads. Series retain their own sparse reset points rather than a shared account-by-reset matrix. Exact account evidence stays below the plot and replaces the chart's duplicate data-table disclosure. Account details retain all provider bodies, reset-credit controls and the existing windows timeline.
 
-The workspace uses the installed shared `src/components/ui/TimeSeriesChart.tsx` and the pinned Recharts dependency in `package.json` and `bun.lock`. Quota and chart messages ship in all four `src/i18n/locales/` bundles. Product tests load those bundles through isolated i18next instances; no design-review translation artifacts are required.
+The workspace uses the installed shared `src/components/ui/TimeSeriesChart.tsx` and the pinned Recharts dependency in `package.json` and `bun.lock`. Quota and chart messages ship in all four `src/i18n/locales/` bundles. Product tests load those bundles through isolated i18next instances.
 
 Release context. This redesign supersedes manual-only entry behavior for eligible accounts. Provider endpoints, payloads and reset contracts remain provider-owned.
 
