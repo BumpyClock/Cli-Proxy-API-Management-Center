@@ -3,6 +3,9 @@ import type { TFunction } from 'i18next';
 import { CODEX_CONFIG } from '@/features/quota/providers/codex/data';
 import { apiCallApi, authFilesApi, apiClient } from '@/services/api';
 import { CODEX_RATE_LIMIT_RESET_CREDITS_CONSUME_URL } from '@/utils/quota';
+import { requestQuota } from '@/features/quota/hooks/quotaRequests';
+import { QUOTA_ADAPTERS } from '@/features/quota/providers';
+import { useQuotaStore } from '@/stores/useQuotaStore';
 
 const t = ((key: string) => key) as TFunction;
 const file = { name: 'codex-test.json', auth_index: 'test-index', type: 'codex' };
@@ -17,6 +20,7 @@ const mocks: Array<{ mockRestore(): void }> = [];
 afterEach(() => {
   for (const mock of mocks.splice(0)) mock.mockRestore();
   apiClient.setConfig({ apiBase: '', managementKey: '' });
+  useQuotaStore.getState().clearQuotaCache();
 });
 
 function setup(body: unknown, statusCode = 200) {
@@ -73,6 +77,30 @@ describe('Codex reset gateway cooldown', () => {
     clear.mockRejectedValue(new Error('offline'));
     await expect(reset()).rejects.toThrow('codex_quota.reset_cooldown_failed');
     expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  test('requires a fresh snapshot before offering another reset after partial failure', async () => {
+    const { clear } = setup({ code: 'reset' });
+    clear.mockRejectedValue(new Error('offline'));
+    const adapter = QUOTA_ADAPTERS.codex;
+    useQuotaStore.getState().setCodexQuota({
+      [file.name]: {
+        status: 'success',
+        windows: [],
+        rateLimitResetCreditsAvailableCount: 1,
+      },
+    });
+    expect((await requestQuota(file, adapter, t, 'reset')).status).toBe('error');
+    const stale = useQuotaStore.getState().codexQuota[file.name];
+    expect(stale).toMatchObject({ status: 'success', stale: true });
+    expect(adapter.canResetQuota?.(stale)).toBe(false);
+    const fresh = spyOn(adapter, 'fetchQuota').mockResolvedValue({
+      windows: [],
+      rateLimitResetCreditsAvailableCount: 1,
+    });
+    mocks.push(fresh);
+    expect((await requestQuota(file, adapter, t)).status).toBe('success');
+    expect(adapter.canResetQuota?.(useQuotaStore.getState().codexQuota[file.name])).toBe(true);
   });
 
   test('rejects mismatched cooldown acknowledgements', async () => {

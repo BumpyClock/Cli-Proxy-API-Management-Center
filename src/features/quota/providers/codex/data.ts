@@ -38,7 +38,7 @@ import {
 } from '@/utils/quota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
 import { isRecord } from '@/utils/helpers';
-import type { QuotaProviderData } from '../types';
+import type { QuotaCardState, QuotaProviderData } from '../types';
 import { observeQuota, observeWindow, resetCreditRowId } from '../observations';
 import { parseIsoToMs } from '@/utils/quota/resetInstants';
 
@@ -547,7 +547,8 @@ export const CODEX_CONFIG: QuotaProviderData<CodexQuotaState, CodexQuotaData> = 
   filterFn: (file) => isCodexFile(file) && !isDisabledAuthFile(file),
   fetchQuota: fetchCodexQuota,
   resetQuota: resetCodexQuota,
-  canResetQuota: (quota) => (quota.rateLimitResetCreditsAvailableCount ?? 0) > 0,
+  canResetQuota: (quota: CodexQuotaState & QuotaCardState) =>
+    !quota.stale && (quota.rateLimitResetCreditsAvailableCount ?? 0) > 0,
   getObservations: (state) =>
     observeQuota(
       (state.windows ?? [])
