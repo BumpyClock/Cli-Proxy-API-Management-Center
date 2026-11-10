@@ -110,6 +110,10 @@ Automatic quota reads never run inference. xAI API health tests require a separa
 
 Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`. Connect the local UI at `http://127.0.0.1:5173` to `http://127.0.0.1:8318` using any nonempty mock management key. All fixture accounts are labelled `mock-*`; no provider credentials are needed or used. Open Quota Management and check its automatic entry refresh, Remaining, Accounts, provider filters, the detailed windows timeline, light/dark themes, and mobile layouts. To verify Qoder refresh, load its quota, then run `curl -X POST http://127.0.0.1:8318/v0/management/__mock/qoder -H 'Content-Type: application/json' --data '{"used":90}'` and refresh that account's quota row. Account details must show updated usage. This control endpoint exists only in the local fixture. Stop the fixture server afterward. `bun test tests/quotaObservations.test.ts tests/quotaRefreshScope.test.ts tests/quotaPool.test.ts tests/copilotQuotaApi.test.ts` checks provider observations, fresh refresh targets, quota math, and the Copilot boundary.
 
+### Autocomplete browser verification
+
+Run `bun scripts/verify-autocomplete-browser.mjs`. The script starts isolated Vite and headless Chrome processes, checks clipped-container and sheet dropdowns, desktop/mobile bounds, keyboard and pointer selection, Escape and Tab, then stops both processes. It uses mock options only. Set `CHROME_PATH` when Chrome is not at the macOS default path or `chromium` is not on PATH. Screenshots are written to `docs/screenshots/upstream-backports`.
+
 ## Tech Stack
 
 - React 19 + TypeScript 6.0

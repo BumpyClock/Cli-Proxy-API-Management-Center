@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autocomplete verification fixture</title>
+  </head>
+  <body>
+    <button id="outside" type="button">Outside control</button>
+    <div
+      id="clip"
+      style="
+        position: fixed;
+        bottom: 80px;
+        left: 32px;
+        width: min(300px, calc(100vw - 64px));
+        height: 80px;
+        overflow: hidden;
+        border: 1px solid gray;
+        padding: 8px;
+      "
+    >
+      <div id="root"></div>
+    </div>
+    <output id="selection"></output>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import { AutocompleteInput } from '/src/components/ui/AutocompleteInput.tsx';
+      import { Sheet } from '/src/components/ui/Sheet/Sheet.tsx';
+      import '/src/i18n/index.ts';
+      import '/src/styles/global.scss';
+      function Fixture() {
+        const [value, setValue] = React.useState('');
+        const [open, setOpen] = React.useState(true);
+        const control = React.createElement(AutocompleteInput, {
+          id: 'fixture-model',
+          label: 'Fixture model',
+          value,
+          onChange: (next) => {
+            setValue(next);
+            document.querySelector('#selection').textContent = next;
+          },
+          options: ['Alpha', 'Beta', 'Gamma'],
+          ariaDescribedBy: 'fixture-help',
+        });
+        return new URLSearchParams(location.search).has('sheet')
+          ? React.createElement(
+              Sheet,
+              { open, title: 'Fixture provider editor', onClose: () => setOpen(false) },
+              control
+            )
+          : control;
+      }
+      createRoot(document.querySelector('#root')).render(React.createElement(Fixture));
+    </script>
+    <p id="fixture-help">Mock options. No network requests.</p>
+  </body>
+</html>
