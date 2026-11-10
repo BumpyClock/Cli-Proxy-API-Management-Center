@@ -300,9 +300,9 @@ describe('response-only and legacy fields never reach the backend', () => {
       keys: [{ 'api-key': 'fixture', models: [{ name: 'k', 'test-model': 'legacy' }] }],
     };
     const b = backend('openai-compatibility', [group]);
-    const current = (await providersApi.getOpenAIProviders())[0];
+    const current = openaiRows(b.groups())[0];
     expect(current).not.toHaveProperty('testModel');
-    await providersApi.updateOpenAIProvider(current.name, 0, {
+    await providersApi.updateOpenAIProvider(current.name, {
       ...current,
       testModel: 'm',
       models: [{ ...current.models![0], testModel: 'm' }],
@@ -502,7 +502,7 @@ describe('workbench form edits do not materialize defaults', () => {
       }),
       current
     );
-    await providersApi.updateOpenAIProvider(current.name, 0, config);
+    await providersApi.updateOpenAIProvider(current.name, config);
     expect(b.groups()).toEqual([
       {
         ...group,
@@ -569,7 +569,9 @@ describe('resources carry their persisted identity', () => {
       [0, 1],
       [1, 0],
     ]);
-    expect(codex[0].source?.groups).toBe(config.providerGroups!.codex as unknown[]);
+    expect(codex[0].source?.groups).toBe(
+      (config.raw!['api-keys'] as Record<string, unknown[]>).codex
+    );
     const openai = buildProviderGroups(config).find(
       (group) => group.id === 'openaiCompatibility'
     )!.resources;

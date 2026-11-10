@@ -5,7 +5,6 @@
 
 import { create } from 'zustand';
 import type { Config } from '@/types';
-import type { RawConfigSection } from '@/types/config';
 import { configApi } from '@/services/api/config';
 import { CACHE_EXPIRY_MS } from '@/utils/constants';
 
@@ -19,7 +18,7 @@ interface ConfigState {
 
   // 操作
   fetchConfig: (forceRefresh?: boolean) => Promise<Config>;
-  updateConfigValue: (section: RawConfigSection, value: unknown) => void;
+  setRequestLog: (enabled: boolean) => void;
   invalidateCache: () => void;
   clearCache: () => void;
   isCacheValid: () => boolean;
@@ -67,80 +66,8 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     }
   },
 
-  updateConfigValue: (section, value) => {
-    set((state) => {
-      // UI rows are not serialized v8 groups. Retain the last server document until refetched.
-      const nextConfig: Config = { ...(state.config || {}) };
-
-      switch (section) {
-        case 'debug':
-          nextConfig.debug = value as Config['debug'];
-          break;
-        case 'proxy-url':
-          nextConfig.proxyUrl = value as Config['proxyUrl'];
-          break;
-        case 'request-retry':
-          nextConfig.requestRetry = value as Config['requestRetry'];
-          break;
-        case 'quota-exceeded':
-          nextConfig.quotaExceeded = value as Config['quotaExceeded'];
-          break;
-        case 'request-log':
-          nextConfig.requestLog = value as Config['requestLog'];
-          break;
-        case 'logging-to-file':
-          nextConfig.loggingToFile = value as Config['loggingToFile'];
-          break;
-        case 'logs-max-total-size-mb':
-          nextConfig.logsMaxTotalSizeMb = value as Config['logsMaxTotalSizeMb'];
-          break;
-        case 'ws-auth':
-          nextConfig.wsAuth = value as Config['wsAuth'];
-          break;
-        case 'force-model-prefix':
-          nextConfig.forceModelPrefix = value as Config['forceModelPrefix'];
-          break;
-        case 'routing/strategy':
-          nextConfig.routingStrategy = value as Config['routingStrategy'];
-          break;
-        case 'api-keys':
-          nextConfig.apiKeys = value as Config['apiKeys'];
-          break;
-        case 'gemini-api-key':
-          nextConfig.geminiApiKeys = value as Config['geminiApiKeys'];
-          break;
-        case 'interactions-api-key':
-          nextConfig.interactionsApiKeys = value as Config['interactionsApiKeys'];
-          break;
-        case 'codex-api-key':
-          nextConfig.codexApiKeys = value as Config['codexApiKeys'];
-          break;
-        case 'meta-api-key':
-          nextConfig.metaApiKeys = value as Config['metaApiKeys'];
-          break;
-        case 'xai-api-key':
-          nextConfig.xaiApiKeys = value as Config['xaiApiKeys'];
-          break;
-        case 'claude-api-key':
-          nextConfig.claudeApiKeys = value as Config['claudeApiKeys'];
-          break;
-        case 'vertex-api-key':
-          nextConfig.vertexApiKeys = value as Config['vertexApiKeys'];
-          break;
-        case 'openai-compatibility':
-          nextConfig.openaiCompatibility = value as Config['openaiCompatibility'];
-          break;
-        case 'oauth-excluded-models':
-          nextConfig.oauthExcludedModels = value as Config['oauthExcludedModels'];
-          break;
-        default:
-          break;
-      }
-
-      return { config: nextConfig };
-    });
-
-    // 使缓存失效（保留当前 config 快照）
+  setRequestLog: (requestLog) => {
+    set((state) => ({ config: { ...state.config, requestLog } }));
     get().invalidateCache();
   },
 

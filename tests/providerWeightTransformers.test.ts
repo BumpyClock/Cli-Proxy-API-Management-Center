@@ -4,6 +4,7 @@ import { apiClient } from '../src/services/api/client';
 import { providersApi } from '../src/services/api/providers';
 import {
   normalizeGeminiKeyConfig,
+  normalizeConfigResponse,
   normalizeOpenAIProvider,
   normalizeProviderKeyConfig,
 } from '../src/services/api/transformers';
@@ -89,8 +90,9 @@ describe('provider credential weight normalization', () => {
       return undefined;
     }) as typeof apiClient.put;
 
-    const current = (await providersApi.getOpenAIProviders())[0];
-    await providersApi.updateOpenAIProvider('example', 0, {
+    const current = normalizeConfigResponse((await apiClient.getRaw('/config')).data)
+      .openaiCompatibility![0];
+    await providersApi.updateOpenAIProvider('example', {
       ...current,
       apiKeyEntries: [
         { ...current.apiKeyEntries[0], weight: undefined },

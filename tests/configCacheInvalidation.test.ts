@@ -43,15 +43,16 @@ test('session clearing removes accepted configuration as well as its cache', () 
   expect(useConfigStore.getState().isCacheValid()).toBe(false);
 });
 
-test('UI key edits cannot overwrite the raw provider groups or last server document', () => {
+test('optimistic request-log edits retain other fields and the last server document', () => {
   useConfigStore.setState({
     config: {
       apiKeys: ['old'],
       raw: { access: { 'api-keys': ['old'] }, 'api-keys': { meta: [] } },
     },
   });
-  useConfigStore.getState().updateConfigValue('api-keys', ['new']);
-  expect(useConfigStore.getState().config?.apiKeys).toEqual(['new']);
+  useConfigStore.getState().setRequestLog(true);
+  expect(useConfigStore.getState().config?.requestLog).toBe(true);
+  expect(useConfigStore.getState().config?.apiKeys).toEqual(['old']);
   expect(useConfigStore.getState().config?.raw).toEqual({
     access: { 'api-keys': ['old'] },
     'api-keys': { meta: [] },

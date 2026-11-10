@@ -33,7 +33,7 @@ Dependent JSON and YAML replacements send the ETag from their own read as `If-Ma
 
 The transport captures connection identity before Axios dispatch and drops stale data, 401 events and version/plugin metadata. Post-mutation cache invalidation supersedes pre-write reads without clearing accepted rows. Optimistic request-log updates also bind rollback, notifications and completion to their original connection. OAuth exclusion deletion never retries a cancelled or conflicting mutation through a legacy whole-map replacement. YAML loads use request ownership so a delayed initial response cannot erase a newer edit.
 
-Provider edits preserve group policies, unrelated keys, explicit inheritance and model metadata. Existing rows carry explicit identities; newly added models cannot inherit removed-row metadata. Connection-test model selection is local to the editor, not a persisted v8 field.
+Provider edits preserve group policies, unrelated keys, explicit inheritance and model metadata. Existing model and credential rows carry explicit identities. Replacing a removed row with a new, identical-looking row does not inherit the removed row's hidden metadata; reordering retained rows keeps each row's own policy. Connection-test model selection is local to the editor, not a persisted v8 field.
 
 Both explicit management URL suffixes are stripped when identifying a server so existing mount-scoped storage keys remain stable. This normalization does not provide v0 transport fallback. Plugin-defined HTTP extensions and resource URLs retain the backend's declared v0 paths.
 
@@ -87,6 +87,6 @@ node scripts/verify-management-v8-browser.mjs
 
 Set `CHROME_EXECUTABLE` if needed. The browser uses an isolated context and real native backend responses. It tests wrong-key feedback, login, unsupported usage on desktop/mobile, OAuth choices, actual model-form metadata preservation, replacement-row identity, a delayed initial YAML response and conditional visual saves. It delays one real YAML response to exercise request ownership; it does not fabricate API data or inject application stores. Screenshots are saved under `docs/screenshots/management-v8/`.
 
-The delayed-load regression was mutation-checked by removing its ownership guard and observing the expected lost-edit failure, then restoring the guard. Autocomplete retains its separate check, `bun scripts/verify-autocomplete-browser.mjs`.
+The delayed-load regression was mutation-checked by removing its ownership guard and observing the expected lost-edit failure, then restoring the guard. Autocomplete retains its separate Playwright check, `PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs bun scripts/verify-autocomplete-browser.mjs`.
 
 Destroy the disposable sandbox and stop owned Vite/tunnel processes afterward. Real provider OAuth completion, provider refresh/redemption, billable inference and plugin installation are intentionally not exercised. No real credentials or reset credits are used.

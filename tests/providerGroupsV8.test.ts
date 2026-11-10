@@ -27,6 +27,8 @@ function backend(family: ProviderFamily, groups: Record<string, unknown>[] = [])
   return { groups: () => state, writes };
 }
 const rows = (groups: unknown) => normalizeProviderGroups(groups) as ProviderKeyConfig[];
+const openaiRows = (groups: unknown) =>
+  normalizeProviderGroups(groups, true) as OpenAIProviderConfig[];
 
 describe('v8 provider groups', () => {
   test('reads only the v8 tree and retains empty groups and exact source snapshots', () => {
@@ -51,7 +53,7 @@ describe('v8 provider groups', () => {
     expect(config.codexApiKeys).toHaveLength(2);
     expect(config.codexApiKeys?.map((r) => r.priority)).toEqual([8, 0]);
     expect(config.codexApiKeys?.[0].source).toMatchObject({ groupIndex: 0, keyIndex: 0, group });
-    expect(config.providerGroups?.codex).toHaveLength(2);
+    expect(config.codexApiKeys?.[0].source?.groups).toHaveLength(2);
     expect(config.apiKeys).toEqual(['client-fixture']);
     expect(config.debug).toBe(true);
     expect(config.requestRetry).toBe(4);
@@ -205,15 +207,15 @@ describe('v8 provider groups', () => {
     };
     const b = backend('openai-compatibility', [group]);
     const row = (normalizeProviderGroups([group], true) as OpenAIProviderConfig[])[0];
-    await providersApi.updateOpenAIProvider(row.name, 0, {
+    await providersApi.updateOpenAIProvider(row.name, {
       ...row,
       apiKeyEntries: [{ ...row.apiKeyEntries[0], weight: 4 }],
     });
     expect(b.groups()).toEqual([{ ...group, keys: [{ ...group.keys[0], weight: 4 }] }]);
-    let current = (await providersApi.getOpenAIProviders())[0];
-    await providersApi.updateOpenAIProviderDisabled(999, true, current.source);
-    current = (await providersApi.getOpenAIProviders())[0];
-    await providersApi.deleteOpenAIProvider(999, current.source);
+    let current = openaiRows(b.groups())[0];
+    await providersApi.updateOpenAIProviderDisabled(true, current.source);
+    current = openaiRows(b.groups())[0];
+    await providersApi.deleteOpenAIProvider(current.source);
     expect(b.groups()).toEqual([]);
   });
 
@@ -303,8 +305,8 @@ test('OpenAI credential rotation retains per-key metadata using source identity'
     ],
   };
   const b = backend('openai-compatibility', [group]);
-  const current = (await providersApi.getOpenAIProviders())[0];
-  await providersApi.updateOpenAIProvider(current.name, 0, {
+  const current = openaiRows(b.groups())[0];
+  await providersApi.updateOpenAIProvider(current.name, {
     ...current,
     apiKeyEntries: [{ ...current.apiKeyEntries[1], apiKey: 'rotated' }, current.apiKeyEntries[0]],
   });
@@ -345,10 +347,10 @@ for (const prepend of [false, true]) {
       keys: [{ 'api-key': 'fixture', 'proxy-url': 'direct', weight: 2, custom: 'keep' }],
     };
     const b = backend('openai-compatibility', [group]);
-    const current = (await providersApi.getOpenAIProviders())[0];
+    const current = openaiRows(b.groups())[0];
     const added = { apiKey: 'fixture', proxyUrl: 'http://proxy.invalid', weight: 3 };
     const entries = [current.apiKeyEntries[0], added];
-    await providersApi.updateOpenAIProvider(current.name, 0, {
+    await providersApi.updateOpenAIProvider(current.name, {
       ...current,
       apiKeyEntries: prepend ? entries.toReversed() : entries,
     });
@@ -370,9 +372,9 @@ test.each([-1, 2, 0.5])(
       keys: [{ 'api-key': 'fixture' }],
     };
     const b = backend('openai-compatibility', [group]);
-    const current = (await providersApi.getOpenAIProviders())[0];
+    const current = openaiRows(b.groups())[0];
     await expect(
-      providersApi.updateOpenAIProvider(current.name, 0, {
+      providersApi.updateOpenAIProvider(current.name, {
         ...current,
         apiKeyEntries: [{ ...current.apiKeyEntries[0], sourceIndex, weight: 2 }],
       })
@@ -385,9 +387,9 @@ test('OpenAI rejects repeated sourceIndex without writing', async () => {
   const b = backend('openai-compatibility', [
     { name: 'compat', 'base-url': 'https://example.invalid', keys: [{ 'api-key': 'fixture' }] },
   ]);
-  const current = (await providersApi.getOpenAIProviders())[0];
+  const current = openaiRows(b.groups())[0];
   await expect(
-    providersApi.updateOpenAIProvider(current.name, 0, {
+    providersApi.updateOpenAIProvider(current.name, {
       ...current,
       apiKeyEntries: [current.apiKeyEntries[0], { ...current.apiKeyEntries[0], weight: 2 }],
     })
@@ -433,8 +435,8 @@ test('OpenAI group headers retain auth-index while edited credentials drop respo
     keys: [{ 'api-key': 'fixture', 'auth-index': 'response-metadata', custom: 'keep' }],
   };
   const b = backend('openai-compatibility', [group]);
-  const current = (await providersApi.getOpenAIProviders())[0];
-  await providersApi.updateOpenAIProvider(current.name, 0, {
+  const current = openaiRows(b.groups())[0];
+  await providersApi.updateOpenAIProvider(current.name, {
     ...current,
     headers: { ...current.headers, Other: 'after' },
     apiKeyEntries: [{ ...current.apiKeyEntries[0], weight: 2 }],

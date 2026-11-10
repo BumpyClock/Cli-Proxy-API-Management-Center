@@ -345,7 +345,6 @@ export const normalizeConfigResponse = (raw: unknown): Config => {
       normalizeBoolean(at('oauth.providers.antigravity.antigravity-credits')) ?? false,
   };
 
-  config.providerGroups = isRecord(raw['api-keys']) ? raw['api-keys'] : {};
   const family = (name: string, openai = false) =>
     normalizeProviderGroups(at(`api-keys.${name}`), openai);
   config.geminiApiKeys = family('gemini') as GeminiKeyConfig[];

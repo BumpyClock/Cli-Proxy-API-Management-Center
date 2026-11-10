@@ -359,26 +359,6 @@ export const applyProviderChanges = (
       const fieldRaw = raw[field] ?? inherited?.[field];
       if (isRecord(fieldRaw) && isRecord(before[field]) && isRecord(after[field])) {
         next[field] = applyProviderChanges(fieldRaw, before[field], after[field]);
-      } else if (
-        Array.isArray(fieldRaw) &&
-        Array.isArray(before[field]) &&
-        Array.isArray(after[field])
-      ) {
-        const rawItems = fieldRaw as unknown[];
-        const beforeItems = before[field] as unknown[];
-        const used = new Set<number>();
-        next[field] = (after[field] as unknown[]).map((item) => {
-          if (!isRecord(item)) return item;
-          const identity = item.name ?? item['api-key'];
-          const index = beforeItems.findIndex(
-            (old, i) => !used.has(i) && isRecord(old) && (old.name ?? old['api-key']) === identity
-          );
-          if (index < 0 || !isRecord(rawItems[index]) || !isRecord(beforeItems[index])) {
-            return item;
-          }
-          used.add(index);
-          return applyProviderChanges(rawItems[index] as Wire, beforeItems[index] as Wire, item);
-        });
       } else {
         next[field] = after[field];
       }
@@ -554,8 +534,6 @@ const updateOpenAIGroup = async (config: OpenAIProviderConfig, name?: string) =>
 
   const before = serializeOpenAIProvider(original);
   const after = serializeOpenAIProvider(config);
-  const beforeKeys = before.keys;
-  const afterKeys = after.keys;
   delete before.keys;
   delete after.keys;
 
@@ -569,27 +547,25 @@ const updateOpenAIGroup = async (config: OpenAIProviderConfig, name?: string) =>
     config.models,
     (models) => serializeModelAliases(models, true)
   );
-  if (!equal(beforeKeys, afterKeys)) {
-    const rawKeys = groups[index].keys as Wire[];
-    const used = new Set<number>();
-    next.keys = config.apiKeyEntries.map((entry) => {
-      // An existing entry keeps its persisted position; its absence means a new credential.
-      // API keys alone are not identities: one key can appear with different proxies.
-      const keyIndex = entry.sourceIndex;
-      if (keyIndex === undefined) return serializeApiKeyEntry(entry);
-      if (!Number.isInteger(keyIndex) || used.has(keyIndex) || !isRecord(rawKeys[keyIndex])) {
-        throw conflict();
-      }
-      used.add(keyIndex);
-      const old = normalizeApiKeyEntry(rawKeys[keyIndex]);
-      if (!old) throw conflict();
-      return applyProviderChanges(
-        rawKeys[keyIndex],
-        serializeApiKeyEntry(old),
-        serializeApiKeyEntry(entry)
-      );
-    });
-  }
+  const rawKeys = groups[index].keys as Wire[];
+  const used = new Set<number>();
+  next.keys = config.apiKeyEntries.map((entry) => {
+    // An existing entry keeps its persisted position; its absence means a new credential.
+    // API keys alone are not identities: one key can appear with different proxies.
+    const keyIndex = entry.sourceIndex;
+    if (keyIndex === undefined) return serializeApiKeyEntry(entry);
+    if (!Number.isInteger(keyIndex) || used.has(keyIndex) || !isRecord(rawKeys[keyIndex])) {
+      throw conflict();
+    }
+    used.add(keyIndex);
+    const old = normalizeApiKeyEntry(rawKeys[keyIndex]);
+    if (!old) throw conflict();
+    return applyProviderChanges(
+      rawKeys[keyIndex],
+      serializeApiKeyEntry(old),
+      serializeApiKeyEntry(entry)
+    );
+  });
   groups[index] = next;
   await replace(groups);
 };
@@ -637,37 +613,22 @@ export const providersApi = {
   deleteVertexConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
     deleteKey('vertex', apiKey, baseUrl, source),
 
-  async getMetaConfigs(): Promise<ProviderKeyConfig[]> {
-    return normalizeProviderGroups((await getGroups('meta')).groups) as ProviderKeyConfig[];
-  },
-
-  async getVertexConfigs(): Promise<ProviderKeyConfig[]> {
-    return normalizeProviderGroups((await getGroups('vertex')).groups) as ProviderKeyConfig[];
-  },
-
-  async getOpenAIProviders(): Promise<OpenAIProviderConfig[]> {
-    return normalizeProviderGroups(
-      (await getGroups('openai-compatibility')).groups,
-      true
-    ) as OpenAIProviderConfig[];
-  },
-
   async createOpenAIProvider(config: OpenAIProviderConfig) {
     const { groups, replace } = await getGroups('openai-compatibility');
     await replace([...groups, serializeOpenAIProvider(config)]);
   },
 
-  updateOpenAIProvider: (name: string, _index: number, config: OpenAIProviderConfig) =>
+  updateOpenAIProvider: (name: string, config: OpenAIProviderConfig) =>
     updateOpenAIGroup(config, name),
 
-  async updateOpenAIProviderDisabled(_index: number, disabled: boolean, source?: ProviderSource) {
+  async updateOpenAIProviderDisabled(disabled: boolean, source?: ProviderSource) {
     const { groups, replace } = await getGroups('openai-compatibility');
     const index = findOpenAISource(groups, source);
     groups[index] = { ...groups[index], disabled };
     await replace(groups);
   },
 
-  async deleteOpenAIProvider(_index: number, source?: ProviderSource) {
+  async deleteOpenAIProvider(source?: ProviderSource) {
     const { groups, replace } = await getGroups('openai-compatibility');
     const index = findOpenAISource(groups, source);
     await replace(groups.filter((_, i) => i !== index));

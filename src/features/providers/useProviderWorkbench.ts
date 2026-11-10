@@ -374,7 +374,7 @@ const toggleSponsorConfig = async (raw: SponsorProviderRaw, disabled: boolean) =
     });
   }
   for (const item of raw.openai) {
-    await providersApi.updateOpenAIProviderDisabled(item.index, disabled, item.config.source);
+    await providersApi.updateOpenAIProviderDisabled(disabled, item.config.source);
   }
 };
 
@@ -644,16 +644,12 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           currentOpenAI?.config
         );
         if (currentOpenAI) {
-          await providersApi.updateOpenAIProvider(
-            currentOpenAI.config.name,
-            currentOpenAI.index,
-            next
-          );
+          await providersApi.updateOpenAIProvider(currentOpenAI.config.name, next);
         } else {
           await providersApi.createOpenAIProvider(next);
         }
       } else if (currentOpenAI) {
-        await providersApi.deleteOpenAIProvider(currentOpenAI.index, currentOpenAI.config.source);
+        await providersApi.deleteOpenAIProvider(currentOpenAI.config.source);
       }
     },
     [config]
@@ -767,7 +763,6 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         } else if (brand === 'openaiCompatibility' && selector.brand === 'openaiCompatibility') {
           await providersApi.updateOpenAIProvider(
             selector.name,
-            selector.index,
             buildOpenAIConfig(input, resource.raw as OpenAIProviderConfig)
           );
         } else if (
@@ -807,7 +802,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         } else if (sel.brand === 'vertex') {
           await providersApi.deleteVertexConfig(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'openaiCompatibility') {
-          await providersApi.deleteOpenAIProvider(sel.index, source);
+          await providersApi.deleteOpenAIProvider(source);
         } else if (
           sel.brand === 'apikeyFun' ||
           sel.brand === 'fennoAI' ||
@@ -837,8 +832,8 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
                 item.config.source
               );
             }
-            for (const item of [...raw.openai].sort((left, right) => right.index - left.index)) {
-              await providersApi.deleteOpenAIProvider(item.index, item.config.source);
+            for (const item of raw.openai) {
+              await providersApi.deleteOpenAIProvider(item.config.source);
             }
           }, refetch);
         }
@@ -898,11 +893,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
             await providersApi.updateVertexConfig(selector.apiKey, selector.baseUrl, next);
           }
         } else if (brand === 'openaiCompatibility' && selector.brand === 'openaiCompatibility') {
-          await providersApi.updateOpenAIProviderDisabled(
-            selector.index,
-            disabled,
-            resource.source
-          );
+          await providersApi.updateOpenAIProviderDisabled(disabled, resource.source);
         } else if (
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||

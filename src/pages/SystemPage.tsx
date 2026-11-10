@@ -155,7 +155,7 @@ export function SystemPage() {
   const config = useConfigStore((state) => state.config);
   const fetchConfig = useConfigStore((state) => state.fetchConfig);
   const invalidateCache = useConfigStore((state) => state.invalidateCache);
-  const updateConfigValue = useConfigStore((state) => state.updateConfigValue);
+  const setRequestLog = useConfigStore((state) => state.setRequestLog);
 
   const models = useModelsStore((state) => state.models);
   const modelsLoading = useModelsStore((state) => state.loading);
@@ -314,7 +314,7 @@ export function SystemPage() {
     const revision = apiClient.getConnectionRevision();
     const previous = requestLogEnabled;
     setRequestLogSaving(true);
-    updateConfigValue('request-log', requestLogDraft);
+    setRequestLog(requestLogDraft);
 
     try {
       await configApi.updateRequestLog(requestLogDraft);
@@ -326,7 +326,7 @@ export function SystemPage() {
       if (apiClient.getConnectionRevision() !== revision) return;
       const message =
         error instanceof Error ? error.message : typeof error === 'string' ? error : '';
-      updateConfigValue('request-log', previous);
+      setRequestLog(previous);
       showNotification(
         `${t('notification.update_failed')}${message ? `: ${message}` : ''}`,
         'error'

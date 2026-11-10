@@ -139,10 +139,10 @@ describe('v8 cooling overrides', () => {
       keys: [{ 'api-key': 'fixture-key' }],
     });
     const config = openai(b.group());
-    await providersApi.updateOpenAIProvider(config.name, 0, { ...config, disableCooling: false });
+    await providersApi.updateOpenAIProvider(config.name, { ...config, disableCooling: false });
     expect(b.group()['disable-cooling']).toBe(false);
     const current = openai(b.group());
-    await providersApi.updateOpenAIProvider(current.name, 0, { ...current, priority: 3 });
+    await providersApi.updateOpenAIProvider(current.name, { ...current, priority: 3 });
     expect(b.group()['disable-cooling']).toBe(false);
   });
 
@@ -154,6 +154,60 @@ describe('v8 cooling overrides', () => {
       disableCooling: false,
     });
     expect(key(b.group())['disable-cooling']).toBe(false);
+  });
+});
+
+describe('v8 credential row identity', () => {
+  test.each([false, true])(
+    'same-looking credential replacement preserves hidden metadata only with retained identity (%s)',
+    async (retained) => {
+      const original = { 'api-key': 'fixture-key', 'connection-pool': { enabled: true } };
+      const group = { name: 'fixture', 'base-url': 'https://example.invalid', keys: [original] };
+      const b = backend('openai-compatibility', group);
+      const config = openai(b.group());
+      await providersApi.updateOpenAIProvider(config.name, {
+        ...config,
+        apiKeyEntries: retained ? config.apiKeyEntries : [{ apiKey: 'fixture-key' }],
+      });
+      expect(b.group()).toEqual({
+        ...group,
+        keys: retained ? [original] : [{ 'api-key': 'fixture-key' }],
+      });
+      expect(JSON.stringify(b.writes)).not.toContain('sourceIndex');
+    }
+  );
+
+  test('identical visible credentials retain their own hidden metadata when reordered', async () => {
+    const first = { 'api-key': 'fixture-key', 'connection-pool': { enabled: true } };
+    const second = { 'api-key': 'fixture-key', 'connection-pool': { enabled: false } };
+    const b = backend('openai-compatibility', {
+      name: 'fixture',
+      'base-url': 'https://example.invalid',
+      keys: [first, second],
+    });
+    const config = openai(b.group());
+    await providersApi.updateOpenAIProvider(config.name, {
+      ...config,
+      apiKeyEntries: config.apiKeyEntries.toReversed(),
+    });
+    expect(b.group().keys).toEqual([second, first]);
+  });
+
+  test('repeated identity cannot bypass validation when serialized credentials are unchanged', async () => {
+    const credential = { 'api-key': 'fixture-key' };
+    const b = backend('openai-compatibility', {
+      name: 'fixture',
+      'base-url': 'https://example.invalid',
+      keys: [credential, credential],
+    });
+    const config = openai(b.group());
+    await expect(
+      providersApi.updateOpenAIProvider(config.name, {
+        ...config,
+        apiKeyEntries: [config.apiKeyEntries[0], config.apiKeyEntries[0]],
+      })
+    ).rejects.toThrow();
+    expect(b.writes).toHaveLength(0);
   });
 });
 
@@ -220,7 +274,7 @@ describe('v8 model row identity', () => {
       keys: [{ 'api-key': 'fixture-key' }],
     });
     const config = openai(b.group());
-    await providersApi.updateOpenAIProvider(config.name, 0, {
+    await providersApi.updateOpenAIProvider(config.name, {
       ...config,
       models: [
         { name: 'fresh', alias: 'fresh' },
