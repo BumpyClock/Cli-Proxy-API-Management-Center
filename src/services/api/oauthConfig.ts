@@ -24,16 +24,6 @@ function queueWrite(path: string, write: () => Promise<void>): Promise<void> {
   return pending;
 }
 
-export function replaceOauthProviderMap(
-  path: string,
-  value: Record<string, unknown>
-): Promise<void> {
-  return queueWrite(path, async () => {
-    const resource = await readConfigResource(path, {});
-    await resource.replace(value);
-  });
-}
-
 export function updateOauthProviderMap(
   path: string,
   provider: string,

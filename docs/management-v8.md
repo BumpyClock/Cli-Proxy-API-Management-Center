@@ -31,7 +31,7 @@ Configuration field writes send bare JSON values. Provider groups and OAuth maps
 
 Dependent JSON and YAML replacements send the ETag from their own read as `If-Match`. A changed file returns HTTP 412. Missing ETags block writes instead of falling back to unconditional replacement. The backend and reverse proxy must expose ETag to the browser. YAML saves retain the existing two-stage preview and confirmation workflow.
 
-The transport captures connection identity before Axios dispatch and drops stale data, 401 events and version/plugin metadata. Post-mutation cache invalidation supersedes pre-write reads without clearing accepted rows. YAML loads use request ownership so a delayed initial response cannot erase a newer edit.
+The transport captures connection identity before Axios dispatch and drops stale data, 401 events and version/plugin metadata. Post-mutation cache invalidation supersedes pre-write reads without clearing accepted rows. Optimistic request-log updates also bind rollback, notifications and completion to their original connection. OAuth exclusion deletion never retries a cancelled or conflicting mutation through a legacy whole-map replacement. YAML loads use request ownership so a delayed initial response cannot erase a newer edit.
 
 Provider edits preserve group policies, unrelated keys, explicit inheritance and model metadata. Existing rows carry explicit identities; newly added models cannot inherit removed-row metadata. Connection-test model selection is local to the editor, not a persisted v8 field.
 
@@ -41,7 +41,7 @@ Both explicit management URL suffixes are stripped when identifying a server so 
 
 Original v8 has no Plus usage snapshot, Copilot quota endpoint, or built-in Qoder OAuth provider. The frontend must label absent capabilities as unsupported and must not invent usage, balances, or provider support. Existing fork code can remain available for a backend that actually advertises the corresponding capability.
 
-The v8 usage queue is a destructive consumer. Dashboard and Usage pages must never poll it as a replacement for usage snapshots.
+The v8 usage queue is a destructive consumer. Dashboard and Usage pages must never poll it as a replacement for usage snapshots. The dashboard checks snapshot support even when collection is off, so an absent capability never asks the operator to enable an unusable panel.
 
 ## Scope
 

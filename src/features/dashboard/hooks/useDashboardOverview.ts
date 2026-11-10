@@ -47,6 +47,13 @@ export interface UsageSourceData {
   usage: UsageSnapshot | null;
 }
 
+export async function loadDashboardUsage(): Promise<UsageSourceData> {
+  const response = await usageApi.getUsage();
+  if (response.supported === false) return { enabled: null, supported: false, usage: null };
+  const enabled = await usageApi.getStatisticsEnabled();
+  return { enabled, supported: true, usage: enabled === true ? (response.usage ?? null) : null };
+}
+
 export const getProviderKeyCounts = (config: Config) => ({
   gemini: config.geminiApiKeys?.length ?? 0,
   interactions: config.interactionsApiKeys?.length ?? 0,
@@ -134,12 +141,7 @@ export function useDashboardOverview() {
     enabled: connected,
     intervalMs: DASHBOARD_POLL_MS.usage,
     timeoutMs: DASHBOARD_TIMEOUT_MS.usage,
-    load: async () => {
-      const enabled = await usageApi.getStatisticsEnabled();
-      if (enabled !== true) return { enabled, usage: null };
-      const response = await usageApi.getUsage();
-      return { enabled, supported: response.supported !== false, usage: response.usage ?? null };
-    },
+    load: loadDashboardUsage,
   });
 
   // Keep the sidebar's Auth Files badge in step with what the dashboard shows. While the

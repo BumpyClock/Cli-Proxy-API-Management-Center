@@ -4,7 +4,7 @@
 
 import { apiClient } from './client';
 import { getConfigValue } from './configValue';
-import { replaceOauthProviderMap, updateOauthProviderMap } from './oauthConfig';
+import { updateOauthProviderMap } from './oauthConfig';
 import type { AuthFileCooldownResetResponse, AuthFilesResponse } from '@/types/authFile';
 import type { OAuthModelAliasEntry } from '@/types';
 import { normalizeOAuthProviderKey } from '@/utils/providerKeys';
@@ -530,9 +530,6 @@ export const authFilesApi = {
 
   deleteOauthExcludedEntry: (provider: string) =>
     updateOauthProviderMap(OAUTH_EXCLUDED_MODELS_ENDPOINT, provider),
-
-  replaceOauthExcludedModels: (map: Record<string, string[]>) =>
-    replaceOauthProviderMap(OAUTH_EXCLUDED_MODELS_ENDPOINT, normalizeOauthExcludedModels(map)),
 
   // OAuth 模型别名
   async getOauthModelAlias(): Promise<Record<string, OAuthModelAliasEntry[]>> {

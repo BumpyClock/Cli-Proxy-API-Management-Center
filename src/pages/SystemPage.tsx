@@ -22,7 +22,7 @@ import {
   useModelsStore,
   useThemeStore,
 } from '@/stores';
-import { configApi, versionApi } from '@/services/api';
+import { apiClient, configApi, versionApi } from '@/services/api';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
 import { formatDateTimeValue, isoTitle } from '@/utils/format';
 import { classifyModels } from '@/utils/models';
@@ -311,16 +311,19 @@ export function SystemPage() {
       return;
     }
 
+    const revision = apiClient.getConnectionRevision();
     const previous = requestLogEnabled;
     setRequestLogSaving(true);
     updateConfigValue('request-log', requestLogDraft);
 
     try {
       await configApi.updateRequestLog(requestLogDraft);
+      if (apiClient.getConnectionRevision() !== revision) return;
       invalidateCache();
       showNotification(t('notification.request_log_updated'), 'success');
       setRequestLogModalOpen(false);
     } catch (error: unknown) {
+      if (apiClient.getConnectionRevision() !== revision) return;
       const message =
         error instanceof Error ? error.message : typeof error === 'string' ? error : '';
       updateConfigValue('request-log', previous);
@@ -329,7 +332,7 @@ export function SystemPage() {
         'error'
       );
     } finally {
-      setRequestLogSaving(false);
+      if (apiClient.getConnectionRevision() === revision) setRequestLogSaving(false);
     }
   };
 
