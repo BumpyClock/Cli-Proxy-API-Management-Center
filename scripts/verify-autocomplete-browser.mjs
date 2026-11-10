@@ -115,6 +115,20 @@ try {
       windowsVirtualKeyCode: code,
     });
   };
+  const click = async (point) => {
+    await send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      button: 'left',
+      clickCount: 1,
+      ...point,
+    });
+    await send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      button: 'left',
+      clickCount: 1,
+      ...point,
+    });
+  };
   failureDetails = async () =>
     console.error(
       await evaluate(
@@ -138,6 +152,18 @@ try {
   assert.equal(await evaluate('document.hasFocus()'), true);
   await evaluate(`document.getElementById('fixture-model').focus()`);
   await waitFor(() => evaluate(`!!document.querySelector('[role="listbox"]')`), 'dropdown');
+  const chevronPoint = await evaluate(`(() => {
+    const r = document.getElementById('fixture-model').nextElementSibling.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  })()`);
+  for (const open of [false, true]) {
+    await click(chevronPoint);
+    await evaluate(
+      'new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))'
+    );
+    assert.equal(await evaluate(`!!document.querySelector('[role="listbox"]')`), open);
+    assert.equal(await evaluate(`document.activeElement.id`), 'fixture-model');
+  }
   const scrollWork = await evaluate(`(async () => {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const wrapper = document.getElementById('fixture-model').parentElement;
@@ -183,6 +209,23 @@ try {
   assert.equal(await evaluate(`document.querySelector('[role="listbox"]') === null`), true);
   await key('ArrowDown', 40);
   await waitFor(() => evaluate(`!!document.querySelector('[role="listbox"]')`), 'reopened menu');
+  assert.equal(
+    await evaluate(`(() => {
+      const active = document.getElementById('fixture-model').getAttribute('aria-activedescendant');
+      return !active || !!document.getElementById(active);
+    })()`),
+    true,
+    'Reopening must not reference an option from the unfiltered list'
+  );
+  await key('ArrowDown', 40);
+  assert.equal(
+    await evaluate(`(() => {
+      const active = document.getElementById('fixture-model').getAttribute('aria-activedescendant');
+      return document.getElementById(active)?.textContent;
+    })()`),
+    'Beta',
+    'Keyboard navigation must reach the only remaining option'
+  );
   await key('Escape', 27);
   await waitFor(() => evaluate(`!document.querySelector('[role="listbox"]')`), 'Escape dismissal');
   await send('Emulation.setDeviceMetricsOverride', {
@@ -214,18 +257,7 @@ try {
   const point = await evaluate(
     `(() => { const option = [...document.querySelectorAll('[role="option"]')].find(node => node.textContent === 'Gamma'); const r = option.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`
   );
-  await send('Input.dispatchMouseEvent', {
-    type: 'mousePressed',
-    button: 'left',
-    clickCount: 1,
-    ...point,
-  });
-  await send('Input.dispatchMouseEvent', {
-    type: 'mouseReleased',
-    button: 'left',
-    clickCount: 1,
-    ...point,
-  });
+  await click(point);
   await waitFor(() => evaluate(`!document.querySelector('[role="listbox"]')`), 'pointer selection');
   assert.equal(await evaluate(`document.getElementById('fixture-model').value`), 'Gamma');
   assert.equal(await evaluate(`document.getElementById('selection').textContent`), 'Gamma');

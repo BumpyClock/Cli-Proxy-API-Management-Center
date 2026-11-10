@@ -81,6 +81,7 @@ export function AutocompleteInput({
     );
   });
 
+  const activeIndex = highlightedIndex < filteredOptions.length ? highlightedIndex : -1;
   const showDropdown = isOpen && filteredOptions.length > 0 && !disabled;
 
   useLayoutEffect(() => {
@@ -113,11 +114,9 @@ export function AutocompleteInput({
   }, [showDropdown]);
 
   useEffect(() => {
-    if (!showDropdown || highlightedIndex < 0) return;
-    document
-      .getElementById(`${listboxId}-${highlightedIndex}`)
-      ?.scrollIntoView({ block: 'nearest' });
-  }, [showDropdown, highlightedIndex, listboxId]);
+    if (!showDropdown || activeIndex < 0) return;
+    document.getElementById(`${listboxId}-${activeIndex}`)?.scrollIntoView({ block: 'nearest' });
+  }, [showDropdown, activeIndex, listboxId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -137,6 +136,7 @@ export function AutocompleteInput({
 
   const handleSelect = (selectedValue: string) => {
     onChange(selectedValue);
+    setHighlightedIndex(-1);
     setIsOpen(false);
   };
 
@@ -149,14 +149,14 @@ export function AutocompleteInput({
         setIsOpen(true);
         return;
       }
-      setHighlightedIndex((prev) => (prev < filteredOptions.length - 1 ? prev + 1 : prev));
+      setHighlightedIndex(Math.min(activeIndex + 1, filteredOptions.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+      setHighlightedIndex(filteredOptions.length ? Math.max(activeIndex - 1, 0) : -1);
     } else if (e.key === 'Enter') {
-      if (isOpen && highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
+      if (isOpen && activeIndex >= 0) {
         e.preventDefault();
-        handleSelect(filteredOptions[highlightedIndex].value);
+        handleSelect(filteredOptions[activeIndex].value);
       } else if (isOpen) {
         e.preventDefault();
         setIsOpen(false);
@@ -196,7 +196,7 @@ export function AutocompleteInput({
           aria-expanded={showDropdown}
           aria-controls={showDropdown ? listboxId : undefined}
           aria-activedescendant={
-            showDropdown && highlightedIndex >= 0 ? `${listboxId}-${highlightedIndex}` : undefined
+            showDropdown && activeIndex >= 0 ? `${listboxId}-${activeIndex}` : undefined
           }
           autoComplete="off"
           style={{ paddingRight: space['32'] }}
@@ -213,6 +213,7 @@ export function AutocompleteInput({
             cursor: 'pointer',
             height: '100%',
           }}
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => !disabled && setIsOpen(!isOpen)}
         >
           {rightElement}
@@ -252,8 +253,7 @@ export function AutocompleteInput({
                   style={{
                     padding: `${px(space['8'])} ${px(space['12'])}`,
                     cursor: 'pointer',
-                    backgroundColor:
-                      index === highlightedIndex ? 'var(--bg-tertiary)' : 'transparent',
+                    backgroundColor: index === activeIndex ? 'var(--bg-tertiary)' : 'transparent',
                     color: 'var(--text-primary)',
                     display: 'flex',
                     flexDirection: 'column',

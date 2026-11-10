@@ -112,7 +112,7 @@ Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`
 
 ### Autocomplete browser verification
 
-Run `bun scripts/verify-autocomplete-browser.mjs`. The script starts isolated Vite and headless Chrome processes, checks clipped-container and sheet dropdowns, desktop/mobile bounds, keyboard and pointer selection, Escape and Tab, then stops both processes. It uses mock options only. Set `CHROME_PATH` when Chrome is not at the macOS default path or `chromium` is not on PATH. Screenshots are written to `docs/screenshots/upstream-backports`.
+Run `bun scripts/verify-autocomplete-browser.mjs`. The script starts isolated Vite and headless Chrome processes, checks clipped-container and sheet dropdowns, desktop/mobile bounds, keyboard and pointer selection, valid active-option references after filtering, chevron dismissal without losing input focus, Escape and Tab, then stops both processes. It uses mock options only. Set `CHROME_PATH` when Chrome is not at the macOS default path or `chromium` is not on PATH. Screenshots are written to `docs/screenshots/upstream-backports`.
 
 ## Tech Stack
 
