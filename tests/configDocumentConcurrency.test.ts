@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { parse as parseYaml, parseDocument } from 'yaml';
 import {
   buildConfigSaveDraft,
+  readCommercialModeFromYaml,
   selectVisualMergeBase,
   shouldReloadVisualDraft,
 } from '../src/features/config/hooks/useConfigDocument';
@@ -13,6 +14,12 @@ function applyProxyEdit(yaml: string): string {
 }
 
 describe('config document concurrency policy', () => {
+  test('restart warnings read the native server commercial-mode flag', () => {
+    expect(readCommercialModeFromYaml('server:\n  commercial-mode: true\n')).toBe(true);
+    expect(readCommercialModeFromYaml('server:\n  commercial-mode: false\n')).toBe(false);
+    expect(readCommercialModeFromYaml('server: null\n')).toBe(false);
+    expect(readCommercialModeFromYaml('commercial-mode: true\n')).toBe(false);
+  });
   test('a visual/source mode round trip keeps merging visual edits onto the latest server YAML', () => {
     const synchronizedSource =
       'debug: false\nproxy-url: http://local-proxy.example\nsource-only: draft\n';

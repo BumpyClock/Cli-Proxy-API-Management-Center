@@ -94,6 +94,15 @@ describe('Usage production states', () => {
     expect(markup).not.toContain('No requests have been recorded');
   });
 
+  test('an unsupported snapshot never claims live or empty usage when collection is enabled', () => {
+    const markup = render({ payload: { supported: false }, lastUpdated: null });
+    expect(markup).toContain('data-usage-state="unsupported"');
+    expect(markup).toContain('Usage statistics unavailable');
+    expect(markup).not.toContain('<dl');
+    expect(markup).not.toContain('<table');
+    expect(markup).not.toContain('No requests have been recorded');
+  });
+
   test('first loading state never flashes fake zero metrics', () => {
     const markup = render({ payload: null, enabled: null, loading: true, lastUpdated: null });
     expect(markup).toContain('data-usage-state="loading"');

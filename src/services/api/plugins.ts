@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { getConfigValue, readConfigResource } from './configValue';
 import { isRecord } from '@/utils/helpers';
 import {
   isManagementOAuthProviderKey,
@@ -318,7 +319,7 @@ export const pluginsApi = {
   },
 
   updateEnabled: (id: string, enabled: boolean) =>
-    apiClient.patch(`/plugins/${encodeURIComponent(id)}/enabled`, { enabled }),
+    apiClient.put(`/config/plugins/configs/${encodeURIComponent(id)}/enabled`, enabled),
 
   async deletePlugin(id: string): Promise<PluginDeleteResult> {
     const data = await apiClient.delete(`/plugins/${encodeURIComponent(id)}`);
@@ -326,17 +327,35 @@ export const pluginsApi = {
   },
 
   async getConfig(id: string): Promise<PluginConfigObject> {
-    const data = await apiClient.get(`/plugins/${encodeURIComponent(id)}/config`);
+    const data = await getConfigValue(`/config/plugins/configs/${encodeURIComponent(id)}`, {});
     return normalizePluginConfig(data);
   },
 
-  patchConfig: (id: string, config: PluginConfigObject) =>
-    apiClient.patch(`/plugins/${encodeURIComponent(id)}/config`, config),
+  async patchConfig(id: string, changes: PluginConfigObject) {
+    const resource = await readConfigResource(
+      `/config/plugins/configs/${encodeURIComponent(id)}`,
+      {}
+    );
+    if (!isRecord(resource.value)) throw new Error('Invalid plugin configuration');
+    const next = { ...resource.value };
+    // Form object fields replace values; v8 PATCH would deep-merge them and retain nulls.
+    for (const [key, value] of Object.entries(changes)) {
+      if (value === null) delete next[key];
+      else
+        Object.defineProperty(next, key, {
+          value,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
+    }
+    return resource.replace(next);
+  },
 };
 
 export const pluginStoreApi = {
   async list(): Promise<PluginStoreResponse> {
-    const data = await apiClient.get('/plugin-store');
+    const data = await apiClient.get('/plugins/store');
     return normalizeStoreList(data);
   },
 
@@ -344,7 +363,7 @@ export const pluginStoreApi = {
     id: string,
     options: PluginStoreInstallOptions = {}
   ): Promise<PluginStoreInstallResult> {
-    const path = `/plugin-store/${encodeURIComponent(id)}/install`;
+    const path = `/plugins/store/${encodeURIComponent(id)}/install`;
     const params = new URLSearchParams();
     const sourceId = options.sourceId?.trim();
     const version = options.version?.trim();

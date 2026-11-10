@@ -4,6 +4,12 @@
 
 [English](README.md)
 
+## 后端兼容性
+
+此迁移分支要求原版 CLIProxyAPI 的 v8 Management API，目标版本为 `v8.0.63`。它不兼容仅提供 v0 API 的 CLIProxyAPIPlus。下方四层独立回移仍保留 Plus 兼容性。详情见 [v8 集成边界](docs/management-v8.md)。
+
+成功写入 v8 配置会迁移 YAML 布局。不要让旧版 Plus 进程共用迁移后的文件。此前端不会升级或部署后端。
+
 ## 维护分支
 
 `kaitranntt/Cli-Proxy-API-Management-Center` 是 **CLIProxyAPIPlus** 的仪表盘发布流。Fork 版本会发布 `management.html` 资源，供 CLIProxyAPIPlus 独立下载和打包。
@@ -13,7 +19,7 @@
 - Fork 自有仪表盘版本使用与上游兼容的 `vX.Y.Z-N` 标签后缀。
 
 **主项目**: https://github.com/router-for-me/CLIProxyAPI  
-**最低版本要求**: ≥ 7.2.147（推荐最新）
+**后端契约**：原版 CLIProxyAPI v8（`v8.0.63`）。
 
 从6.0.19版本开始，Web UI 随主程序一起提供；服务运行后，通过 API 端口上的"/management.html"访问它。
 
@@ -27,7 +33,7 @@ APIMart 是专注 AI 图片/视频生成的低价 API 平台，GPT-Image-2 低�
 
 ## 这是什么（以及不是什么）
 
-- 本仓库只包含 Web 管理界面本身，通过 CLI Proxy API 的 **Management API**（`/v0/management`）读取/修改配置、上传凭据与查看日志。
+- 本仓库只包含 Web 管理界面本身，通过 CLI Proxy API 的 **Management API**（`/v8/management`）读取/修改配置、上传凭据与查看日志。
 - 它 **不是** 代理本体，不参与流量转发。
 
 ## 快速开始
@@ -71,7 +77,8 @@ bun run build
 - `localhost:8317`
 - `http://192.168.1.10:8317`
 - `https://example.com:8317`
-- `http://example.com:8317/v0/management`（也可填写，后缀会被自动去除）
+- `http://example.com:8317/v8/management`（后缀会被自动去除）
+- 显式填写 `/v0/management` 后缀也会归一化，但应用请求仍使用 v8。
 
 ### 管理密钥（注意：不是 API Keys）
 
@@ -83,20 +90,20 @@ bun run build
 
 ### 远程管理
 
-当你从非 localhost 的浏览器访问时，服务端通常需要开启远程管理（例如 `allow-remote-management: true`）。  
+当你从非 localhost 的浏览器访问时，服务端通常需要开启远程管理（v8 配置为 `management.allow-remote: true`）。
 完整鉴权规则、服务端限制与边界情况请参考 CLI Proxy API 服务端文档或配置注释。
 
 ## 功能一览（按页面对应）
 
 - **仪表盘**：实时运维视图。页面可见时凭证、流量、配置与使用统计每 15 秒刷新，模型列表每分钟刷新。基于证据的状态标题、可直达故障凭证与供应商的待处理列表、包含冷却原因与重试时间的供应商与凭证健康度、按本地时区显示的流量，以及开启使用统计后的各模型请求量、延迟与最近失败。每个区块都会标明数据更新时间。
-- **配置面板**：可视化编辑常用 `config.yaml` 字段、基础设置与代理 `api-keys`；也支持源码编辑、YAML 高亮/搜索与保存前差异预览。
+- **配置面板**：可视化编辑常用 `config.yaml` 字段、基础设置与客户端 `access.api-keys`；也支持源码编辑、YAML 高亮/搜索与保存前差异预览。
 - **AI 提供商**：
   - Gemini/Codex/Claude/Vertex 配置（Base URL、Headers、代理、模型别名、排除模型、Prefix）。
   - OpenAI 兼容提供商（多 Key、Header、自助从 `/v1/models` 拉取并导入模型别名、可选浏览器侧 `chat/completions` 测试）。
 - **认证文件**：上传/下载/删除 JSON 凭据，筛选/搜索/分页，标记 runtime-only；查看单个凭据可用模型（依赖后端支持）；管理 OAuth 排除模型（支持 `*` 通配符）；配置 OAuth 模型别名映射。
-- **OAuth**：对 Codex、Anthropic/Claude、Antigravity、Kimi、Qoder、xAI/Grok 发起 OAuth/设备码流程并轮询状态；支持提交回调 URL 或 xAI/Grok 页面显示的 code；包含 Vertex JSON 凭据导入与 iFlow Cookie 导入。
+- **OAuth**：为 Muse (Meta)、Kimi 中国与国际版、Codex、Claude、Antigravity、xAI/Grok 和 Devin 发起 OAuth/设备码流程，轮询状态，提交受支持的回调，并导入 Vertex JSON 凭据。Qoder 等其他登录方式仅在插件声明支持时显示。
 - **配额管理**：在固定 0–100% 坐标中独立比较各账户的剩余额度，支持提供商筛选、搜索及每周/5 小时视图。进入页面时自动检查，重新进入时再次检查，不进行后台轮询；筛选、搜索、时间窗口与图例切换不会重新请求配额。刷新期间保留缓存，失败时标记过期，并显示检查时间与部分成功结果。虚线仅根据下一次已报告的重置时间投影，不虚构历史、消耗速率或可转移额度。账户详情保留单独刷新、受支持的重置操作与详细时间线；仪表盘也使用同一图表模型。
-- **使用统计**：查看来自 `/v0/management/usage` 的请求与 Token 总量、后端提供日期的每日趋势，以及已脱敏的 API/模型对比。明确区分采集关闭、状态未知、无数据、失败、缓存过期与正常状态；同一连接刷新失败时保留缓存。不会将只有小时编号的汇总数据虚构为日期历史。统计存于内存，后端重启后清空，启用采集不会补录此前数据。
+- **使用统计**：原版 v8 后端没有使用统计快照接口。仪表盘与使用统计页会明确显示不支持，不会伪造零值或实时流量。兼容的后端扩展可以提供请求与 Token 总量、后端日期的每日趋势及脱敏对比。前端不会将具有破坏性读取语义的 v8 使用队列作为替代。
 - **日志**：增量拉取日志、自动刷新、搜索、隐藏管理端流量、清空日志；下载请求错误日志文件。
 - **系统信息**：快捷链接、版本检查、请求日志开关、本地登录信息清理，以及拉取 `/v1/models` 并分组展示（需要至少一个代理 API Key 才能查询模型）。
 
@@ -148,7 +155,7 @@ bun run build
 - **反复输错密钥**：服务端可能对远程 IP 进行临时封禁。
 - **日志页面不显示**：需要在“基础设置”里开启“写入日志文件”，导航项才会出现。
 - **功能提示不支持**：多为后端版本较旧或接口未启用/不存在（如：认证文件模型列表、排除模型、日志相关接口）。
-- **OpenAI 提供商测试失败**：测试在浏览器侧执行，会受网络与 CORS 影响；这里失败不一定代表服务端不可用。
+- **提供商测试失败**：连接测试通过后端执行，使用编辑器当前的代理设置。请检查端点、所选密钥和代理，包括显式的 `direct` 覆盖。
 
 ## 开发命令
 

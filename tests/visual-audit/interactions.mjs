@@ -38,7 +38,7 @@ async function open(options, overrides = {}) {
   const page = await context.newPage();
   const writes = [];
   page.on('request', (request) => {
-    if (request.method() !== 'GET' && request.url().includes('/v0/management')) {
+    if (request.method() !== 'GET' && request.url().includes('/v8/management')) {
       writes.push(`${request.method()} ${new URL(request.url()).pathname}`);
     }
   });
@@ -157,13 +157,13 @@ for (const [name, options] of [
   ['phone', phone],
   ['short viewport', { ...desktop, viewport: { width: 1440, height: 240 } }],
 ]) {
-  const credentials = buildFixtures().routes['/auth-files']();
+  const credentials = buildFixtures().routes['/credentials']();
   Object.assign(credentials.files.at(-1), {
     name: 'z-claude-team.json',
     provider: 'claude',
     type: 'claude',
   });
-  const { context, page } = await open(options, { '/auth-files': credentials });
+  const { context, page } = await open(options, { '/credentials': credentials });
   await gotoRoute(page, origin, '/auth-files');
   const trigger = page
     .locator('main tbody tr')

@@ -154,7 +154,7 @@ export function SystemPage() {
   const auth = useAuthStore();
   const config = useConfigStore((state) => state.config);
   const fetchConfig = useConfigStore((state) => state.fetchConfig);
-  const clearCache = useConfigStore((state) => state.clearCache);
+  const invalidateCache = useConfigStore((state) => state.invalidateCache);
   const updateConfigValue = useConfigStore((state) => state.updateConfigValue);
 
   const models = useModelsStore((state) => state.models);
@@ -317,7 +317,7 @@ export function SystemPage() {
 
     try {
       await configApi.updateRequestLog(requestLogDraft);
-      clearCache('request-log');
+      invalidateCache();
       showNotification(t('notification.request_log_updated'), 'success');
       setRequestLogModalOpen(false);
     } catch (error: unknown) {

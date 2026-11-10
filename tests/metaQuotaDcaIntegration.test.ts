@@ -23,7 +23,7 @@ for (const hasUsage of [true, false]) {
     try {
       const data = await META_CONFIG.fetchQuota(file, i18n.t);
       expect(post).toHaveBeenCalledWith(
-        '/api-call',
+        '/requests/api-call',
         {
           authIndex: 'fixture-index',
           method: 'POST',

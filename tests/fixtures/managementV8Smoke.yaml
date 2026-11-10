@@ -1,0 +1,25 @@
+# SYNTHETIC LOCAL FIXTURE ONLY. Never use these keys in a real deployment.
+config-version: 8
+server:
+  host: 127.0.0.1
+  port: 18318
+management:
+  allow-remote: false
+  secret-key: cpamc-fixture-management-only
+  disable-control-panel: true
+  disable-auto-update-panel: true
+access:
+  api-keys:
+    - cpamc-smoke-client-only
+requests:
+  proxy-url: http://127.0.0.1:1
+oauth:
+  auth-dir: /tmp/cpamc-v8-smoke/auth
+observability:
+  logs:
+    logging-to-file: true
+    request-log: false
+  usage:
+    usage-statistics-enabled: true
+plugins:
+  enabled: false

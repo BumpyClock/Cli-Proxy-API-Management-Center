@@ -2,7 +2,7 @@
 
 ## Project Scope & Structure
 
-This is a React 19 + TypeScript + Vite management frontend for CLI Proxy API, not the proxy itself. It talks to the backend Management API under `/v0/management`.
+This is a React 19 + TypeScript + Vite management frontend for CLI Proxy API, not the proxy itself. It talks to the backend Management API under `/v8/management`.
 
 - `src/features/`: feature-owned pages, components, hooks, types, and logic. Current features include `dashboard`, `providers`, `authFiles`, `quota`, `config`, and `plugins`. Prefer this layout for new feature work.
 - `src/pages/`: existing route pages outside the feature layout. Follow nearby conventions when modifying these; do not migrate unrelated code.
@@ -36,11 +36,11 @@ Preserve hash routing and single-file deployment. Changes to assets, imports, co
 
 ## API Contracts & State
 
-- Treat backend contracts as the source of truth. Inspect `../CLIProxyAPI` before changing endpoint names, payloads, provider keys, OAuth callback parameters, auth-file semantics, or plugin/config contracts. If that checkout is unavailable, report the missing evidence rather than guessing; do not modify the backend unless requested.
+- Treat backend contracts as the source of truth. Read `docs/management-v8.md` for the target revision and compatibility boundary. Inspect that backend's source before changing endpoint names, payloads, provider keys, OAuth callbacks, credentials, or plugin/config contracts. Report missing evidence rather than guessing. Do not modify the backend unless requested.
 - Reuse `apiClient` from `src/services/api/client.ts` for Management API requests through domain modules. It centralizes the API prefix, bearer authentication, error normalization, and response-header handling. Avoid bypassing it with ad hoc requests in components.
 - Preserve the client's event integration: `unauthorized` handles 401s, `server-version-update` carries version/build metadata, and `server-plugin-support-update` carries plugin capability information. Keep plugin routes gated by backend support.
-- Normalize backend fields on read and serialize on write in the API layer; consult `transformers.ts` and the relevant domain module. Keep raw backend field-name handling out of ordinary UI components.
-- `useConfigStore.fetchConfig(forceRefresh?: boolean)` uses a full-config TTL cache and in-flight request deduplication, not section-based fetching. Reuse it where appropriate and invalidate/update caches after mutations using existing store actions.
+- Normalize backend fields on read and serialize on write in the API layer; consult `transformers.ts` and the relevant domain module. Keep raw backend field-name handling out of ordinary UI components. Use `readConfigResource` for dependent JSON configuration replacements. It binds writes to the read connection and ETag.
+- `useConfigStore.fetchConfig(forceRefresh?: boolean)` uses a full-config TTL cache and in-flight request deduplication, not section-based fetching. After mutations, use `invalidateCache()` to supersede pre-write requests while retaining visible rows. Use `clearCache()` when changing sessions.
 - Preserve stale-request guards and cache cleanup when switching connections or logging out. Old asynchronous responses must not overwrite the new session's state.
 - Provider UI capabilities live in `src/features/providers/descriptors.ts`; `adapters.ts` maps provider configs to the shared resource model. Extend these existing abstractions rather than scattering provider-specific conditionals across components.
 

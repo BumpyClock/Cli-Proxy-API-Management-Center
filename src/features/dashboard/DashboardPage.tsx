@@ -177,7 +177,10 @@ export function DashboardPage() {
   const usageWindowStart = traffic.startMs ?? now - DEFAULT_WINDOW_MINUTES * 60_000;
   const usageWindowEnd = traffic.endMs ?? now;
   const usageSummary = useMemo(
-    () => (usage?.enabled ? summarizeUsage(usage.usage, usageWindowStart, usageWindowEnd) : null),
+    () =>
+      usage?.enabled && usage.supported !== false
+        ? summarizeUsage(usage.usage, usageWindowStart, usageWindowEnd)
+        : null,
     [usage, usageWindowStart, usageWindowEnd]
   );
   const usageWindowLabel = t('dashboard.usage_window_bounds', {

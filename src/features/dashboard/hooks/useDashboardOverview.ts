@@ -43,6 +43,7 @@ export const DASHBOARD_SOURCE_IDS: DashboardSourceId[] = [
 export interface UsageSourceData {
   /** null when the backend does not expose usage statistics at all. */
   enabled: boolean | null;
+  supported?: boolean;
   usage: UsageSnapshot | null;
 }
 
@@ -137,7 +138,7 @@ export function useDashboardOverview() {
       const enabled = await usageApi.getStatisticsEnabled();
       if (enabled !== true) return { enabled, usage: null };
       const response = await usageApi.getUsage();
-      return { enabled, usage: response?.usage ?? null };
+      return { enabled, supported: response.supported !== false, usage: response.usage ?? null };
     },
   });
 

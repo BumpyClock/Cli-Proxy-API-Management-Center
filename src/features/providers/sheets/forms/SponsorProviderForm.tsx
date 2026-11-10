@@ -80,7 +80,7 @@ interface SponsorKeyEntryCardProps {
   onRemove: () => void;
 }
 
-const emptyModel = (): ModelEntryInput => ({ name: '', alias: '' });
+const emptyModel = (): ModelEntryInput => ({ name: '', alias: '', sourceIndex: null });
 
 const emptySponsorKeyEntry = (
   definition: SponsorProviderDefinition,
@@ -147,6 +147,7 @@ const modelsFromConfig = (
   models:
     | Array<{
         name?: string;
+        sourceIndex?: number | null;
         alias?: string;
         priority?: number;
         testModel?: string;
@@ -157,6 +158,7 @@ const modelsFromConfig = (
 ): ModelEntryInput[] =>
   models?.length
     ? models.map((model) => ({
+        sourceIndex: model.sourceIndex,
         name: model.name ?? '',
         alias: model.alias ?? '',
         priority: model.priority,
@@ -248,6 +250,7 @@ const applyDiscoveredModels = (
     if (!trimmed || seen.has(trimmed)) return;
     seen.add(trimmed);
     next.push({
+      sourceIndex: null,
       name: trimmed,
       alias: (info.alias ?? '').trim(),
     });

@@ -53,7 +53,7 @@ interface BaseProviderFormProps {
 }
 
 const emptyHeader = () => ({ key: '', value: '' });
-const emptyModel = (): ModelEntryInput => ({ name: '', alias: '' });
+const emptyModel = (): ModelEntryInput => ({ name: '', alias: '', sourceIndex: null });
 const emptyApiKeyEntry = (): ApiKeyEntryInput => ({
   apiKey: '',
   proxyUrl: '',
@@ -124,6 +124,7 @@ function buildInitialForm(
       priority: cfg.priority,
       models: cfg.models?.length
         ? cfg.models.map((m) => ({
+            sourceIndex: m.sourceIndex,
             name: m.name,
             alias: m.alias ?? '',
             priority: m.priority,
@@ -140,6 +141,7 @@ function buildInitialForm(
       testModel: cfg.testModel ?? '',
       apiKeyEntries: cfg.apiKeyEntries?.length
         ? cfg.apiKeyEntries.map((entry) => ({
+            sourceIndex: entry.sourceIndex,
             apiKey: '',
             existingApiKey: entry.apiKey,
             proxyUrl: entry.proxyUrl ?? '',
@@ -169,6 +171,7 @@ function buildInitialForm(
     weight: cfg.weight,
     models: cfg.models?.length
       ? cfg.models.map((m) => ({
+          sourceIndex: m.sourceIndex,
           name: m.name,
           alias: m.alias ?? '',
           priority: m.priority,
@@ -359,6 +362,7 @@ export function BaseProviderForm({
         if (!trimmed || seen.has(trimmed)) return;
         seen.add(trimmed);
         next.push({
+          sourceIndex: null,
           name: trimmed,
           alias: (info.alias ?? '').trim(),
         });

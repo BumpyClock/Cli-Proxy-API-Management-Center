@@ -119,6 +119,14 @@ export function SectionAdvanced({ values, disabled, animateIn, onChange }: Confi
           defaultOpen={false}
         >
           <FieldStack>
+            <FieldAnchor fieldId="quotaAntigravityCredits">
+              <ToggleRow
+                title={t('config_management.visual.sections.quota.antigravity_credits')}
+                checked={values.quotaAntigravityCredits}
+                disabled={disabled}
+                onChange={(quotaAntigravityCredits) => onChange({ quotaAntigravityCredits })}
+              />
+            </FieldAnchor>
             <FieldAnchor fieldId="antigravitySensitiveWords">
               <FieldGroup
                 title={t('config_management.visual.sections.system.antigravity_sensitive_words')}

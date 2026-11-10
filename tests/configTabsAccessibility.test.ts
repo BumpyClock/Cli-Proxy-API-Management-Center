@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import i18n from '@/i18n';
 import { ConfigTabs } from '@/features/config/components/ConfigTabs';
+import { CONFIG_TAB_IDS } from '@/features/config/constants';
 
 const noop = () => {};
 
@@ -35,7 +36,7 @@ test('mobile picker retains every section, active selection, and dirty/error evi
       onChange: noop,
     })
   );
-  expect(markup.match(/<option /g)).toHaveLength(8);
+  expect(markup.match(/<option /g)).toHaveLength(CONFIG_TAB_IDS.length);
   expect(markup).toContain('<option value="logging" selected=""');
   expect(markup).toContain(i18n.t('config_management.meta_errors', { count: 2 }));
   expect(markup).toContain('aria-orientation="vertical"');
@@ -52,5 +53,5 @@ test('saving disables both section navigation controls', () => {
     })
   );
   expect(markup).toMatch(/<select[^>]*disabled=""/);
-  expect(markup.match(/<button[^>]*disabled=""/g)).toHaveLength(8);
+  expect(markup.match(/<button[^>]*disabled=""/g)).toHaveLength(CONFIG_TAB_IDS.length);
 });

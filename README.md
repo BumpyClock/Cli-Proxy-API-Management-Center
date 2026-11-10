@@ -4,6 +4,12 @@ A single-file Web UI (React + TypeScript) for operating and troubleshooting the 
 
 [中文文档](README_CN.md)
 
+## Backend compatibility
+
+This migration branch requires the original CLIProxyAPI v8 Management API, targeting `v8.0.63`. It does not work with a v0-only CLIProxyAPIPlus backend. The four lower backport layers retain Plus compatibility. See [the v8 integration boundary](docs/management-v8.md).
+
+Successful v8 configuration writes migrate the YAML layout. Do not share that file with an older Plus process. This frontend does not upgrade or deploy the backend.
+
 ## Maintained fork
 
 `kaitranntt/Cli-Proxy-API-Management-Center` is maintained as the dashboard release stream for **CLIProxyAPIPlus**. Fork releases publish `management.html` assets that CLIProxyAPIPlus can download and bundle independently from the upstream dashboard.
@@ -14,7 +20,7 @@ A single-file Web UI (React + TypeScript) for operating and troubleshooting the 
 
 **Main Project**: https://github.com/router-for-me/CLIProxyAPI  
 **Example URL**: https://remote.router-for.me/  
-**Minimum Required Version**: ≥ 7.2.147 (recommended latest)
+**Backend contract.** Original CLIProxyAPI v8 (`v8.0.63`).
 
 Since version 6.0.19, the Web UI ships with the main program; access it via `/management.html` on the API port once the service is running.
 
@@ -28,7 +34,7 @@ APIMart is a low-cost API platform for AI image & video generation — GPT-Image
 
 ## What this is (and isn’t)
 
-- This repository is the Web UI only. It talks to the CLI Proxy API **Management API** (`/v0/management`) to read/update config, upload credentials, and view logs.
+- This repository is the Web UI only. It talks to the CLI Proxy API **Management API** (`/v8/management`) to read/update config, upload credentials, and view logs.
 - It is **not** a proxy and does not forward traffic.
 
 ## Quick start
@@ -73,7 +79,8 @@ You can enter any of the following; the UI will normalize it:
 - `localhost:8317`
 - `http://192.168.1.10:8317`
 - `https://example.com:8317`
-- `http://example.com:8317/v0/management` (also accepted; the suffix is removed internally)
+- `http://example.com:8317/v8/management` (the suffix is removed internally)
+- An explicit `/v0/management` suffix is also normalized, but all application requests still use v8.
 
 ### Management key (not the same as API keys)
 
@@ -85,30 +92,32 @@ This is different from the proxy `api-keys` you manage inside the UI (those are 
 
 ### Remote management
 
-If you connect from a non-localhost browser, the server must allow remote management (e.g. `allow-remote-management: true`).  
+If you connect from a non-localhost browser, the server must allow remote management (`management.allow-remote: true` in v8).
 Check the CLI Proxy API server documentation/config comments for the full authentication rules, server-side limits, and edge cases.
 
 ## What you can manage (mapped to the UI pages)
 
 - **Dashboard**: live operations view. Credentials, traffic, configuration, and usage refresh every 15 seconds while the page is visible; the model list every minute. An evidence-based status headline, an attention list linking straight to failing credentials and providers, provider and credential health with cooldown reasons and retry times, traffic in your local timezone, and per-model volume, latency, and recent failures when usage statistics are on. Every section shows how old its data is. Dashboard links reset conflicting destination filters; credentials with missing or empty provider types remain discoverable under Other in Auth Files. Returning from an OAuth editor preserves the mounted Auth Files page. Usage shows its exact evidence window and warns when historical cutoffs or retention gaps limit the counts. The quota graph checks eligible accounts once on entry, retains cached snapshots during refresh, and does not poll quota endpoints.
-- **Config Panel**: visual editor for common `config.yaml` fields, basic settings, proxy `api-keys`, and source editing with YAML highlighting/search plus a save diff preview.
+- **Config Panel**: visual editor for common `config.yaml` fields, basic settings, client `access.api-keys`, and source editing with YAML highlighting/search plus a save diff preview.
 - **AI Providers**:
   - Gemini/Codex/Claude/Vertex key entries (base URL, headers, proxy, model aliases, excluded models, prefix). Connection tests and model discovery use the current editable proxy setting, including `direct`; clearing it uses the current global proxy or a direct connection, not the credential's old saved proxy. OpenAI-compatible keys retain their individual proxy settings, including public model discovery and unauthenticated retries. Provider refreshes use one full configuration snapshot, so delayed section reads cannot restore partial routing settings after a refresh.
   - OpenAI-compatible providers (multiple API keys, custom headers, model alias import via `/v1/models`, optional browser-side "chat/completions" test).
 - **Auth Files**: upload/download/delete JSON credentials, filter/search/pagination, runtime-only indicators, view supported models per credential (when the server supports it), manage OAuth excluded models (supports `*` wildcards), configure OAuth model alias mappings. Credentials with an observed cooldown offer a confirmed Clear cooldown action. Clearing gateway scheduling state does not restore upstream quota.
-- **OAuth**: start OAuth/device flows for Codex, Anthropic/Claude, Antigravity, Kimi, Qoder, and xAI/Grok; poll status; submit callback URLs or xAI/Grok displayed codes; import Vertex JSON credentials and iFlow cookies.
-Antigravity cards preserve model-specific bucket names and do not label a full 5-hour window as available when its shared weekly allowance is exhausted. Claude legacy `iguana_necktie` pools with partial dollar fields are shown as cloud-session credits, separately from Fable allowances, without inventing recurring periods. Complete dollar balances, including `iguana_necktie`, are shown separately under their backend keys and are not duplicated as credit windows.
+- **OAuth**: start OAuth/device flows for Muse (Meta), Kimi China and International, Codex, Claude, Antigravity, xAI/Grok, and Devin. Poll status, submit supported callbacks, and import Vertex JSON credentials. Additional logins, including Qoder, appear only when advertised by a plugin.
+  Antigravity cards preserve model-specific bucket names and do not label a full 5-hour window as available when its shared weekly allowance is exhausted. Claude legacy `iguana_necktie` pools with partial dollar fields are shown as cloud-session credits, separately from Fable allowances, without inventing recurring periods. Complete dollar balances, including `iguana_necktie`, are shown separately under their backend keys and are not duplicated as credit windows.
 
 Automatic quota reads never run inference. xAI API health tests require a separate action labeled with its potential cost. Snapshot-backed quota refreshes reload auth files before reporting success. Codex resets must be confirmed by the upstream service before the gateway cooldown is cleared. If cooldown clearing fails after redemption, clear it from Auth Files on the original connection instead of spending another reset.
 
-- **Quota Management**: independent-account allowance charts on a fixed 0–100% scale, account comparisons, provider filters, search, and weekly/5-hour views. Eligible accounts are checked automatically on entry and again on route re-entry, without background polling. Cached snapshots remain visible during checks; failures retain them marked stale. Filters, searches, windows, and series visibility do not query quotas again. Dashed projections apply only each account's next reported reset, assuming no further usage, never transferable credits, invented history, or burn rates. Refresh results show partial outcomes and timestamps. Account details retain per-credential refresh, supported reset actions, and the detailed windows timeline. GitHub Copilot shows premium interactions, chat, completions, unlimited allowances, plan, and reset dates through the backend's `/v0/management/copilot-quota` endpoint using the selected credential's `auth_index`.
-- **Usage Statistics**: request/token totals, backend-dated daily charts, and masked API/model comparisons from `/v0/management/usage`. Collection-off, unknown, empty, failed, stale, and live states are explicit. Failed refreshes retain accepted snapshots from the same connection. Hour-only aggregates are not turned into invented dated history. Statistics are in memory, reset on backend restart, and do not backfill when collection is enabled.
+- **Quota Management**: independent-account allowance charts on a fixed 0–100% scale, account comparisons, provider filters, search, and weekly/5-hour views. Eligible accounts are checked automatically on entry and again on route re-entry, without background polling. Cached snapshots remain visible during checks; failures retain them marked stale. Filters, searches, windows, and series visibility do not query quotas again. Dashed projections apply only each account's next reported reset, assuming no further usage, never transferable credits, invented history, or burn rates. Refresh results show partial outcomes and timestamps. Account details retain per-credential refresh, supported reset actions, and the detailed windows timeline. Copilot quota requires a compatible backend extension; the original v8 backend has no Copilot quota endpoint.
+- **Usage Statistics**: the original v8 backend has no usage snapshot endpoint. Dashboard and Usage show this capability as unsupported, not as zero or live traffic. A compatible snapshot extension may supply request/token totals, backend-dated daily charts, and masked API/model comparisons. The destructive v8 usage queue is never polled as a substitute.
 - **Logs**: tail logs with incremental polling, auto-refresh, search, hide management traffic, clear logs; download request error log files.
 - **System**: quick links, update check, request logging toggle, local login data cleanup, and fetch `/v1/models` (grouped view). Requires at least one proxy API key to query models.
 
 ### Quota UI verification with mock data
 
-Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`. Connect the local UI at `http://127.0.0.1:5173` to `http://127.0.0.1:8318` using any nonempty mock management key. All fixture accounts are labelled `mock-*`; no provider credentials are needed or used. Open Quota Management and check its automatic entry refresh, Remaining, Accounts, provider filters, the detailed windows timeline, light/dark themes, and mobile layouts. To verify Qoder refresh, load its quota, then run `curl -X POST http://127.0.0.1:8318/v0/management/__mock/qoder -H 'Content-Type: application/json' --data '{"used":90}'` and refresh that account's quota row. Account details must show updated usage. This control endpoint exists only in the local fixture. Stop the fixture server afterward. `bun test tests/quotaObservations.test.ts tests/quotaRefreshScope.test.ts tests/quotaPool.test.ts tests/copilotQuotaApi.test.ts` checks provider observations, fresh refresh targets, quota math, and the Copilot boundary.
+This synthetic v8 fixture also models optional usage and Copilot extensions. It does not prove those capabilities exist in the original v8 backend.
+
+Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`. Connect the local UI at `http://127.0.0.1:5173` to `http://127.0.0.1:8318` using any nonempty mock management key. All fixture accounts are labelled `mock-*`; no provider credentials are needed or used. Open Quota Management and check its automatic entry refresh, Remaining, Accounts, provider filters, the detailed windows timeline, light/dark themes, and mobile layouts. To verify Qoder refresh, load its quota, then run `curl -X POST http://127.0.0.1:8318/v8/management/__mock/qoder -H 'Content-Type: application/json' --data '{"used":90}'` and refresh that account's quota row. Account details must show updated usage. This control endpoint exists only in the local fixture. Stop the fixture server afterward. `bun test tests/quotaObservations.test.ts tests/quotaRefreshScope.test.ts tests/quotaPool.test.ts tests/copilotQuotaApi.test.ts` checks provider observations, fresh refresh targets, quota math, and the Copilot boundary.
 
 ### Autocomplete browser verification
 
@@ -165,7 +174,7 @@ The UI language is automatically detected from browser settings and can be manua
 - **Repeated auth failures**: the server may temporarily block remote IPs.
 - **Logs page missing**: enable “Logging to file” in Basic Settings; the navigation item is shown only when file logging is enabled.
 - **Some features show “unsupported”**: the backend may be too old or the endpoint is disabled/absent (common for model lists per auth file, excluded models, logs).
-- **OpenAI provider test fails**: the test runs in the browser and depends on network/CORS of the provider endpoint; a failure here does not always mean the server cannot reach it.
+- **Provider test fails**: connection tests use the backend and the editor's current proxy. Check the endpoint, selected key, and proxy, including an explicit `direct` override.
 
 ## Development
 

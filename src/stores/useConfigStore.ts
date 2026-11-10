@@ -20,7 +20,8 @@ interface ConfigState {
   // 操作
   fetchConfig: (forceRefresh?: boolean) => Promise<Config>;
   updateConfigValue: (section: RawConfigSection, value: unknown) => void;
-  clearCache: (section?: RawConfigSection) => void;
+  invalidateCache: () => void;
+  clearCache: () => void;
   isCacheValid: () => boolean;
 }
 
@@ -68,9 +69,8 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
 
   updateConfigValue: (section, value) => {
     set((state) => {
-      const raw = { ...(state.config?.raw || {}) };
-      raw[section] = value;
-      const nextConfig: Config = { ...(state.config || {}), raw };
+      // UI rows are not serialized v8 groups. Retain the last server document until refetched.
+      const nextConfig: Config = { ...(state.config || {}) };
 
       switch (section) {
         case 'debug':
@@ -141,20 +141,18 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     });
 
     // 使缓存失效（保留当前 config 快照）
-    get().clearCache(section);
+    get().invalidateCache();
   },
 
-  clearCache: (section) => {
+  invalidateCache: () => {
     fullConfigCache = null;
-
-    // 缓存失效通常伴随乐观写或“切换连接/登出/全量刷新”，需要让 in-flight 的旧请求失效
     configRequestToken += 1;
     inFlightConfigRequest = null;
+  },
 
-    // 无 section 代表“切换连接/登出/全量刷新”，连 config 快照一起清除
-    if (!section) {
-      set({ config: null });
-    }
+  clearCache: () => {
+    get().invalidateCache();
+    set({ config: null });
   },
 
   isCacheValid: () => isFullCacheValid(),

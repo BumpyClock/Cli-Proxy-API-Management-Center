@@ -110,33 +110,3 @@ export function LoggingToFileToggle({ values, disabled, onChange }: SharedFieldP
     </FieldAnchor>
   );
 }
-
-export function QuotaSwitchProjectToggle({ values, disabled, onChange }: SharedFieldProps) {
-  const { t } = useTranslation();
-  return (
-    <FieldAnchor fieldId="quotaSwitchProject">
-      <ToggleRow
-        title={t('config_management.visual.sections.quota.switch_project')}
-        description={t('config_management.visual.sections.quota.switch_project_desc')}
-        checked={values.quotaSwitchProject}
-        disabled={disabled}
-        onChange={(quotaSwitchProject) => onChange({ quotaSwitchProject })}
-      />
-    </FieldAnchor>
-  );
-}
-
-export function QuotaSwitchPreviewModelToggle({ values, disabled, onChange }: SharedFieldProps) {
-  const { t } = useTranslation();
-  return (
-    <FieldAnchor fieldId="quotaSwitchPreviewModel">
-      <ToggleRow
-        title={t('config_management.visual.sections.quota.switch_preview_model')}
-        description={t('config_management.visual.sections.quota.switch_preview_model_desc')}
-        checked={values.quotaSwitchPreviewModel}
-        disabled={disabled}
-        onChange={(quotaSwitchPreviewModel) => onChange({ quotaSwitchPreviewModel })}
-      />
-    </FieldAnchor>
-  );
-}

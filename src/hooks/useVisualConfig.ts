@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useReducer } from 'react';
 import { isMap, isScalar, isSeq, parse as parseYaml, parseDocument } from 'yaml';
-import type { Node, Pair, YAMLMap, YAMLSeq } from 'yaml';
+import type { Document, Node, Pair, YAMLMap, YAMLSeq } from 'yaml';
 import type {
   DisableImageGenerationMode,
   PluginStoreAuthApplyTo,
@@ -54,54 +54,64 @@ function parseApiKeysText(raw: unknown): string {
   return keys.join('\n');
 }
 
-function resolveApiKeysText(parsed: Record<string, unknown>): string {
-  if (Object.prototype.hasOwnProperty.call(parsed, 'api-keys')) {
-    return parseApiKeysText(parsed['api-keys']);
-  }
-
-  const auth = asRecord(parsed.auth);
-  const providers = asRecord(auth?.providers);
-  const configApiKeyProvider = asRecord(providers?.['config-api-key']);
-  if (!configApiKeyProvider) return '';
-
-  if (Object.prototype.hasOwnProperty.call(configApiKeyProvider, 'api-key-entries')) {
-    return parseApiKeysText(configApiKeyProvider['api-key-entries']);
-  }
-
-  return parseApiKeysText(configApiKeyProvider['api-keys']);
-}
-
-type YamlDocument = ReturnType<typeof parseDocument>;
+type YamlDocument = Document;
 type YamlPath = string[];
 
 function docHas(doc: YamlDocument, path: YamlPath): boolean {
   return doc.hasIn(path);
 }
 
-function ensureMapInDoc(doc: YamlDocument, path: YamlPath): void {
-  const existing = doc.getIn(path, true);
-  if (isMap(existing)) return;
-  // Use a YAML node here; plain objects are not treated as collections by subsequent `setIn`.
-  doc.setIn(path, doc.createNode({}));
+function isNullScalar(node: unknown): boolean {
+  return isScalar(node) && node.value === null;
 }
 
-function deleteIfMapEmpty(doc: YamlDocument, path: YamlPath): void {
-  const value = doc.getIn(path, true);
-  if (!isMap(value)) return;
-  if (value.items.length === 0) doc.deleteIn(path);
+/**
+ * Create every missing ancestor map of a leaf path. A null section (`routing:`) is the backend's
+ * "use defaults" spelling, so it becomes a map in place and keeps its comments.
+ */
+function ensureParentMaps(doc: YamlDocument, leafPath: YamlPath): void {
+  for (let depth = 1; depth < leafPath.length; depth += 1) {
+    const path = leafPath.slice(0, depth);
+    const existing = doc.getIn(path, true);
+    if (isMap(existing)) continue;
+    if (existing !== undefined && !isNullScalar(existing)) return;
+    const next = doc.createNode({});
+    doc.setIn(path, isNullScalar(existing) ? preserveNodeComments(existing as Node, next) : next);
+  }
+}
+
+/** Remove the empty maps a deletion leaves behind, from the leaf's parent up to the root. */
+function pruneEmptyParents(doc: YamlDocument, leafPath: YamlPath): void {
+  for (let depth = leafPath.length - 1; depth > 0; depth -= 1) {
+    const path = leafPath.slice(0, depth);
+    const value = doc.getIn(path, true);
+    if (!isMap(value) || value.items.length > 0) return;
+    doc.deleteIn(path);
+  }
+}
+
+function deleteInDoc(doc: YamlDocument, path: YamlPath): void {
+  if (!docHas(doc, path)) return;
+  doc.deleteIn(path);
+  pruneEmptyParents(doc, path);
+}
+
+function setValueInDoc(doc: YamlDocument, path: YamlPath, value: unknown): void {
+  ensureParentMaps(doc, path);
+  doc.setIn(path, value);
 }
 
 function setBooleanInDoc(doc: YamlDocument, path: YamlPath, value: boolean): void {
   // Callers only write dirty fields. Explicit false must override backend defaults
   // even when the original document omitted the key (for example, ws-auth).
-  doc.setIn(path, value);
+  setValueInDoc(doc, path, value);
 }
 
 function setStringInDoc(doc: YamlDocument, path: YamlPath, value: unknown): void {
   const safe = typeof value === 'string' ? value : '';
   const trimmed = safe.trim();
   if (trimmed !== '') {
-    doc.setIn(path, safe);
+    setValueInDoc(doc, path, safe);
     return;
   }
   // Preserve existing empty-string keys to avoid dropping template blocks/comments.
@@ -114,17 +124,17 @@ function setStringInDoc(doc: YamlDocument, path: YamlPath, value: unknown): void
 function setStringListInDoc(doc: YamlDocument, path: YamlPath, values: string[]): void {
   const nextValues = values.map((value) => value.trim()).filter(Boolean);
   if (nextValues.length > 0) {
-    doc.setIn(path, nextValues);
+    setValueInDoc(doc, path, nextValues);
     return;
   }
-  if (docHas(doc, path)) doc.deleteIn(path);
+  deleteInDoc(doc, path);
 }
 
 function setIntFromStringInDoc(doc: YamlDocument, path: YamlPath, value: unknown): void {
   const safe = typeof value === 'string' ? value : '';
   const trimmed = safe.trim();
   if (trimmed === '') {
-    if (docHas(doc, path)) doc.deleteIn(path);
+    deleteInDoc(doc, path);
     return;
   }
 
@@ -134,7 +144,7 @@ function setIntFromStringInDoc(doc: YamlDocument, path: YamlPath, value: unknown
 
   const parsed = Number(trimmed);
   if (Number.isSafeInteger(parsed)) {
-    doc.setIn(path, parsed);
+    setValueInDoc(doc, path, parsed);
     return;
   }
 }
@@ -145,17 +155,26 @@ function setDisableImageGenerationInDoc(
   value: DisableImageGenerationMode
 ): void {
   if (value === 'chat' || value === 'passthrough') {
-    doc.setIn(path, value);
+    setValueInDoc(doc, path, value);
     return;
   }
 
   if (value === 'true') {
-    doc.setIn(path, true);
+    setValueInDoc(doc, path, true);
     return;
   }
 
   if (docHas(doc, path)) doc.setIn(path, false);
 }
+
+const PAYLOAD_PATH: YamlPath = ['requests', 'payload'];
+const ANTIGRAVITY_SENSITIVE_WORDS_PATH: YamlPath = [
+  'oauth',
+  'providers',
+  'antigravity',
+  'sensitive-words',
+];
+const DEVIN_SENSITIVE_WORDS_PATH: YamlPath = ['oauth', 'providers', 'devin', 'sensitive-words'];
 
 const PAYLOAD_DIRTY_FIELDS = [
   'payloadDefaultRules',
@@ -261,7 +280,11 @@ function hasPayloadParamValidationErrors(rules: PayloadRule[]): boolean {
 
 function deepClone<T>(value: T): T {
   if (typeof structuredClone === 'function') return structuredClone(value);
-  return JSON.parse(JSON.stringify(value)) as T;
+  try {
+    return JSON.parse(JSON.stringify(value)) as T;
+  } catch (cause) {
+    throw Object.assign(new Error('Visual configuration is not serializable'), { cause });
+  }
 }
 
 function arePayloadModelEntriesEqual(
@@ -566,18 +589,6 @@ function parsePluginStoreAuthRules(raw: unknown): PluginStoreAuthRule[] {
     .filter((rule): rule is PluginStoreAuthRule => Boolean(rule));
 }
 
-function deleteLegacyApiKeysProvider(doc: YamlDocument): void {
-  if (docHas(doc, ['auth', 'providers', 'config-api-key', 'api-key-entries'])) {
-    doc.deleteIn(['auth', 'providers', 'config-api-key', 'api-key-entries']);
-  }
-  if (docHas(doc, ['auth', 'providers', 'config-api-key', 'api-keys'])) {
-    doc.deleteIn(['auth', 'providers', 'config-api-key', 'api-keys']);
-  }
-  deleteIfMapEmpty(doc, ['auth', 'providers', 'config-api-key']);
-  deleteIfMapEmpty(doc, ['auth', 'providers']);
-  deleteIfMapEmpty(doc, ['auth']);
-}
-
 function parsePayloadModelEntries(raw: unknown, idPrefix: string): PayloadRule['models'] {
   if (!Array.isArray(raw)) return [];
 
@@ -664,7 +675,10 @@ function parseRawPayloadRules(rules: unknown): PayloadRule[] {
   });
 }
 
-function serializePayloadParamEntryValue(param: PayloadParamEntry): unknown {
+type PayloadWireValue =
+  string | number | boolean | null | PayloadWireValue[] | { [key: string]: PayloadWireValue };
+
+function serializePayloadParamEntryValue(param: PayloadParamEntry): PayloadWireValue {
   if (param.valueType === 'number') {
     const num = Number(param.value);
     return Number.isFinite(num) ? num : param.value;
@@ -674,7 +688,7 @@ function serializePayloadParamEntryValue(param: PayloadParamEntry): unknown {
   }
   if (param.valueType === 'json') {
     try {
-      return JSON.parse(param.value);
+      return JSON.parse(param.value) as PayloadWireValue;
     } catch {
       return param.value;
     }
@@ -951,7 +965,7 @@ function syncPayloadRuleSequence(
   desired: PayloadRule[],
   rawValues: boolean
 ): void {
-  const payload = doc.getIn(['payload'], true);
+  const payload = doc.getIn(PAYLOAD_PATH, true);
   if (!isMap(payload)) throw new Error('Expected payload map');
   const rules = desired.filter((rule) => rule.models.some((model) => model.name.trim()));
   if (rules.length === 0) {
@@ -985,7 +999,7 @@ function syncPayloadFilterSequence(
   baseline: PayloadFilterRule[],
   desired: PayloadFilterRule[]
 ): void {
-  const payload = doc.getIn(['payload'], true);
+  const payload = doc.getIn(PAYLOAD_PATH, true);
   if (!isMap(payload)) throw new Error('Expected payload map');
   const rules = desired.filter((rule) => rule.models.some((model) => model.name.trim()));
   if (rules.length === 0) {
@@ -1113,8 +1127,6 @@ function getNextDirtyFields(
       'maxRetryCredentials',
       'maxRetryInterval',
       'wsAuth',
-      'quotaSwitchProject',
-      'quotaSwitchPreviewModel',
       'quotaAntigravityCredits',
       'routingStrategy',
       'routingSessionAffinity',
@@ -1281,77 +1293,84 @@ export function useVisualConfig() {
 
       const parsedRaw: unknown = parseYaml(yamlContent) || {};
       const parsed = asRecord(parsedRaw) ?? {};
-      const tls = asRecord(parsed.tls);
-      const remoteManagement = asRecord(parsed['remote-management']);
-      const quotaExceeded = asRecord(parsed['quota-exceeded']);
+      const server = asRecord(parsed.server);
+      const tls = asRecord(server?.tls);
+      const management = asRecord(parsed.management);
+      const access = asRecord(parsed.access);
       const routing = asRecord(parsed.routing);
-      const payload = asRecord(parsed.payload);
-      const streaming = asRecord(parsed.streaming);
+      const routingRetry = asRecord(routing?.retry);
+      const routingCooldown = asRecord(routing?.cooldown);
+      const requests = asRecord(parsed.requests);
+      const payload = asRecord(requests?.payload);
+      const streaming = asRecord(requests?.streaming);
       const plugins = asRecord(parsed.plugins);
-      const codex = asRecord(parsed.codex);
-      const antigravity = asRecord(parsed.antigravity);
-      const devin = asRecord(parsed.devin);
-      const claudeHeaderDefaults = asRecord(parsed['claude-header-defaults']);
-      const codexHeaderDefaults = asRecord(parsed['codex-header-defaults']);
+      const oauth = asRecord(parsed.oauth);
+      const providers = asRecord(oauth?.providers);
+      const aistudio = asRecord(providers?.aistudio);
+      const antigravity = asRecord(providers?.antigravity);
+      const devin = asRecord(providers?.devin);
+      const codex = asRecord(providers?.codex);
+      const codexHeaderDefaults = asRecord(codex?.['header-defaults']);
+      const claudeHeaderDefaults = asRecord(
+        asRecord(asRecord(parsed.upstream)?.claude)?.['header-defaults']
+      );
+      const multimedia = asRecord(parsed.multimedia);
+      const logs = asRecord(asRecord(parsed.observability)?.logs);
+      const usage = asRecord(asRecord(parsed.observability)?.usage);
 
       const newValues: VisualConfigValues = {
-        host: typeof parsed.host === 'string' ? parsed.host : '',
-        port: String(parsed.port ?? ''),
+        host: typeof server?.host === 'string' ? server.host : '',
+        port: String(server?.port ?? ''),
 
         tlsEnable: Boolean(tls?.enable),
         tlsCert: typeof tls?.cert === 'string' ? tls.cert : '',
         tlsKey: typeof tls?.key === 'string' ? tls.key : '',
 
-        rmAllowRemote: Boolean(remoteManagement?.['allow-remote']),
-        rmSecretKey:
-          typeof remoteManagement?.['secret-key'] === 'string'
-            ? remoteManagement['secret-key']
-            : '',
-        rmDisableControlPanel: Boolean(remoteManagement?.['disable-control-panel']),
-        rmDisableAutoUpdatePanel: Boolean(remoteManagement?.['disable-auto-update-panel']),
+        rmAllowRemote: Boolean(management?.['allow-remote']),
+        rmSecretKey: typeof management?.['secret-key'] === 'string' ? management['secret-key'] : '',
+        rmDisableControlPanel: Boolean(management?.['disable-control-panel']),
+        rmDisableAutoUpdatePanel: Boolean(management?.['disable-auto-update-panel']),
         rmPanelRepo:
-          typeof remoteManagement?.['panel-github-repository'] === 'string'
-            ? remoteManagement['panel-github-repository']
-            : typeof remoteManagement?.['panel-repo'] === 'string'
-              ? remoteManagement['panel-repo']
-              : '',
+          typeof management?.['panel-github-repository'] === 'string'
+            ? management['panel-github-repository']
+            : '',
 
-        authDir: typeof parsed['auth-dir'] === 'string' ? parsed['auth-dir'] : '',
-        apiKeysText: resolveApiKeysText(parsed),
+        authDir: typeof oauth?.['auth-dir'] === 'string' ? oauth['auth-dir'] : '',
+        apiKeysText: parseApiKeysText(access?.['api-keys']),
         pluginsEnabled: Boolean(plugins?.enabled),
         pluginStoreSources: parseStringList(plugins?.['store-sources']),
         pluginStoreAuth: parsePluginStoreAuthRules(plugins?.['store-auth']),
 
-        debug: Boolean(parsed.debug),
-        commercialMode: Boolean(parsed['commercial-mode']),
-        loggingToFile: Boolean(parsed['logging-to-file']),
-        logsMaxTotalSizeMb: String(parsed['logs-max-total-size-mb'] ?? ''),
-        errorLogsMaxFiles: String(parsed['error-logs-max-files'] ?? ''),
-        usageStatisticsEnabled: Boolean(parsed['usage-statistics-enabled']),
+        debug: Boolean(logs?.debug),
+        commercialMode: Boolean(server?.['commercial-mode']),
+        loggingToFile: Boolean(logs?.['logging-to-file']),
+        logsMaxTotalSizeMb: String(logs?.['logs-max-total-size-mb'] ?? ''),
+        errorLogsMaxFiles: String(logs?.['error-logs-max-files'] ?? ''),
+        usageStatisticsEnabled: Boolean(usage?.['usage-statistics-enabled']),
         redisUsageQueueRetentionSeconds: String(
-          parsed['redis-usage-queue-retention-seconds'] ?? ''
+          usage?.['redis-usage-queue-retention-seconds'] ?? ''
         ),
 
-        proxyUrl: typeof parsed['proxy-url'] === 'string' ? parsed['proxy-url'] : '',
-        forceModelPrefix: Boolean(parsed['force-model-prefix']),
-        passthroughHeaders: Boolean(parsed['passthrough-headers']),
-        requestRetry: String(parsed['request-retry'] ?? ''),
-        maxRetryCredentials: String(parsed['max-retry-credentials'] ?? ''),
-        maxRetryInterval: String(parsed['max-retry-interval'] ?? ''),
-        disableCooling: Boolean(parsed['disable-cooling']),
-        disableImageGeneration: parseDisableImageGenerationMode(parsed['disable-image-generation']),
+        proxyUrl: typeof requests?.['proxy-url'] === 'string' ? requests['proxy-url'] : '',
+        forceModelPrefix: Boolean(routing?.['force-model-prefix']),
+        passthroughHeaders: Boolean(requests?.['passthrough-headers']),
+        requestRetry: String(routingRetry?.['request-retry'] ?? ''),
+        maxRetryCredentials: String(routingRetry?.['max-retry-credentials'] ?? ''),
+        maxRetryInterval: String(routingRetry?.['max-retry-interval'] ?? ''),
+        disableCooling: Boolean(routingCooldown?.['disable-cooling']),
+        disableImageGeneration: parseDisableImageGenerationMode(
+          multimedia?.['disable-image-generation']
+        ),
         gptImage2BaseModel:
-          typeof parsed['gpt-image-2-base-model'] === 'string'
-            ? parsed['gpt-image-2-base-model']
+          typeof multimedia?.['gpt-image-2-base-model'] === 'string'
+            ? multimedia['gpt-image-2-base-model']
             : '',
-        authAutoRefreshWorkers: String(parsed['auth-auto-refresh-workers'] ?? ''),
-        wsAuth: Boolean(parsed['ws-auth'] ?? DEFAULT_VISUAL_VALUES.wsAuth),
+        authAutoRefreshWorkers: String(oauth?.['auth-auto-refresh-workers'] ?? ''),
+        wsAuth: Boolean(aistudio?.['ws-auth'] ?? DEFAULT_VISUAL_VALUES.wsAuth),
         antigravitySensitiveWords: parseStringList(antigravity?.['sensitive-words']),
         devinSensitiveWords: parseStringList(devin?.['sensitive-words']),
-        antigravitySignatureCacheEnabled: Boolean(
-          parsed['antigravity-signature-cache-enabled'] ?? true
-        ),
-        antigravitySignatureBypassStrict: Boolean(parsed['antigravity-signature-bypass-strict']),
+        antigravitySignatureCacheEnabled: Boolean(antigravity?.['signature-cache-enabled'] ?? true),
+        antigravitySignatureBypassStrict: Boolean(antigravity?.['signature-bypass-strict']),
 
         claudeHeaderUserAgent:
           typeof claudeHeaderDefaults?.['user-agent'] === 'string'
@@ -1383,26 +1402,14 @@ export function useVisualConfig() {
             : '',
         codexIdentityConfuse: Boolean(codex?.['identity-confuse']),
 
-        quotaSwitchProject: Boolean(
-          quotaExceeded?.['switch-project'] ?? DEFAULT_VISUAL_VALUES.quotaSwitchProject
-        ),
-        quotaSwitchPreviewModel: Boolean(
-          quotaExceeded?.['switch-preview-model'] ?? DEFAULT_VISUAL_VALUES.quotaSwitchPreviewModel
-        ),
-        quotaAntigravityCredits: Boolean(quotaExceeded?.['antigravity-credits'] ?? false),
+        quotaAntigravityCredits: Boolean(antigravity?.['antigravity-credits'] ?? false),
 
         routingStrategy: parseRoutingStrategy(routing?.strategy),
-        routingSessionAffinity: Boolean(
-          routing?.['session-affinity'] ?? routing?.sessionAffinity ?? routing?.['sessionAffinity']
-        ),
+        routingSessionAffinity: Boolean(routing?.['session-affinity']),
         routingSessionAffinityTTL:
           typeof routing?.['session-affinity-ttl'] === 'string'
             ? routing['session-affinity-ttl']
-            : typeof routing?.sessionAffinityTTL === 'string'
-              ? routing.sessionAffinityTTL
-              : typeof routing?.['sessionAffinityTTL'] === 'string'
-                ? routing['sessionAffinityTTL']
-                : '',
+            : '',
 
         payloadDefaultRules: parsePayloadRules(payload?.default),
         payloadDefaultRawRules: parseRawPayloadRules(payload?.['default-raw']),
@@ -1413,7 +1420,7 @@ export function useVisualConfig() {
         streaming: {
           keepaliveSeconds: String(streaming?.['keepalive-seconds'] ?? ''),
           bootstrapRetries: String(streaming?.['bootstrap-retries'] ?? ''),
-          nonstreamKeepaliveInterval: String(parsed['nonstream-keepalive-interval'] ?? ''),
+          nonstreamKeepaliveInterval: String(requests?.['nonstream-keepalive-interval'] ?? ''),
         },
       };
 
@@ -1429,176 +1436,169 @@ export function useVisualConfig() {
   const applyVisualChangesToYaml = useCallback(
     (currentYaml: string): string => {
       try {
-        const doc = parseDocument(currentYaml);
+        const doc: YamlDocument = parseDocument(currentYaml);
         if (doc.errors.length > 0) return currentYaml;
         if (!isMap(doc.contents)) {
-          doc.contents = doc.createNode({}) as unknown as typeof doc.contents;
+          doc.contents = doc.createNode({});
         }
         const values = visualValues;
-        const shouldWritePluginStoreAuth = dirtyFields.has('pluginStoreAuth');
+        const dirty = (field: string) => dirtyFields.has(field);
 
-        if (dirtyFields.has('host')) setStringInDoc(doc, ['host'], values.host);
-        if (dirtyFields.has('port')) setIntFromStringInDoc(doc, ['port'], values.port);
-
-        const tlsDirty =
-          dirtyFields.has('tlsEnable') || dirtyFields.has('tlsCert') || dirtyFields.has('tlsKey');
-        if (tlsDirty) {
-          ensureMapInDoc(doc, ['tls']);
-          if (dirtyFields.has('tlsEnable')) {
-            setBooleanInDoc(doc, ['tls', 'enable'], values.tlsEnable);
-          }
-          if (dirtyFields.has('tlsCert')) setStringInDoc(doc, ['tls', 'cert'], values.tlsCert);
-          if (dirtyFields.has('tlsKey')) setStringInDoc(doc, ['tls', 'key'], values.tlsKey);
-          deleteIfMapEmpty(doc, ['tls']);
+        if (dirty('host')) setStringInDoc(doc, ['server', 'host'], values.host);
+        if (dirty('port')) setIntFromStringInDoc(doc, ['server', 'port'], values.port);
+        if (dirty('tlsEnable')) setBooleanInDoc(doc, ['server', 'tls', 'enable'], values.tlsEnable);
+        if (dirty('tlsCert')) setStringInDoc(doc, ['server', 'tls', 'cert'], values.tlsCert);
+        if (dirty('tlsKey')) setStringInDoc(doc, ['server', 'tls', 'key'], values.tlsKey);
+        if (dirty('commercialMode')) {
+          setBooleanInDoc(doc, ['server', 'commercial-mode'], values.commercialMode);
         }
 
-        const remoteManagementDirty =
-          dirtyFields.has('rmAllowRemote') ||
-          dirtyFields.has('rmSecretKey') ||
-          dirtyFields.has('rmDisableControlPanel') ||
-          dirtyFields.has('rmDisableAutoUpdatePanel') ||
-          dirtyFields.has('rmPanelRepo');
-        if (remoteManagementDirty) {
-          ensureMapInDoc(doc, ['remote-management']);
-          if (dirtyFields.has('rmAllowRemote')) {
-            setBooleanInDoc(doc, ['remote-management', 'allow-remote'], values.rmAllowRemote);
-          }
-          if (dirtyFields.has('rmSecretKey')) {
-            setStringInDoc(doc, ['remote-management', 'secret-key'], values.rmSecretKey);
-          }
-          if (dirtyFields.has('rmDisableControlPanel')) {
-            setBooleanInDoc(
-              doc,
-              ['remote-management', 'disable-control-panel'],
-              values.rmDisableControlPanel
-            );
-          }
-          if (dirtyFields.has('rmDisableAutoUpdatePanel')) {
-            setBooleanInDoc(
-              doc,
-              ['remote-management', 'disable-auto-update-panel'],
-              values.rmDisableAutoUpdatePanel
-            );
-          }
-          if (dirtyFields.has('rmPanelRepo')) {
-            setStringInDoc(
-              doc,
-              ['remote-management', 'panel-github-repository'],
-              values.rmPanelRepo
-            );
-          }
-          if (dirtyFields.has('rmPanelRepo') && docHas(doc, ['remote-management', 'panel-repo'])) {
-            doc.deleteIn(['remote-management', 'panel-repo']);
-          }
-          deleteIfMapEmpty(doc, ['remote-management']);
+        if (dirty('rmAllowRemote')) {
+          setBooleanInDoc(doc, ['management', 'allow-remote'], values.rmAllowRemote);
+        }
+        if (dirty('rmSecretKey')) {
+          setStringInDoc(doc, ['management', 'secret-key'], values.rmSecretKey);
+        }
+        if (dirty('rmDisableControlPanel')) {
+          setBooleanInDoc(
+            doc,
+            ['management', 'disable-control-panel'],
+            values.rmDisableControlPanel
+          );
+        }
+        if (dirty('rmDisableAutoUpdatePanel')) {
+          setBooleanInDoc(
+            doc,
+            ['management', 'disable-auto-update-panel'],
+            values.rmDisableAutoUpdatePanel
+          );
+        }
+        if (dirty('rmPanelRepo')) {
+          setStringInDoc(doc, ['management', 'panel-github-repository'], values.rmPanelRepo);
         }
 
-        if (dirtyFields.has('authDir')) setStringInDoc(doc, ['auth-dir'], values.authDir);
-        if (dirtyFields.has('apiKeysText')) {
-          const apiKeys = values.apiKeysText
-            .split('\n')
-            .map((key) => key.trim())
-            .filter(Boolean);
-          if (apiKeys.length > 0) {
-            doc.setIn(['api-keys'], apiKeys);
-          } else if (docHas(doc, ['api-keys'])) {
-            doc.deleteIn(['api-keys']);
-          }
-          deleteLegacyApiKeysProvider(doc);
-        }
-
-        const pluginsDirty =
-          dirtyFields.has('pluginsEnabled') ||
-          dirtyFields.has('pluginStoreSources') ||
-          shouldWritePluginStoreAuth;
-        if (pluginsDirty) {
-          ensureMapInDoc(doc, ['plugins']);
-          if (dirtyFields.has('pluginsEnabled')) {
-            setBooleanInDoc(doc, ['plugins', 'enabled'], values.pluginsEnabled);
-          }
-          if (dirtyFields.has('pluginStoreSources')) {
-            setStringListInDoc(doc, ['plugins', 'store-sources'], values.pluginStoreSources);
-          }
-          if (shouldWritePluginStoreAuth) {
-            const storeAuth = serializePluginStoreAuthForYaml(values.pluginStoreAuth);
-            if (storeAuth.length > 0) {
-              doc.setIn(['plugins', 'store-auth'], storeAuth);
-            } else if (docHas(doc, ['plugins', 'store-auth'])) {
-              doc.deleteIn(['plugins', 'store-auth']);
-            }
-          }
-          deleteIfMapEmpty(doc, ['plugins']);
-        }
-
-        if (dirtyFields.has('debug')) setBooleanInDoc(doc, ['debug'], values.debug);
-        if (dirtyFields.has('commercialMode')) {
-          setBooleanInDoc(doc, ['commercial-mode'], values.commercialMode);
-        }
-        if (dirtyFields.has('loggingToFile')) {
-          setBooleanInDoc(doc, ['logging-to-file'], values.loggingToFile);
-        }
-        if (dirtyFields.has('logsMaxTotalSizeMb')) {
-          setIntFromStringInDoc(doc, ['logs-max-total-size-mb'], values.logsMaxTotalSizeMb);
-        }
-        if (dirtyFields.has('errorLogsMaxFiles')) {
-          setIntFromStringInDoc(doc, ['error-logs-max-files'], values.errorLogsMaxFiles);
-        }
-        if (dirtyFields.has('usageStatisticsEnabled')) {
-          setBooleanInDoc(doc, ['usage-statistics-enabled'], values.usageStatisticsEnabled);
-        }
-        if (dirtyFields.has('redisUsageQueueRetentionSeconds')) {
+        if (dirty('authDir')) setStringInDoc(doc, ['oauth', 'auth-dir'], values.authDir);
+        if (dirty('authAutoRefreshWorkers')) {
           setIntFromStringInDoc(
             doc,
-            ['redis-usage-queue-retention-seconds'],
+            ['oauth', 'auth-auto-refresh-workers'],
+            values.authAutoRefreshWorkers
+          );
+        }
+        if (dirty('apiKeysText')) {
+          setStringListInDoc(doc, ['access', 'api-keys'], values.apiKeysText.split('\n'));
+        }
+
+        if (dirty('pluginsEnabled')) {
+          setBooleanInDoc(doc, ['plugins', 'enabled'], values.pluginsEnabled);
+        }
+        if (dirty('pluginStoreSources')) {
+          setStringListInDoc(doc, ['plugins', 'store-sources'], values.pluginStoreSources);
+        }
+        if (dirty('pluginStoreAuth')) {
+          const storeAuth = serializePluginStoreAuthForYaml(values.pluginStoreAuth);
+          if (storeAuth.length > 0) setValueInDoc(doc, ['plugins', 'store-auth'], storeAuth);
+          else deleteInDoc(doc, ['plugins', 'store-auth']);
+        }
+
+        if (dirty('debug')) setBooleanInDoc(doc, ['observability', 'logs', 'debug'], values.debug);
+        if (dirty('loggingToFile')) {
+          setBooleanInDoc(doc, ['observability', 'logs', 'logging-to-file'], values.loggingToFile);
+        }
+        if (dirty('logsMaxTotalSizeMb')) {
+          setIntFromStringInDoc(
+            doc,
+            ['observability', 'logs', 'logs-max-total-size-mb'],
+            values.logsMaxTotalSizeMb
+          );
+        }
+        if (dirty('errorLogsMaxFiles')) {
+          setIntFromStringInDoc(
+            doc,
+            ['observability', 'logs', 'error-logs-max-files'],
+            values.errorLogsMaxFiles
+          );
+        }
+        if (dirty('usageStatisticsEnabled')) {
+          setBooleanInDoc(
+            doc,
+            ['observability', 'usage', 'usage-statistics-enabled'],
+            values.usageStatisticsEnabled
+          );
+        }
+        if (dirty('redisUsageQueueRetentionSeconds')) {
+          setIntFromStringInDoc(
+            doc,
+            ['observability', 'usage', 'redis-usage-queue-retention-seconds'],
             values.redisUsageQueueRetentionSeconds
           );
         }
 
-        if (dirtyFields.has('proxyUrl')) setStringInDoc(doc, ['proxy-url'], values.proxyUrl);
-        if (dirtyFields.has('forceModelPrefix')) {
-          setBooleanInDoc(doc, ['force-model-prefix'], values.forceModelPrefix);
+        if (dirty('proxyUrl')) setStringInDoc(doc, ['requests', 'proxy-url'], values.proxyUrl);
+        if (dirty('passthroughHeaders')) {
+          setBooleanInDoc(doc, ['requests', 'passthrough-headers'], values.passthroughHeaders);
         }
-        if (dirtyFields.has('passthroughHeaders')) {
-          setBooleanInDoc(doc, ['passthrough-headers'], values.passthroughHeaders);
+        if (dirty('forceModelPrefix')) {
+          setBooleanInDoc(doc, ['routing', 'force-model-prefix'], values.forceModelPrefix);
         }
-        if (dirtyFields.has('requestRetry')) {
-          setIntFromStringInDoc(doc, ['request-retry'], values.requestRetry);
+        if (dirty('requestRetry')) {
+          setIntFromStringInDoc(doc, ['routing', 'retry', 'request-retry'], values.requestRetry);
         }
-        if (dirtyFields.has('maxRetryCredentials')) {
-          setIntFromStringInDoc(doc, ['max-retry-credentials'], values.maxRetryCredentials);
+        if (dirty('maxRetryCredentials')) {
+          setIntFromStringInDoc(
+            doc,
+            ['routing', 'retry', 'max-retry-credentials'],
+            values.maxRetryCredentials
+          );
         }
-        if (dirtyFields.has('maxRetryInterval')) {
-          setIntFromStringInDoc(doc, ['max-retry-interval'], values.maxRetryInterval);
+        if (dirty('maxRetryInterval')) {
+          setIntFromStringInDoc(
+            doc,
+            ['routing', 'retry', 'max-retry-interval'],
+            values.maxRetryInterval
+          );
         }
-        if (dirtyFields.has('disableCooling')) {
-          setBooleanInDoc(doc, ['disable-cooling'], values.disableCooling);
+        if (dirty('disableCooling')) {
+          setBooleanInDoc(doc, ['routing', 'cooldown', 'disable-cooling'], values.disableCooling);
         }
-        if (dirtyFields.has('disableImageGeneration')) {
+        if (dirty('routingStrategy')) {
+          setValueInDoc(doc, ['routing', 'strategy'], values.routingStrategy);
+        }
+        if (dirty('routingSessionAffinity')) {
+          setBooleanInDoc(doc, ['routing', 'session-affinity'], values.routingSessionAffinity);
+        }
+        if (dirty('routingSessionAffinityTTL')) {
+          setStringInDoc(
+            doc,
+            ['routing', 'session-affinity-ttl'],
+            values.routingSessionAffinityTTL
+          );
+        }
+
+        if (dirty('disableImageGeneration')) {
           setDisableImageGenerationInDoc(
             doc,
-            ['disable-image-generation'],
+            ['multimedia', 'disable-image-generation'],
             values.disableImageGeneration
           );
         }
-        if (dirtyFields.has('gptImage2BaseModel')) {
-          setStringInDoc(doc, ['gpt-image-2-base-model'], values.gptImage2BaseModel);
+        if (dirty('gptImage2BaseModel')) {
+          setStringInDoc(doc, ['multimedia', 'gpt-image-2-base-model'], values.gptImage2BaseModel);
         }
-        if (dirtyFields.has('authAutoRefreshWorkers')) {
-          setIntFromStringInDoc(doc, ['auth-auto-refresh-workers'], values.authAutoRefreshWorkers);
+
+        if (dirty('wsAuth')) {
+          setBooleanInDoc(doc, ['oauth', 'providers', 'aistudio', 'ws-auth'], values.wsAuth);
         }
-        if (dirtyFields.has('wsAuth')) setBooleanInDoc(doc, ['ws-auth'], values.wsAuth);
-        if (dirtyFields.has('antigravitySensitiveWords')) {
-          ensureMapInDoc(doc, ['antigravity']);
+        if (dirty('antigravitySensitiveWords')) {
           setStringListInDoc(
             doc,
-            ['antigravity', 'sensitive-words'],
+            ANTIGRAVITY_SENSITIVE_WORDS_PATH,
             values.antigravitySensitiveWords
           );
-          deleteIfMapEmpty(doc, ['antigravity']);
         }
-        if (dirtyFields.has('devinSensitiveWords')) {
-          ensureMapInDoc(doc, ['devin']);
-          const devin = doc.getIn(['devin'], true);
+        if (dirty('devinSensitiveWords')) {
+          ensureParentMaps(doc, DEVIN_SENSITIVE_WORDS_PATH);
+          const devin = doc.getIn(DEVIN_SENSITIVE_WORDS_PATH.slice(0, -1), true);
           if (isMap(devin)) {
             syncStringSequence(
               doc,
@@ -1608,178 +1608,104 @@ export function useVisualConfig() {
               values.devinSensitiveWords
             );
           }
-          deleteIfMapEmpty(doc, ['devin']);
+          pruneEmptyParents(doc, DEVIN_SENSITIVE_WORDS_PATH);
         }
-        if (dirtyFields.has('antigravitySignatureCacheEnabled')) {
-          if (
-            docHas(doc, ['antigravity-signature-cache-enabled']) ||
-            !values.antigravitySignatureCacheEnabled
-          ) {
-            doc.setIn(
-              ['antigravity-signature-cache-enabled'],
-              values.antigravitySignatureCacheEnabled
-            );
+        if (dirty('antigravitySignatureCacheEnabled')) {
+          const path = ['oauth', 'providers', 'antigravity', 'signature-cache-enabled'];
+          if (docHas(doc, path) || !values.antigravitySignatureCacheEnabled) {
+            setValueInDoc(doc, path, values.antigravitySignatureCacheEnabled);
           }
         }
-        if (dirtyFields.has('antigravitySignatureBypassStrict')) {
+        if (dirty('antigravitySignatureBypassStrict')) {
           setBooleanInDoc(
             doc,
-            ['antigravity-signature-bypass-strict'],
+            ['oauth', 'providers', 'antigravity', 'signature-bypass-strict'],
             values.antigravitySignatureBypassStrict
           );
         }
-
-        const claudeHeadersDirty =
-          dirtyFields.has('claudeHeaderUserAgent') ||
-          dirtyFields.has('claudeHeaderPackageVersion') ||
-          dirtyFields.has('claudeHeaderRuntimeVersion') ||
-          dirtyFields.has('claudeHeaderOs') ||
-          dirtyFields.has('claudeHeaderArch') ||
-          dirtyFields.has('claudeHeaderTimeout') ||
-          dirtyFields.has('claudeHeaderStabilizeDeviceProfile');
-        if (claudeHeadersDirty) {
-          ensureMapInDoc(doc, ['claude-header-defaults']);
-          if (dirtyFields.has('claudeHeaderUserAgent')) {
-            setStringInDoc(
-              doc,
-              ['claude-header-defaults', 'user-agent'],
-              values.claudeHeaderUserAgent
-            );
-          }
-          if (dirtyFields.has('claudeHeaderPackageVersion')) {
-            setStringInDoc(
-              doc,
-              ['claude-header-defaults', 'package-version'],
-              values.claudeHeaderPackageVersion
-            );
-          }
-          if (dirtyFields.has('claudeHeaderRuntimeVersion')) {
-            setStringInDoc(
-              doc,
-              ['claude-header-defaults', 'runtime-version'],
-              values.claudeHeaderRuntimeVersion
-            );
-          }
-          if (dirtyFields.has('claudeHeaderOs')) {
-            setStringInDoc(doc, ['claude-header-defaults', 'os'], values.claudeHeaderOs);
-          }
-          if (dirtyFields.has('claudeHeaderArch')) {
-            setStringInDoc(doc, ['claude-header-defaults', 'arch'], values.claudeHeaderArch);
-          }
-          if (dirtyFields.has('claudeHeaderTimeout')) {
-            setStringInDoc(doc, ['claude-header-defaults', 'timeout'], values.claudeHeaderTimeout);
-          }
-          if (dirtyFields.has('claudeHeaderStabilizeDeviceProfile')) {
-            setBooleanInDoc(
-              doc,
-              ['claude-header-defaults', 'stabilize-device-profile'],
-              values.claudeHeaderStabilizeDeviceProfile
-            );
-          }
-          deleteIfMapEmpty(doc, ['claude-header-defaults']);
+        if (dirty('quotaAntigravityCredits')) {
+          setBooleanInDoc(
+            doc,
+            ['oauth', 'providers', 'antigravity', 'antigravity-credits'],
+            values.quotaAntigravityCredits
+          );
         }
 
-        const codexHeadersDirty =
-          dirtyFields.has('codexHeaderUserAgent') || dirtyFields.has('codexHeaderBetaFeatures');
-        if (codexHeadersDirty) {
-          ensureMapInDoc(doc, ['codex-header-defaults']);
-          if (dirtyFields.has('codexHeaderUserAgent')) {
-            setStringInDoc(
-              doc,
-              ['codex-header-defaults', 'user-agent'],
-              values.codexHeaderUserAgent
-            );
-          }
-          if (dirtyFields.has('codexHeaderBetaFeatures')) {
-            setStringInDoc(
-              doc,
-              ['codex-header-defaults', 'beta-features'],
-              values.codexHeaderBetaFeatures
-            );
-          }
-          deleteIfMapEmpty(doc, ['codex-header-defaults']);
+        const claudeHeaders = ['upstream', 'claude', 'header-defaults'];
+        if (dirty('claudeHeaderUserAgent')) {
+          setStringInDoc(doc, [...claudeHeaders, 'user-agent'], values.claudeHeaderUserAgent);
+        }
+        if (dirty('claudeHeaderPackageVersion')) {
+          setStringInDoc(
+            doc,
+            [...claudeHeaders, 'package-version'],
+            values.claudeHeaderPackageVersion
+          );
+        }
+        if (dirty('claudeHeaderRuntimeVersion')) {
+          setStringInDoc(
+            doc,
+            [...claudeHeaders, 'runtime-version'],
+            values.claudeHeaderRuntimeVersion
+          );
+        }
+        if (dirty('claudeHeaderOs')) {
+          setStringInDoc(doc, [...claudeHeaders, 'os'], values.claudeHeaderOs);
+        }
+        if (dirty('claudeHeaderArch')) {
+          setStringInDoc(doc, [...claudeHeaders, 'arch'], values.claudeHeaderArch);
+        }
+        if (dirty('claudeHeaderTimeout')) {
+          setStringInDoc(doc, [...claudeHeaders, 'timeout'], values.claudeHeaderTimeout);
+        }
+        if (dirty('claudeHeaderStabilizeDeviceProfile')) {
+          setBooleanInDoc(
+            doc,
+            [...claudeHeaders, 'stabilize-device-profile'],
+            values.claudeHeaderStabilizeDeviceProfile
+          );
         }
 
-        if (dirtyFields.has('codexIdentityConfuse')) {
-          ensureMapInDoc(doc, ['codex']);
-          setBooleanInDoc(doc, ['codex', 'identity-confuse'], values.codexIdentityConfuse);
-          deleteIfMapEmpty(doc, ['codex']);
+        const codexHeaders = ['oauth', 'providers', 'codex', 'header-defaults'];
+        if (dirty('codexHeaderUserAgent')) {
+          setStringInDoc(doc, [...codexHeaders, 'user-agent'], values.codexHeaderUserAgent);
+        }
+        if (dirty('codexHeaderBetaFeatures')) {
+          setStringInDoc(doc, [...codexHeaders, 'beta-features'], values.codexHeaderBetaFeatures);
+        }
+        if (dirty('codexIdentityConfuse')) {
+          setBooleanInDoc(
+            doc,
+            ['oauth', 'providers', 'codex', 'identity-confuse'],
+            values.codexIdentityConfuse
+          );
         }
 
-        const quotaDirty =
-          dirtyFields.has('quotaSwitchProject') ||
-          dirtyFields.has('quotaSwitchPreviewModel') ||
-          dirtyFields.has('quotaAntigravityCredits');
-        if (quotaDirty) {
-          ensureMapInDoc(doc, ['quota-exceeded']);
-          if (dirtyFields.has('quotaSwitchProject')) {
-            doc.setIn(['quota-exceeded', 'switch-project'], values.quotaSwitchProject);
-          }
-          if (dirtyFields.has('quotaSwitchPreviewModel')) {
-            doc.setIn(['quota-exceeded', 'switch-preview-model'], values.quotaSwitchPreviewModel);
-          }
-          if (dirtyFields.has('quotaAntigravityCredits')) {
-            doc.setIn(['quota-exceeded', 'antigravity-credits'], values.quotaAntigravityCredits);
-          }
-          deleteIfMapEmpty(doc, ['quota-exceeded']);
+        if (dirty('streaming.keepaliveSeconds')) {
+          setIntFromStringInDoc(
+            doc,
+            ['requests', 'streaming', 'keepalive-seconds'],
+            values.streaming.keepaliveSeconds
+          );
         }
-
-        const routingDirty =
-          dirtyFields.has('routingStrategy') ||
-          dirtyFields.has('routingSessionAffinity') ||
-          dirtyFields.has('routingSessionAffinityTTL');
-        if (routingDirty) {
-          ensureMapInDoc(doc, ['routing']);
-          if (dirtyFields.has('routingStrategy')) {
-            doc.setIn(['routing', 'strategy'], values.routingStrategy);
-          }
-          if (dirtyFields.has('routingSessionAffinity')) {
-            setBooleanInDoc(doc, ['routing', 'session-affinity'], values.routingSessionAffinity);
-          }
-          if (dirtyFields.has('routingSessionAffinityTTL')) {
-            setStringInDoc(
-              doc,
-              ['routing', 'session-affinity-ttl'],
-              values.routingSessionAffinityTTL
-            );
-          }
-          deleteIfMapEmpty(doc, ['routing']);
+        if (dirty('streaming.bootstrapRetries')) {
+          setIntFromStringInDoc(
+            doc,
+            ['requests', 'streaming', 'bootstrap-retries'],
+            values.streaming.bootstrapRetries
+          );
         }
-
-        const keepaliveSeconds =
-          typeof values.streaming?.keepaliveSeconds === 'string'
-            ? values.streaming.keepaliveSeconds
-            : '';
-        const bootstrapRetries =
-          typeof values.streaming?.bootstrapRetries === 'string'
-            ? values.streaming.bootstrapRetries
-            : '';
-        const nonstreamKeepaliveInterval =
-          typeof values.streaming?.nonstreamKeepaliveInterval === 'string'
-            ? values.streaming.nonstreamKeepaliveInterval
-            : '';
-
-        const streamingDirty =
-          dirtyFields.has('streaming.keepaliveSeconds') ||
-          dirtyFields.has('streaming.bootstrapRetries');
-        if (streamingDirty) {
-          ensureMapInDoc(doc, ['streaming']);
-          if (dirtyFields.has('streaming.keepaliveSeconds')) {
-            setIntFromStringInDoc(doc, ['streaming', 'keepalive-seconds'], keepaliveSeconds);
-          }
-          if (dirtyFields.has('streaming.bootstrapRetries')) {
-            setIntFromStringInDoc(doc, ['streaming', 'bootstrap-retries'], bootstrapRetries);
-          }
-          deleteIfMapEmpty(doc, ['streaming']);
-        }
-
-        if (dirtyFields.has('streaming.nonstreamKeepaliveInterval')) {
-          setIntFromStringInDoc(doc, ['nonstream-keepalive-interval'], nonstreamKeepaliveInterval);
+        if (dirty('streaming.nonstreamKeepaliveInterval')) {
+          setIntFromStringInDoc(
+            doc,
+            ['requests', 'nonstream-keepalive-interval'],
+            values.streaming.nonstreamKeepaliveInterval
+          );
         }
 
         if (hasPayloadDirtyFields(dirtyFields)) {
-          ensureMapInDoc(doc, ['payload']);
-          if (dirtyFields.has('payloadDefaultRules')) {
+          ensureParentMaps(doc, [...PAYLOAD_PATH, 'default']);
+          if (dirty('payloadDefaultRules')) {
             syncPayloadRuleSequence(
               doc,
               'default',
@@ -1788,7 +1714,7 @@ export function useVisualConfig() {
               false
             );
           }
-          if (dirtyFields.has('payloadDefaultRawRules')) {
+          if (dirty('payloadDefaultRawRules')) {
             syncPayloadRuleSequence(
               doc,
               'default-raw',
@@ -1797,7 +1723,7 @@ export function useVisualConfig() {
               true
             );
           }
-          if (dirtyFields.has('payloadOverrideRules')) {
+          if (dirty('payloadOverrideRules')) {
             syncPayloadRuleSequence(
               doc,
               'override',
@@ -1806,7 +1732,7 @@ export function useVisualConfig() {
               false
             );
           }
-          if (dirtyFields.has('payloadOverrideRawRules')) {
+          if (dirty('payloadOverrideRawRules')) {
             syncPayloadRuleSequence(
               doc,
               'override-raw',
@@ -1815,14 +1741,14 @@ export function useVisualConfig() {
               true
             );
           }
-          if (dirtyFields.has('payloadFilterRules')) {
+          if (dirty('payloadFilterRules')) {
             syncPayloadFilterSequence(
               doc,
               baselineValues.payloadFilterRules,
               values.payloadFilterRules
             );
           }
-          deleteIfMapEmpty(doc, ['payload']);
+          pruneEmptyParents(doc, [...PAYLOAD_PATH, 'default']);
         }
 
         return doc.toString({ indent: 2, lineWidth: 120, minContentWidth: 0 });

@@ -11,17 +11,12 @@ import {
   LoggingToFileToggle,
   PortField,
   ProxyUrlField,
-  QuotaSwitchPreviewModelToggle,
-  QuotaSwitchProjectToggle,
 } from '../fields/sharedFields';
 import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.common;
 
-/**
- * 「常用」tab：原简单模式的 8 个高频字段，别名视图（不占分区序号）。
- * 渲染源与正典分区共享（sharedFields），数据同为 useVisualConfig 一份状态。
- */
+/** Common fields share their controls with the canonical sections. */
 export function SectionCommon({
   values,
   validationErrors,
@@ -51,8 +46,6 @@ export function SectionCommon({
         <FieldGrid pairs>
           <DebugToggle values={values} disabled={disabled} onChange={onChange} />
           <LoggingToFileToggle values={values} disabled={disabled} onChange={onChange} />
-          <QuotaSwitchProjectToggle values={values} disabled={disabled} onChange={onChange} />
-          <QuotaSwitchPreviewModelToggle values={values} disabled={disabled} onChange={onChange} />
         </FieldGrid>
       </FieldStack>
     </SectionCard>

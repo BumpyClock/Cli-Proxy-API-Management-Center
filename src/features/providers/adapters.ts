@@ -103,6 +103,7 @@ function providerKeyToResource(
     disabled,
     flags,
     selector,
+    source: config.source,
     raw: config,
   };
 }
@@ -161,6 +162,7 @@ export function openaiToResource(config: OpenAIProviderConfig, index: number): P
     disabled: config.disabled === true,
     flags: {},
     selector: { brand: 'openaiCompatibility', name, index: sourceIndex },
+    source: config.source,
     raw: config,
   };
 }
