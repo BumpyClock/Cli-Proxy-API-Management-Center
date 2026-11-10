@@ -201,8 +201,18 @@ try {
   );
   const mobile = await send('Page.captureScreenshot', { format: 'png' });
   await writeFile(join(output, 'autocomplete-mobile.png'), Buffer.from(mobile.data, 'base64'));
+  await evaluate(`document.getElementById('fixture-model').select()`);
+  await key('Backspace', 8);
+  await waitFor(
+    () =>
+      evaluate(
+        `document.getElementById('fixture-model').value === '' && document.querySelectorAll('[role="option"]').length === 3`
+      ),
+    'unfiltered pointer options'
+  );
+  assert.equal(await evaluate(`document.getElementById('selection').textContent`), '');
   const point = await evaluate(
-    `(() => { const r = document.querySelector('[role="option"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`
+    `(() => { const option = [...document.querySelectorAll('[role="option"]')].find(node => node.textContent === 'Gamma'); const r = option.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`
   );
   await send('Input.dispatchMouseEvent', {
     type: 'mousePressed',
@@ -217,6 +227,8 @@ try {
     ...point,
   });
   await waitFor(() => evaluate(`!document.querySelector('[role="listbox"]')`), 'pointer selection');
+  assert.equal(await evaluate(`document.getElementById('fixture-model').value`), 'Gamma');
+  assert.equal(await evaluate(`document.getElementById('selection').textContent`), 'Gamma');
   assert.equal(await evaluate(`document.activeElement.id`), 'fixture-model');
   await key('ArrowDown', 40);
   await waitFor(() => evaluate(`!!document.querySelector('[role="listbox"]')`), 'menu before Tab');
