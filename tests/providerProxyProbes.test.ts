@@ -9,10 +9,13 @@ import {
   type UseConnectivityTestArgs,
 } from '@/features/providers/sheets/forms/useConnectivityTest';
 import { useModelDiscovery } from '@/features/providers/sheets/forms/useModelDiscovery';
+import { useConfigStore } from '@/stores/useConfigStore';
 
 const mocks: Array<{ mockRestore(): void }> = [];
+const originalConfig = useConfigStore.getState().config;
 afterEach(() => {
   for (const mock of mocks.splice(0)) mock.mockRestore();
+  useConfigStore.setState({ config: originalConfig });
 });
 const response = { status_code: 200, body: { data: [{ id: 'test-model' }] } };
 const success = { statusCode: 200, header: {}, bodyText: '', body: { data: [] } };
@@ -152,7 +155,7 @@ describe('provider probes use editable proxy settings', () => {
     expect(request.mock.calls.map(([payload]) => payload.proxy_url)).toEqual([
       'http://one.test:8080',
       'direct',
-      undefined,
+      'direct',
     ]);
   });
 
@@ -165,6 +168,78 @@ describe('provider probes use editable proxy settings', () => {
       expect(request.mock.calls[0][0].proxy_url).toBe('socks5://proxy.test:1080');
     }
   );
+
+  for (const globalProxy of [' http://global.test:8080 ', undefined]) {
+    const expectedProxy = globalProxy?.trim() || 'direct';
+    for (const brand of ['codex', 'meta', 'xai', 'gemini', 'interactions', 'claude'] as const) {
+      test(`${brand} clearing a saved proxy uses ${expectedProxy} with credential auth`, async () => {
+        useConfigStore.setState({ config: { proxyUrl: globalProxy } });
+        const request = spyOn(apiCallApi, 'request').mockResolvedValue(success);
+        mocks.push(request);
+        const edited = { ...args, brand, proxyUrl: ' ', apiKey: '', authIndex: 'saved-auth' };
+        const connectivity = captureHook(() => useConnectivityTest(edited, messages));
+        if (brand === 'claude') await connectivity.runClaude();
+        else if (brand === 'gemini' || brand === 'interactions') await connectivity.runGemini();
+        else await connectivity.runCodex();
+        await captureHook(() => useModelDiscovery(edited)).fetch();
+        expect(request).toHaveBeenCalledTimes(2);
+        for (const [payload] of request.mock.calls) {
+          expect(payload.proxy_url).toBe(expectedProxy);
+          expect(payload.authIndex).toBe('saved-auth');
+          expect(
+            Object.values(payload.header ?? {}).some((value) => value.includes('$TOKEN$'))
+          ).toBe(true);
+        }
+      });
+    }
+
+    test(`OpenAI blank key proxy uses ${expectedProxy} in tests and discovery retries`, async () => {
+      useConfigStore.setState({ config: { proxyUrl: globalProxy } });
+      const requests: ApiCallRequest[] = [];
+      const request = spyOn(apiCallApi, 'request').mockImplementation(async (payload) => {
+        requests.push(payload);
+        return requests.length === 2 ? { ...success, statusCode: 401 } : success;
+      });
+      mocks.push(request);
+      const edited = {
+        ...args,
+        brand: 'openaiCompatibility' as const,
+        apiKeyEntries: [{ apiKey: '', authIndex: 'saved-auth', proxyUrl: ' ' }],
+      };
+      await captureHook(() => useConnectivityTest(edited, messages)).runOpenAIKey(0);
+      await captureHook(() => useModelDiscovery(edited)).fetch();
+      expect(requests.map((payload) => payload.proxy_url)).toEqual([
+        expectedProxy,
+        expectedProxy,
+        expectedProxy,
+      ]);
+      expect(requests.map((payload) => payload.authIndex)).toEqual([
+        'saved-auth',
+        'saved-auth',
+        undefined,
+      ]);
+    });
+  }
+
+  test('public OpenAI discovery retains the first entry proxy and custom headers', async () => {
+    const requests: ApiCallRequest[] = [];
+    const request = spyOn(apiCallApi, 'request').mockImplementation(async (payload) => {
+      requests.push(payload);
+      return requests.length === 1 ? { ...success, statusCode: 401 } : success;
+    });
+    mocks.push(request);
+    await captureHook(() =>
+      useModelDiscovery({
+        ...args,
+        brand: 'openaiCompatibility',
+        formHeaders: [{ key: 'x-custom-auth', value: 'fixture' }],
+        apiKeyEntries: [{ apiKey: '', proxyUrl: ' direct ' }],
+      })
+    ).fetch();
+    expect(requests.map((payload) => payload.proxy_url)).toEqual(['direct', 'direct']);
+    expect(requests[0].header).toEqual({ 'x-custom-auth': 'fixture' });
+    expect(requests[1].header).toBeUndefined();
+  });
 
   test('unauthenticated OpenAI discovery retry retains the selected key proxy', async () => {
     const requests: ApiCallRequest[] = [];

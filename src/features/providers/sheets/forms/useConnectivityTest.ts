@@ -11,6 +11,7 @@ import {
 } from '@/components/providers/utils';
 import { buildHeaderObject, hasHeader } from '@/utils/headers';
 import { getErrorMessage } from '@/utils/helpers';
+import { resolveProbeProxyUrl } from './probeProxy';
 import type { ApiKeyEntryInput, ModelEntryInput, ProviderBrand } from '../../types';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -241,7 +242,7 @@ export function useConnectivityTest(
         const result = await apiCallApi.request(
           {
             authIndex: resolvedAuthIndex,
-            proxy_url: entry?.proxyUrl?.trim() || undefined,
+            proxy_url: resolveProbeProxyUrl(entry?.proxyUrl),
             method: 'POST',
             url: endpoint,
             header: headerObj,
@@ -340,7 +341,7 @@ export function useConnectivityTest(
       const result = await apiCallApi.request(
         {
           authIndex: resolvedAuthIndex,
-          proxy_url: proxyUrl?.trim() || undefined,
+          proxy_url: resolveProbeProxyUrl(proxyUrl),
           method: 'POST',
           url: endpoint,
           header: headerObj,
@@ -428,7 +429,7 @@ export function useConnectivityTest(
       const result = await apiCallApi.request(
         {
           authIndex: resolvedAuthIndex,
-          proxy_url: proxyUrl?.trim() || undefined,
+          proxy_url: resolveProbeProxyUrl(proxyUrl),
           method: 'POST',
           url: endpoint,
           header: headerObj,
@@ -514,7 +515,7 @@ export function useConnectivityTest(
       const result = await apiCallApi.request(
         {
           authIndex: resolvedAuthIndex,
-          proxy_url: proxyUrl?.trim() || undefined,
+          proxy_url: resolveProbeProxyUrl(proxyUrl),
           method: 'POST',
           url: endpoint,
           header: headerObj,

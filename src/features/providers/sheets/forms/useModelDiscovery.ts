@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { modelsApi } from '@/services/api';
 import { buildHeaderObject } from '@/utils/headers';
 import { getErrorMessage } from '@/utils/helpers';
+import { resolveProbeProxyUrl } from './probeProxy';
 import type { ModelInfo } from '@/utils/models';
 import type { ApiKeyEntryInput, ProviderBrand } from '../../types';
 
@@ -64,6 +65,7 @@ export function useModelDiscovery(args: UseModelDiscoveryArgs): UseModelDiscover
     try {
       const baseHeaders = buildHeaderObject(formHeaders);
       const resolvedAuthIndex = (authIndex ?? '').trim() || undefined;
+      const probeProxyUrl = resolveProbeProxyUrl(proxyUrl);
       let next: ModelInfo[] = [];
       if (brand === 'gemini' || brand === 'interactions') {
         const key = (apiKey ?? '').trim() || (fallbackApiKey ?? '').trim();
@@ -72,7 +74,7 @@ export function useModelDiscovery(args: UseModelDiscoveryArgs): UseModelDiscover
           key,
           baseHeaders,
           resolvedAuthIndex,
-          proxyUrl
+          probeProxyUrl
         );
       } else if (brand === 'codex' || brand === 'meta' || brand === 'xai') {
         const key = (apiKey ?? '').trim() || (fallbackApiKey ?? '').trim();
@@ -81,7 +83,7 @@ export function useModelDiscovery(args: UseModelDiscoveryArgs): UseModelDiscover
           key,
           baseHeaders,
           resolvedAuthIndex,
-          proxyUrl
+          probeProxyUrl
         );
       } else if (brand === 'claude') {
         const key = (apiKey ?? '').trim() || (fallbackApiKey ?? '').trim();
@@ -90,13 +92,18 @@ export function useModelDiscovery(args: UseModelDiscoveryArgs): UseModelDiscover
           key,
           baseHeaders,
           resolvedAuthIndex,
-          proxyUrl
+          probeProxyUrl
         );
       } else if (brand === 'openaiCompatibility') {
-        const firstEntry = (apiKeyEntries ?? []).find(
-          (e) =>
-            (e.apiKey ?? '').trim() || (e.existingApiKey ?? '').trim() || (e.authIndex ?? '').trim()
-        );
+        const entries = apiKeyEntries ?? [];
+        const firstEntry =
+          entries.find(
+            (e) =>
+              (e.apiKey ?? '').trim() ||
+              (e.existingApiKey ?? '').trim() ||
+              (e.authIndex ?? '').trim()
+          ) ?? entries[0];
+        const entryProxyUrl = resolveProbeProxyUrl(firstEntry?.proxyUrl);
         const entryKey =
           (firstEntry?.apiKey ?? '').trim() || (firstEntry?.existingApiKey ?? '').trim();
         const entryAuthIndex = (firstEntry?.authIndex ?? '').trim() || resolvedAuthIndex;
@@ -106,7 +113,7 @@ export function useModelDiscovery(args: UseModelDiscoveryArgs): UseModelDiscover
             entryKey,
             baseHeaders,
             entryAuthIndex,
-            firstEntry?.proxyUrl
+            entryProxyUrl
           );
         } catch (firstErr) {
           // Some OpenAI-compatible endpoints expose /models without auth, or
@@ -118,7 +125,7 @@ export function useModelDiscovery(args: UseModelDiscoveryArgs): UseModelDiscover
               undefined,
               undefined,
               undefined,
-              firstEntry?.proxyUrl
+              entryProxyUrl
             );
           } catch {
             throw firstErr;
