@@ -32,6 +32,12 @@ export interface AuthFileCooldown {
   httpStatus?: number;
 }
 
+export interface AuthFileCooldownResetResponse {
+  status: string;
+  auth_index: string;
+  models: string[];
+}
+
 export interface AuthFileCooldownSnapshot {
   /** Server observation time, not the start of the cooldown. */
   observedAt?: string;

@@ -61,11 +61,13 @@ export type AuthFileCardProps = {
   deleting: string | null;
   statusUpdating: Record<string, boolean>;
   manualRefreshing: Record<string, boolean>;
+  cooldownResetting: Record<string, boolean>;
   quotaFilterType: AuthFileQuotaFilter;
   statusBarCache: Map<string, AuthFileStatusBarData>;
   onShowModels: (file: AuthFileItem) => void;
   onDownload: (name: string) => void;
   onManualRefresh: (file: AuthFileItem) => void;
+  onCooldownReset: (file: AuthFileItem) => void;
   onOpenPrefixProxyEditor: (file: AuthFileItem) => void;
   onDelete: (name: string) => void;
   onToggleStatus: (file: AuthFileItem, enabled: boolean) => void;
@@ -88,11 +90,13 @@ export function AuthFileCard(props: AuthFileCardProps) {
     deleting,
     statusUpdating,
     manualRefreshing,
+    cooldownResetting,
     quotaFilterType,
     statusBarCache,
     onShowModels,
     onDownload,
     onManualRefresh,
+    onCooldownReset,
     onOpenPrefixProxyEditor,
     onDelete,
     onToggleStatus,
@@ -470,7 +474,14 @@ export function AuthFileCard(props: AuthFileCardProps) {
           </button>
         )}
 
-        <AuthFileCooldownSection snapshot={file.cooldownSnapshot} />
+        <AuthFileCooldownSection
+          snapshot={file.cooldownSnapshot}
+          resetting={Boolean(authIndexKey && cooldownResetting[authIndexKey])}
+          resetDisabled={
+            disableControls || statusUpdating[file.name] === true || isManualRefreshing
+          }
+          onReset={authIndexKey ? () => onCooldownReset(file) : undefined}
+        />
         {/* Cards keep freshness visible; the desktop table has its own Updated column. */}
         {modified && (
           <p className={styles.cardUpdated}>

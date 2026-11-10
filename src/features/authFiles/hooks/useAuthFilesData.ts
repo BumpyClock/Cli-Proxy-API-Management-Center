@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { authFilesApi } from '@/services/api';
+import { apiClient, authFilesApi } from '@/services/api';
 import { notifyAuthFilesChanged } from '@/features/authFiles/authFilesEvents';
 import { useNotificationStore } from '@/stores';
 import type { AuthFileItem } from '@/types';
@@ -48,6 +48,7 @@ export type UseAuthFilesDataResult = {
   deletingAll: boolean;
   statusUpdating: Record<string, boolean>;
   manualRefreshing: Record<string, boolean>;
+  cooldownResetting: Record<string, boolean>;
   batchStatusUpdating: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
   loadFiles: (options?: LoadFilesOptions) => Promise<void>;
@@ -57,6 +58,7 @@ export type UseAuthFilesDataResult = {
   handleDeleteAll: (options: DeleteAllOptions) => void;
   handleDownload: (name: string) => Promise<void>;
   handleManualRefresh: (item: AuthFileItem) => Promise<void>;
+  handleCooldownReset: (item: AuthFileItem) => void;
   handleStatusToggle: (item: AuthFileItem, enabled: boolean) => Promise<void>;
   toggleSelect: (name: string) => void;
   selectAllVisible: (visibleFiles: AuthFileItem[]) => void;
@@ -81,12 +83,14 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
   const [deletingAll, setDeletingAll] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>({});
   const [manualRefreshing, setManualRefreshing] = useState<Record<string, boolean>>({});
+  const [cooldownResetting, setCooldownResetting] = useState<Record<string, boolean>>({});
   const [batchStatusUpdating, setBatchStatusUpdating] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const uploadPendingRef = useRef(false);
   const manualRefreshPendingRef = useRef<Set<string>>(new Set());
+  const cooldownResetPendingRef = useRef<Set<string>>(new Set());
   const batchStatusPendingRef = useRef(false);
   /** 列表请求代号：变更操作会使在途响应过期，防止旧轮询复活已删/已改文件。 */
   const loadRequestIdRef = useRef(0);
@@ -147,28 +151,31 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
     setSelectedFiles(new Set());
   }, []);
 
-  const applyDeletedFiles = useCallback((names: string[]) => {
-    const deletedNames = Array.from(new Set(names.map((name) => name.trim()).filter(Boolean)));
-    if (deletedNames.length === 0) return;
+  const applyDeletedFiles = useCallback(
+    (names: string[]) => {
+      const deletedNames = Array.from(new Set(names.map((name) => name.trim()).filter(Boolean)));
+      if (deletedNames.length === 0) return;
 
-    invalidateInFlightLoads();
-    onFilesMutatedRef.current?.(deletedNames);
-    const deletedSet = new Set(deletedNames);
-    setFiles((prev) => prev.filter((file) => !deletedSet.has(file.name)));
-    setSelectedFiles((prev) => {
-      if (prev.size === 0) return prev;
-      let changed = false;
-      const next = new Set<string>();
-      prev.forEach((name) => {
-        if (deletedSet.has(name)) {
-          changed = true;
-        } else {
-          next.add(name);
-        }
+      invalidateInFlightLoads();
+      onFilesMutatedRef.current?.(deletedNames);
+      const deletedSet = new Set(deletedNames);
+      setFiles((prev) => prev.filter((file) => !deletedSet.has(file.name)));
+      setSelectedFiles((prev) => {
+        if (prev.size === 0) return prev;
+        let changed = false;
+        const next = new Set<string>();
+        prev.forEach((name) => {
+          if (deletedSet.has(name)) {
+            changed = true;
+          } else {
+            next.add(name);
+          }
+        });
+        return changed ? next : prev;
       });
-      return changed ? next : prev;
-    });
-  }, [invalidateInFlightLoads]);
+    },
+    [invalidateInFlightLoads]
+  );
 
   useEffect(() => {
     if (selectedFiles.size === 0) return;
@@ -465,7 +472,15 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
         },
       });
     },
-    [applyDeletedFiles, deselectAll, files, invalidateInFlightLoads, showConfirmation, showNotification, t]
+    [
+      applyDeletedFiles,
+      deselectAll,
+      files,
+      invalidateInFlightLoads,
+      showConfirmation,
+      showNotification,
+      t,
+    ]
   );
 
   const handleDownload = useCallback(
@@ -518,6 +533,61 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
       }
     },
     [showNotification, t]
+  );
+
+  const handleCooldownReset = useCallback(
+    (item: AuthFileItem) => {
+      const authIndex = String(item.authIndex ?? '').trim();
+      if (
+        !authIndex ||
+        !item.cooldownSnapshot?.records?.length ||
+        cooldownResetPendingRef.current.has(authIndex)
+      )
+        return;
+
+      const revision = apiClient.getConnectionRevision();
+      showConfirmation({
+        title: t('auth_files.cooldown_reset_title'),
+        message: t('auth_files.cooldown_reset_confirm', { name: item.name }),
+        confirmText: t('auth_files.cooldown_reset_button'),
+        variant: 'primary',
+        onConfirm: async () => {
+          if (
+            revision !== apiClient.getConnectionRevision() ||
+            cooldownResetPendingRef.current.has(authIndex)
+          )
+            return;
+          cooldownResetPendingRef.current.add(authIndex);
+          setCooldownResetting((prev) => ({ ...prev, [authIndex]: true }));
+          try {
+            await authFilesApi.resetCooldown(authIndex);
+            if (revision !== apiClient.getConnectionRevision()) return;
+            invalidateInFlightLoads();
+            onFilesMutatedRef.current?.([item.name]);
+            showNotification(
+              t('auth_files.cooldown_reset_success', { name: item.name }),
+              'success'
+            );
+            await loadFiles({ background: true });
+          } catch (err: unknown) {
+            if (revision !== apiClient.getConnectionRevision()) return;
+            const message = err instanceof Error ? err.message : t('notification.update_failed');
+            showNotification(
+              t('auth_files.cooldown_reset_failed', { name: item.name, message }),
+              'error'
+            );
+          } finally {
+            cooldownResetPendingRef.current.delete(authIndex);
+            setCooldownResetting((prev) => {
+              const next = { ...prev };
+              delete next[authIndex];
+              return next;
+            });
+          }
+        },
+      });
+    },
+    [invalidateInFlightLoads, loadFiles, showConfirmation, showNotification, t]
   );
 
   const handleStatusToggle = useCallback(
@@ -746,6 +816,7 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
     deletingAll,
     statusUpdating,
     manualRefreshing,
+    cooldownResetting,
     batchStatusUpdating,
     fileInputRef,
     loadFiles,
@@ -755,6 +826,7 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
     handleDeleteAll,
     handleDownload,
     handleManualRefresh,
+    handleCooldownReset,
     handleStatusToggle,
     toggleSelect,
     selectAllVisible,

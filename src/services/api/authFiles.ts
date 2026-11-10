@@ -3,7 +3,7 @@
  */
 
 import { apiClient } from './client';
-import type { AuthFilesResponse } from '@/types/authFile';
+import type { AuthFileCooldownResetResponse, AuthFilesResponse } from '@/types/authFile';
 import type { OAuthModelAliasEntry } from '@/types';
 import { normalizeOAuthProviderKey } from '@/utils/providerKeys';
 import { getQuotaCacheKey } from '@/utils/quota/identity';
@@ -13,6 +13,7 @@ import {
   normalizeUsageTotal,
 } from '@/utils/recentRequests';
 import { parseTimestampMs } from '@/utils/timestamp';
+import { isRecord } from '@/utils/helpers';
 import { normalizeAuthFileCooldowns, normalizeCooldownTimestamp } from './authFileCooldowns';
 
 type StatusError = { status?: number };
@@ -453,6 +454,20 @@ export const authFilesApi = {
 
   patchFields: (name: string, fields: AuthFileFieldsPatch) =>
     apiClient.patch('/auth-files/fields', { name, ...fields }),
+
+  async resetCooldown(authIndex: string): Promise<AuthFileCooldownResetResponse> {
+    const result = await apiClient.post<unknown>('/reset-quota', { auth_index: authIndex });
+    if (!isRecord(result) || result.status !== 'ok' || result.auth_index !== authIndex) {
+      throw new Error('Cooldown reset was not confirmed by the gateway');
+    }
+    return {
+      status: result.status,
+      auth_index: result.auth_index,
+      models: Array.isArray(result.models)
+        ? result.models.filter((model): model is string => typeof model === 'string')
+        : [],
+    };
+  },
 
   requestManualRefresh: async (name: string, authIndex?: string): Promise<void> => {
     // v7.3.0 returns the complete Auth (including tokens). Never return it to callers.
