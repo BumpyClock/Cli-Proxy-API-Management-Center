@@ -10,34 +10,8 @@ const chrome =
   (process.platform === 'darwin'
     ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     : 'chromium');
-const reservation = Bun.serve({ port: 0, fetch: () => new Response('reserved') });
-const port = reservation.port;
-reservation.stop(true);
-const vite = Bun.spawn(
-  [
-    process.execPath,
-    'node_modules/vite/bin/vite.js',
-    '--host',
-    '127.0.0.1',
-    '--port',
-    String(port),
-    '--strictPort',
-  ],
-  { stdout: 'ignore', stderr: 'ignore' }
-);
-const browser = Bun.spawn(
-  [
-    chrome,
-    '--headless=new',
-    '--disable-gpu',
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--remote-debugging-port=0',
-    `--user-data-dir=${profile}`,
-    'about:blank',
-  ],
-  { stdout: 'ignore', stderr: 'ignore' }
-);
+let vite;
+let browser;
 let socket;
 let failureDetails;
 async function waitFor(read, description) {
@@ -52,6 +26,34 @@ async function waitFor(read, description) {
   throw new Error(`Timed out waiting for ${description}`);
 }
 try {
+  const reservation = Bun.serve({ port: 0, fetch: () => new Response('reserved') });
+  const port = reservation.port;
+  reservation.stop(true);
+  vite = Bun.spawn(
+    [
+      process.execPath,
+      'node_modules/vite/bin/vite.js',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      String(port),
+      '--strictPort',
+    ],
+    { stdout: 'ignore', stderr: 'ignore' }
+  );
+  browser = Bun.spawn(
+    [
+      chrome,
+      '--headless=new',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--remote-debugging-port=0',
+      `--user-data-dir=${profile}`,
+      'about:blank',
+    ],
+    { stdout: 'ignore', stderr: 'ignore' }
+  );
   await mkdir(output, { recursive: true });
   const debugPort = await waitFor(
     async () =>
@@ -136,6 +138,25 @@ try {
   assert.equal(await evaluate('document.hasFocus()'), true);
   await evaluate(`document.getElementById('fixture-model').focus()`);
   await waitFor(() => evaluate(`!!document.querySelector('[role="listbox"]')`), 'dropdown');
+  const scrollWork = await evaluate(`(async () => {
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const wrapper = document.getElementById('fixture-model').parentElement;
+    const original = wrapper.getBoundingClientRect;
+    let reads = 0;
+    wrapper.getBoundingClientRect = function () { reads++; return original.call(this); };
+    try {
+      document.querySelector('[role="listbox"]').dispatchEvent(new Event('scroll'));
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const internal = reads;
+      window.dispatchEvent(new Event('scroll'));
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      return { internal, external: reads - internal };
+    } finally {
+      wrapper.getBoundingClientRect = original;
+    }
+  })()`);
+  assert.equal(scrollWork.internal, 0, 'Menu scrolling must not reposition its stationary anchor');
+  assert(scrollWork.external > 0, 'Viewport scrolling must still reposition the menu');
   const placement = await evaluate(`(() => {
     const menu = document.querySelector('[role="listbox"]');
     const bounds = menu.getBoundingClientRect();
@@ -277,8 +298,8 @@ try {
   throw error;
 } finally {
   socket?.close();
-  browser.kill();
-  vite.kill();
-  await Promise.allSettled([browser.exited, vite.exited]);
+  browser?.kill();
+  vite?.kill();
+  await Promise.allSettled([browser?.exited, vite?.exited]);
   await rm(profile, { recursive: true, force: true });
 }

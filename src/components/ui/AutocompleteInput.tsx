@@ -99,12 +99,16 @@ export function AutocompleteInput({
     position();
     const observer = new ResizeObserver(position);
     observer.observe(inputWrapRef.current);
+    const onScroll = (event: Event) => {
+      if (event.target instanceof Node && dropdownRef.current?.contains(event.target)) return;
+      position();
+    };
     window.addEventListener('resize', position);
-    window.addEventListener('scroll', position, true);
+    window.addEventListener('scroll', onScroll, true);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', position);
-      window.removeEventListener('scroll', position, true);
+      window.removeEventListener('scroll', onScroll, true);
     };
   }, [showDropdown]);
 
