@@ -481,20 +481,8 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
     setIsFetching(true);
     setErrorMessage(null);
     try {
-      const [configResult, vertexResult, openaiResult] = await Promise.allSettled([
-        fetchConfig(true),
-        providersApi.getVertexConfigs(),
-        providersApi.getOpenAIProviders(),
-      ]);
-      if (configResult.status !== 'fulfilled') {
-        throw configResult.reason;
-      }
-      if (vertexResult.status === 'fulfilled') {
-        updateConfigValue('vertex-api-key', vertexResult.value || []);
-      }
-      if (openaiResult.status === 'fulfilled') {
-        updateConfigValue('openai-compatibility', openaiResult.value || []);
-      }
+      // The config store owns full snapshots and discards superseded requests.
+      await fetchConfig(true);
       setFetchedAt(new Date().toISOString());
     } catch (err) {
       setErrorMessage(getErrorMessage(err) || 'Failed to load providers');
@@ -502,7 +490,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
       setIsPending(false);
       setIsFetching(false);
     }
-  }, [fetchConfig, updateConfigValue]);
+  }, [fetchConfig]);
 
   const refreshSnapshot = useCallback(() => {
     setFetchedAt(new Date().toISOString());
