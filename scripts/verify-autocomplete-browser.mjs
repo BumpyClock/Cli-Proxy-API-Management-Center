@@ -338,7 +338,11 @@ try {
     )
   );
 } catch (error) {
-  await failureDetails?.();
+  try {
+    await failureDetails?.();
+  } catch (diagnosticError) {
+    console.error('Failure diagnostics unavailable:', diagnosticError);
+  }
   throw error;
 } finally {
   socket?.close();
