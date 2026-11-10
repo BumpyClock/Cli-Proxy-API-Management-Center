@@ -11,6 +11,7 @@ import type {
   ClaudeProfileResponse,
   ClaudeQuotaState,
   ClaudeQuotaWindow,
+  ClaudeUsageWindow,
   ClaudeUsagePayload,
 } from '@/types';
 import { apiCallApi, getApiCallErrorMessage } from '@/services/api';
@@ -65,26 +66,28 @@ export const buildClaudeQuotaWindows = (
   const fableLimit = findFableUsageLimit(payload);
 
   for (const { key, id, labelKey } of CLAUDE_USAGE_WINDOW_KEYS) {
-    if (
-      (key === 'iguana_necktie' && fableLimit) ||
-      dollarWindows.some((balance) => balance.key === key)
-    )
-      continue;
+    if (dollarWindows.some((balance) => balance.key === key)) continue;
     const window = payload[key as keyof ClaudeUsagePayload];
     if (!window || typeof window !== 'object' || !('utilization' in window)) continue;
-    const typedWindow = window as { utilization: number; resets_at: string | null };
+    const typedWindow = window as ClaudeUsageWindow;
+    const isCreditPool =
+      key === 'iguana_necktie' &&
+      [typedWindow.limit_dollars, typedWindow.used_dollars, typedWindow.remaining_dollars].some(
+        (value) => normalizeNumberValue(value) !== null
+      );
+    if (key === 'iguana_necktie' && fableLimit && !isCreditPool) continue;
+    const windowLabelKey = isCreditPool ? 'claude_quota.cloud_session_credits' : labelKey;
     const usedPercent = normalizeNumberValue(typedWindow.utilization);
     const resetLabel = formatQuotaResetTime(typedWindow.resets_at ?? undefined);
     windows.push({
-      id,
-      label: t(labelKey),
-      labelKey,
+      id: isCreditPool ? 'cloud-session-credits' : id,
+      label: t(windowLabelKey),
+      labelKey: windowLabelKey,
       usedPercent,
       resetLabel,
-      // Claude states the period nowhere in the payload, so it comes from the
-      // key: `five_hour` is the rolling window, everything else is weekly.
       resetAtMs: resolveResetMs([typedWindow.resets_at]),
-      periodHours: claudePeriodHours(key),
+      // Credit pools report a reset but do not promise a recurring allowance period.
+      periodHours: isCreditPool ? null : claudePeriodHours(key),
     });
   }
 
