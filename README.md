@@ -112,7 +112,7 @@ Run `bun run dev` and, in another terminal, `bun tests/fixtures/quotaPreview.ts`
 
 ### Autocomplete browser verification
 
-Run `bun scripts/verify-autocomplete-browser.mjs`. The script starts isolated Vite and headless Chrome processes, checks clipped-container and sheet dropdowns, desktop/mobile bounds, keyboard and pointer selection, valid active-option references after filtering, chevron dismissal without losing input focus, Escape and Tab, then stops both processes. It uses mock options only. Set `CHROME_PATH` when Chrome is not at the macOS default path or `chromium` is not on PATH. Screenshots are written to `docs/screenshots/upstream-backports`.
+Run `PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs bun scripts/verify-autocomplete-browser.mjs`. Like the other browser checks, it uses Playwright to own Chrome, input handling and browser cleanup. The script starts isolated Vite, checks clipped-container and sheet dropdowns, desktop/mobile bounds, keyboard and distinct pointer selection, valid active-option references after filtering, chevron dismissal without losing input focus, Escape and Tab, then stops Vite and the browser. It uses mock options only. Set `CHROME_PATH` (or `CHROME_EXECUTABLE`) for a non-default Chrome installation; on Linux, point it to system Chromium or use a browser installed for Playwright. Screenshots are written to `docs/screenshots/upstream-backports`.
 
 ## Tech Stack
 
