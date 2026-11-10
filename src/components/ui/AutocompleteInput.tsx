@@ -157,7 +157,7 @@ export function AutocompleteInput({
         e.preventDefault();
         setIsOpen(false);
       }
-    } else if (e.key === 'Escape' && isOpen) {
+    } else if (e.key === 'Escape' && showDropdown) {
       e.preventDefault();
       e.stopPropagation();
       setIsOpen(false);

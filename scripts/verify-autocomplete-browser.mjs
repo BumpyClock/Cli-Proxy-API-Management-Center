@@ -234,10 +234,34 @@ try {
   assert.equal(await evaluate(`!!document.querySelector('[role="dialog"]')`), true);
   await key('Escape', 27);
   await waitFor(() => evaluate(`!document.querySelector('[role="dialog"]')`), 'sheet dismissal');
+  for (const scenario of ['no-options', 'no-match']) {
+    await send('Page.navigate', {
+      url: `http://127.0.0.1:${port}/tests/fixtures/autocompletePreview.html?sheet=1&${scenario}=1`,
+    });
+    await waitFor(
+      () =>
+        evaluate(
+          `!!document.querySelector('[role="dialog"]') && !!document.getElementById('fixture-model')`
+        ),
+      scenario
+    );
+    await evaluate(
+      `Promise.all(document.getAnimations().filter((animation) => animation.effect.getTiming().iterations !== Infinity).map((animation) => animation.finished))`
+    );
+    await send('Page.bringToFront');
+    await evaluate(`document.getElementById('fixture-model').focus()`);
+    assert.equal(await evaluate(`!!document.querySelector('[role="listbox"]')`), false);
+    await key('Escape', 27);
+    await waitFor(
+      () => evaluate(`!document.querySelector('[role="dialog"]')`),
+      `${scenario} Escape`
+    );
+  }
   console.log(
     JSON.stringify(
       {
         sheet: 'passed',
+        emptyMenuEscape: 'passed',
         desktop: 'passed',
         mobile: 'passed',
         keyboard: 'passed',

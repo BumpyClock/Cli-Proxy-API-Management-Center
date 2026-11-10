@@ -30,8 +30,9 @@
       import { Sheet } from '/src/components/ui/Sheet/Sheet.tsx';
       import '/src/i18n/index.ts';
       import '/src/styles/global.scss';
+      const params = new URLSearchParams(location.search);
       function Fixture() {
-        const [value, setValue] = React.useState('');
+        const [value, setValue] = React.useState(params.has('no-match') ? 'No matching model' : '');
         const [open, setOpen] = React.useState(true);
         const control = React.createElement(AutocompleteInput, {
           id: 'fixture-model',
@@ -41,10 +42,10 @@
             setValue(next);
             document.querySelector('#selection').textContent = next;
           },
-          options: ['Alpha', 'Beta', 'Gamma'],
+          options: params.has('no-options') ? [] : ['Alpha', 'Beta', 'Gamma'],
           ariaDescribedBy: 'fixture-help',
         });
-        return new URLSearchParams(location.search).has('sheet')
+        return params.has('sheet')
           ? React.createElement(
               Sheet,
               { open, title: 'Fixture provider editor', onClose: () => setOpen(false) },
