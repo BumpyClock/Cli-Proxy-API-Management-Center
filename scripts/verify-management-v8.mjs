@@ -80,12 +80,12 @@ try {
     baseUrl: 'https://provider.invalid/v1',
     apiKeyEntries: [{ apiKey: 'cpamc-smoke-upstream' }],
   });
-  let compat = (await providersApi.getOpenAIProviders())[0];
-  await providersApi.updateOpenAIProvider(compat.name, 0, { ...compat, priority: 2 });
-  compat = (await providersApi.getOpenAIProviders())[0];
+  let compat = (await configApi.getConfig()).openaiCompatibility[0];
+  await providersApi.updateOpenAIProvider(compat.name, { ...compat, priority: 2 });
+  compat = (await configApi.getConfig()).openaiCompatibility[0];
   assert.equal(compat.priority, 2);
-  await providersApi.deleteOpenAIProvider(0, compat.source);
-  assert.equal((await providersApi.getOpenAIProviders()).length, 0);
+  await providersApi.deleteOpenAIProvider(compat.source);
+  assert.equal((await configApi.getConfig()).openaiCompatibility.length, 0);
   passed('native provider-group creation, editing and removal');
 
   await authFilesApi.saveOauthExcludedModels('claude', ['cpamc-smoke-model']);

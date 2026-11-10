@@ -1,5 +1,41 @@
 import { expect, test } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import ts from 'typescript';
+import { providersApi } from '@/services/api/providers';
+
+test('verification scripts call existing provider APIs', async () => {
+  const root = resolve(import.meta.dir, '../scripts');
+  let checked = 0;
+  for await (const path of new Bun.Glob('**/*.mjs').scan(root)) {
+    const source = ts.createSourceFile(
+      path,
+      await readFile(resolve(root, path), 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.JS
+    );
+    const visit = (node: ts.Node) => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === 'providersApi'
+      ) {
+        const method = node.expression.name.text;
+        expect({ path, method, exists: Object.hasOwn(providersApi, method) }).toEqual({
+          path,
+          method,
+          exists: true,
+        });
+        checked += 1;
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  }
+  expect(checked).toBeGreaterThan(0);
+});
 
 for (const optedIn of [false, true]) {
   test(`native smoke refuses non-fixture writes (opt-in=${optedIn})`, async () => {
