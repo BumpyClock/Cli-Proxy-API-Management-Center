@@ -22,11 +22,19 @@ const WINDOW_KEYS = new Map<string, string>([
 ]);
 const normalize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, ' ');
 
-export function resolveAntigravityBucketLabelKey(label: string, window?: string): string | null {
+function resolveAntigravityBucketPeriodKey(label: string, window?: string): string | null {
   const normalized = normalize(label)
     .replace(/\s*(?:-|:)?\s*remaining$/, '')
     .trim();
   return LABEL_KEYS.get(normalized) ?? (window ? WINDOW_KEYS.get(normalize(window)) : null) ?? null;
+}
+
+export function resolveAntigravityBucketLabelKey(
+  bucket: Pick<AntigravityQuotaBucket, 'id' | 'label' | 'window'>
+): string | null {
+  const fallbackWindow =
+    !bucket.label.trim() || bucket.label === bucket.id ? bucket.window : undefined;
+  return resolveAntigravityBucketPeriodKey(bucket.label, fallbackWindow);
 }
 
 type Bucket = Pick<AntigravityQuotaBucket, 'label' | 'window' | 'remainingFraction'>;
@@ -36,12 +44,12 @@ export function shouldShowAntigravityQuotaAvailable(
   group: readonly Bucket[]
 ): boolean {
   if (bucket.remainingFraction !== 1) return false;
-  if (resolveAntigravityBucketLabelKey(bucket.label, bucket.window) !== 'five_hour_limit')
+  if (resolveAntigravityBucketPeriodKey(bucket.label, bucket.window) !== 'five_hour_limit')
     return true;
   // A full short window is still blocked when its shared weekly allowance is exhausted.
   return !group.some(
     (item) =>
-      resolveAntigravityBucketLabelKey(item.label, item.window) === 'weekly_limit' &&
+      resolveAntigravityBucketPeriodKey(item.label, item.window) === 'weekly_limit' &&
       item.remainingFraction <= 0
   );
 }

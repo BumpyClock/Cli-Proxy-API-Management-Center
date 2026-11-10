@@ -186,10 +186,7 @@ export function AntigravityQuotaBody({ quota, classes }: QuotaBodyProps<Antigrav
                       percent: Math.round(percent),
                     });
                 const resetLabel = formatAntigravityResetLabel(bucket.resetTime, t, nowMs);
-                const bucketLabelKey = resolveAntigravityBucketLabelKey(
-                  bucket.label,
-                  bucket.window
-                );
+                const bucketLabelKey = resolveAntigravityBucketLabelKey(bucket);
                 const bucketLabel = bucketLabelKey
                   ? t(`antigravity_quota.${bucketLabelKey}`)
                   : bucket.label;

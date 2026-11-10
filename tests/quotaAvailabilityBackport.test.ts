@@ -6,6 +6,7 @@ import { AntigravityQuotaBody } from '@/features/quota/providers/antigravity/Ant
 import { buildClaudeQuotaWindows, CLAUDE_CONFIG } from '@/features/quota/providers/claude/data';
 import { normalizeClaudeUsageSnapshot } from '@/services/api/claudeUsage';
 import { bindQuotaClasses, QUOTA_CLASS_KEYS } from '@/features/quota/types';
+import { buildAntigravityQuotaGroups } from '@/utils/quota/builders';
 import type { TFunction } from 'i18next';
 import type { ClaudeUsagePayload } from '@/types';
 
@@ -44,6 +45,70 @@ describe('Antigravity quota availability', () => {
   test('does not promise availability when weekly quota is exhausted', () => {
     expect(antigravity(0)).not.toContain(i18n.t('antigravity_quota.quota_available'));
     expect(antigravity(0.5)).toContain(i18n.t('antigravity_quota.quota_available'));
+  });
+
+  test('preserves named buckets while classifying availability by their windows', () => {
+    const groups = buildAntigravityQuotaGroups({
+      groups: [
+        {
+          displayName: 'Gemini Models',
+          buckets: [
+            {
+              bucketId: 'pro-weekly',
+              displayName: 'Gemini Pro',
+              window: 'weekly',
+              remainingFraction: 0,
+            },
+            {
+              bucketId: 'flash-weekly',
+              displayName: 'Gemini Flash',
+              window: 'weekly',
+              remainingFraction: 0.5,
+            },
+            {
+              bucketId: 'pro-short',
+              displayName: 'Gemini Pro short',
+              window: '5h',
+              remainingFraction: 1,
+            },
+          ],
+        },
+      ],
+    });
+    const markup = renderToStaticMarkup(
+      createElement(AntigravityQuotaBody, {
+        classes,
+        quota: { status: 'success', groups },
+      })
+    );
+    for (const name of ['Gemini Pro', 'Gemini Flash', 'Gemini Pro short']) {
+      expect(markup).toContain(`>${name}</span>`);
+    }
+    expect(markup).not.toContain(i18n.t('antigravity_quota.quota_available'));
+  });
+
+  test('uses window labels when the builder falls back to bucket IDs', () => {
+    const groups = buildAntigravityQuotaGroups({
+      groups: [
+        {
+          displayName: 'Gemini Models',
+          buckets: [
+            { bucketId: 'opaque-weekly', window: 'weekly', remainingFraction: 0.5 },
+            { bucketId: 'opaque-short', window: '5h', remainingFraction: 1 },
+          ],
+        },
+      ],
+    });
+    const markup = renderToStaticMarkup(
+      createElement(AntigravityQuotaBody, {
+        classes,
+        quota: { status: 'success', groups },
+      })
+    );
+    expect(markup).toContain(i18n.t('antigravity_quota.weekly_limit'));
+    expect(markup).toContain(i18n.t('antigravity_quota.five_hour_limit'));
+    expect(markup).not.toContain('opaque-');
+    expect(markup).toContain(i18n.t('antigravity_quota.quota_available'));
   });
 
   test('translates current upstream Remaining labels', () => {
