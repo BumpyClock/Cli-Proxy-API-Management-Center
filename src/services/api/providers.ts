@@ -33,7 +33,7 @@ export type ProviderFamily =
 
 type KeyConfig = ProviderKeyConfig | GeminiKeyConfig;
 type Wire = Record<string, unknown>;
-type EmptyOverride = '' | 0 | false | [] | Record<string, never>;
+type EmptyOverride = '' | 0 | 1 | false | [] | Record<string, never>;
 
 const serializeHeaders = (headers?: Record<string, string>) =>
   headers && Object.keys(headers).length ? headers : undefined;
@@ -322,12 +322,13 @@ const findOpenAISource = (groups: Wire[], source: ProviderSource | undefined, na
 /* applying form changes to raw records                                        */
 /* -------------------------------------------------------------------------- */
 
-/** Value that overrides an inherited setting with "nothing" rather than re-inheriting it. */
+/** Override inherited policy with the editor's neutral value instead of re-inheriting it. */
 const emptyOverride = (field: string): EmptyOverride => {
   if (['models', 'excluded-models'].includes(field)) return [];
   if (['headers', 'cloak'].includes(field)) return {};
   if (['disable-cooling', 'websockets', 'disabled'].includes(field)) return false;
-  if (['priority', 'weight'].includes(field)) return 0;
+  if (field === 'priority') return 0;
+  if (field === 'weight') return 1;
   return '';
 };
 

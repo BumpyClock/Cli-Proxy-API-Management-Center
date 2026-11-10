@@ -42,6 +42,61 @@ const keyApis = [
   ['claude', providersApi.updateClaudeConfig],
 ] as const;
 
+describe('v8 weight clearing', () => {
+  for (const [family, update] of keyApis) {
+    test.each([undefined, null, 4])(
+      `${family} clearing weight %s restores default routing weight without changing group policy`,
+      async (weight) => {
+        const original = {
+          'api-key': 'fixture-key',
+          priority: 3,
+          ...(weight === undefined ? {} : { weight }),
+        };
+        const sibling = { 'api-key': 'fixture-sibling', weight: 2 };
+        const group = {
+          name: 'fixture',
+          weight: 9,
+          priority: 7,
+          future: 'keep',
+          keys: [original, sibling],
+        };
+        const b = backend(family, group);
+        const config = row(b.group());
+        await update(config.apiKey, config.baseUrl, {
+          ...config,
+          weight: undefined,
+          priority: undefined,
+        });
+        expect(b.group()).toEqual({
+          ...group,
+          keys: [{ ...original, weight: 1, priority: 0 }, sibling],
+        });
+      }
+    );
+
+    test(`${family} retains explicit zero as an exclusion override`, async () => {
+      const group = { name: 'fixture', weight: 9, keys: [{ 'api-key': 'fixture-key', weight: 4 }] };
+      const b = backend(family, group);
+      const config = row(b.group());
+      await update(config.apiKey, config.baseUrl, { ...config, weight: 0 });
+      expect(b.group()).toEqual({ ...group, keys: [{ 'api-key': 'fixture-key', weight: 0 }] });
+    });
+  }
+
+  test('clearing a local weight without group inheritance removes the override', async () => {
+    const b = backend('codex', {
+      name: 'fixture',
+      keys: [{ 'api-key': 'fixture-key', weight: 4 }],
+    });
+    const config = row(b.group());
+    await providersApi.updateCodexConfig(config.apiKey, config.baseUrl, {
+      ...config,
+      weight: undefined,
+    });
+    expect(key(b.group())).toEqual({ 'api-key': 'fixture-key' });
+  });
+});
+
 describe('v8 cooling overrides', () => {
   for (const [family, update] of keyApis) {
     test(`${family} persists explicit false instead of inheriting disabled global cooling`, async () => {
