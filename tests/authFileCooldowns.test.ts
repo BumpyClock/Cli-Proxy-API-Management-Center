@@ -197,6 +197,25 @@ describe('cooldown section rendering', () => {
     expect(markup).toContain(i18n.t('auth_files.cooldown_note'));
   });
 
+  test('offers clearing only when an action exists, and disables it while busy', () => {
+    const actionable = renderToStaticMarkup(
+      createElement(AuthFileCooldownSection, {
+        snapshot,
+        onReset: () => {},
+      })
+    );
+    expect(actionable).toContain(i18n.t('auth_files.cooldown_reset_button'));
+    expect(render(snapshot)).not.toContain('<button');
+    const busy = renderToStaticMarkup(
+      createElement(AuthFileCooldownSection, {
+        snapshot,
+        onReset: () => {},
+        resetting: true,
+      })
+    );
+    expect(busy).toContain('disabled=""');
+  });
+
   test('shows elapsed / refresh confirmation and safely escapes model keys', () => {
     const expired = { ...snapshot, receivedAtMs: receivedAtMs - 100_000 };
     expect(render(expired)).toContain(i18n.t('auth_files.cooldown_elapsed'));
@@ -224,6 +243,7 @@ describe('cooldown section rendering', () => {
             lng,
             count,
             name: 'sample.json',
+            message: 'fixture failure',
             time: '32s',
             status: 429,
             level: 6,

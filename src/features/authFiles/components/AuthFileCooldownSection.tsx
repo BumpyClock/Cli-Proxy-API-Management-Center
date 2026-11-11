@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { IconChevronDown } from '@/components/ui/icons';
+import { Button } from '@/components/ui/Button';
+import { IconChevronDown, IconRefreshCw } from '@/components/ui/icons';
 import type { AuthFileCooldownSnapshot } from '@/types/authFile';
 import { createSharedClock } from '@/utils/time/sharedClock';
 import { formatDateTimeValue } from '@/utils/format';
@@ -11,17 +12,29 @@ import { iconSize } from '@/design-system';
 // One timer for visible cooldown cards, never one interval/request per credential.
 const clock = createSharedClock({ intervalMs: 1000 });
 
-export function AuthFileCooldownSection({ snapshot }: { snapshot?: AuthFileCooldownSnapshot }) {
+type AuthFileCooldownSectionProps = {
+  snapshot?: AuthFileCooldownSnapshot;
+  resetting?: boolean;
+  resetDisabled?: boolean;
+  onReset?: () => void;
+};
+
+export function AuthFileCooldownSection({ snapshot, ...actions }: AuthFileCooldownSectionProps) {
   const { t } = useTranslation();
   if (!snapshot) return null; // Old backend: no claim about cooldown support or health.
   if (snapshot.records === null) {
     return <p className={styles.unknown}>{t('auth_files.cooldown_unknown')}</p>;
   }
   if (snapshot.records.length === 0) return null;
-  return <CooldownDetails snapshot={snapshot} />;
+  return <CooldownDetails snapshot={snapshot} {...actions} />;
 }
 
-function CooldownDetails({ snapshot }: { snapshot: AuthFileCooldownSnapshot }) {
+function CooldownDetails({
+  snapshot,
+  resetting = false,
+  resetDisabled = false,
+  onReset,
+}: AuthFileCooldownSectionProps & { snapshot: AuthFileCooldownSnapshot }) {
   const { t, i18n } = useTranslation();
   const now = useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getSnapshot);
   const { rows, modelCount, credentialWide, earliestSeconds } = summarizeCooldowns(snapshot, now);
@@ -95,6 +108,21 @@ function CooldownDetails({ snapshot }: { snapshot: AuthFileCooldownSnapshot }) {
           </p>
         )}
         <p className={styles.note}>{t('auth_files.cooldown_note')}</p>
+        {onReset && (
+          <div className={styles.actionRow}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onReset}
+              loading={resetting}
+              disabled={resetDisabled || resetting}
+              title={t('auth_files.cooldown_reset_hint')}
+            >
+              {!resetting && <IconRefreshCw size={iconSize['14']} />}
+              {t('auth_files.cooldown_reset_button')}
+            </Button>
+          </div>
+        )}
       </div>
     </details>
   );

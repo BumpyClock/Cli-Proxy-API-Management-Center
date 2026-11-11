@@ -125,6 +125,11 @@
   margin-top: $space-6;
 }
 
+.actionRow {
+  display: flex;
+  margin-top: $space-8;
+}
+
 .elapsed {
   color: var(--text-secondary);
 }
