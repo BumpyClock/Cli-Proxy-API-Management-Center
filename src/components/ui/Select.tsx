@@ -11,7 +11,8 @@ import {
 import { createPortal } from 'react-dom';
 import { IconChevronDown } from './icons';
 import styles from './Select.module.scss';
-import { iconSize, size, space, z } from '@/design-system';
+import { iconSize } from '@/design-system';
+import { resolveDropdownStyle } from './dropdownPosition';
 
 export interface SelectOption {
   value: string;
@@ -32,50 +33,6 @@ interface SelectProps {
   size?: 'sm' | 'md';
   id?: string;
 }
-
-const VIEWPORT_MARGIN = space['8'];
-const DROPDOWN_OFFSET = space['6'];
-const DROPDOWN_MAX_HEIGHT = size['240'];
-const DROPDOWN_Z_INDEX = z['select-menu'];
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
-const resolveDropdownStyle = (element: HTMLElement): CSSProperties => {
-  const rect = element.getBoundingClientRect();
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const width = Math.min(rect.width, Math.max(0, viewportWidth - VIEWPORT_MARGIN * 2));
-  const left = clamp(
-    rect.left,
-    VIEWPORT_MARGIN,
-    Math.max(VIEWPORT_MARGIN, viewportWidth - width - VIEWPORT_MARGIN)
-  );
-  const spaceBelow = viewportHeight - rect.bottom - VIEWPORT_MARGIN - DROPDOWN_OFFSET;
-  const spaceAbove = rect.top - VIEWPORT_MARGIN - DROPDOWN_OFFSET;
-  const direction = spaceBelow >= DROPDOWN_MAX_HEIGHT || spaceBelow >= spaceAbove ? 'down' : 'up';
-  const maxHeight = Math.max(
-    0,
-    Math.min(DROPDOWN_MAX_HEIGHT, direction === 'down' ? spaceBelow : spaceAbove)
-  );
-
-  return direction === 'down'
-    ? {
-        position: 'fixed',
-        top: rect.bottom + DROPDOWN_OFFSET,
-        left,
-        width,
-        maxHeight,
-        zIndex: DROPDOWN_Z_INDEX,
-      }
-    : {
-        position: 'fixed',
-        bottom: viewportHeight - rect.top + DROPDOWN_OFFSET,
-        left,
-        width,
-        maxHeight,
-        zIndex: DROPDOWN_Z_INDEX,
-      };
-};
 
 export function Select({
   value,
@@ -115,7 +72,13 @@ export function Select({
 
   const updateDropdownStyle = useCallback(() => {
     if (!wrapRef.current) return;
-    setDropdownStyle(resolveDropdownStyle(wrapRef.current));
+    setDropdownStyle(
+      resolveDropdownStyle(
+        wrapRef.current.getBoundingClientRect(),
+        window.innerWidth,
+        window.innerHeight
+      )
+    );
   }, []);
 
   const scheduleDropdownStyleUpdate = useCallback(() => {

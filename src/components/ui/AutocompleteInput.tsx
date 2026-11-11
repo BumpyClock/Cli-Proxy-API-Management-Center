@@ -1,12 +1,17 @@
 import {
   useEffect,
+  useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { IconChevronDown } from './icons';
+import { resolveDropdownStyle } from './dropdownPosition';
 import {
   borderWidth,
   fontSize,
@@ -17,7 +22,6 @@ import {
   shadow,
   size,
   space,
-  z,
 } from '@/design-system';
 
 interface AutocompleteInputProps {
@@ -57,6 +61,12 @@ export function AutocompleteInput({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputWrapRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<CSSProperties | null>(null);
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const listboxId = `${inputId}-listbox`;
 
   const normalizedOptions = options.map((opt) =>
     typeof opt === 'string'
@@ -71,11 +81,48 @@ export function AutocompleteInput({
     );
   });
 
+  const activeIndex = highlightedIndex < filteredOptions.length ? highlightedIndex : -1;
+  const showDropdown = isOpen && filteredOptions.length > 0 && !disabled;
+
+  useLayoutEffect(() => {
+    if (!showDropdown || !inputWrapRef.current) return;
+    const position = () => {
+      if (!inputWrapRef.current) return;
+      setDropdownStyle(
+        resolveDropdownStyle(
+          inputWrapRef.current.getBoundingClientRect(),
+          window.innerWidth,
+          window.innerHeight,
+          size['200']
+        )
+      );
+    };
+    position();
+    const observer = new ResizeObserver(position);
+    observer.observe(inputWrapRef.current);
+    const onScroll = (event: Event) => {
+      if (event.target instanceof Node && dropdownRef.current?.contains(event.target)) return;
+      position();
+    };
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', onScroll, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', onScroll, true);
+    };
+  }, [showDropdown]);
+
+  useEffect(() => {
+    if (!showDropdown || activeIndex < 0) return;
+    document.getElementById(`${listboxId}-${activeIndex}`)?.scrollIntoView({ block: 'nearest' });
+  }, [showDropdown, activeIndex, listboxId]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+      const target = event.target as Node;
+      if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
+      setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -89,6 +136,7 @@ export function AutocompleteInput({
 
   const handleSelect = (selectedValue: string) => {
     onChange(selectedValue);
+    setHighlightedIndex(-1);
     setIsOpen(false);
   };
 
@@ -101,19 +149,21 @@ export function AutocompleteInput({
         setIsOpen(true);
         return;
       }
-      setHighlightedIndex((prev) => (prev < filteredOptions.length - 1 ? prev + 1 : prev));
+      setHighlightedIndex(Math.min(activeIndex + 1, filteredOptions.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+      setHighlightedIndex(filteredOptions.length ? Math.max(activeIndex - 1, 0) : -1);
     } else if (e.key === 'Enter') {
-      if (isOpen && highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
+      if (isOpen && activeIndex >= 0) {
         e.preventDefault();
-        handleSelect(filteredOptions[highlightedIndex].value);
+        handleSelect(filteredOptions[activeIndex].value);
       } else if (isOpen) {
         e.preventDefault();
         setIsOpen(false);
       }
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' && showDropdown) {
+      e.preventDefault();
+      e.stopPropagation();
       setIsOpen(false);
     } else if (e.key === 'Tab') {
       setIsOpen(false);
@@ -122,18 +172,32 @@ export function AutocompleteInput({
 
   return (
     <div className={`form-group ${wrapperClassName}`} ref={containerRef} style={wrapperStyle}>
-      {label && <label htmlFor={id}>{label}</label>}
-      <div style={{ position: 'relative' }}>
+      {label && <label htmlFor={inputId}>{label}</label>}
+      <div style={{ position: 'relative' }} ref={inputWrapRef}>
         <input
-          id={id}
+          id={inputId}
           className={`input ${className}`.trim()}
           value={value}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
+          onBlur={(event) => {
+            if (
+              !containerRef.current?.contains(event.relatedTarget) &&
+              !dropdownRef.current?.contains(event.relatedTarget)
+            )
+              setIsOpen(false);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
           aria-describedby={ariaDescribedBy}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={showDropdown}
+          aria-controls={showDropdown ? listboxId : undefined}
+          aria-activedescendant={
+            showDropdown && activeIndex >= 0 ? `${listboxId}-${activeIndex}` : undefined
+          }
           autoComplete="off"
           style={{ paddingRight: space['32'] }}
         />
@@ -149,6 +213,7 @@ export function AutocompleteInput({
             cursor: 'pointer',
             height: '100%',
           }}
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => !disabled && setIsOpen(!isOpen)}
         >
           {rightElement}
@@ -158,49 +223,55 @@ export function AutocompleteInput({
           />
         </div>
 
-        {isOpen && filteredOptions.length > 0 && !disabled && (
-          <div
-            className="autocomplete-dropdown"
-            style={{
-              position: 'absolute',
-              top: `calc(100% + ${px(space['4'])})`,
-              left: 0,
-              right: 0,
-              zIndex: z.dropdown,
-              backgroundColor: 'var(--bg-secondary)',
-              border: `${px(borderWidth['1'])} solid var(--border-color)`,
-              borderRadius: 'var(--radius-md)',
-              maxHeight: size['200'],
-              overflowY: 'auto',
-              boxShadow: shadow['autocomplete-menu'],
-            }}
-          >
-            {filteredOptions.map((opt, index) => (
-              <div
-                key={`${opt.value}-${index}`}
-                onClick={() => handleSelect(opt.value)}
-                style={{
-                  padding: `${px(space['8'])} ${px(space['12'])}`,
-                  cursor: 'pointer',
-                  backgroundColor:
-                    index === highlightedIndex ? 'var(--bg-tertiary)' : 'transparent',
-                  color: 'var(--text-primary)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  fontSize: fontSize['0-9rem'],
-                }}
-                onMouseEnter={() => setHighlightedIndex(index)}
-              >
-                <span style={{ fontWeight: fontWeight['500'] }}>{opt.value}</span>
-                {opt.label && opt.label !== opt.value && (
-                  <span style={{ fontSize: fontSize['0-85em'], color: 'var(--text-secondary)' }}>
-                    {opt.label}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {showDropdown &&
+          dropdownStyle &&
+          typeof document !== 'undefined' &&
+          createPortal(
+            <div
+              ref={dropdownRef}
+              id={listboxId}
+              role="listbox"
+              aria-label={label}
+              className="autocomplete-dropdown"
+              style={{
+                ...dropdownStyle,
+                backgroundColor: 'var(--bg-secondary)',
+                border: `${px(borderWidth['1'])} solid var(--border-color)`,
+                borderRadius: 'var(--radius-md)',
+                overflowY: 'auto',
+                boxShadow: shadow['autocomplete-menu'],
+              }}
+            >
+              {filteredOptions.map((opt, index) => (
+                <div
+                  key={`${opt.value}-${index}`}
+                  id={`${listboxId}-${index}`}
+                  role="option"
+                  aria-selected={opt.value === value}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => handleSelect(opt.value)}
+                  style={{
+                    padding: `${px(space['8'])} ${px(space['12'])}`,
+                    cursor: 'pointer',
+                    backgroundColor: index === activeIndex ? 'var(--bg-tertiary)' : 'transparent',
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    fontSize: fontSize['0-9rem'],
+                  }}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                >
+                  <span style={{ fontWeight: fontWeight['500'] }}>{opt.value}</span>
+                  {opt.label && opt.label !== opt.value && (
+                    <span style={{ fontSize: fontSize['0-85em'], color: 'var(--text-secondary)' }}>
+                      {opt.label}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>,
+            document.body
+          )}
       </div>
       {hint && <div className="hint">{hint}</div>}
       {error && <div className="error-box">{error}</div>}
