@@ -3,10 +3,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useProviderWorkbench } from '@/features/providers/useProviderWorkbench';
 import { resolveProbeProxyUrl } from '@/features/providers/sheets/forms/probeProxy';
-import { providersApi } from '@/services/api';
 import { configApi } from '@/services/api/config';
 import { useConfigStore } from '@/stores/useConfigStore';
-import type { Config, OpenAIProviderConfig, ProviderKeyConfig } from '@/types';
+import type { Config } from '@/types';
 
 const mocks: Array<{ mockRestore(): void }> = [];
 afterEach(() => {
@@ -33,45 +32,39 @@ function captureWorkbench() {
 }
 
 for (const freshFirst of [false, true]) {
-  test(`provider refresh cannot restore partial config after invalidation, fresh first ${freshFirst}`, async () => {
+  test(`provider refresh cannot publish an invalidated snapshot, fresh first ${freshFirst}`, async () => {
     useConfigStore.getState().clearCache();
     const initial = deferred<Config>();
     const fresh = deferred<Config>();
-    const vertex = deferred<ProviderKeyConfig[]>();
-    const openai = deferred<OpenAIProviderConfig[]>();
     mocks.push(
       spyOn(configApi, 'getConfig')
         .mockReturnValueOnce(initial.promise)
-        .mockReturnValueOnce(fresh.promise),
-      spyOn(providersApi, 'getVertexConfigs').mockReturnValue(vertex.promise),
-      spyOn(providersApi, 'getOpenAIProviders').mockReturnValue(openai.promise)
+        .mockReturnValueOnce(fresh.promise)
     );
     const refetch = captureWorkbench().refetch();
-    initial.resolve({ proxyUrl: 'http://old-proxy.test', vertexApiKeys: [] });
-    await initial.promise;
-    await Promise.resolve();
-    expect(useConfigStore.getState().config?.proxyUrl).toBe('http://old-proxy.test');
-
     useConfigStore.getState().clearCache();
     const refreshed = useConfigStore.getState().fetchConfig(true);
     const next: Config = {
       proxyUrl: 'http://current-proxy.test',
-      vertexApiKeys: [],
-      openaiCompatibility: [],
+      vertexApiKeys: [{ apiKey: 'fixture-current-key', baseUrl: 'https://current-provider.test' }],
+      openaiCompatibility: [
+        { name: 'current-provider', baseUrl: 'https://current-provider.test', apiKeyEntries: [] },
+      ],
     };
     try {
       if (freshFirst) {
         fresh.resolve(next);
         await refreshed;
       }
-      vertex.resolve([{ apiKey: 'fixture-old-key', baseUrl: 'https://old-provider.test' }]);
-      openai.resolve([{ name: 'old-provider', baseUrl: 'https://old-provider.test' }]);
+      initial.resolve({ proxyUrl: 'http://old-proxy.test', vertexApiKeys: [] });
       await refetch;
       expect(useConfigStore.getState().config).toEqual(freshFirst ? next : null);
     } finally {
+      initial.resolve({ proxyUrl: 'http://old-proxy.test' });
       fresh.resolve(next);
-      await refreshed;
+      await Promise.all([refetch, refreshed]);
     }
+    expect(useConfigStore.getState().config).toEqual(next);
     expect(resolveProbeProxyUrl('')).toBe('http://current-proxy.test');
     expect(resolveProbeProxyUrl('direct')).toBe('direct');
   });

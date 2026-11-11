@@ -1,6 +1,8 @@
 // Synthetic Management API fixtures for local browser audits. Mirrors the council capture
 // harness so audits and captures see the same state. Never reaches a real backend: every
-// non-origin request is aborted and every /v0/management call is fulfilled locally.
+// non-origin request is aborted and every /v8/management call is fulfilled locally.
+import { stringify } from 'yaml';
+
 const MODELS = ['claude-sonnet-4-5', 'gpt-5.2-codex', 'gemini-2.5-pro'];
 
 export function buildFixtures(now = Date.now()) {
@@ -41,28 +43,55 @@ export function buildFixtures(now = Date.now()) {
     })
   );
   const config = {
-    'api-keys': ['local-fixture-key'],
-    'usage-statistics-enabled': true,
-    'request-log': true,
-    debug: false,
-    'logging-to-file': true,
+    'config-version': 8,
+    server: { port: 8317 },
+    access: { 'api-keys': ['local-fixture-key'] },
+    observability: {
+      usage: { 'usage-statistics-enabled': true },
+      logs: { 'request-log': true, debug: false, 'logging-to-file': true },
+    },
     routing: { strategy: 'round-robin' },
-    'gemini-api-key': [
-      {
-        'api-key': 'fixture-gemini',
-        prefix: 'workspace',
-        models: [{ name: 'gemini-2.5-pro', alias: '' }],
-      },
-    ],
-    'claude-api-key': [
-      { 'api-key': 'fixture-claude', models: [{ name: 'claude-sonnet-4-5', alias: '' }] },
-    ],
-    'codex-api-key': [
-      { 'api-key': 'fixture-codex', models: [{ name: 'gpt-5.2-codex', alias: '' }] },
-    ],
-    'openai-compatibility': [],
-    'oauth-excluded-models': { claude: ['claude-legacy'] },
-    'oauth-model-alias': { codex: [{ name: 'gpt-5.2-codex', alias: 'code', fork: true }] },
+    'api-keys': {
+      gemini: [
+        {
+          name: 'gemini-fixture',
+          keys: [
+            {
+              'api-key': 'fixture-gemini',
+              prefix: 'workspace',
+              models: [{ name: 'gemini-2.5-pro', alias: '' }],
+            },
+          ],
+        },
+      ],
+      claude: [
+        {
+          name: 'claude-fixture',
+          keys: [
+            {
+              'api-key': 'fixture-claude',
+              models: [{ name: 'claude-sonnet-4-5', alias: '' }],
+            },
+          ],
+        },
+      ],
+      codex: [
+        {
+          name: 'codex-fixture',
+          keys: [
+            {
+              'api-key': 'fixture-codex',
+              models: [{ name: 'gpt-5.2-codex', alias: '' }],
+            },
+          ],
+        },
+      ],
+      'openai-compatibility': [],
+    },
+    oauth: {
+      'excluded-models': { claude: ['claude-legacy'] },
+      'model-alias': { codex: [{ name: 'gpt-5.2-codex', alias: 'code', fork: true }] },
+    },
   };
   const quotaBody = JSON.stringify({
     five_hour: { utilization: 22, resets_at: new Date(now + 7200000).toISOString() },
@@ -82,8 +111,8 @@ export function buildFixtures(now = Date.now()) {
   });
   const routes = {
     '/config': config,
-    '/auth-files': () => ({ files, observed_at: new Date().toISOString() }),
-    '/usage-statistics-enabled': { 'usage-statistics-enabled': true },
+    '/credentials': () => ({ files, observed_at: new Date().toISOString() }),
+    '/config/observability/usage/usage-statistics-enabled': true,
     '/usage': {
       statistics_enabled: true,
       usage: {
@@ -96,11 +125,15 @@ export function buildFixtures(now = Date.now()) {
         },
       },
     },
-    '/api-keys': { 'api-keys': ['local-fixture-key'] },
-    '/api-key-usage': () => ({ keys: [], usage: {}, observed_at: new Date().toISOString() }),
+    '/config/access/api-keys': ['local-fixture-key'],
+    '/observability/usage/api-keys': () => ({
+      keys: [],
+      usage: {},
+      observed_at: new Date().toISOString(),
+    }),
     '/plugins': { plugins: [] },
-    '/plugin-store': { plugins: [], sources: [], errors: [] },
-    '/logs': {
+    '/plugins/store': { plugins: [], sources: [], errors: [] },
+    '/observability/logs': {
       lines: [
         '2026-10-20T09:42:10Z INFO Management API ready',
         '2026-10-20T09:42:12Z INFO Provider pool synchronized',
@@ -108,10 +141,10 @@ export function buildFixtures(now = Date.now()) {
       ],
       'latest-timestamp': 0,
     },
-    '/oauth-excluded-models': { 'oauth-excluded-models': config['oauth-excluded-models'] },
-    '/oauth-model-alias': { 'oauth-model-alias': config['oauth-model-alias'] },
-    '/api-call': { status_code: 200, header: {}, body: quotaBody },
-    '/latest-version': { 'latest-version': 'v6.8.0' },
+    '/config/oauth/excluded-models': config.oauth['excluded-models'],
+    '/config/oauth/model-alias': config.oauth['model-alias'],
+    '/requests/api-call': { status_code: 200, header: {}, body: quotaBody },
+    '/server/latest-version': { 'latest-version': 'v8.0.63' },
   };
   return { routes, models: MODELS };
 }
@@ -127,13 +160,14 @@ export async function installFixtures(context, origin, overrides = {}) {
       return route.abort();
     }
     if (url.origin !== origin) return route.abort();
-    const endpoint = url.pathname.split('/v0/management')[1];
+    const endpoint = url.pathname.split('/v8/management')[1];
     if (endpoint === undefined && url.pathname !== '/v1/models') return route.continue();
     if (endpoint === '/config.yaml') {
       return route.fulfill({
         status: 200,
         contentType: 'text/yaml',
-        body: 'port: 8317\nusage-statistics-enabled: true\nrequest-log: true\nrouting:\n  strategy: round-robin\n',
+        headers: { etag: '"fixture"' },
+        body: '# SYNTHETIC V8 CONFIGURATION\n' + stringify(routes['/config']),
       });
     }
     let body;
@@ -147,13 +181,14 @@ export async function installFixtures(context, origin, overrides = {}) {
         status = value.__status;
         body = value.body ?? {};
       } else {
-        body = value ?? {};
+        if (value === undefined) status = 404;
+        body = value ?? { error: 'not_found' };
       }
     }
     return route.fulfill({
       status,
       contentType: 'application/json',
-      headers: { 'x-cpa-version': '6.8.0', 'x-cpa-support-plugin': 'true' },
+      headers: { 'x-cpa-version': '8.0.63', 'x-cpa-support-plugin': 'true', etag: '"fixture"' },
       body: JSON.stringify(body),
     });
   });

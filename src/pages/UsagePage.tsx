@@ -95,21 +95,26 @@ export function UsagePageContent({
   const ageStale = lastUpdated !== null && now - lastUpdated >= STALE_AFTER_MS;
   const state = loading
     ? 'loading'
-    : enabled === false
-      ? 'off'
-      : error
-        ? usage && lastUpdated !== null
-          ? 'stale'
-          : 'error'
-        : enabled === null
-          ? 'unknown'
-          : ageStale
+    : payload?.supported === false
+      ? 'unsupported'
+      : enabled === false
+        ? 'off'
+        : error
+          ? usage && lastUpdated !== null
             ? 'stale'
-            : usage?.total_requests === 0
-              ? 'empty'
-              : 'live';
+            : 'error'
+          : enabled === null
+            ? 'unknown'
+            : ageStale
+              ? 'stale'
+              : usage?.total_requests === 0
+                ? 'empty'
+                : 'live';
   const showData =
-    enabled !== false && Boolean(usage) && (enabled === true || state === 'stale' || loading);
+    payload?.supported !== false &&
+    enabled !== false &&
+    Boolean(usage) &&
+    (enabled === true || state === 'stale' || loading);
   const number = (value: number) => value.toLocaleString(i18n.language);
   const dateFormat = new Intl.DateTimeFormat(i18n.language, {
     year: 'numeric',
@@ -134,7 +139,11 @@ export function UsagePageContent({
         meta={
           <div className={styles.statusLine} role="status" aria-live="polite">
             <span className={styles.status} data-state={state}>
-              {t(`redesign.usage.state_${state}`)}
+              {t(
+                state === 'unsupported'
+                  ? 'dashboard.usage_unsupported'
+                  : `redesign.usage.state_${state}`
+              )}
             </span>
             {lastUpdated !== null && showData && (
               <span>
@@ -171,6 +180,12 @@ export function UsagePageContent({
           <Link className={styles.actionLink} to="/config?field=usageStatisticsEnabled">
             {t('redesign.usage.open_config')}
           </Link>
+        </section>
+      )}
+      {state === 'unsupported' && (
+        <section className={styles.notice} aria-labelledby="usage-unsupported-title">
+          <h2 id="usage-unsupported-title">{t('dashboard.usage_unsupported')}</h2>
+          <p>{t('dashboard.usage_unsupported_detail')}</p>
         </section>
       )}
       {state === 'unknown' && (
@@ -464,7 +479,10 @@ export function UsagePage() {
       },
       onSuccess: (result) => {
         setEnabled(result.enabled.status === 'fulfilled' ? result.enabled.value : null);
-        if (result.enabled.status === 'fulfilled' && result.enabled.value !== true) {
+        if (result.payload.status === 'fulfilled' && result.payload.value.supported === false) {
+          setPayload(result.payload.value);
+          setLastUpdated(null);
+        } else if (result.enabled.status === 'fulfilled' && result.enabled.value !== true) {
           setPayload(null);
           setLastUpdated(null);
         } else if (result.enabled.status === 'fulfilled' && result.payload.status === 'fulfilled') {

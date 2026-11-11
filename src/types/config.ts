@@ -6,8 +6,6 @@
 import type { GeminiKeyConfig, ProviderKeyConfig, OpenAIProviderConfig } from './provider';
 
 export interface QuotaExceededConfig {
-  switchProject?: boolean;
-  switchPreviewModel?: boolean;
   antigravityCredits?: boolean;
 }
 
@@ -34,25 +32,3 @@ export interface Config {
   oauthExcludedModels?: Record<string, string[]>;
   raw?: Record<string, unknown>;
 }
-
-export type RawConfigSection =
-  | 'debug'
-  | 'proxy-url'
-  | 'request-retry'
-  | 'quota-exceeded'
-  | 'request-log'
-  | 'logging-to-file'
-  | 'logs-max-total-size-mb'
-  | 'ws-auth'
-  | 'force-model-prefix'
-  | 'routing/strategy'
-  | 'api-keys'
-  | 'gemini-api-key'
-  | 'interactions-api-key'
-  | 'codex-api-key'
-  | 'meta-api-key'
-  | 'xai-api-key'
-  | 'claude-api-key'
-  | 'vertex-api-key'
-  | 'openai-compatibility'
-  | 'oauth-excluded-models';

@@ -41,7 +41,6 @@ export interface UsageSnapshot {
   tokens_by_hour?: Record<string, number>;
 }
 
-export interface UsageResponse {
-  statistics_enabled?: boolean;
-  usage?: UsageSnapshot;
-}
+export type UsageResponse =
+  | { supported?: true; statistics_enabled?: boolean; usage?: UsageSnapshot }
+  | { supported: false; statistics_enabled?: never; usage?: never };

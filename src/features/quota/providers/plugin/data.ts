@@ -86,10 +86,10 @@ export async function fetchPluginQuota(file: AuthFileItem, t: TFunction): Promis
   }
   const authIndex = normalizeAuthIndex(file.authIndex ?? file.auth_index);
   if (!authIndex) throw new Error(t('plugin_quota.missing_auth_index'));
-  const provider = text(file.quotaProvider);
+  const pluginId = text(file.quotaPluginId);
+  if (!pluginId) throw new Error(t('plugin_quota.route_unavailable'));
   return normalizePluginQuota(
-    await apiClient.post<unknown>('/quota/fetch', {
-      ...(provider ? { provider } : {}),
+    await apiClient.post<unknown>(`/plugins/${encodeURIComponent(pluginId)}/quota`, {
       auth_index: authIndex,
     })
   );

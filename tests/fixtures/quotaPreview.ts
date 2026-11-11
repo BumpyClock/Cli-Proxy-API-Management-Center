@@ -1,5 +1,6 @@
 /** Local UI verification only. Every credential and quota below is synthetic. */
 import type { UsageResponse } from '../../src/types/usage';
+import { stringify } from 'yaml';
 
 const port = 8318;
 const files = [
@@ -22,6 +23,18 @@ let failedAccounts: string[] = [];
 let delayMs = 0;
 let usageEnabled: boolean | null = true;
 let usageFails = false;
+const previewConfig = () => ({
+  'config-version': 8,
+  server: { port },
+  access: { 'api-keys': ['mock-preview-key'] },
+  'api-keys': {},
+  oauth: { 'excluded-models': {}, 'model-alias': {} },
+  observability: {
+    logs: { 'logging-to-file': true, 'request-log': true },
+    usage: usageEnabled === null ? {} : { 'usage-statistics-enabled': usageEnabled },
+  },
+  routing: { retry: { 'request-retry': 3 } },
+});
 const counts: Record<string, number> = {};
 const reset = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
 const day = (offset: number) =>
@@ -66,14 +79,16 @@ Bun.serve({
       )
         ? origin
         : 'http://127.0.0.1:5173',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type, If-Match',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Expose-Headers': 'ETag, X-Cpa-Support-Plugin',
+      ETag: `"quota-preview-${usageEnabled}"`,
       'X-Cpa-Support-Plugin': 'false',
     };
     const json = (body: unknown, status = 200) => Response.json(body, { status, headers });
     if (req.method === 'OPTIONS') return new Response(null, { headers });
     const url = new URL(req.url);
-    const path = url.pathname.replace('/v0/management', '');
+    const path = url.pathname.replace(/^\/v8\/management(?=\/|$)/, '');
     if (!path.startsWith('/__mock/')) counts[path] = (counts[path] ?? 0) + 1;
     if (path === '/__mock/requests') return json(counts);
     if (path === '/__mock/state' && req.method === 'POST') {
@@ -110,28 +125,17 @@ Bun.serve({
       qoderUsed = used;
       return json({ used });
     }
-    if (req.method !== 'GET' && path !== '/api-call')
+    if (req.method !== 'GET' && path !== '/requests/api-call')
       return json({ error: 'Read-only mock preview' }, 405);
-    if (path === '/config')
-      return json({
-        'mock-data': true,
-        'api-keys': ['mock-preview-key'],
-        'logging-to-file': true,
-        'request-log': true,
-        ...(usageEnabled === null ? {} : { 'usage-statistics-enabled': usageEnabled }),
-      });
+    if (path === '/config') return json(previewConfig());
     if (path === '/config.yaml')
-      return new Response(
-        '# MOCK DATA ONLY\nlogging-to-file: true\nrequest-log: true\nrequest-retry: 3\n' +
-          (usageEnabled === null ? '' : `usage-statistics-enabled: ${usageEnabled}\n`),
-        { headers }
-      );
-    if (path === '/oauth-excluded-models') return json({ 'oauth-excluded-models': {} });
-    if (path === '/oauth-model-alias') return json({ 'oauth-model-alias': {} });
-    if (path === '/request-log') return json({ 'request-log': true });
-    if (path === '/logging-to-file') return json({ 'logging-to-file': true });
-    if (path === '/request-error-logs') return json({ files: [] });
-    if (path === '/logs')
+      return new Response('# MOCK DATA ONLY\n' + stringify(previewConfig()), { headers });
+    if (path === '/config/oauth/excluded-models') return json({});
+    if (path === '/config/oauth/model-alias') return json({});
+    if (path === '/config/observability/logs/request-log') return json(true);
+    if (path === '/config/observability/logs/logging-to-file') return json(true);
+    if (path === '/observability/logs/errors') return json({ files: [] });
+    if (path === '/observability/logs')
       return json({
         lines: url.searchParams.get('cursor')
           ? []
@@ -143,15 +147,15 @@ Bun.serve({
         'next-cursor': 'mock-static',
         'latest-timestamp': 1793635320,
       });
-    if (path === '/api-keys') return json({ 'api-keys': ['mock-preview-key'] });
-    if (path === '/api-key-usage') return json({});
+    if (path === '/config/access/api-keys') return json(['mock-preview-key']);
+    if (path === '/observability/usage/api-keys') return json({});
     if (path === '/v1/models')
       return json({ data: [{ id: 'mock-model', object: 'model', owned_by: 'mock' }] });
-    if (path === '/usage-statistics-enabled')
-      return json(usageEnabled === null ? {} : { 'usage-statistics-enabled': usageEnabled });
+    if (path === '/config/observability/usage/usage-statistics-enabled')
+      return usageEnabled === null ? json({ error: 'not_found' }, 404) : json(usageEnabled);
     if (path === '/usage')
       return usageFails ? json({ error: 'Mock snapshot unavailable' }, 503) : json(sampleUsage);
-    if (path === '/auth-files')
+    if (path === '/credentials')
       return json({
         observed_at: new Date().toISOString(),
         files: files.map((file, index) => ({
@@ -184,7 +188,7 @@ Bun.serve({
         },
       });
     }
-    if (path === '/api-call' && req.method === 'POST') {
+    if (path === '/requests/api-call' && req.method === 'POST') {
       const payload = (await req.json()) as { url?: string; authIndex?: string };
       if (delayMs) await Bun.sleep(delayMs);
       if (payload.authIndex && failedAccounts.includes(payload.authIndex))

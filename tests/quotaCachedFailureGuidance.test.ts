@@ -7,7 +7,7 @@ describe('cached quota failure guidance', () => {
   for (const language of ['en', 'zh-CN', 'zh-TW', 'ru'] as const) {
     for (const [status, key] of [
       [403, 'common.quota_check_credential'],
-      [404, 'common.quota_update_required'],
+      [404, 'common.quota_endpoint_unavailable'],
     ] as const) {
       test(`${language} resolves actionable guidance for ${status}`, async () => {
         const i18n = await createTestI18n(language);

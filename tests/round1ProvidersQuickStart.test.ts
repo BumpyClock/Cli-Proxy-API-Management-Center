@@ -29,7 +29,7 @@ describe('quick start setup steps', () => {
       expect(routes).toContain(`path: '${step.to.split('?')[0]}'`);
     }
     // The config link opens the existing client API key field, not just the page.
-    expect(findConfigFieldById('apiKeys')?.yamlKeys).toEqual(['api-keys']);
+    expect(findConfigFieldById('apiKeys')?.yamlKeys).toEqual(['access', 'api-keys']);
   });
 
   test('steps show their destination and stay in an ordered list without completion claims', () => {

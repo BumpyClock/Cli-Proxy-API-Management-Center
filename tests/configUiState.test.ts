@@ -93,7 +93,7 @@ describe('countSectionErrors', () => {
     expect(counts.network).toBe(1);
     expect(counts.streaming).toBe(1);
     expect(counts.logging).toBe(0);
-    expect(counts.quota).toBe(0);
+    expect(counts).not.toHaveProperty('quota');
     expect(counts.advanced).toBe(0);
     expect(counts.payload).toBe(0);
     // port 由常用 tab 渲染，同一错误在两个 tab 都要可见
@@ -143,9 +143,10 @@ describe('resolveDirtyTabs', () => {
     expect(tabs.has('connectivity')).toBe(true);
     expect(tabs.size).toBe(2);
 
-    const quotaTabs = resolveDirtyTabs(new Set(['quotaSwitchProject']));
-    expect(quotaTabs.has('common')).toBe(true);
-    expect(quotaTabs.has('quota')).toBe(true);
+    expect([...resolveDirtyTabs(new Set(['quotaAntigravityCredits']))]).toEqual(['advanced']);
+    expect(resolveDirtyTabs(new Set(['quotaSwitchProject', 'quotaSwitchPreviewModel'])).size).toBe(
+      0
+    );
   });
 
   test('unknown keys are ignored instead of crashing', () => {

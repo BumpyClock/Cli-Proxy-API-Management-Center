@@ -9,7 +9,7 @@
 // extra entry anywhere fails CI.
 
 export type VisualSectionId =
-  'connectivity' | 'network' | 'logging' | 'quota' | 'streaming' | 'advanced' | 'payload';
+  'connectivity' | 'network' | 'logging' | 'streaming' | 'advanced' | 'payload';
 
 export interface ConfigFieldSearchEntry {
   /** Stable anchor id; matches FieldAnchor's `fieldId` and the rendered DOM id. */
@@ -42,26 +42,26 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     fieldId: 'host',
     sectionId: 'connectivity',
     labelKey: L('sections.server.host'),
-    yamlKeys: ['host'],
+    yamlKeys: ['server', 'host'],
   },
   {
     fieldId: 'port',
     sectionId: 'connectivity',
     labelKey: L('sections.server.port'),
-    yamlKeys: ['port'],
+    yamlKeys: ['server', 'port'],
   },
   {
     fieldId: 'authDir',
     sectionId: 'connectivity',
     labelKey: L('sections.auth.auth_dir'),
     hintKey: L('sections.auth.auth_dir_hint'),
-    yamlKeys: ['auth-dir'],
+    yamlKeys: ['oauth', 'auth-dir'],
   },
   {
     fieldId: 'apiKeys',
     sectionId: 'connectivity',
     labelKey: L('api_keys.label'),
-    yamlKeys: ['api-keys'],
+    yamlKeys: ['access', 'api-keys'],
     keywords: ['api key', 'apikey', 'token'],
   },
   {
@@ -69,21 +69,21 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'connectivity',
     labelKey: L('sections.tls.enable'),
     hintKey: L('sections.tls.enable_desc'),
-    yamlKeys: ['tls'],
+    yamlKeys: ['server', 'tls', 'enable'],
     keywords: ['tls', 'ssl', 'https'],
   },
   {
     fieldId: 'tlsCert',
     sectionId: 'connectivity',
     labelKey: L('sections.tls.cert'),
-    yamlKeys: ['tls', 'cert'],
+    yamlKeys: ['server', 'tls', 'cert'],
     keywords: ['tls', 'ssl', 'certificate'],
   },
   {
     fieldId: 'tlsKey',
     sectionId: 'connectivity',
     labelKey: L('sections.tls.key'),
-    yamlKeys: ['tls', 'key'],
+    yamlKeys: ['server', 'tls', 'key'],
     keywords: ['tls', 'ssl', 'private key'],
   },
   {
@@ -91,65 +91,65 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'connectivity',
     labelKey: L('sections.remote.allow_remote'),
     hintKey: L('sections.remote.allow_remote_desc'),
-    yamlKeys: ['remote-management', 'allow-remote'],
+    yamlKeys: ['management', 'allow-remote'],
   },
   {
     fieldId: 'rmDisableControlPanel',
     sectionId: 'connectivity',
     labelKey: L('sections.remote.disable_panel'),
-    yamlKeys: ['remote-management', 'disable-control-panel'],
+    yamlKeys: ['management', 'disable-control-panel'],
   },
   {
     fieldId: 'rmDisableAutoUpdatePanel',
     sectionId: 'connectivity',
     labelKey: L('sections.remote.disable_auto_update_panel'),
-    yamlKeys: ['remote-management', 'disable-auto-update-panel'],
+    yamlKeys: ['management', 'disable-auto-update-panel'],
   },
   {
     fieldId: 'rmSecretKey',
     sectionId: 'connectivity',
     labelKey: L('sections.remote.secret_key'),
-    yamlKeys: ['remote-management', 'secret-key'],
+    yamlKeys: ['management', 'secret-key'],
   },
   {
     fieldId: 'rmPanelRepo',
     sectionId: 'connectivity',
     labelKey: L('sections.remote.panel_repo'),
-    yamlKeys: ['remote-management', 'panel-github-repository'],
+    yamlKeys: ['management', 'panel-github-repository'],
   },
   // ── network ───────────────────────────────────────────────────────────────
   {
     fieldId: 'proxyUrl',
     sectionId: 'network',
     labelKey: L('sections.network.proxy_url'),
-    yamlKeys: ['proxy-url'],
+    yamlKeys: ['requests', 'proxy-url'],
   },
   {
     fieldId: 'requestRetry',
     sectionId: 'network',
     labelKey: L('sections.network.request_retry'),
-    yamlKeys: ['request-retry'],
+    yamlKeys: ['routing', 'retry', 'request-retry'],
   },
   {
     fieldId: 'maxRetryCredentials',
     sectionId: 'network',
     labelKey: L('sections.network.max_retry_credentials'),
     hintKey: L('sections.network.max_retry_credentials_hint'),
-    yamlKeys: ['max-retry-credentials'],
+    yamlKeys: ['routing', 'retry', 'max-retry-credentials'],
   },
   {
     fieldId: 'maxRetryInterval',
     sectionId: 'network',
     labelKey: L('sections.network.max_retry_interval'),
     hintKey: L('sections.network.max_retry_interval_hint'),
-    yamlKeys: ['max-retry-interval'],
+    yamlKeys: ['routing', 'retry', 'max-retry-interval'],
   },
   {
     fieldId: 'authAutoRefreshWorkers',
     sectionId: 'network',
     labelKey: L('sections.network.auth_auto_refresh_workers'),
     hintKey: L('sections.network.auth_auto_refresh_workers_hint'),
-    yamlKeys: ['auth-auto-refresh-workers'],
+    yamlKeys: ['oauth', 'auth-auto-refresh-workers'],
   },
   {
     fieldId: 'routingStrategy',
@@ -164,7 +164,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'network',
     labelKey: L('sections.network.disable_image_generation'),
     hintKey: L('sections.network.disable_image_generation_hint'),
-    yamlKeys: ['disable-image-generation'],
+    yamlKeys: ['multimedia', 'disable-image-generation'],
     keywords: ['false', 'true', 'chat', 'passthrough'],
   },
   {
@@ -172,7 +172,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'network',
     labelKey: L('sections.network.gpt_image_2_base_model'),
     hintKey: L('sections.network.gpt_image_2_base_model_hint'),
-    yamlKeys: ['gpt-image-2-base-model'],
+    yamlKeys: ['multimedia', 'gpt-image-2-base-model'],
   },
   {
     fieldId: 'routingSessionAffinityTTL',
@@ -185,21 +185,21 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'network',
     labelKey: L('sections.network.force_model_prefix'),
     hintKey: L('sections.network.force_model_prefix_desc'),
-    yamlKeys: ['force-model-prefix'],
+    yamlKeys: ['routing', 'force-model-prefix'],
   },
   {
     fieldId: 'passthroughHeaders',
     sectionId: 'network',
     labelKey: L('sections.network.passthrough_headers'),
     hintKey: L('sections.network.passthrough_headers_desc'),
-    yamlKeys: ['passthrough-headers'],
+    yamlKeys: ['requests', 'passthrough-headers'],
   },
   {
     fieldId: 'disableCooling',
     sectionId: 'network',
     labelKey: L('sections.network.disable_cooling'),
     hintKey: L('sections.network.disable_cooling_desc'),
-    yamlKeys: ['disable-cooling'],
+    yamlKeys: ['routing', 'cooldown', 'disable-cooling'],
   },
   {
     fieldId: 'routingSessionAffinity',
@@ -212,7 +212,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'network',
     labelKey: L('sections.network.ws_auth'),
     hintKey: L('sections.network.ws_auth_desc'),
-    yamlKeys: ['ws-auth'],
+    yamlKeys: ['oauth', 'providers', 'aistudio', 'ws-auth'],
     keywords: ['websocket'],
   },
   // ── logging ───────────────────────────────────────────────────────────────
@@ -221,68 +221,47 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'logging',
     labelKey: L('sections.system.debug'),
     hintKey: L('sections.system.debug_desc'),
-    yamlKeys: ['debug'],
+    yamlKeys: ['observability', 'logs', 'debug'],
   },
   {
     fieldId: 'commercialMode',
     sectionId: 'logging',
     labelKey: L('sections.system.commercial_mode'),
     hintKey: L('sections.system.commercial_mode_desc'),
-    yamlKeys: ['commercial-mode'],
+    yamlKeys: ['server', 'commercial-mode'],
   },
   {
     fieldId: 'loggingToFile',
     sectionId: 'logging',
     labelKey: L('sections.system.logging_to_file'),
     hintKey: L('sections.system.logging_to_file_desc'),
-    yamlKeys: ['logging-to-file'],
+    yamlKeys: ['observability', 'logs', 'logging-to-file'],
   },
   {
     fieldId: 'logsMaxTotalSizeMb',
     sectionId: 'logging',
     labelKey: L('sections.system.logs_max_size'),
-    yamlKeys: ['logs-max-total-size-mb'],
+    yamlKeys: ['observability', 'logs', 'logs-max-total-size-mb'],
   },
   {
     fieldId: 'errorLogsMaxFiles',
     sectionId: 'logging',
     labelKey: L('sections.system.error_logs_max_files'),
-    yamlKeys: ['error-logs-max-files'],
+    yamlKeys: ['observability', 'logs', 'error-logs-max-files'],
   },
   {
     fieldId: 'redisUsageQueueRetentionSeconds',
     sectionId: 'logging',
     labelKey: L('sections.system.redis_usage_retention'),
     hintKey: L('sections.system.redis_usage_retention_hint'),
-    yamlKeys: ['redis-usage-queue-retention-seconds'],
+    yamlKeys: ['observability', 'usage', 'redis-usage-queue-retention-seconds'],
   },
   {
     fieldId: 'usageStatisticsEnabled',
     sectionId: 'logging',
     labelKey: L('sections.system.usage_statistics_enabled'),
     hintKey: L('sections.system.usage_statistics_enabled_desc'),
-    yamlKeys: ['usage-statistics-enabled'],
-  },
-  // ── quota ─────────────────────────────────────────────────────────────────
-  {
-    fieldId: 'quotaSwitchProject',
-    sectionId: 'quota',
-    labelKey: L('sections.quota.switch_project'),
-    hintKey: L('sections.quota.switch_project_desc'),
-    yamlKeys: ['quota-exceeded', 'switch-project'],
-  },
-  {
-    fieldId: 'quotaSwitchPreviewModel',
-    sectionId: 'quota',
-    labelKey: L('sections.quota.switch_preview_model'),
-    hintKey: L('sections.quota.switch_preview_model_desc'),
-    yamlKeys: ['quota-exceeded', 'switch-preview-model'],
-  },
-  {
-    fieldId: 'quotaAntigravityCredits',
-    sectionId: 'quota',
-    labelKey: L('sections.quota.antigravity_credits'),
-    yamlKeys: ['quota-exceeded', 'antigravity-credits'],
+    yamlKeys: ['observability', 'usage', 'usage-statistics-enabled'],
   },
   // ── streaming ─────────────────────────────────────────────────────────────
   {
@@ -290,21 +269,21 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'streaming',
     labelKey: L('sections.streaming.keepalive_seconds'),
     hintKey: L('sections.streaming.keepalive_hint'),
-    yamlKeys: ['streaming', 'keepalive-seconds'],
+    yamlKeys: ['requests', 'streaming', 'keepalive-seconds'],
   },
   {
     fieldId: 'streamingBootstrapRetries',
     sectionId: 'streaming',
     labelKey: L('sections.streaming.bootstrap_retries'),
     hintKey: L('sections.streaming.bootstrap_hint'),
-    yamlKeys: ['streaming', 'bootstrap-retries'],
+    yamlKeys: ['requests', 'streaming', 'bootstrap-retries'],
   },
   {
     fieldId: 'streamingNonstreamKeepalive',
     sectionId: 'streaming',
     labelKey: L('sections.streaming.nonstream_keepalive'),
     hintKey: L('sections.streaming.nonstream_keepalive_hint'),
-    yamlKeys: ['streaming', 'nonstream-keepalive-interval'],
+    yamlKeys: ['requests', 'nonstream-keepalive-interval'],
   },
   // ── advanced ──────────────────────────────────────────────────────────────
   {
@@ -312,7 +291,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.system.plugins_enabled'),
     hintKey: L('sections.system.plugins_enabled_desc'),
-    yamlKeys: ['plugins'],
+    yamlKeys: ['plugins', 'enabled'],
   },
   {
     fieldId: 'pluginStoreSources',
@@ -333,7 +312,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.system.antigravity_sensitive_words'),
     hintKey: L('sections.system.antigravity_sensitive_words_desc'),
-    yamlKeys: ['antigravity', 'sensitive-words'],
+    yamlKeys: ['oauth', 'providers', 'antigravity', 'sensitive-words'],
     keywords: ['antigravity', 'obfuscate', 'zero-width'],
   },
   {
@@ -341,7 +320,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.system.devin_sensitive_words'),
     hintKey: L('sections.system.devin_sensitive_words_desc'),
-    yamlKeys: ['devin', 'sensitive-words'],
+    yamlKeys: ['oauth', 'providers', 'devin', 'sensitive-words'],
     keywords: ['devin', 'system prompt', 'remove line', 'obfuscate', 'zero-width'],
   },
   {
@@ -349,14 +328,20 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.system.antigravity_signature_cache'),
     hintKey: L('sections.system.antigravity_signature_cache_desc'),
-    yamlKeys: ['antigravity-signature-cache-enabled'],
+    yamlKeys: ['oauth', 'providers', 'antigravity', 'signature-cache-enabled'],
   },
   {
     fieldId: 'antigravitySignatureBypassStrict',
     sectionId: 'advanced',
     labelKey: L('sections.system.antigravity_signature_strict'),
     hintKey: L('sections.system.antigravity_signature_strict_desc'),
-    yamlKeys: ['antigravity-signature-bypass-strict'],
+    yamlKeys: ['oauth', 'providers', 'antigravity', 'signature-bypass-strict'],
+  },
+  {
+    fieldId: 'quotaAntigravityCredits',
+    sectionId: 'advanced',
+    labelKey: L('sections.quota.antigravity_credits'),
+    yamlKeys: ['oauth', 'providers', 'antigravity', 'antigravity-credits'],
   },
   // Claude header defaults — qualifierKey disambiguates the shared "User-Agent" label.
   {
@@ -364,7 +349,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.user_agent'),
     qualifierKey: L('sections.headers.claude_title'),
-    yamlKeys: ['claude-header-defaults', 'user-agent'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'user-agent'],
     keywords: ['claude'],
   },
   {
@@ -372,7 +357,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.package_version'),
     qualifierKey: L('sections.headers.claude_title'),
-    yamlKeys: ['claude-header-defaults', 'package-version'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'package-version'],
     keywords: ['claude'],
   },
   {
@@ -380,7 +365,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.runtime_version'),
     qualifierKey: L('sections.headers.claude_title'),
-    yamlKeys: ['claude-header-defaults', 'runtime-version'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'runtime-version'],
     keywords: ['claude'],
   },
   {
@@ -388,7 +373,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.os'),
     qualifierKey: L('sections.headers.claude_title'),
-    yamlKeys: ['claude-header-defaults', 'os'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'os'],
     keywords: ['claude'],
   },
   {
@@ -396,7 +381,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.arch'),
     qualifierKey: L('sections.headers.claude_title'),
-    yamlKeys: ['claude-header-defaults', 'arch'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'arch'],
     keywords: ['claude'],
   },
   {
@@ -404,7 +389,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.timeout'),
     qualifierKey: L('sections.headers.claude_title'),
-    yamlKeys: ['claude-header-defaults', 'timeout'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'timeout'],
     keywords: ['claude'],
   },
   {
@@ -413,7 +398,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     labelKey: L('sections.headers.stabilize_device'),
     qualifierKey: L('sections.headers.claude_title'),
     hintKey: L('sections.headers.stabilize_device_desc'),
-    yamlKeys: ['claude-header-defaults', 'stabilize-device-profile'],
+    yamlKeys: ['upstream', 'claude', 'header-defaults', 'stabilize-device-profile'],
     keywords: ['claude'],
   },
   // Codex header defaults.
@@ -422,7 +407,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.user_agent'),
     qualifierKey: L('sections.headers.codex_title'),
-    yamlKeys: ['codex-header-defaults', 'user-agent'],
+    yamlKeys: ['oauth', 'providers', 'codex', 'header-defaults', 'user-agent'],
     keywords: ['codex'],
   },
   {
@@ -430,7 +415,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     sectionId: 'advanced',
     labelKey: L('sections.headers.beta_features'),
     qualifierKey: L('sections.headers.codex_title'),
-    yamlKeys: ['codex-header-defaults', 'beta-features'],
+    yamlKeys: ['oauth', 'providers', 'codex', 'header-defaults', 'beta-features'],
     keywords: ['codex'],
   },
   {
@@ -439,7 +424,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     labelKey: L('sections.headers.codex_identity_confuse'),
     qualifierKey: L('sections.headers.codex_title'),
     hintKey: L('sections.headers.codex_identity_confuse_desc'),
-    yamlKeys: ['codex', 'identity-confuse'],
+    yamlKeys: ['oauth', 'providers', 'codex', 'identity-confuse'],
     keywords: ['codex'],
   },
   // ── payload (coarse: one entry per rule group) ──────────────────────────────

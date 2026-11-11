@@ -135,6 +135,6 @@ describe('Codex reset gateway cooldown', () => {
     });
     mocks.push(post);
     await authFilesApi.resetCooldown('test-index');
-    expect(post).toHaveBeenCalledWith('/reset-quota', { auth_index: 'test-index' });
+    expect(post).toHaveBeenCalledWith('/routing/cooldown/reset', { auth_index: 'test-index' });
   });
 });

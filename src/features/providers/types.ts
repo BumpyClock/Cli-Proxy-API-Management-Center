@@ -2,7 +2,12 @@
  * AI 提供商 Workbench 视图模型(归一化各 brand 的异构 config)
  */
 
-import type { GeminiKeyConfig, OpenAIProviderConfig, ProviderKeyConfig } from '@/types';
+import type {
+  GeminiKeyConfig,
+  OpenAIProviderConfig,
+  ProviderKeyConfig,
+  ProviderSource,
+} from '@/types';
 import type { ThinkingLevel } from './thinkingLevels';
 
 export type ProviderBrand =
@@ -105,6 +110,8 @@ export interface ProviderResource {
   flags: ProviderResourceFlags;
   /** 删除/更新使用的 selector */
   selector: ProviderResourceSelector;
+  /** Persisted v8 identity of this row; absent for aggregated sponsor resources. */
+  source?: ProviderSource;
   /** 原始 raw config,Sheet 表单初始化用 */
   raw: unknown;
 }
@@ -131,6 +138,8 @@ export interface SponsorProviderRaw {
  * Gemini/Codex/Claude/Vertex/OpenAI 共用基础字段,各自启用 advanced 区。
  */
 export interface ModelEntryInput {
+  /** Persisted model position; null identifies a new row. */
+  sourceIndex?: number | null;
   name: string;
   alias?: string;
   priority?: number;
@@ -159,6 +168,8 @@ export interface SponsorKeyEntryInput {
 }
 
 export interface ApiKeyEntryInput {
+  /** Persisted credential position when editing an existing row. */
+  sourceIndex?: number;
   apiKey: string;
   existingApiKey?: string;
   proxyUrl: string;
@@ -196,7 +207,7 @@ export interface ProviderEntryFormInput {
   /** Claude 专属 */
   cloak?: CloakInput;
   fingerprintProfile?: string;
-  /** OpenAI persists this; Gemini/Claude use it for one-off connectivity tests. */
+  /** Local model selection for one-off connectivity tests; not persisted in v8. */
   testModel?: string;
   apiKeyEntries?: ApiKeyEntryInput[];
   /** APIKEY.FUN stores one grouped key per platform protocol. */

@@ -8,6 +8,7 @@ import {
   withoutDisableAllModelsRule,
 } from '@/components/providers/utils';
 import type {
+  CloakConfig,
   Config,
   GeminiKeyConfig,
   ModelAlias,
@@ -134,38 +135,48 @@ export const buildExcludedModels = (
   return filtered.length ? filtered : undefined;
 };
 
+/**
+ * A checkbox cannot say "unset". Turning an option off writes an explicit `false` only when
+ * the stored row already had a value (it may be overriding an inherited `true`); otherwise
+ * the field stays unset so an unrelated edit does not materialize a default.
+ */
+export const resolveFlag = (checked: boolean | undefined, existing: boolean | undefined) =>
+  checked === true ? true : existing === undefined ? undefined : false;
+
 const buildModelAliases = (
   models: ProviderEntryFormInput['models'] | undefined,
   includeImage = false
-): ModelAlias[] =>
-  (models ?? [])
-    .map((m) => {
-      const entry: ModelAlias = {
-        name: m.name.trim(),
-        alias: m.alias?.trim() || undefined,
-        priority: m.priority,
-        testModel: m.testModel,
-        thinking: m.thinkingLevelsTouched
-          ? buildThinkingFromLevels(m.thinkingLevels)
-          : parseThinkingJson(m.thinkingJson),
-      };
-      if (includeImage) {
-        entry.image = m.image === true;
-      }
-      return entry;
-    })
-    .filter((m) => m.name);
+): ModelAlias[] => {
+  const rows = (models ?? []).map((m) => ({ ...m, name: m.name.trim() })).filter((m) => m.name);
+  return rows.map((m) => {
+    const entry: ModelAlias = {
+      sourceIndex: m.sourceIndex,
+      name: m.name,
+      alias: m.alias?.trim() || undefined,
+      priority: m.priority,
+      testModel: m.testModel,
+      thinking: m.thinkingLevelsTouched
+        ? buildThinkingFromLevels(m.thinkingLevels)
+        : parseThinkingJson(m.thinkingJson),
+    };
+    if (includeImage) {
+      entry.image = m.image === true;
+    }
+    return entry;
+  });
+};
 
-const buildProviderKeyConfig = (
+export const buildProviderKeyConfig = (
   brand: 'gemini' | 'interactions' | 'codex' | 'meta' | 'xai' | 'claude' | 'vertex',
   input: ProviderEntryFormInput,
   existing?: ProviderKeyConfig | GeminiKeyConfig | null
 ): ProviderKeyConfig | GeminiKeyConfig => {
   const headers = headersFromEntries(input.headers);
-  const models = buildModelAliases(input.models);
+  const models = buildModelAliases(input.models, false);
   const excluded = buildExcludedModels(input.excludedModelsText, input.disabled, brand);
   const apiKeyChanged = input.apiKey.trim().length > 0;
   const next: ProviderKeyConfig = {
+    source: existing?.source,
     apiKey: apiKeyChanged ? input.apiKey.trim() : (existing?.apiKey ?? ''),
     priority: input.priority,
     weight: input.weight,
@@ -175,19 +186,30 @@ const buildProviderKeyConfig = (
     models: models.length ? models : undefined,
     headers: Object.keys(headers).length ? headers : undefined,
     excludedModels: excluded,
-    disableCooling: input.disableCooling === true,
+    disableCooling: resolveFlag(input.disableCooling, existing?.disableCooling),
     authIndex: existing?.authIndex,
   };
   if ((brand === 'codex' || brand === 'xai') && input.websockets !== undefined) {
-    next.websockets = input.websockets;
+    next.websockets = resolveFlag(input.websockets, (existing as ProviderKeyConfig)?.websockets);
   }
   if (brand === 'claude' && input.cloak) {
-    next.cloak = {
+    const existingCloak = (existing as ProviderKeyConfig | null | undefined)?.cloak;
+    const cloak: CloakConfig = {
       mode: input.cloak.mode.trim() || undefined,
-      strictMode: input.cloak.strictMode,
+      strictMode: resolveFlag(input.cloak.strictMode, existingCloak?.strictMode),
       sensitiveWords: parseTextList(input.cloak.sensitiveWordsText),
       cacheUserId: input.cloak.cacheUserId === true,
     };
+    // An untouched, empty cloak form must not create a `cloak` block on a key without one.
+    if (
+      existingCloak ||
+      cloak.mode ||
+      cloak.strictMode !== undefined ||
+      cloak.sensitiveWords?.length ||
+      cloak.cacheUserId
+    ) {
+      next.cloak = cloak;
+    }
   }
   if (brand === 'claude') {
     next.fingerprintProfile = input.fingerprintProfile?.trim() || undefined;
@@ -195,25 +217,24 @@ const buildProviderKeyConfig = (
   return next;
 };
 
-const buildOpenAIConfig = (
+export const buildOpenAIConfig = (
   input: ProviderEntryFormInput,
   existing?: OpenAIProviderConfig | null
 ): OpenAIProviderConfig => {
   const headers = headersFromEntries(input.headers);
   const models = buildModelAliases(input.models, true);
-  const apiKeyEntries =
-    input.apiKeyEntries
-      ?.map((entry, index) => {
-        const fallbackApiKey =
-          entry.existingApiKey?.trim() || existing?.apiKeyEntries?.[index]?.apiKey?.trim() || '';
-        return {
-          apiKey: entry.apiKey.trim() || fallbackApiKey,
-          proxyUrl: entry.proxyUrl.trim() || undefined,
-          weight: entry.weight,
-          authIndex: entry.authIndex?.trim() || undefined,
-        };
-      })
-      .filter((entry) => entry.apiKey) ?? [];
+  const apiKeyEntries = (input.apiKeyEntries ?? [])
+    .map((entry) => {
+      const fallbackApiKey = entry.existingApiKey?.trim() || '';
+      return {
+        sourceIndex: entry.sourceIndex,
+        apiKey: entry.apiKey.trim() || fallbackApiKey,
+        proxyUrl: entry.proxyUrl.trim() || undefined,
+        weight: entry.weight,
+        authIndex: entry.authIndex?.trim() || undefined,
+      };
+    })
+    .filter((entry) => entry.apiKey);
 
   return {
     ...(existing ?? {}),
@@ -221,8 +242,8 @@ const buildOpenAIConfig = (
     baseUrl: input.baseUrl.trim(),
     prefix: input.prefix.trim() || undefined,
     apiKeyEntries,
-    disabled: input.disabled,
-    disableCooling: input.disableCooling === true,
+    disabled: resolveFlag(input.disabled, existing?.disabled),
+    disableCooling: resolveFlag(input.disableCooling, existing?.disableCooling),
     headers: Object.keys(headers).length ? headers : undefined,
     models: models.length ? models : undefined,
     priority: input.priority,
@@ -259,8 +280,8 @@ const buildSponsorOpenAIConfig = (
     name: providerName,
     baseUrl: urls.openai,
     prefix: entry.prefix.trim() || undefined,
-    disabled: entry.disabled,
-    disableCooling: entry.disableCooling === true,
+    disabled: resolveFlag(entry.disabled, existing?.disabled),
+    disableCooling: resolveFlag(entry.disableCooling, existing?.disableCooling),
     priority: entry.priority,
     apiKeyEntries,
     models: models.length ? models : undefined,
@@ -274,7 +295,7 @@ const buildSponsorProviderKeyConfig = (
   existing?: ProviderKeyConfig
 ): ProviderKeyConfig => {
   const urls = getProtocolUrls(entry.baseUrl);
-  const models = buildModelAliases(entry.models);
+  const models = buildModelAliases(entry.models, false);
   const apiKey = sponsorEntryApiKey(entry);
   const excluded = entry.disabled
     ? withDisableAllModelsRule(stripDisableAllModelsRule(existing?.excludedModels))
@@ -288,7 +309,7 @@ const buildSponsorProviderKeyConfig = (
     prefix: entry.prefix.trim() || undefined,
     priority: entry.priority,
     weight: entry.weight,
-    disableCooling: entry.disableCooling === true,
+    disableCooling: resolveFlag(entry.disableCooling, existing?.disableCooling),
     excludedModels: excluded,
     models: models.length ? models : undefined,
   };
@@ -300,7 +321,7 @@ const buildSponsorGeminiConfig = (
   existing?: GeminiKeyConfig
 ): GeminiKeyConfig => {
   const urls = getProtocolUrls(entry.baseUrl);
-  const models = buildModelAliases(entry.models);
+  const models = buildModelAliases(entry.models, false);
   const apiKey = sponsorEntryApiKey(entry);
   const excluded = entry.disabled
     ? withDisableAllModelsRule(stripDisableAllModelsRule(existing?.excludedModels))
@@ -314,7 +335,7 @@ const buildSponsorGeminiConfig = (
     prefix: entry.prefix.trim() || undefined,
     priority: entry.priority,
     weight: entry.weight,
-    disableCooling: entry.disableCooling === true,
+    disableCooling: resolveFlag(entry.disableCooling, existing?.disableCooling),
     excludedModels: excluded,
     models: models.length ? models : undefined,
   };
@@ -353,7 +374,7 @@ const toggleSponsorConfig = async (raw: SponsorProviderRaw, disabled: boolean) =
     });
   }
   for (const item of raw.openai) {
-    await providersApi.updateOpenAIProviderDisabled(item.index, disabled);
+    await providersApi.updateOpenAIProviderDisabled(disabled, item.config.source);
   }
 };
 
@@ -460,11 +481,15 @@ export const buildProviderGroups = (config: Config): ProviderGroup[] =>
 /* hook                                                                       */
 /* -------------------------------------------------------------------------- */
 
+const refreshAfterMutation = (refetch: () => Promise<void>) => {
+  useConfigStore.getState().invalidateCache();
+  return refetch();
+};
+
 export function useProviderWorkbench(): UseProviderWorkbenchResult {
   const connectionStatus = useAuthStore((s) => s.connectionStatus);
   const config = useConfigStore((s) => s.config);
   const fetchConfig = useConfigStore((s) => s.fetchConfig);
-  const updateConfigValue = useConfigStore((s) => s.updateConfigValue);
   const isCacheValid = useConfigStore((s) => s.isCacheValid);
 
   const [isPending, setIsPending] = useState<boolean>(() => !isCacheValid());
@@ -547,7 +572,11 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           }
         } else {
           for (const item of raw.gemini) {
-            await providersApi.deleteGeminiKey(item.config.apiKey, item.config.baseUrl);
+            await providersApi.deleteGeminiKey(
+              item.config.apiKey,
+              item.config.baseUrl,
+              item.config.source
+            );
           }
         }
       }
@@ -571,7 +600,11 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         }
       } else {
         for (const item of raw.codex) {
-          await providersApi.deleteCodexConfig(item.config.apiKey, item.config.baseUrl);
+          await providersApi.deleteCodexConfig(
+            item.config.apiKey,
+            item.config.baseUrl,
+            item.config.source
+          );
         }
       }
 
@@ -594,7 +627,11 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         }
       } else {
         for (const item of raw.claude) {
-          await providersApi.deleteClaudeConfig(item.config.apiKey, item.config.baseUrl);
+          await providersApi.deleteClaudeConfig(
+            item.config.apiKey,
+            item.config.baseUrl,
+            item.config.source
+          );
         }
       }
 
@@ -607,16 +644,12 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           currentOpenAI?.config
         );
         if (currentOpenAI) {
-          await providersApi.updateOpenAIProvider(
-            currentOpenAI.config.name,
-            currentOpenAI.index,
-            next
-          );
+          await providersApi.updateOpenAIProvider(currentOpenAI.config.name, next);
         } else {
           await providersApi.createOpenAIProvider(next);
         }
       } else if (currentOpenAI) {
-        await providersApi.deleteOpenAIProvider(currentOpenAI.index);
+        await providersApi.deleteOpenAIProvider(currentOpenAI.config.source);
       }
     },
     [config]
@@ -664,7 +697,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         ) {
           await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
         }
-        await refetch();
+        await refreshAfterMutation(refetch);
       } finally {
         setMutating(false);
       }
@@ -730,7 +763,6 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         } else if (brand === 'openaiCompatibility' && selector.brand === 'openaiCompatibility') {
           await providersApi.updateOpenAIProvider(
             selector.name,
-            selector.index,
             buildOpenAIConfig(input, resource.raw as OpenAIProviderConfig)
           );
         } else if (
@@ -741,7 +773,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         ) {
           await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
         }
-        await refetch();
+        await refreshAfterMutation(refetch);
       } finally {
         setMutating(false);
       }
@@ -754,40 +786,23 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
       setMutating(true);
       try {
         const sel = resource.selector;
+        const source = resource.source;
         if (sel.brand === 'gemini') {
-          await providersApi.deleteGeminiKey(sel.apiKey, sel.baseUrl);
-          const next = (config?.geminiApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('gemini-api-key', next);
+          await providersApi.deleteGeminiKey(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'interactions') {
-          await providersApi.deleteInteractionsKey(sel.apiKey, sel.baseUrl);
-          const next = (config?.interactionsApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('interactions-api-key', next);
+          await providersApi.deleteInteractionsKey(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'codex') {
-          await providersApi.deleteCodexConfig(sel.apiKey, sel.baseUrl);
-          const next = (config?.codexApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('codex-api-key', next);
+          await providersApi.deleteCodexConfig(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'meta') {
-          await providersApi.deleteMetaConfig(sel.apiKey, sel.baseUrl);
-          const next = (config?.metaApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('meta-api-key', next);
+          await providersApi.deleteMetaConfig(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'xai') {
-          await providersApi.deleteXAIConfig(sel.apiKey, sel.baseUrl);
-          const next = (config?.xaiApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('xai-api-key', next);
+          await providersApi.deleteXAIConfig(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'claude') {
-          await providersApi.deleteClaudeConfig(sel.apiKey, sel.baseUrl);
-          const next = (config?.claudeApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('claude-api-key', next);
+          await providersApi.deleteClaudeConfig(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'vertex') {
-          await providersApi.deleteVertexConfig(sel.apiKey, sel.baseUrl);
-          const next = (config?.vertexApiKeys ?? []).filter((_, i) => i !== sel.index);
-          updateConfigValue('vertex-api-key', next);
+          await providersApi.deleteVertexConfig(sel.apiKey, sel.baseUrl, source);
         } else if (sel.brand === 'openaiCompatibility') {
-          await providersApi.deleteOpenAIProvider(sel.index);
-          const next = (config?.openaiCompatibility ?? []).filter(
-            (item, index) => (item.sourceIndex ?? index) !== sel.index
-          );
-          updateConfigValue('openai-compatibility', next);
+          await providersApi.deleteOpenAIProvider(source);
         } else if (
           sel.brand === 'apikeyFun' ||
           sel.brand === 'fennoAI' ||
@@ -797,28 +812,37 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           await runSponsorMutationWithRecovery(async () => {
             const raw = resource.raw as SponsorProviderRaw;
             for (const item of raw.gemini) {
-              await providersApi.deleteGeminiKey(item.config.apiKey, item.config.baseUrl);
+              await providersApi.deleteGeminiKey(
+                item.config.apiKey,
+                item.config.baseUrl,
+                item.config.source
+              );
             }
             for (const item of raw.codex) {
-              await providersApi.deleteCodexConfig(item.config.apiKey, item.config.baseUrl);
+              await providersApi.deleteCodexConfig(
+                item.config.apiKey,
+                item.config.baseUrl,
+                item.config.source
+              );
             }
             for (const item of raw.claude) {
-              await providersApi.deleteClaudeConfig(item.config.apiKey, item.config.baseUrl);
+              await providersApi.deleteClaudeConfig(
+                item.config.apiKey,
+                item.config.baseUrl,
+                item.config.source
+              );
             }
-            const openAIIndices = raw.openai
-              .map((item) => item.index)
-              .sort((left, right) => right - left);
-            for (const index of openAIIndices) {
-              await providersApi.deleteOpenAIProvider(index);
+            for (const item of raw.openai) {
+              await providersApi.deleteOpenAIProvider(item.config.source);
             }
           }, refetch);
         }
-        await refetch();
+        await refreshAfterMutation(refetch);
       } finally {
         setMutating(false);
       }
     },
-    [config, refetch, updateConfigValue]
+    [refetch]
   );
 
   const toggleDisabled = useCallback(
@@ -869,7 +893,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
             await providersApi.updateVertexConfig(selector.apiKey, selector.baseUrl, next);
           }
         } else if (brand === 'openaiCompatibility' && selector.brand === 'openaiCompatibility') {
-          await providersApi.updateOpenAIProviderDisabled(selector.index, disabled);
+          await providersApi.updateOpenAIProviderDisabled(disabled, resource.source);
         } else if (
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
@@ -881,7 +905,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
             refetch
           );
         }
-        await refetch();
+        await refreshAfterMutation(refetch);
       } finally {
         setMutating(false);
       }

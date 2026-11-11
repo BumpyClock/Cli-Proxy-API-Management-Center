@@ -69,13 +69,13 @@ test('OAuth list keeps all built-in login choices and the JSON import without st
     'codex',
     'anthropic',
     'antigravity',
-    'qoder',
     'xai',
     'devin',
   ]) {
     expect(markup).toContain(i18n.t(`auth_login.${provider}_oauth_title`));
     expect(markup).toContain(i18n.t(`auth_login.${provider}_oauth_button`));
   }
+  expect(markup).not.toContain(i18n.t('auth_login.qoder_oauth_button'));
   expect(markup).toContain(i18n.t('vertex_import.import_button'));
   expect(markup).toContain('type="file"');
   expect(markup.indexOf(i18n.t('auth_login.meta_oauth_title'))).toBeLessThan(

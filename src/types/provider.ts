@@ -4,15 +4,20 @@
  */
 
 export interface ModelAlias {
+  /** Persisted model position; null marks a new form row. Never sent to the backend. */
+  sourceIndex?: number | null;
   name: string;
   alias?: string;
   priority?: number;
+  /** Connectivity-test selection only. v8 has no `test-model` field, so it is never persisted. */
   testModel?: string;
   image?: boolean;
   thinking?: Record<string, unknown>;
 }
 
 export interface ApiKeyEntry {
+  /** Persisted key position inside its OpenAI-compatible group. Never sent to the backend. */
+  sourceIndex?: number;
   apiKey: string;
   proxyUrl?: string;
   weight?: number;
@@ -26,7 +31,21 @@ export interface CloakConfig {
   cacheUserId?: boolean;
 }
 
+/**
+ * Persisted v8 identity of a provider row. Never derive a group from its endpoint
+ * or credential: groups may share both while differing in policy.
+ */
+export interface ProviderSource {
+  /** Complete provider-family list as read, used to detect concurrent changes. */
+  groups?: unknown[];
+  groupIndex: number;
+  /** Position in `group.keys`; absent for OpenAI-compatible groups. */
+  keyIndex?: number;
+  group: Record<string, unknown>;
+}
+
 export interface GeminiKeyConfig {
+  source?: ProviderSource;
   apiKey: string;
   priority?: number;
   weight?: number;
@@ -41,6 +60,7 @@ export interface GeminiKeyConfig {
 }
 
 export interface ProviderKeyConfig {
+  source?: ProviderSource;
   apiKey: string;
   priority?: number;
   weight?: number;
@@ -58,6 +78,7 @@ export interface ProviderKeyConfig {
 }
 
 export interface OpenAIProviderConfig {
+  source?: ProviderSource;
   name: string;
   prefix?: string;
   baseUrl: string;
@@ -66,10 +87,11 @@ export interface OpenAIProviderConfig {
   headers?: Record<string, string>;
   models?: ModelAlias[];
   priority?: number;
-  testModel?: string;
   disableCooling?: boolean;
+  /** Connectivity-test selection only. v8 has no `test-model` field, so it is never persisted. */
+  testModel?: string;
   authIndex?: string;
-  /** Original index in the backend openai-compatibility array. */
+  /** Original index in the backend openai-compatibility group list. */
   sourceIndex?: number;
   [key: string]: unknown;
 }

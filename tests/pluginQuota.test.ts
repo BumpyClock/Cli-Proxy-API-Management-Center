@@ -31,6 +31,7 @@ const file = {
   authIndex: 'fixture-index',
   supportsQuota: true,
   quotaProvider: 'quota-provider',
+  quotaPluginId: 'fixture-plugin',
 };
 const classes = Object.fromEntries(
   QUOTA_CLASS_KEYS.map((key) => [key, key])
@@ -58,7 +59,7 @@ function markup(data: ReturnType<typeof normalizePluginQuota>) {
 }
 
 describe('generic plugin quota contract', () => {
-  test('dispatches the current v0 quota endpoint with normalized identity', async () => {
+  test('dispatches the authoritative v8 plugin route with normalized identity', async () => {
     useAuthStore.setState({ supportsPlugin: true });
     const post = spyOn(apiClient, 'post').mockResolvedValue({
       summary: [
@@ -67,8 +68,7 @@ describe('generic plugin quota contract', () => {
     });
     try {
       const data = await PLUGIN_CONFIG.fetchQuota(file, t);
-      expect(post).toHaveBeenCalledWith('/quota/fetch', {
-        provider: 'quota-provider',
+      expect(post).toHaveBeenCalledWith('/plugins/fixture-plugin/quota', {
         auth_index: 'fixture-index',
       });
       expect(data.summary).toEqual([
@@ -87,12 +87,14 @@ describe('generic plugin quota contract', () => {
     }
   });
 
-  test('supports declarative probes without fabricating a provider', async () => {
+  test('does not guess a plugin route for declarative probes or missing host selection', async () => {
     useAuthStore.setState({ supportsPlugin: true });
     const post = spyOn(apiClient, 'post').mockResolvedValue({});
     try {
-      await PLUGIN_CONFIG.fetchQuota({ ...file, quotaProvider: undefined }, t);
-      expect(post).toHaveBeenCalledWith('/quota/fetch', { auth_index: 'fixture-index' });
+      await expect(
+        PLUGIN_CONFIG.fetchQuota({ ...file, quotaPluginId: undefined }, t)
+      ).rejects.toThrow(t('plugin_quota.route_unavailable'));
+      expect(post).not.toHaveBeenCalled();
     } finally {
       post.mockRestore();
     }
@@ -125,6 +127,7 @@ describe('generic plugin quota contract', () => {
           auth_index: '1',
           supports_quota: '1',
           quota_provider: 'custom',
+          quota_plugin_id: 'selected-plugin',
         },
       ],
     });
@@ -133,6 +136,7 @@ describe('generic plugin quota contract', () => {
       expect(result.files[0]).toMatchObject({
         supportsQuota: true,
         quotaProvider: 'custom',
+        quotaPluginId: 'selected-plugin',
         authIndex: '1',
       });
       expect(resolveQuotaProviderType(result.files[0])).toBe('plugin');

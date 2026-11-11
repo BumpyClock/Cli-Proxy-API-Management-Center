@@ -1,365 +1,61 @@
 /**
- * AI 提供商相关 API
+ * Upstream provider groups (v8 `api-keys.<family>`).
+ *
+ * A group owns one endpoint and shared policy; each key may override it, and a null key
+ * field inherits. The Management API only replaces whole family lists, so every write is a
+ * read-modify-write against GET /config: the edited row is located by its persisted
+ * snapshot (never by endpoint or credential), only fields the form actually changed are
+ * applied to the raw record, and every other group, key and unknown field passes through.
  */
 
-import { apiClient } from './client';
+import { readConfigResource } from './configValue';
 import { isRecord } from '@/utils/helpers';
-import { normalizeOpenAIProvider, normalizeProviderKeyConfig } from './transformers';
+import { normalizeApiKeyEntry, normalizeProviderGroups } from './transformers';
+import { serializeModelThinking } from './providerModels';
 import type {
   GeminiKeyConfig,
   OpenAIProviderConfig,
   ProviderKeyConfig,
   ApiKeyEntry,
   ModelAlias,
+  ProviderSource,
 } from '@/types';
+
+export type ProviderFamily =
+  | 'gemini'
+  | 'interactions'
+  | 'codex'
+  | 'meta'
+  | 'xai'
+  | 'claude'
+  | 'vertex'
+  | 'openai-compatibility';
+
+type KeyConfig = ProviderKeyConfig | GeminiKeyConfig;
+type Wire = Record<string, unknown>;
+type EmptyOverride = '' | 0 | 1 | false | [] | Record<string, never>;
 
 const serializeHeaders = (headers?: Record<string, string>) =>
   headers && Object.keys(headers).length ? headers : undefined;
 
-const RESPONSE_ONLY_FIELDS = ['auth-index'] as const;
+/* -------------------------------------------------------------------------- */
+/* serialization (config -> wire)                                              */
+/* -------------------------------------------------------------------------- */
 
-const PROVIDER_COMMON_KEY_FIELDS = [
-  'api-key',
-  'priority',
-  'weight',
-  'prefix',
-  'base-url',
-  'proxy-url',
-  'headers',
-  'models',
-  'excluded-models',
-  'disable-cooling',
-] as const;
-
-const GEMINI_KEY_FIELDS = PROVIDER_COMMON_KEY_FIELDS;
-const INTERACTIONS_KEY_FIELDS = PROVIDER_COMMON_KEY_FIELDS;
-const CODEX_KEY_FIELDS = [...PROVIDER_COMMON_KEY_FIELDS, 'websockets'] as const;
-const META_KEY_FIELDS = PROVIDER_COMMON_KEY_FIELDS;
-const XAI_KEY_FIELDS = CODEX_KEY_FIELDS;
-const CLAUDE_KEY_FIELDS = [
-  ...PROVIDER_COMMON_KEY_FIELDS,
-  'cloak',
-  'fingerprint-profile',
-  // Keep stripping the deprecated field when a Claude entry is saved.
-  'experimental-cch-signing',
-] as const;
-const VERTEX_KEY_FIELDS = [
-  'api-key',
-  'priority',
-  'weight',
-  'prefix',
-  'base-url',
-  'proxy-url',
-  'headers',
-  'models',
-  'excluded-models',
-] as const;
-
-const OPENAI_PROVIDER_FIELDS = [
-  'name',
-  'priority',
-  'disabled',
-  'prefix',
-  'base-url',
-  'api-key-entries',
-  'headers',
-  'models',
-  'test-model',
-  'disable-cooling',
-] as const;
-
-const MODEL_ALIAS_FIELDS = ['name', 'alias', 'priority', 'test-model', 'thinking'] as const;
-const OPENAI_MODEL_ALIAS_FIELDS = [...MODEL_ALIAS_FIELDS, 'image'] as const;
-
-const API_KEY_ENTRY_FIELDS = ['api-key', 'proxy-url', 'weight'] as const;
-
-const CLOAK_FIELDS = ['mode', 'strict-mode', 'sensitive-words', 'cache-user-id'] as const;
-
-const getStringField = (record: Record<string, unknown>, keys: readonly string[]) => {
-  for (const key of keys) {
-    const value = record[key];
-    if (value === undefined || value === null) continue;
-    const text = String(value).trim();
-    if (text) return text;
-  }
-  return '';
-};
-
-const openAIProviderIdentity = (record: Record<string, unknown>) =>
-  getStringField(record, ['name']);
-
-const modelIdentity = (record: Record<string, unknown>) => getStringField(record, ['name']);
-
-const apiKeyEntryIdentity = (record: Record<string, unknown>) =>
-  getStringField(record, ['api-key']);
-
-const cloneWithoutKnownFields = (
-  raw: unknown,
-  knownFields: readonly string[]
-): Record<string, unknown> => {
-  const next: Record<string, unknown> = isRecord(raw) ? { ...raw } : {};
-  [...knownFields, ...RESPONSE_ONLY_FIELDS].forEach((field) => {
-    delete next[field];
-  });
-  return next;
-};
-
-const mergeKnownFields = (
-  raw: unknown,
-  payload: Record<string, unknown>,
-  knownFields: readonly string[]
-) => {
-  const next = cloneWithoutKnownFields(raw, knownFields);
-  Object.entries(payload).forEach(([key, value]) => {
-    if (value !== undefined) {
-      next[key] = value;
-    }
-  });
-  return next;
-};
-
-const findRawRecord = (
-  rawRecords: Array<Record<string, unknown> | undefined>,
-  usedIndexes: Set<number>,
-  payload: Record<string, unknown>,
-  index: number,
-  getIdentity: (record: Record<string, unknown>) => string,
-  fallbackByIndex = true
-) => {
-  const identity = getIdentity(payload);
-  if (identity) {
-    for (let i = 0; i < rawRecords.length; i += 1) {
-      const candidate = rawRecords[i];
-      if (!candidate || usedIndexes.has(i)) continue;
-      if (getIdentity(candidate) === identity) {
-        usedIndexes.add(i);
-        return candidate;
-      }
-    }
-  }
-
-  if (fallbackByIndex) {
-    const fallback = rawRecords[index];
-    if (fallback && !usedIndexes.has(index)) {
-      usedIndexes.add(index);
-      return fallback;
-    }
-  }
-
-  return undefined;
-};
-
-const mergeKnownRecordList = (
-  rawItems: unknown,
-  payloadItems: Record<string, unknown>[],
-  knownFields: readonly string[],
-  getIdentity: (record: Record<string, unknown>) => string,
-  fallbackByIndex = true
-) => {
-  const rawRecords = Array.isArray(rawItems)
-    ? rawItems.map((item) => (isRecord(item) ? item : undefined))
-    : [];
-  const usedIndexes = new Set<number>();
-
-  return payloadItems.map((payload, index) => {
-    const raw = findRawRecord(
-      rawRecords,
-      usedIndexes,
-      payload,
-      index,
-      getIdentity,
-      fallbackByIndex
-    );
-    return mergeKnownFields(raw, payload, knownFields);
-  });
-};
-
-const getRawSectionList = (rawConfig: unknown, section: string): unknown[] => {
-  if (!isRecord(rawConfig)) return [];
-  const value = rawConfig[section];
-  return Array.isArray(value) ? value : [];
-};
-
-type ProviderRecordMerger = (
-  raw: unknown,
-  payload: Record<string, unknown>
-) => Record<string, unknown>;
-
-export function appendLatestProviderRecord(
-  latestItems: unknown[],
-  payload: Record<string, unknown>,
-  mergePayload: ProviderRecordMerger
-): unknown[] {
-  return [...latestItems, mergePayload(undefined, payload)];
-}
-
-export function replaceLatestProviderRecord(
-  latestItems: unknown[],
-  isTarget: (record: Record<string, unknown>, index: number) => boolean,
-  payload: Record<string, unknown>,
-  mergePayload: ProviderRecordMerger
-): unknown[] {
-  const targetIndex = latestItems.findIndex(
-    (item, index) => isRecord(item) && isTarget(item, index)
-  );
-  if (targetIndex < 0) {
-    throw new Error('Provider configuration changed; refresh and try again.');
-  }
-
-  return latestItems.map((item, index) =>
-    index === targetIndex ? mergePayload(item, payload) : item
-  );
-}
-
-const mutateLatestProviderList = async (
-  section: string,
-  mutate: (latestItems: unknown[]) => unknown[]
-) => {
-  const rawConfig = await apiClient.get('/config');
-  const latestItems = getRawSectionList(rawConfig, section);
-  await apiClient.put(`/${section}`, mutate(latestItems));
-};
-
-const matchesProviderKey = (record: Record<string, unknown>, apiKey: string, baseUrl?: string) =>
-  getStringField(record, ['api-key']) === apiKey.trim() &&
-  getStringField(record, ['base-url']) === (baseUrl ?? '').trim();
-
-const matchesOpenAIProvider = (record: Record<string, unknown>, name: string) =>
-  openAIProviderIdentity(record) === name.trim();
-
-const mergeModelPayloads = (
-  raw: unknown,
-  models: unknown,
-  knownFields: readonly string[] = MODEL_ALIAS_FIELDS
-) =>
-  Array.isArray(models)
-    ? mergeKnownRecordList(
-        isRecord(raw) ? raw.models : undefined,
-        models.filter(isRecord),
-        knownFields,
-        modelIdentity,
-        false
-      )
-    : undefined;
-
-const mergeProviderKeyPayload = (
-  raw: unknown,
-  payload: Record<string, unknown>,
-  knownFields: readonly string[]
-) => {
-  const next = mergeKnownFields(raw, payload, knownFields);
-  const models = mergeModelPayloads(raw, payload.models);
-  if (models) next.models = models;
-  if (isRecord(payload.cloak)) {
-    next.cloak = mergeKnownFields(
-      isRecord(raw) ? raw.cloak : undefined,
-      payload.cloak,
-      CLOAK_FIELDS
-    );
-  }
-  return next;
-};
-
-const mergeOpenAIProviderPayload = (raw: unknown, payload: Record<string, unknown>) => {
-  const next = mergeKnownFields(raw, payload, OPENAI_PROVIDER_FIELDS);
-  const rawApiKeyEntries = isRecord(raw) ? raw['api-key-entries'] : undefined;
-  const apiKeyEntries = payload['api-key-entries'];
-  if (Array.isArray(apiKeyEntries)) {
-    next['api-key-entries'] = mergeKnownRecordList(
-      rawApiKeyEntries,
-      apiKeyEntries.filter(isRecord),
-      API_KEY_ENTRY_FIELDS,
-      apiKeyEntryIdentity
-    );
-  }
-  const models = mergeModelPayloads(raw, payload.models, OPENAI_MODEL_ALIAS_FIELDS);
-  if (models) next.models = models;
-  return next;
-};
-
-const extractArrayPayload = (data: unknown, key: string): unknown[] => {
-  if (!isRecord(data)) return [];
-  const list = data[key];
-  return Array.isArray(list) ? list : [];
-};
-
-const buildProviderDeleteQuery = (apiKey: string, baseUrl?: string) => {
-  const params = new URLSearchParams();
-  params.set('api-key', apiKey.trim());
-  params.set('base-url', (baseUrl ?? '').trim());
-  return `?${params.toString()}`;
-};
-
+// v8 models carry no `priority` or `test-model`; the backend rejects unknown fields.
 const serializeModelAliases = (models?: ModelAlias[], includeOpenAIFields = false) =>
   Array.isArray(models)
     ? models
         .map((model) => {
           if (!model?.name) return null;
-          const payload: Record<string, unknown> = { name: model.name };
-          if (model.alias && model.alias !== model.name) {
-            payload.alias = model.alias;
-          }
-          if (model.priority !== undefined) {
-            payload.priority = model.priority;
-          }
-          if (model.testModel) {
-            payload['test-model'] = model.testModel;
-          }
-          if (includeOpenAIFields && model.image) {
-            payload.image = true;
-          }
-          if (model.thinking) {
-            payload.thinking = model.thinking;
-          }
+          const payload: Wire = { name: model.name };
+          if (model.alias) payload.alias = model.alias;
+          if (includeOpenAIFields && model.image) payload.image = true;
+          if (model.thinking) payload.thinking = serializeModelThinking(model.thinking);
           return payload;
         })
         .filter(Boolean)
     : undefined;
-
-const serializeApiKeyEntry = (entry: ApiKeyEntry) => {
-  const payload: Record<string, unknown> = { 'api-key': entry.apiKey };
-  if (entry.proxyUrl) payload['proxy-url'] = entry.proxyUrl;
-  if (entry.weight !== undefined) payload.weight = entry.weight;
-  return payload;
-};
-
-const serializeProviderKey = (config: ProviderKeyConfig) => {
-  const payload: Record<string, unknown> = { 'api-key': config.apiKey };
-  if (config.priority !== undefined) payload.priority = config.priority;
-  if (config.weight !== undefined) payload.weight = config.weight;
-  if (config.prefix?.trim()) payload.prefix = config.prefix.trim();
-  if (config.baseUrl) payload['base-url'] = config.baseUrl;
-  if (config.websockets !== undefined) payload.websockets = config.websockets;
-  if (config.proxyUrl) payload['proxy-url'] = config.proxyUrl;
-  if (config.disableCooling) payload['disable-cooling'] = true;
-  const headers = serializeHeaders(config.headers);
-  if (headers) payload.headers = headers;
-  const models = serializeModelAliases(config.models);
-  if (models && models.length) payload.models = models;
-  if (config.excludedModels && config.excludedModels.length) {
-    payload['excluded-models'] = config.excludedModels;
-  }
-  if (config.cloak) {
-    const cloakPayload: Record<string, unknown> = {};
-    const mode = config.cloak.mode?.trim();
-    if (mode) cloakPayload.mode = mode;
-    if (config.cloak.strictMode !== undefined)
-      cloakPayload['strict-mode'] = config.cloak.strictMode;
-    if (config.cloak.sensitiveWords && config.cloak.sensitiveWords.length) {
-      cloakPayload['sensitive-words'] = config.cloak.sensitiveWords;
-    }
-    if (config.cloak.cacheUserId) {
-      cloakPayload['cache-user-id'] = true;
-    }
-    if (Object.keys(cloakPayload).length) {
-      payload.cloak = cloakPayload;
-    }
-  }
-  if (config.fingerprintProfile?.trim()) {
-    payload['fingerprint-profile'] = config.fingerprintProfile.trim();
-  }
-  return payload;
-};
 
 const serializeVertexModelAliases = (models?: ModelAlias[]) =>
   Array.isArray(models)
@@ -371,14 +67,25 @@ const serializeVertexModelAliases = (models?: ModelAlias[]) =>
           return {
             name,
             alias,
-            ...(model.thinking ? { thinking: model.thinking } : {}),
+            ...(model.thinking ? { thinking: serializeModelThinking(model.thinking) } : {}),
           };
         })
         .filter(Boolean)
     : undefined;
 
-const serializeVertexKey = (config: ProviderKeyConfig) => {
-  const payload: Record<string, unknown> = { 'api-key': config.apiKey };
+const serializeApiKeyEntry = (entry: ApiKeyEntry) => {
+  const payload: Wire = { 'api-key': entry.apiKey };
+  if (entry.proxyUrl) payload['proxy-url'] = entry.proxyUrl;
+  if (entry.weight !== undefined) payload.weight = entry.weight;
+  return payload;
+};
+
+/** Fields every direct-key family shares. `disable-cooling` is tri-state: false is meaningful. */
+const serializeCommonKey = (
+  config: KeyConfig,
+  serializeModels: (models?: ModelAlias[]) => unknown[] | undefined
+) => {
+  const payload: Wire = { 'api-key': config.apiKey };
   if (config.priority !== undefined) payload.priority = config.priority;
   if (config.weight !== undefined) payload.weight = config.weight;
   if (config.prefix?.trim()) payload.prefix = config.prefix.trim();
@@ -386,7 +93,7 @@ const serializeVertexKey = (config: ProviderKeyConfig) => {
   if (config.proxyUrl) payload['proxy-url'] = config.proxyUrl;
   const headers = serializeHeaders(config.headers);
   if (headers) payload.headers = headers;
-  const models = serializeVertexModelAliases(config.models);
+  const models = serializeModels(config.models);
   if (models && models.length) payload.models = models;
   if (config.excludedModels && config.excludedModels.length) {
     payload['excluded-models'] = config.excludedModels;
@@ -394,29 +101,43 @@ const serializeVertexKey = (config: ProviderKeyConfig) => {
   return payload;
 };
 
-const serializeGeminiKey = (config: GeminiKeyConfig) => {
-  const payload: Record<string, unknown> = { 'api-key': config.apiKey };
-  if (config.priority !== undefined) payload.priority = config.priority;
-  if (config.weight !== undefined) payload.weight = config.weight;
-  if (config.prefix?.trim()) payload.prefix = config.prefix.trim();
-  if (config.baseUrl) payload['base-url'] = config.baseUrl;
-  if (config.proxyUrl) payload['proxy-url'] = config.proxyUrl;
-  if (config.disableCooling) payload['disable-cooling'] = true;
-  const headers = serializeHeaders(config.headers);
-  if (headers) payload.headers = headers;
-  const models = serializeModelAliases(config.models);
-  if (models && models.length) payload.models = models;
-  if (config.excludedModels && config.excludedModels.length) {
-    payload['excluded-models'] = config.excludedModels;
+const serializeProviderKey = (config: ProviderKeyConfig) => {
+  const payload = serializeCommonKey(config, serializeModelAliases);
+  if (config.websockets !== undefined) payload.websockets = config.websockets;
+  if (config.disableCooling !== undefined) payload['disable-cooling'] = config.disableCooling;
+  if (config.cloak) {
+    const cloakPayload: Wire = {};
+    const mode = config.cloak.mode?.trim();
+    if (mode) cloakPayload.mode = mode;
+    if (config.cloak.strictMode !== undefined) {
+      cloakPayload['strict-mode'] = config.cloak.strictMode;
+    }
+    if (config.cloak.sensitiveWords && config.cloak.sensitiveWords.length) {
+      cloakPayload['sensitive-words'] = config.cloak.sensitiveWords;
+    }
+    if (config.cloak.cacheUserId) cloakPayload['cache-user-id'] = true;
+    if (Object.keys(cloakPayload).length) payload.cloak = cloakPayload;
   }
+  if (config.fingerprintProfile?.trim()) {
+    payload['fingerprint-profile'] = config.fingerprintProfile.trim();
+  }
+  return payload;
+};
+
+const serializeVertexKey = (config: ProviderKeyConfig) =>
+  serializeCommonKey(config, serializeVertexModelAliases);
+
+const serializeGeminiKey = (config: GeminiKeyConfig) => {
+  const payload = serializeCommonKey(config, serializeModelAliases);
+  if (config.disableCooling !== undefined) payload['disable-cooling'] = config.disableCooling;
   return payload;
 };
 
 const serializeOpenAIProvider = (provider: OpenAIProviderConfig) => {
-  const payload: Record<string, unknown> = {
+  const payload: Wire = {
     name: provider.name,
     'base-url': provider.baseUrl,
-    'api-key-entries': Array.isArray(provider.apiKeyEntries)
+    keys: Array.isArray(provider.apiKeyEntries)
       ? provider.apiKeyEntries.map((entry) => serializeApiKeyEntry(entry))
       : [],
   };
@@ -427,198 +148,489 @@ const serializeOpenAIProvider = (provider: OpenAIProviderConfig) => {
   const models = serializeModelAliases(provider.models, true);
   if (models && models.length) payload.models = models;
   if (provider.priority !== undefined) payload.priority = provider.priority;
-  if (provider.testModel) payload['test-model'] = provider.testModel;
-  if (provider.disableCooling) payload['disable-cooling'] = true;
+  if (provider.disableCooling !== undefined) payload['disable-cooling'] = provider.disableCooling;
   return payload;
 };
 
+const keySerializer = (family: ProviderFamily): ((config: KeyConfig) => Wire) =>
+  family === 'vertex'
+    ? (serializeVertexKey as (config: KeyConfig) => Wire)
+    : family === 'gemini' || family === 'interactions'
+      ? (serializeGeminiKey as (config: KeyConfig) => Wire)
+      : (serializeProviderKey as (config: KeyConfig) => Wire);
+
+/* -------------------------------------------------------------------------- */
+/* snapshot comparison                                                         */
+/* -------------------------------------------------------------------------- */
+
+const conflict = () =>
+  new Error('Provider configuration changed or is ambiguous; refresh and try again.');
+
+const equal = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((value, index) => equal(value, b[index]));
+  }
+  if (isRecord(a) && isRecord(b)) {
+    const keys = Object.keys(a).filter((key) => a[key] !== undefined);
+    return (
+      keys.length === Object.keys(b).filter((key) => b[key] !== undefined).length &&
+      keys.every((key) => equal(a[key], b[key]))
+    );
+  }
+  return false;
+};
+
+/** GET /config injects a per-credential `auth_index`; it is not persisted configuration. */
+const RESPONSE_ONLY_FIELDS = ['auth_index', 'auth-index'] as const;
+
+const withoutResponseFields = (record: Wire): Wire => {
+  const next = { ...record };
+  for (const field of RESPONSE_ONLY_FIELDS) delete next[field];
+  return next;
+};
+
+/** Persisted form of a group: response-only fields removed at group and key level only. */
+const persisted = (group: Wire): Wire => ({
+  ...withoutResponseFields(group),
+  ...(Array.isArray(group.keys)
+    ? { keys: group.keys.map((key) => (isRecord(key) ? withoutResponseFields(key) : key)) }
+    : {}),
+});
+
+const withoutKeys = (group: Wire): Wire => {
+  const next = { ...group };
+  delete next.keys;
+  return next;
+};
+
+const persistedGroups = (groups: unknown[]): unknown[] =>
+  groups.map((group) => (isRecord(group) ? persisted(group) : group));
+
+/* -------------------------------------------------------------------------- */
+/* transport                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** Validate a family list read from /config. A malformed list is never rewritten. */
+export const readProviderGroups = (raw: unknown, family: ProviderFamily): Wire[] => {
+  if (!isRecord(raw) || !isRecord(raw['api-keys'])) return [];
+  const groups = raw['api-keys'][family];
+  if (groups === undefined || groups === null) return [];
+  if (!Array.isArray(groups) || !groups.every((g) => isRecord(g) && Array.isArray(g.keys))) {
+    throw conflict();
+  }
+  return groups as Wire[];
+};
+
+const getGroups = async (family: ProviderFamily) => {
+  const resource = await readConfigResource(`/config/api-keys/${family}`, []);
+  return {
+    groups: readProviderGroups({ 'api-keys': { [family]: resource.value } }, family),
+    replace: (groups: Wire[]) => resource.replace(cleanGroups(family, groups)),
+  };
+};
+
+// `test-model` was a legacy UI-only field; v8 validation rejects unknown fields.
+const withoutTestModel = (value: Wire): Wire => {
+  const next = { ...value };
+  delete next['test-model'];
+  return next;
+};
+
+const cleanModelTestFields = (value: Wire): Wire =>
+  Array.isArray(value.models)
+    ? {
+        ...value,
+        models: value.models.map((model) => (isRecord(model) ? withoutTestModel(model) : model)),
+      }
+    : value;
+
+const cleanGroups = (family: ProviderFamily, groups: Wire[]) =>
+  groups.map((group) => {
+    const clean = withoutResponseFields(
+      cleanModelTestFields(family === 'openai-compatibility' ? withoutTestModel(group) : group)
+    );
+    return {
+      ...clean,
+      keys: (group.keys as unknown[]).map((key) =>
+        isRecord(key) ? cleanModelTestFields(withoutResponseFields(key)) : key
+      ),
+    };
+  });
+
+/* -------------------------------------------------------------------------- */
+/* locating the edited row                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Find the group a row was read from. An unchanged list resolves by position; otherwise the
+ * group must still be uniquely identifiable by its persisted content. Anything else is a
+ * concurrent change or a duplicate, and refuses the write.
+ */
+export const locateProviderGroup = (groups: Wire[], source: ProviderSource): number => {
+  const current = persistedGroups(groups);
+  if (
+    source.groups &&
+    equal(current, persistedGroups(source.groups)) &&
+    equal(current[source.groupIndex], persisted(source.group))
+  ) {
+    return source.groupIndex;
+  }
+  const expected = persisted(source.group);
+  const matches = current.flatMap((group, index) => {
+    if (!isRecord(group)) return [];
+    if (source.keyIndex === undefined) return equal(group, expected) ? [index] : [];
+    const { keys: oldKeys, ...oldPolicy } = expected;
+    const { keys, ...policy } = group;
+    if (!equal(policy, oldPolicy) || !Array.isArray(oldKeys) || !Array.isArray(keys)) return [];
+    return keys.some((key) => equal(key, oldKeys[source.keyIndex!])) ? [index] : [];
+  });
+  if (matches.length !== 1) throw conflict();
+  return matches[0];
+};
+
+/** Position of the edited key inside the located group. */
+const locateKey = (group: Wire, source: ProviderSource): number => {
+  const originalKeys = persisted(source.group).keys;
+  if (source.keyIndex === undefined || !Array.isArray(originalKeys)) throw conflict();
+  const keys = persisted(group).keys as unknown[];
+  const matches = equal(persisted(group), persisted(source.group))
+    ? [source.keyIndex]
+    : keys.flatMap((key, index) => (equal(key, originalKeys[source.keyIndex!]) ? [index] : []));
+  if (matches.length !== 1) throw conflict();
+  return matches[0];
+};
+
+const findKeySource = (groups: Wire[], apiKey: string, baseUrl?: string): ProviderSource => {
+  const matches = (normalizeProviderGroups(groups) as KeyConfig[]).filter(
+    (config) => config.apiKey === apiKey && (config.baseUrl ?? '') === (baseUrl ?? '')
+  );
+  if (matches.length !== 1 || !matches[0].source) throw conflict();
+  return matches[0].source;
+};
+
+const findOpenAISource = (groups: Wire[], source: ProviderSource | undefined, name?: string) => {
+  if (source) return locateProviderGroup(groups, source);
+  const matches = (normalizeProviderGroups(groups, true) as OpenAIProviderConfig[]).filter(
+    (config) => name !== undefined && config.name === name.trim()
+  );
+  if (matches.length !== 1 || !matches[0].source) throw conflict();
+  return locateProviderGroup(groups, matches[0].source);
+};
+
+/* -------------------------------------------------------------------------- */
+/* applying form changes to raw records                                        */
+/* -------------------------------------------------------------------------- */
+
+/** Override inherited policy with the editor's neutral value instead of re-inheriting it. */
+const emptyOverride = (field: string): EmptyOverride => {
+  if (['models', 'excluded-models'].includes(field)) return [];
+  if (['headers', 'cloak'].includes(field)) return {};
+  if (['disable-cooling', 'websockets', 'disabled'].includes(field)) return false;
+  if (field === 'priority') return 0;
+  if (field === 'weight') return 1;
+  return '';
+};
+
+/**
+ * Apply only the fields that differ between the serialized original (`before`) and the
+ * serialized form (`after`) onto the raw record. Untouched fields, unknown fields and
+ * explicit nulls therefore survive; a field cleared in the form removes the local
+ * override, or writes an empty override when a parent group would otherwise be inherited.
+ */
+export const applyProviderChanges = (
+  raw: Wire,
+  before: Wire,
+  after: Wire,
+  inherited?: Wire
+): Wire => {
+  const next = { ...raw };
+  for (const field of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (equal(before[field], after[field])) continue;
+    // The form shows an omitted flag as off. Do not materialize that default.
+    if (
+      ['websockets', 'disabled'].includes(field) &&
+      before[field] === undefined &&
+      after[field] === false
+    ) {
+      continue;
+    }
+    if (after[field] !== undefined) {
+      const fieldRaw = raw[field] ?? inherited?.[field];
+      if (isRecord(fieldRaw) && isRecord(before[field]) && isRecord(after[field])) {
+        next[field] = applyProviderChanges(fieldRaw, before[field], after[field]);
+      } else {
+        next[field] = after[field];
+      }
+    } else if (inherited?.[field] !== undefined && inherited[field] !== null) {
+      next[field] = emptyOverride(field);
+    } else {
+      delete next[field];
+    }
+  }
+  return next;
+};
+
+/**
+ * Edit models by row identity so renames, reordering and deletion keep each model's
+ * unknown/advanced fields. `sourceIndex` is the row's persisted position (never sent);
+ * null marks a new row. Rows without an identity are matched only when unambiguous.
+ */
+const preserveModelMetadata = (
+  next: Wire,
+  raw: unknown,
+  before: unknown,
+  after: unknown,
+  original: ModelAlias[] | undefined,
+  desired: ModelAlias[] | undefined,
+  serialize: (models?: ModelAlias[]) => unknown
+) => {
+  if (!Array.isArray(after) || !Array.isArray(raw)) return;
+  const sameRows = equal(
+    original?.map((model) => model.sourceIndex),
+    desired?.map((model) => model.sourceIndex)
+  );
+  if (equal(before, after) && sameRows) return;
+  const used = new Set<number>();
+  const reserved = new Set(desired?.flatMap((model) => model.sourceIndex ?? []) ?? []);
+  next.models = (desired ?? []).flatMap((model) => {
+    const serialized = serialize([model]);
+    if (!Array.isArray(serialized) || !isRecord(serialized[0])) return [];
+    const value = serialized[0];
+    if (model.sourceIndex === null) return [value];
+    let old: ModelAlias | undefined;
+    if (model.sourceIndex !== undefined) {
+      old = original?.find((entry) => entry.sourceIndex === model.sourceIndex);
+      if (!old || used.has(model.sourceIndex)) throw conflict();
+    } else {
+      const candidates = (original ?? []).filter(
+        (entry) =>
+          typeof entry.sourceIndex === 'number' &&
+          !used.has(entry.sourceIndex) &&
+          !reserved.has(entry.sourceIndex) &&
+          entry.name === model.name
+      );
+      const exact = candidates.filter((entry) => entry.alias === model.alias);
+      old = exact.length === 1 ? exact[0] : candidates.length === 1 ? candidates[0] : undefined;
+    }
+    const index = old?.sourceIndex;
+    if (!old || typeof index !== 'number') return [value];
+    if (!isRecord(raw[index])) throw conflict();
+    used.add(index);
+    const previous = serialize([old]);
+    if (!Array.isArray(previous) || !isRecord(previous[0])) throw conflict();
+    return [applyProviderChanges(raw[index], previous[0], value)];
+  });
+};
+
+/* -------------------------------------------------------------------------- */
+/* mutations                                                                   */
+/* -------------------------------------------------------------------------- */
+
+const uniqueGroupName = (family: ProviderFamily, groups: Wire[]) => {
+  const names = new Set(groups.map((group) => group.name));
+  let number = groups.length + 1;
+  while (names.has(`${family}-${number}`)) number++;
+  return `${family}-${number}`;
+};
+
+const createKey = async (family: ProviderFamily, config: KeyConfig) => {
+  const { groups, replace } = await getGroups(family);
+  const payload = keySerializer(family)(config);
+  const baseUrl = payload['base-url'];
+  delete payload['base-url'];
+  await replace([
+    ...groups,
+    {
+      name: uniqueGroupName(family, groups),
+      ...(baseUrl ? { 'base-url': baseUrl } : {}),
+      keys: [payload],
+    },
+  ]);
+};
+
+const updateKey = async (
+  family: ProviderFamily,
+  apiKey: string,
+  baseUrl: string | undefined,
+  config: KeyConfig
+) => {
+  const { groups, replace } = await getGroups(family);
+  const source = config.source ?? findKeySource(groups, apiKey, baseUrl);
+  const index = locateProviderGroup(groups, source);
+  const group = groups[index];
+  const keyIndex = locateKey(group, source);
+  const keys = [...(group.keys as Wire[])];
+  const original = (normalizeProviderGroups([group]) as KeyConfig[]).find(
+    (row) => row.source?.keyIndex === keyIndex
+  );
+  if (!original) throw conflict();
+
+  const serialize = keySerializer(family);
+  const before = serialize(original);
+  const after = serialize(config);
+  const baseUrlChanged = !equal(before['base-url'], after['base-url']);
+  const nextBaseUrl = after['base-url'];
+  delete before['base-url'];
+  delete after['base-url'];
+
+  const rawKey = keys[keyIndex];
+  const rawModels = rawKey.models ?? group.models;
+  const nextKey = applyProviderChanges(rawKey, before, after, group);
+  preserveModelMetadata(
+    nextKey,
+    rawModels,
+    before.models,
+    after.models,
+    original.models,
+    config.models,
+    family === 'vertex' ? serializeVertexModelAliases : serializeModelAliases
+  );
+
+  const groupFields = withoutKeys(group);
+  if (!baseUrlChanged) {
+    keys[keyIndex] = nextKey;
+    groups[index] = { ...groupFields, keys };
+  } else if (keys.length === 1) {
+    keys[keyIndex] = nextKey;
+    const next: Wire = { ...groupFields, keys };
+    if (nextBaseUrl === undefined) delete next['base-url'];
+    else next['base-url'] = nextBaseUrl;
+    groups[index] = next;
+  } else {
+    // The endpoint belongs to the group. Moving this key must not repoint its siblings,
+    // so it leaves for a new group that keeps the group's shared policy.
+    const moved: Wire = { ...groupFields, name: uniqueGroupName(family, groups), keys: [nextKey] };
+    if (nextBaseUrl === undefined) delete moved['base-url'];
+    else moved['base-url'] = nextBaseUrl;
+    groups[index] = { ...groupFields, keys: keys.filter((_, i) => i !== keyIndex) };
+    groups.splice(index + 1, 0, moved);
+  }
+  await replace(groups);
+};
+
+const deleteKey = async (
+  family: ProviderFamily,
+  apiKey: string,
+  baseUrl?: string,
+  expected?: ProviderSource
+) => {
+  const { groups, replace } = await getGroups(family);
+  const source = expected ?? findKeySource(groups, apiKey, baseUrl);
+  const index = locateProviderGroup(groups, source);
+  const keyIndex = locateKey(groups[index], source);
+  groups[index] = {
+    ...groups[index],
+    keys: (groups[index].keys as unknown[]).filter((_, i) => i !== keyIndex),
+  };
+  await replace(groups);
+};
+
+const updateOpenAIGroup = async (config: OpenAIProviderConfig, name?: string) => {
+  const { groups, replace } = await getGroups('openai-compatibility');
+  const index = findOpenAISource(groups, config.source, name);
+  const original = (normalizeProviderGroups([groups[index]], true) as OpenAIProviderConfig[])[0];
+  if (!original) throw conflict();
+
+  const before = serializeOpenAIProvider(original);
+  const after = serializeOpenAIProvider(config);
+  delete before.keys;
+  delete after.keys;
+
+  const next = applyProviderChanges(groups[index], before, after);
+  preserveModelMetadata(
+    next,
+    groups[index].models,
+    before.models,
+    after.models,
+    original.models,
+    config.models,
+    (models) => serializeModelAliases(models, true)
+  );
+  const rawKeys = groups[index].keys as Wire[];
+  const used = new Set<number>();
+  next.keys = config.apiKeyEntries.map((entry) => {
+    // An existing entry keeps its persisted position; its absence means a new credential.
+    // API keys alone are not identities: one key can appear with different proxies.
+    const keyIndex = entry.sourceIndex;
+    if (keyIndex === undefined) return serializeApiKeyEntry(entry);
+    if (!Number.isInteger(keyIndex) || used.has(keyIndex) || !isRecord(rawKeys[keyIndex])) {
+      throw conflict();
+    }
+    used.add(keyIndex);
+    const old = normalizeApiKeyEntry(rawKeys[keyIndex]);
+    if (!old) throw conflict();
+    return applyProviderChanges(
+      rawKeys[keyIndex],
+      serializeApiKeyEntry(old),
+      serializeApiKeyEntry(entry)
+    );
+  });
+  groups[index] = next;
+  await replace(groups);
+};
+
 export const providersApi = {
-  createGeminiKey: (config: GeminiKeyConfig) =>
-    mutateLatestProviderList('gemini-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeGeminiKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, GEMINI_KEY_FIELDS)
-      )
-    ),
-
+  createGeminiKey: (config: GeminiKeyConfig) => createKey('gemini', config),
   updateGeminiKey: (apiKey: string, baseUrl: string | undefined, config: GeminiKeyConfig) =>
-    mutateLatestProviderList('gemini-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeGeminiKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, GEMINI_KEY_FIELDS)
-      )
-    ),
+    updateKey('gemini', apiKey, baseUrl, config),
+  deleteGeminiKey: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('gemini', apiKey, baseUrl, source),
 
-  deleteGeminiKey: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/gemini-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  createInteractionsKey: (config: GeminiKeyConfig) =>
-    mutateLatestProviderList('interactions-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeGeminiKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, INTERACTIONS_KEY_FIELDS)
-      )
-    ),
-
+  createInteractionsKey: (config: GeminiKeyConfig) => createKey('interactions', config),
   updateInteractionsKey: (apiKey: string, baseUrl: string | undefined, config: GeminiKeyConfig) =>
-    mutateLatestProviderList('interactions-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeGeminiKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, INTERACTIONS_KEY_FIELDS)
-      )
-    ),
+    updateKey('interactions', apiKey, baseUrl, config),
+  deleteInteractionsKey: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('interactions', apiKey, baseUrl, source),
 
-  deleteInteractionsKey: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/interactions-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  createCodexConfig: (config: ProviderKeyConfig) =>
-    mutateLatestProviderList('codex-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeProviderKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, CODEX_KEY_FIELDS)
-      )
-    ),
-
+  createCodexConfig: (config: ProviderKeyConfig) => createKey('codex', config),
   updateCodexConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    mutateLatestProviderList('codex-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeProviderKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, CODEX_KEY_FIELDS)
-      )
-    ),
+    updateKey('codex', apiKey, baseUrl, config),
+  deleteCodexConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('codex', apiKey, baseUrl, source),
 
-  deleteCodexConfig: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/codex-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  async getMetaConfigs(): Promise<ProviderKeyConfig[]> {
-    const data = await apiClient.get('/meta-api-key');
-    const list = extractArrayPayload(data, 'meta-api-key');
-    return list
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  },
-
-  createMetaConfig: (config: ProviderKeyConfig) =>
-    mutateLatestProviderList('meta-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeProviderKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, META_KEY_FIELDS)
-      )
-    ),
-
+  createMetaConfig: (config: ProviderKeyConfig) => createKey('meta', config),
   updateMetaConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    mutateLatestProviderList('meta-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeProviderKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, META_KEY_FIELDS)
-      )
-    ),
+    updateKey('meta', apiKey, baseUrl, config),
+  deleteMetaConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('meta', apiKey, baseUrl, source),
 
-  deleteMetaConfig: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/meta-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  createXAIConfig: (config: ProviderKeyConfig) =>
-    mutateLatestProviderList('xai-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeProviderKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, XAI_KEY_FIELDS)
-      )
-    ),
-
+  createXAIConfig: (config: ProviderKeyConfig) => createKey('xai', config),
   updateXAIConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    mutateLatestProviderList('xai-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeProviderKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, XAI_KEY_FIELDS)
-      )
-    ),
+    updateKey('xai', apiKey, baseUrl, config),
+  deleteXAIConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('xai', apiKey, baseUrl, source),
 
-  deleteXAIConfig: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/xai-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  createClaudeConfig: (config: ProviderKeyConfig) =>
-    mutateLatestProviderList('claude-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeProviderKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, CLAUDE_KEY_FIELDS)
-      )
-    ),
-
+  createClaudeConfig: (config: ProviderKeyConfig) => createKey('claude', config),
   updateClaudeConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    mutateLatestProviderList('claude-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeProviderKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, CLAUDE_KEY_FIELDS)
-      )
-    ),
+    updateKey('claude', apiKey, baseUrl, config),
+  deleteClaudeConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('claude', apiKey, baseUrl, source),
 
-  deleteClaudeConfig: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/claude-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  async getVertexConfigs(): Promise<ProviderKeyConfig[]> {
-    const data = await apiClient.get('/vertex-api-key');
-    const list = extractArrayPayload(data, 'vertex-api-key');
-    return list
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  },
-
-  createVertexConfig: (config: ProviderKeyConfig) =>
-    mutateLatestProviderList('vertex-api-key', (latestItems) =>
-      appendLatestProviderRecord(latestItems, serializeVertexKey(config), (raw, payload) =>
-        mergeProviderKeyPayload(raw, payload, VERTEX_KEY_FIELDS)
-      )
-    ),
-
+  createVertexConfig: (config: ProviderKeyConfig) => createKey('vertex', config),
   updateVertexConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    mutateLatestProviderList('vertex-api-key', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record) => matchesProviderKey(record, apiKey, baseUrl),
-        serializeVertexKey(config),
-        (raw, payload) => mergeProviderKeyPayload(raw, payload, VERTEX_KEY_FIELDS)
-      )
-    ),
+    updateKey('vertex', apiKey, baseUrl, config),
+  deleteVertexConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
+    deleteKey('vertex', apiKey, baseUrl, source),
 
-  deleteVertexConfig: (apiKey: string, baseUrl?: string) =>
-    apiClient.delete(`/vertex-api-key${buildProviderDeleteQuery(apiKey, baseUrl)}`),
-
-  async getOpenAIProviders(): Promise<OpenAIProviderConfig[]> {
-    const data = await apiClient.get('/openai-compatibility');
-    const list = extractArrayPayload(data, 'openai-compatibility');
-    return list
-      .map((item, index) => normalizeOpenAIProvider(item, index))
-      .filter(Boolean) as OpenAIProviderConfig[];
+  async createOpenAIProvider(config: OpenAIProviderConfig) {
+    const { groups, replace } = await getGroups('openai-compatibility');
+    await replace([...groups, serializeOpenAIProvider(config)]);
   },
 
-  createOpenAIProvider: (provider: OpenAIProviderConfig) =>
-    mutateLatestProviderList('openai-compatibility', (latestItems) =>
-      appendLatestProviderRecord(
-        latestItems,
-        serializeOpenAIProvider(provider),
-        mergeOpenAIProviderPayload
-      )
-    ),
+  updateOpenAIProvider: (name: string, config: OpenAIProviderConfig) =>
+    updateOpenAIGroup(config, name),
 
-  updateOpenAIProvider: (name: string, index: number, provider: OpenAIProviderConfig) =>
-    mutateLatestProviderList('openai-compatibility', (latestItems) =>
-      replaceLatestProviderRecord(
-        latestItems,
-        (record, currentIndex) => currentIndex === index && matchesOpenAIProvider(record, name),
-        serializeOpenAIProvider(provider),
-        mergeOpenAIProviderPayload
-      )
-    ),
+  async updateOpenAIProviderDisabled(disabled: boolean, source?: ProviderSource) {
+    const { groups, replace } = await getGroups('openai-compatibility');
+    const index = findOpenAISource(groups, source);
+    groups[index] = { ...groups[index], disabled };
+    await replace(groups);
+  },
 
-  updateOpenAIProviderDisabled: (index: number, disabled: boolean) =>
-    apiClient.patch('/openai-compatibility', { index, value: { disabled } }),
-
-  deleteOpenAIProvider: (index: number) =>
-    apiClient.delete(`/openai-compatibility?index=${encodeURIComponent(String(index))}`),
+  async deleteOpenAIProvider(source?: ProviderSource) {
+    const { groups, replace } = await getGroups('openai-compatibility');
+    const index = findOpenAISource(groups, source);
+    await replace(groups.filter((_, i) => i !== index));
+  },
 };

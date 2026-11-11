@@ -43,7 +43,15 @@ export const DASHBOARD_SOURCE_IDS: DashboardSourceId[] = [
 export interface UsageSourceData {
   /** null when the backend does not expose usage statistics at all. */
   enabled: boolean | null;
+  supported?: boolean;
   usage: UsageSnapshot | null;
+}
+
+export async function loadDashboardUsage(): Promise<UsageSourceData> {
+  const response = await usageApi.getUsage();
+  if (response.supported === false) return { enabled: null, supported: false, usage: null };
+  const enabled = await usageApi.getStatisticsEnabled();
+  return { enabled, supported: true, usage: enabled === true ? (response.usage ?? null) : null };
 }
 
 export const getProviderKeyCounts = (config: Config) => ({
@@ -133,12 +141,7 @@ export function useDashboardOverview() {
     enabled: connected,
     intervalMs: DASHBOARD_POLL_MS.usage,
     timeoutMs: DASHBOARD_TIMEOUT_MS.usage,
-    load: async () => {
-      const enabled = await usageApi.getStatisticsEnabled();
-      if (enabled !== true) return { enabled, usage: null };
-      const response = await usageApi.getUsage();
-      return { enabled, usage: response?.usage ?? null };
-    },
+    load: loadDashboardUsage,
   });
 
   // Keep the sidebar's Auth Files badge in step with what the dashboard shows. While the

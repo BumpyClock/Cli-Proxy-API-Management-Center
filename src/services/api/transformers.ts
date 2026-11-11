@@ -10,43 +10,31 @@ import type { Config } from '@/types/config';
 import { buildHeaderObject } from '@/utils/headers';
 import { isRecord } from '@/utils/helpers';
 import { readCredentialWeight } from '@/utils/credentialWeight';
+import { normalizeModelThinking } from './providerModels';
 
 const normalizeBoolean = (value: unknown): boolean | undefined =>
   typeof value === 'boolean' ? value : undefined;
 
-const normalizeRecord = (value: unknown): Record<string, unknown> | undefined =>
-  isRecord(value) ? value : undefined;
-
 const normalizeModelAliases = (models: unknown): ModelAlias[] => {
   if (!Array.isArray(models)) return [];
   return models
-    .map((item) => {
+    .map((item, sourceIndex) => {
       if (item === undefined || item === null) return null;
       if (typeof item === 'string') {
         const trimmed = item.trim();
-        return trimmed ? ({ name: trimmed } satisfies ModelAlias) : null;
+        return trimmed ? ({ name: trimmed, sourceIndex } satisfies ModelAlias) : null;
       }
       if (!isRecord(item)) return null;
 
       const name = item.name;
       if (!name) return null;
       const alias = item.alias;
-      const priority = item.priority;
-      const testModel = item['test-model'];
       const image = normalizeBoolean(item.image);
-      const thinking = normalizeRecord(item.thinking);
-      const entry: ModelAlias = { name: String(name) };
-      if (alias && alias !== name) {
+      const thinking = normalizeModelThinking(item.thinking);
+      const entry: ModelAlias = { name: String(name), sourceIndex };
+      // An alias equal to its model name is meaningful: Vertex requires one per model.
+      if (alias) {
         entry.alias = String(alias);
-      }
-      if (priority !== undefined) {
-        const parsed = Number(priority);
-        if (Number.isFinite(parsed)) {
-          entry.priority = parsed;
-        }
-      }
-      if (testModel) {
-        entry.testModel = String(testModel);
       }
       if (image !== undefined) {
         entry.image = image;
@@ -102,6 +90,10 @@ const normalizeAuthIndex = (value: unknown): string | undefined => {
   return trimmed ? trimmed : undefined;
 };
 
+/** GET /config injects `auth_index`; older payloads spell it `auth-index`. */
+const readAuthIndex = (record: Record<string, unknown> | null | undefined) =>
+  normalizeAuthIndex(record?.auth_index) ?? normalizeAuthIndex(record?.['auth-index']);
+
 const normalizeApiKeyEntry = (entry: unknown): ApiKeyEntry | null => {
   if (entry === undefined || entry === null) return null;
   const record = isRecord(entry) ? entry : null;
@@ -111,7 +103,7 @@ const normalizeApiKeyEntry = (entry: unknown): ApiKeyEntry | null => {
 
   const proxyUrl = record?.['proxy-url'];
   const weight = readCredentialWeight(record?.weight);
-  const authIndex = normalizeAuthIndex(record?.['auth-index']);
+  const authIndex = readAuthIndex(record);
 
   const result: ApiKeyEntry = {
     apiKey: trimmed,
@@ -155,7 +147,7 @@ const normalizeProviderKeyConfig = (item: unknown): ProviderKeyConfig | null => 
   if (models.length) config.models = models;
   const excludedModels = normalizeExcludedModels(record?.['excluded-models']);
   if (excludedModels.length) config.excludedModels = excludedModels;
-  const authIndex = normalizeAuthIndex(record?.['auth-index']);
+  const authIndex = readAuthIndex(record);
   if (authIndex) config.authIndex = authIndex;
 
   const cloakRaw = record?.cloak;
@@ -223,7 +215,7 @@ const normalizeGeminiKeyConfig = (item: unknown): GeminiKeyConfig | null => {
   if (headers) config.headers = headers;
   const excludedModels = normalizeExcludedModels(record?.['excluded-models']);
   if (excludedModels.length) config.excludedModels = excludedModels;
-  const authIndex = normalizeAuthIndex(record?.['auth-index']);
+  const authIndex = readAuthIndex(record);
   if (authIndex) config.authIndex = authIndex;
   return config;
 };
@@ -237,16 +229,18 @@ const normalizeOpenAIProvider = (
   const baseUrl = provider['base-url'];
   if (!name || !baseUrl) return null;
 
-  const apiKeyEntries = Array.isArray(provider['api-key-entries'])
-    ? (provider['api-key-entries']
-        .map((entry) => normalizeApiKeyEntry(entry))
+  const apiKeyEntries = Array.isArray(provider.keys)
+    ? (provider.keys
+        .map((entry, keyIndex) => {
+          const normalized = normalizeApiKeyEntry(entry);
+          return normalized ? { ...normalized, sourceIndex: keyIndex } : null;
+        })
         .filter(Boolean) as ApiKeyEntry[])
     : [];
 
   const headers = normalizeHeaders(provider.headers);
   const models = normalizeModelAliases(provider.models);
   const priority = provider.priority;
-  const testModel = provider['test-model'];
 
   const result: OpenAIProviderConfig = {
     name: String(name),
@@ -263,8 +257,7 @@ const normalizeOpenAIProvider = (
   if (headers) result.headers = headers;
   if (models.length) result.models = models;
   if (priority !== undefined) result.priority = Number(priority);
-  if (testModel) result.testModel = String(testModel);
-  const authIndex = normalizeAuthIndex(provider['auth-index']);
+  const authIndex = readAuthIndex(provider);
   if (authIndex) result.authIndex = authIndex;
   if (sourceIndex !== undefined) result.sourceIndex = sourceIndex;
   return result;
@@ -272,134 +265,98 @@ const normalizeOpenAIProvider = (
 
 const normalizeOauthExcluded = (payload: unknown): Record<string, string[]> | undefined => {
   if (!isRecord(payload)) return undefined;
-  const source = payload['oauth-excluded-models'] ?? payload.items ?? payload;
-  if (!isRecord(source)) return undefined;
   const map: Record<string, string[]> = {};
-  Object.entries(source).forEach(([provider, models]) => {
+  Object.entries(payload).forEach(([provider, models]) => {
     const key = String(provider || '').trim();
     if (!key) return;
-    const normalized = normalizeExcludedModels(models);
-    map[key.toLowerCase()] = normalized;
+    map[key.toLowerCase()] = normalizeExcludedModels(models);
   });
   return map;
 };
 
 /**
- * 规范化 /config 返回值
+ * Flatten persisted v8 groups into one row per key for display. A key field overrides
+ * its group's value unless it is null, which inherits. Every row keeps the exact persisted
+ * group (and the complete family list) as its write identity.
  */
+export const normalizeProviderGroups = (
+  groups: unknown,
+  openai = false
+): Array<GeminiKeyConfig | ProviderKeyConfig | OpenAIProviderConfig> => {
+  if (!Array.isArray(groups)) return [];
+  return groups.flatMap<GeminiKeyConfig | ProviderKeyConfig | OpenAIProviderConfig>(
+    (group, groupIndex) => {
+      if (!isRecord(group) || !Array.isArray(group.keys)) return [];
+      if (openai) {
+        const config = normalizeOpenAIProvider(group, groupIndex);
+        return config ? [{ ...config, source: { groupIndex, group, groups } }] : [];
+      }
+      return group.keys.flatMap((key, keyIndex) => {
+        if (!isRecord(key)) return [];
+        const effective: Record<string, unknown> = { ...group };
+        delete effective.keys;
+        delete effective.name;
+        delete effective.auth_index;
+        delete effective['auth-index'];
+        Object.entries(key).forEach(([field, value]) => {
+          if (value !== null) effective[field] = value;
+        });
+        const config = normalizeProviderKeyConfig(effective);
+        return config ? [{ ...config, source: { groupIndex, keyIndex, group, groups } }] : [];
+      });
+    }
+  );
+};
+
+/** Normalize the persisted v8 /config tree into the flat camelCase domain. */
 export const normalizeConfigResponse = (raw: unknown): Config => {
   const config: Config = { raw: isRecord(raw) ? raw : {} };
   if (!isRecord(raw)) {
     return config;
   }
+  const at = (path: string): unknown =>
+    path
+      .split('.')
+      .reduce<unknown>((value, key) => (isRecord(value) ? value[key] : undefined), raw);
+  const number = (path: string): number | undefined => {
+    const value = at(path);
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+  };
 
-  config.debug = normalizeBoolean(raw.debug);
-  const proxyUrl = raw['proxy-url'];
-  config.proxyUrl =
-    typeof proxyUrl === 'string'
-      ? proxyUrl
-      : proxyUrl === undefined || proxyUrl === null
-        ? undefined
-        : String(proxyUrl);
-  const requestRetry = raw['request-retry'];
-  if (typeof requestRetry === 'number' && Number.isFinite(requestRetry)) {
-    config.requestRetry = requestRetry;
-  } else if (typeof requestRetry === 'string' && requestRetry.trim() !== '') {
-    const parsed = Number(requestRetry);
-    if (Number.isFinite(parsed)) {
-      config.requestRetry = parsed;
-    }
-  }
+  config.debug = normalizeBoolean(at('observability.logs.debug'));
+  config.requestLog = normalizeBoolean(at('observability.logs.request-log'));
+  config.loggingToFile = normalizeBoolean(at('observability.logs.logging-to-file'));
+  config.logsMaxTotalSizeMb = number('observability.logs.logs-max-total-size-mb');
+  const proxyUrl = at('requests.proxy-url');
+  if (typeof proxyUrl === 'string') config.proxyUrl = proxyUrl;
+  config.requestRetry = number('routing.retry.request-retry');
+  // GET /config omits runtime defaults; AI Studio WebSocket authentication defaults to on.
+  config.wsAuth = normalizeBoolean(at('oauth.providers.aistudio.ws-auth')) ?? true;
+  config.forceModelPrefix = normalizeBoolean(at('routing.force-model-prefix'));
+  const strategy = at('routing.strategy');
+  if (typeof strategy === 'string') config.routingStrategy = strategy;
+  // Client authentication keys. The root `api-keys` map holds upstream provider groups.
+  const clientKeys = at('access.api-keys');
+  config.apiKeys = Array.isArray(clientKeys)
+    ? clientKeys.filter((key): key is string => typeof key === 'string' && key.trim() !== '')
+    : [];
+  config.quotaExceeded = {
+    antigravityCredits:
+      normalizeBoolean(at('oauth.providers.antigravity.antigravity-credits')) ?? false,
+  };
 
-  const quota = raw['quota-exceeded'];
-  if (isRecord(quota)) {
-    config.quotaExceeded = {
-      switchProject: normalizeBoolean(quota['switch-project']),
-      switchPreviewModel: normalizeBoolean(quota['switch-preview-model']),
-      antigravityCredits: normalizeBoolean(quota['antigravity-credits']),
-    };
-  }
+  const family = (name: string, openai = false) =>
+    normalizeProviderGroups(at(`api-keys.${name}`), openai);
+  config.geminiApiKeys = family('gemini') as GeminiKeyConfig[];
+  config.interactionsApiKeys = family('interactions') as GeminiKeyConfig[];
+  config.codexApiKeys = family('codex') as ProviderKeyConfig[];
+  config.metaApiKeys = family('meta') as ProviderKeyConfig[];
+  config.xaiApiKeys = family('xai') as ProviderKeyConfig[];
+  config.claudeApiKeys = family('claude') as ProviderKeyConfig[];
+  config.vertexApiKeys = family('vertex') as ProviderKeyConfig[];
+  config.openaiCompatibility = family('openai-compatibility', true) as OpenAIProviderConfig[];
 
-  config.requestLog = normalizeBoolean(raw['request-log']);
-  config.loggingToFile = normalizeBoolean(raw['logging-to-file']);
-  const logsMaxTotalSizeMb = raw['logs-max-total-size-mb'];
-  if (typeof logsMaxTotalSizeMb === 'number' && Number.isFinite(logsMaxTotalSizeMb)) {
-    config.logsMaxTotalSizeMb = logsMaxTotalSizeMb;
-  } else if (typeof logsMaxTotalSizeMb === 'string' && logsMaxTotalSizeMb.trim() !== '') {
-    const parsed = Number(logsMaxTotalSizeMb);
-    if (Number.isFinite(parsed)) {
-      config.logsMaxTotalSizeMb = parsed;
-    }
-  }
-  config.wsAuth = normalizeBoolean(raw['ws-auth']);
-  config.forceModelPrefix = normalizeBoolean(raw['force-model-prefix']);
-  const routing = raw.routing;
-  const strategyRaw = isRecord(routing) ? routing.strategy : undefined;
-  if (strategyRaw !== undefined && strategyRaw !== null) {
-    config.routingStrategy = String(strategyRaw);
-  }
-  const apiKeysRaw = raw['api-keys'];
-  if (Array.isArray(apiKeysRaw)) {
-    config.apiKeys = apiKeysRaw.map((key) => String(key)).filter((key) => key.trim() !== '');
-  }
-
-  const geminiList = raw['gemini-api-key'];
-  if (Array.isArray(geminiList)) {
-    config.geminiApiKeys = geminiList
-      .map((item) => normalizeGeminiKeyConfig(item))
-      .filter(Boolean) as GeminiKeyConfig[];
-  }
-
-  const interactionsList = raw['interactions-api-key'];
-  if (Array.isArray(interactionsList)) {
-    config.interactionsApiKeys = interactionsList
-      .map((item) => normalizeGeminiKeyConfig(item))
-      .filter(Boolean) as GeminiKeyConfig[];
-  }
-
-  const codexList = raw['codex-api-key'];
-  if (Array.isArray(codexList)) {
-    config.codexApiKeys = codexList
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  }
-
-  const metaList = raw['meta-api-key'];
-  if (Array.isArray(metaList)) {
-    config.metaApiKeys = metaList
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  }
-
-  const xaiList = raw['xai-api-key'];
-  if (Array.isArray(xaiList)) {
-    config.xaiApiKeys = xaiList
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  }
-
-  const claudeList = raw['claude-api-key'];
-  if (Array.isArray(claudeList)) {
-    config.claudeApiKeys = claudeList
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  }
-
-  const vertexList = raw['vertex-api-key'];
-  if (Array.isArray(vertexList)) {
-    config.vertexApiKeys = vertexList
-      .map((item) => normalizeProviderKeyConfig(item))
-      .filter(Boolean) as ProviderKeyConfig[];
-  }
-
-  const openaiList = raw['openai-compatibility'];
-  if (Array.isArray(openaiList)) {
-    config.openaiCompatibility = openaiList
-      .map((item, index) => normalizeOpenAIProvider(item, index))
-      .filter(Boolean) as OpenAIProviderConfig[];
-  }
-
-  const oauthExcluded = normalizeOauthExcluded(raw['oauth-excluded-models']);
+  const oauthExcluded = normalizeOauthExcluded(at('oauth.excluded-models'));
   if (oauthExcluded) {
     config.oauthExcludedModels = oauthExcluded;
   }

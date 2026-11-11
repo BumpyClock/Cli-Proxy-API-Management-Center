@@ -36,7 +36,7 @@ import { logsApi, type ErrorLogFile, type LogsQuery } from '@/services/api/logs'
 import { copyToClipboard } from '@/utils/clipboard';
 import { getErrorMessage } from '@/utils/helpers';
 import { downloadBlob } from '@/utils/download';
-import { MANAGEMENT_API_PREFIX } from '@/utils/constants';
+import { MANAGEMENT_API_PREFIXES } from '@/utils/constants';
 import { formatUnixTimestamp } from '@/utils/format';
 import { resolveTimeZoneLabel } from '@/utils/time/timezone';
 import {
@@ -362,7 +362,7 @@ export function LogsOptions({
             checked={display.hideManagementLogs}
             onChange={onHideManagementLogsChange}
             labelPosition="left"
-            label={t('logs.hide_management_logs', { prefix: MANAGEMENT_API_PREFIX })}
+            label={t('logs.hide_management_logs')}
           />
           <ToggleSwitch
             checked={display.showRawLogs}
@@ -826,7 +826,9 @@ export function LogsPage() {
     let working = baseLines;
 
     if (hideManagementLogs) {
-      working = working.filter((line) => !line.includes(MANAGEMENT_API_PREFIX));
+      working = working.filter(
+        (line) => !MANAGEMENT_API_PREFIXES.some((prefix) => line.includes(prefix))
+      );
     }
 
     if (trimmedSearchQuery) {

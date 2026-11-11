@@ -31,7 +31,7 @@ export function UsagePanel({
     return <p className={styles.note}>{t('dashboard.usage_loading')}</p>;
   }
 
-  if (usage.enabled === null) {
+  if (usage.supported === false || usage.enabled === null) {
     return (
       <div className={styles.off}>
         <p className={styles.offTitle}>{t('dashboard.usage_unsupported')}</p>

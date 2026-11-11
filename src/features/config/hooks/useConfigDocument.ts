@@ -1,20 +1,19 @@
-// 配置文档的加载 / 保存状态机 —— 从旧 pages/ConfigPage.tsx 逐字提取。
-// 正确性核心，勿随手「顺化」：两阶段保存（预览前 re-fetch → diff → 确认时再 re-fetch，
-// 服务端变更则重新预览不落盘）、可视化模式的规范化 diff、commercial-mode 重启警告、
-// 保存成功后刷新全局 config store。
+// Reload before preview and confirmation. Server changes require a new preview.
+// Conditional writes protect the remaining read/write gap.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { parse as parseYaml, parseDocument } from 'yaml';
 import { useConfigStore, useNotificationStore } from '@/stores';
 import { configFileApi } from '@/services/api/configFile';
+import { guardConfigConnection } from '@/services/api/configValue';
+import { getErrorMessage, isRecord, isRequestCancelled } from '@/utils/helpers';
 import type { ConfigEditorMode } from '../constants';
 
-function readCommercialModeFromYaml(yamlContent: string): boolean {
+export function readCommercialModeFromYaml(yamlContent: string): boolean {
   try {
     const parsed = parseYaml(yamlContent);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
-    return Boolean((parsed as Record<string, unknown>)['commercial-mode']);
+    return isRecord(parsed) && isRecord(parsed.server) && parsed.server['commercial-mode'] === true;
   } catch {
     return false;
   }
@@ -90,12 +89,17 @@ export function useConfigDocument({
   const [previewMode, setPreviewMode] = useState<ConfigEditorMode>('visual');
 
   const isDirty = sourceDirty || visualDirty;
+  const loadRequestId = useRef(0);
 
   const loadConfig = useCallback(async () => {
+    const requestId = ++loadRequestId.current;
+    const assertConnection = guardConfigConnection();
     setLoading(true);
     setError('');
     try {
-      const data = await configFileApi.fetchConfigYaml();
+      const { content: data } = await configFileApi.fetchConfigYaml();
+      assertConnection();
+      if (requestId !== loadRequestId.current) return;
       setContent(data);
       setSourceDirty(false);
       setDiffModalOpen(false);
@@ -104,21 +108,28 @@ export function useConfigDocument({
       setPreviewServerYaml(data);
       loadVisualValuesFromYaml(data);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : t('notification.refresh_failed');
+      if (requestId !== loadRequestId.current || isRequestCancelled(err)) return;
+      const message = getErrorMessage(err, t('notification.refresh_failed'));
       setError(message);
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestId.current) setLoading(false);
     }
   }, [loadVisualValuesFromYaml, t]);
 
   useEffect(() => {
-    loadConfig();
+    void loadConfig();
+    return () => {
+      loadRequestId.current += 1;
+    };
   }, [loadConfig]);
 
   const handleConfirmSave = useCallback(async () => {
+    const assertConnection = guardConfigConnection();
     setSaving(true);
     try {
-      const latestServerYaml = await configFileApi.fetchConfigYaml();
+      const snapshot = await configFileApi.fetchConfigYaml();
+      assertConnection();
+      const latestServerYaml = snapshot.content;
       if (latestServerYaml !== previewServerYaml) {
         const nextMergedYaml =
           previewMode === 'visual' && !sourceDirty
@@ -147,8 +158,10 @@ export function useConfigDocument({
       const nextCommercialMode = readCommercialModeFromYaml(mergedYaml);
       const commercialModeChanged = previousCommercialMode !== nextCommercialMode;
 
-      await configFileApi.saveConfigYaml(mergedYaml);
-      const latestContent = await configFileApi.fetchConfigYaml();
+      await snapshot.replace(mergedYaml);
+      assertConnection();
+      const { content: latestContent } = await configFileApi.fetchConfigYaml();
+      assertConnection();
       setSourceDirty(false);
       setDiffModalOpen(false);
       setContent(latestContent);
@@ -159,9 +172,11 @@ export function useConfigDocument({
 
       // Keep the global config store in sync so sidebar / other pages reflect YAML changes immediately.
       try {
-        useConfigStore.getState().clearCache();
+        useConfigStore.getState().invalidateCache();
         await useConfigStore.getState().fetchConfig(true);
+        assertConnection();
       } catch (refreshError: unknown) {
+        if (isRequestCancelled(refreshError)) return;
         const message =
           refreshError instanceof Error
             ? refreshError.message
@@ -179,7 +194,8 @@ export function useConfigDocument({
         showNotification(t('notification.commercial_mode_restart_required'), 'warning');
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '';
+      if (isRequestCancelled(err)) return;
+      const message = getErrorMessage(err);
       showNotification(`${t('notification.save_failed')}: ${message}`, 'error');
     } finally {
       setSaving(false);
@@ -196,6 +212,7 @@ export function useConfigDocument({
   ]);
 
   const handleSave = useCallback(async () => {
+    const assertConnection = guardConfigConnection();
     if (mode === 'visual' && visualParseError) {
       showNotification(t('config_management.visual_mode_save_blocked'), 'error');
       return;
@@ -203,7 +220,9 @@ export function useConfigDocument({
 
     setSaving(true);
     try {
-      const latestServerYaml = await configFileApi.fetchConfigYaml();
+      const snapshot = await configFileApi.fetchConfigYaml();
+      assertConnection();
+      const latestServerYaml = snapshot.content;
 
       const visualBaseYaml = selectVisualMergeBase(latestServerYaml, content, sourceDirty);
       if (mode === 'visual' || !sourceDirty) {
@@ -272,7 +291,8 @@ export function useConfigDocument({
       setPreviewMode(sourceDirty ? 'source' : 'visual');
       setDiffModalOpen(true);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '';
+      if (isRequestCancelled(err)) return;
+      const message = getErrorMessage(err);
       showNotification(`${t('notification.save_failed')}: ${message}`, 'error');
     } finally {
       setSaving(false);

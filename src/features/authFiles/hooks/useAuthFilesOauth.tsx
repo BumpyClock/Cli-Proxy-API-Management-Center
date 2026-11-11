@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { authFilesApi } from '@/services/api';
+import { apiClient, authFilesApi } from '@/services/api';
+import { isRequestCancelled } from '@/utils/helpers';
 import { useNotificationStore } from '@/stores';
 import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
 import type { AuthFileModelItem, OAuthConfigLoadError } from '@/features/authFiles/constants';
@@ -211,30 +212,17 @@ export function useAuthFilesOauth(options: UseAuthFilesOauthOptions): UseAuthFil
             showNotification(t('oauth_excluded.provider_required'), 'error');
             return;
           }
+          const revision = apiClient.getConnectionRevision();
           try {
             await authFilesApi.deleteOauthExcludedEntry(providerKey);
+            if (apiClient.getConnectionRevision() !== revision) return;
             await loadExcluded();
+            if (apiClient.getConnectionRevision() !== revision) return;
             showNotification(t('oauth_excluded.delete_success'), 'success');
           } catch (err: unknown) {
-            try {
-              const current = await authFilesApi.getOauthExcludedModels();
-              const next: Record<string, string[]> = {};
-              Object.entries(current).forEach(([key, models]) => {
-                if (normalizeProviderKey(key) === providerKey) return;
-                next[key] = models;
-              });
-              await authFilesApi.replaceOauthExcludedModels(next);
-              await loadExcluded();
-              showNotification(t('oauth_excluded.delete_success'), 'success');
-            } catch (fallbackErr: unknown) {
-              const errorMessage =
-                fallbackErr instanceof Error
-                  ? fallbackErr.message
-                  : err instanceof Error
-                    ? err.message
-                    : '';
-              showNotification(`${t('oauth_excluded.delete_failed')}: ${errorMessage}`, 'error');
-            }
+            if (apiClient.getConnectionRevision() !== revision || isRequestCancelled(err)) return;
+            const errorMessage = err instanceof Error ? err.message : '';
+            showNotification(`${t('oauth_excluded.delete_failed')}: ${errorMessage}`, 'error');
           }
         },
       });

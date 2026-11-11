@@ -15,6 +15,8 @@ import type { ApiError } from '@/types';
 import styles from './LoginPage.module.scss';
 import { redirectTargetFrom } from '@/router/redirectTarget';
 import { iconSize } from '@/design-system';
+import { LegacyBackendError } from '@/services/api/legacyBackendProbe';
+import { isRequestCancelled } from '@/utils/helpers';
 
 /** Dwell on the auto-login success state before redirecting (flow timing, not a token). */
 // design-tokens: allow flow dwell before navigation, not an animation
@@ -25,6 +27,7 @@ const SUCCESS_REDIRECT_DELAY_MS = 1500;
  */
 
 function getLocalizedErrorMessage(error: unknown, t: (key: string) => string): string {
+  if (error instanceof LegacyBackendError) return t('login.error_legacy_backend');
   const apiError = error as Partial<ApiError>;
   const status = typeof apiError.status === 'number' ? apiError.status : undefined;
   const code = typeof apiError.code === 'string' ? apiError.code : undefined;
@@ -173,6 +176,7 @@ export function LoginPage() {
       showNotification(t('common.connected_status'), 'success');
       navigate(redirectTargetFrom(location.state), { replace: true });
     } catch (err: unknown) {
+      if (isRequestCancelled(err)) return;
       const message = getLocalizedErrorMessage(err, t);
       setError(message);
       showNotification(`${t('notification.login_failed')}: ${message}`, 'error');

@@ -27,17 +27,7 @@ const markup = renderToStaticMarkup(
   )
 );
 const rows = [...markup.matchAll(/<article\b[\s\S]*?<\/article>/g)].map(([row]) => row);
-const BUILTIN = [
-  'meta',
-  'kimi',
-  'kimi_ai',
-  'codex',
-  'anthropic',
-  'antigravity',
-  'qoder',
-  'xai',
-  'devin',
-];
+const BUILTIN = ['meta', 'kimi', 'kimi_ai', 'codex', 'anthropic', 'antigravity', 'xai', 'devin'];
 
 describe('OAuth Login provider rows', () => {
   const REGION_VARIANTS = new Set(['kimi', 'kimi_ai']);

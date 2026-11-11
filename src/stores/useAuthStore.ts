@@ -14,6 +14,8 @@ import {
   resolveLegacyAuthApiBase,
 } from '@/services/storage/secureStorage';
 import { apiClient } from '@/services/api/client';
+import { guardConfigConnection } from '@/services/api/configValue';
+import { LegacyBackendError, probeLegacyBackend } from '@/services/api/legacyBackendProbe';
 import { useConfigStore } from './useConfigStore';
 import { useModelsStore } from './useModelsStore';
 import { useQuotaStore } from './useQuotaStore';
@@ -67,8 +69,7 @@ export const useAuthStore = create<AuthStoreState>()(
           const resolvedBase = normalizeApiBase(
             apiBase || (canUseLegacyCredentials ? migratedLegacyBase : '') || detectedBase
           );
-          const resolvedKey =
-            managementKey || (canUseLegacyCredentials ? legacyKey : '') || '';
+          const resolvedKey = managementKey || (canUseLegacyCredentials ? legacyKey : '') || '';
           const resolvedRememberPassword =
             rememberPassword ||
             Boolean(managementKey) ||
@@ -117,25 +118,24 @@ export const useAuthStore = create<AuthStoreState>()(
         const apiBase = normalizeApiBase(credentials.apiBase);
         const managementKey = credentials.managementKey.trim();
         const rememberPassword = credentials.rememberPassword ?? get().rememberPassword ?? false;
+        apiClient.setConfig({ apiBase, managementKey });
+        const assertConnection = guardConfigConnection();
 
         try {
           set({
+            isAuthenticated: false,
             connectionStatus: 'connecting',
             serverVersion: null,
             serverBuildDate: null,
             supportsPlugin: false,
           });
+          useConfigStore.getState().clearCache();
           useModelsStore.getState().clearCache();
           useQuotaStore.getState().clearQuotaCache();
 
-          // 配置 API 客户端
-          apiClient.setConfig({
-            apiBase,
-            managementKey,
-          });
-
           // 测试连接 - 获取配置
           await useConfigStore.getState().fetchConfig(true);
+          assertConnection();
 
           // 登录成功
           set({
@@ -151,7 +151,16 @@ export const useAuthStore = create<AuthStoreState>()(
             localStorage.removeItem(getAuthLoginStateStorageKey(detectApiBaseFromLocation()));
           }
         } catch (error: unknown) {
+          assertConnection();
+          const notFound =
+            typeof error === 'object' &&
+            error !== null &&
+            'status' in error &&
+            error.status === 404;
+          const legacy = notFound && (await probeLegacyBackend(apiBase, managementKey));
+          assertConnection();
           set({ connectionStatus: 'error' });
+          if (legacy) throw new LegacyBackendError();
           throw error;
         }
       },
@@ -183,13 +192,14 @@ export const useAuthStore = create<AuthStoreState>()(
           return false;
         }
 
+        apiClient.setConfig({ apiBase, managementKey });
+        const revision = apiClient.getConnectionRevision();
         try {
-          // 重新配置客户端
-          apiClient.setConfig({ apiBase, managementKey });
           set({ supportsPlugin: false });
 
           // 验证连接
           await useConfigStore.getState().fetchConfig();
+          if (revision !== apiClient.getConnectionRevision()) return false;
 
           set({
             isAuthenticated: true,
@@ -198,6 +208,7 @@ export const useAuthStore = create<AuthStoreState>()(
 
           return true;
         } catch {
+          if (revision !== apiClient.getConnectionRevision()) return false;
           set({
             isAuthenticated: false,
             connectionStatus: 'error',
@@ -236,7 +247,8 @@ export const useAuthStore = create<AuthStoreState>()(
 // 监听全局未授权事件
 if (typeof window !== 'undefined') {
   window.addEventListener('unauthorized', () => {
-    useAuthStore.getState().logout();
+    const state = useAuthStore.getState();
+    if (state.connectionStatus !== 'connecting') state.logout();
   });
 
   window.addEventListener('server-version-update', ((e: CustomEvent) => {

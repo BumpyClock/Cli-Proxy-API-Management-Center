@@ -90,7 +90,7 @@ describe('Options disclosure', () => {
     expect(panel.match(/role="switch"/g)).toHaveLength(3);
     expect(panel).toContain('aria-label="Log display options"');
     expect(panel).toContain('aria-label="Log actions"');
-    expect(textOf(panel)).toContain('Hide /v0/management logs');
+    expect(textOf(panel)).toContain('Hide management logs');
     expect(textOf(panel)).toContain('Show raw logs');
     expect(textOf(panel)).toContain('Download');
     expect(textOf(panel)).toContain('Full screen');
