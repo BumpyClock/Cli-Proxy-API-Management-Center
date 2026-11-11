@@ -400,6 +400,7 @@ function SponsorKeyEntryCard({
   const discovery = useModelDiscovery({
     brand: discoveryBrandForSponsorProtocol(entry.protocol),
     baseUrl: endpointUrl,
+    proxyUrl: entry.proxyUrl,
     formHeaders: discoveryHeaders,
     apiKey: entry.apiKey,
     fallbackApiKey: entry.existingApiKey,

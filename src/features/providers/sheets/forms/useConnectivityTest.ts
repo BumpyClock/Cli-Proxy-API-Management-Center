@@ -11,6 +11,7 @@ import {
 } from '@/components/providers/utils';
 import { buildHeaderObject, hasHeader } from '@/utils/headers';
 import { getErrorMessage } from '@/utils/helpers';
+import { resolveProbeProxyUrl } from './probeProxy';
 import type { ApiKeyEntryInput, ModelEntryInput, ProviderBrand } from '../../types';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -57,6 +58,7 @@ const resolveBearerToken = (headers: Record<string, string>): string => {
 export interface UseConnectivityTestArgs {
   brand: ProviderBrand;
   baseUrl: string;
+  proxyUrl?: string;
   testModel?: string;
   models: ModelEntryInput[];
   formHeaders: Array<{ key: string; value: string }>;
@@ -95,6 +97,7 @@ export function useConnectivityTest(
   const {
     brand,
     baseUrl,
+    proxyUrl,
     testModel,
     models,
     formHeaders,
@@ -153,6 +156,7 @@ export function useConnectivityTest(
     const m = models.map((it) => `${it.name}:${it.alias ?? ''}`).join('|');
     return [
       baseUrl,
+      proxyUrl ?? '',
       (testModel ?? '').trim(),
       apiKey ?? '',
       fallbackApiKey ?? '',
@@ -160,7 +164,7 @@ export function useConnectivityTest(
       h,
       m,
     ].join('||');
-  }, [apiKey, authIndex, baseUrl, fallbackApiKey, testModel, formHeaders, models]);
+  }, [apiKey, authIndex, baseUrl, fallbackApiKey, testModel, formHeaders, models, proxyUrl]);
 
   const lastSignatureRef = useRef(signature);
   useEffect(() => {
@@ -238,6 +242,7 @@ export function useConnectivityTest(
         const result = await apiCallApi.request(
           {
             authIndex: resolvedAuthIndex,
+            proxy_url: resolveProbeProxyUrl(entry?.proxyUrl),
             method: 'POST',
             url: endpoint,
             header: headerObj,
@@ -336,6 +341,7 @@ export function useConnectivityTest(
       const result = await apiCallApi.request(
         {
           authIndex: resolvedAuthIndex,
+          proxy_url: resolveProbeProxyUrl(proxyUrl),
           method: 'POST',
           url: endpoint,
           header: headerObj,
@@ -359,7 +365,18 @@ export function useConnectivityTest(
     } finally {
       setInFlight((n) => n - 1);
     }
-  }, [apiKey, authIndex, baseUrl, brand, fallbackApiKey, formHeaders, messages, models, testModel]);
+  }, [
+    apiKey,
+    authIndex,
+    baseUrl,
+    brand,
+    fallbackApiKey,
+    formHeaders,
+    messages,
+    models,
+    testModel,
+    proxyUrl,
+  ]);
 
   const runGemini = useCallback(async (): Promise<void> => {
     if (brand !== 'gemini' && brand !== 'interactions') return;
@@ -412,6 +429,7 @@ export function useConnectivityTest(
       const result = await apiCallApi.request(
         {
           authIndex: resolvedAuthIndex,
+          proxy_url: resolveProbeProxyUrl(proxyUrl),
           method: 'POST',
           url: endpoint,
           header: headerObj,
@@ -438,7 +456,18 @@ export function useConnectivityTest(
     } finally {
       setInFlight((n) => n - 1);
     }
-  }, [apiKey, authIndex, baseUrl, brand, fallbackApiKey, formHeaders, messages, models, testModel]);
+  }, [
+    apiKey,
+    authIndex,
+    baseUrl,
+    brand,
+    fallbackApiKey,
+    formHeaders,
+    messages,
+    models,
+    testModel,
+    proxyUrl,
+  ]);
 
   const runClaude = useCallback(async (): Promise<void> => {
     if (brand !== 'claude') return;
@@ -486,6 +515,7 @@ export function useConnectivityTest(
       const result = await apiCallApi.request(
         {
           authIndex: resolvedAuthIndex,
+          proxy_url: resolveProbeProxyUrl(proxyUrl),
           method: 'POST',
           url: endpoint,
           header: headerObj,
@@ -509,7 +539,18 @@ export function useConnectivityTest(
     } finally {
       setInFlight((n) => n - 1);
     }
-  }, [apiKey, authIndex, baseUrl, brand, fallbackApiKey, formHeaders, messages, models, testModel]);
+  }, [
+    apiKey,
+    authIndex,
+    baseUrl,
+    brand,
+    fallbackApiKey,
+    formHeaders,
+    messages,
+    models,
+    testModel,
+    proxyUrl,
+  ]);
 
   return {
     openaiStatuses,
