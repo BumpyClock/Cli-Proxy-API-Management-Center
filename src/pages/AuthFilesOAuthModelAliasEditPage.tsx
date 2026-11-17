@@ -13,7 +13,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useAuthStore, useNotificationStore } from '@/stores';
-import { authFilesApi } from '@/services/api';
+import { apiClient, authFilesApi } from '@/services/api';
 import {
   buildOAuthProviderOptions,
   getTypeLabel,
@@ -24,7 +24,7 @@ import {
   isOAuthEditorDirty,
 } from '@/features/authFiles/oauthEditorState';
 import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
-import { generateId, getErrorMessage } from '@/utils/helpers';
+import { generateId, getErrorMessage, isRequestCancelled } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
 import bodyStyles from './AuthFilesOAuthModelAliasEditPage.module.scss';
 import { iconSize } from '@/design-system';
@@ -33,7 +33,10 @@ type AuthFileModelItem = { id: string; display_name?: string; type?: string; own
 
 type LocationState = { fromAuthFiles?: boolean } | null;
 
-type OAuthModelMappingFormEntry = OAuthModelAliasEntry & { id: string };
+type OAuthModelMappingFormEntry = OAuthModelAliasEntry & {
+  id: string;
+  original?: OAuthModelAliasEntry;
+};
 
 const buildEmptyMappingEntry = (): OAuthModelMappingFormEntry => ({
   id: generateId(),
@@ -54,6 +57,7 @@ const normalizeMappingEntries = (
     alias: entry.alias ?? '',
     fork: Boolean(entry.fork),
     forceMapping: entry.forceMapping,
+    original: entry,
   }));
 };
 
@@ -75,7 +79,9 @@ export function AuthFilesOAuthModelAliasEditPage() {
   const [modelAlias, setModelAlias] = useState<Record<string, OAuthModelAliasEntry[]>>({});
   const [initialLoading, setInitialLoading] = useState(true);
   const [initialLoadError, setInitialLoadError] = useState<string | null>(null);
-  const [baselineReady, setBaselineReady] = useState(false);
+  const [editor, setEditor] = useState<Awaited<
+    ReturnType<typeof authFilesApi.editOauthModelAlias>
+  > | null>(null);
   const [modelAliasUnsupported, setModelAliasUnsupported] = useState(false);
   const loadRequestRef = useRef(0);
 
@@ -184,14 +190,14 @@ export function AuthFilesOAuthModelAliasEditPage() {
     const requestId = ++loadRequestRef.current;
     setInitialLoading(true);
     setInitialLoadError(null);
-    setBaselineReady(false);
+    setEditor(null);
     setModelAliasUnsupported(false);
 
     try {
       const [filesResult, excludedResult, aliasResult] = await Promise.allSettled([
         authFilesApi.list(),
         authFilesApi.getOauthExcludedModels(),
-        authFilesApi.getOauthModelAlias(),
+        authFilesApi.editOauthModelAlias(),
       ]);
 
       if (requestId !== loadRequestRef.current) return;
@@ -205,8 +211,8 @@ export function AuthFilesOAuthModelAliasEditPage() {
       }
 
       if (aliasResult.status === 'fulfilled') {
-        setModelAlias(aliasResult.value ?? {});
-        setBaselineReady(true);
+        setModelAlias(aliasResult.value.values);
+        setEditor(aliasResult.value);
         return;
       }
 
@@ -347,7 +353,7 @@ export function AuthFilesOAuthModelAliasEditPage() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (providerMissing) return;
+    if (providerMissing || !editor) return;
 
     const seenAlias = new Set<string>();
     let hasDuplicateAlias = false;
@@ -362,32 +368,33 @@ export function AuthFilesOAuthModelAliasEditPage() {
           return null;
         }
         seenAlias.add(aliasKey);
-        const normalizedEntry: OAuthModelAliasEntry = { name, alias };
-        if (entry.fork) normalizedEntry.fork = true;
-        if (typeof entry.forceMapping === 'boolean') {
-          normalizedEntry.forceMapping = entry.forceMapping;
-        }
+        const normalizedEntry = {
+          name,
+          alias,
+          fork: entry.fork,
+          forceMapping: entry.forceMapping,
+          original: entry.original,
+        };
         return normalizedEntry;
       })
-      .filter(Boolean) as OAuthModelAliasEntry[];
+      .filter((entry) => entry !== null);
 
     if (hasDuplicateAlias) {
       showNotification(t('oauth_model_alias.duplicate_alias'), 'error');
       return;
     }
 
+    const revision = apiClient.getConnectionRevision();
     setSaving(true);
     try {
-      if (normalized.length) {
-        await authFilesApi.saveOauthModelAlias(resolvedProviderKey, normalized);
-      } else if (isEditing) {
-        await authFilesApi.deleteOauthModelAlias(resolvedProviderKey);
-      }
+      await editor.save(resolvedProviderKey, normalized);
+      if (apiClient.getConnectionRevision() !== revision) return;
       showNotification(t('oauth_model_alias.save_success'), 'success');
       allowNextNavigation();
       handleBack();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '';
+      if (apiClient.getConnectionRevision() !== revision || isRequestCancelled(err)) return;
+      const errorMessage = getErrorMessage(err);
       showNotification(`${t('oauth_model_alias.save_failed')}: ${errorMessage}`, 'error');
     } finally {
       setSaving(false);
@@ -395,7 +402,7 @@ export function AuthFilesOAuthModelAliasEditPage() {
   }, [
     allowNextNavigation,
     handleBack,
-    isEditing,
+    editor,
     mappings,
     providerMissing,
     resolvedProviderKey,
@@ -409,7 +416,7 @@ export function AuthFilesOAuthModelAliasEditPage() {
     !providerMissing &&
     !disableControls &&
     !saving &&
-    baselineReady &&
+    editor !== null &&
     !modelAliasUnsupported &&
     initialLoadError === null;
 

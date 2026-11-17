@@ -99,20 +99,12 @@ export const isKimiClaudeProvider = (config: ProviderKeyConfig | undefined | nul
 export const isKimiCodexProvider = (config: ProviderKeyConfig | undefined | null): boolean => {
   if (!config) return false;
   const baseUrl = normalizeBaseUrl(config.baseUrl);
-  return KIMI_BASE_URL_OPTIONS.some(
-    (option) => baseUrl === normalizeBaseUrl(option.codexBaseUrl)
-  );
+  return KIMI_BASE_URL_OPTIONS.some((option) => baseUrl === normalizeBaseUrl(option.codexBaseUrl));
 };
 
 export const buildKimiRaw = (config: Config | null | undefined): SponsorProviderRaw => ({
-  openai: (config?.openaiCompatibility ?? [])
-    .map((item, index) => ({ config: item, index: item.sourceIndex ?? index }))
-    .filter((item) => isKimiOpenAIProvider(item.config)),
-  claude: (config?.claudeApiKeys ?? [])
-    .map((item, index) => ({ config: item, index }))
-    .filter((item) => isKimiClaudeProvider(item.config)),
-  codex: (config?.codexApiKeys ?? [])
-    .map((item, index) => ({ config: item, index }))
-    .filter((item) => isKimiCodexProvider(item.config)),
+  openai: (config?.openaiCompatibility ?? []).filter(isKimiOpenAIProvider),
+  claude: (config?.claudeApiKeys ?? []).filter(isKimiClaudeProvider),
+  codex: (config?.codexApiKeys ?? []).filter(isKimiCodexProvider),
   gemini: [],
 });

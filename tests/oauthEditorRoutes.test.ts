@@ -18,7 +18,7 @@ const pageSources = {
 describe('OAuth editor route shells', () => {
   test('Save waits for the loaded baseline in both editors', () => {
     for (const source of Object.values(pageSources)) {
-      expect(source).toMatch(/const canSave =[^;]*baselineReady &&/);
+      expect(source).toMatch(/const canSave =[^;]*editor !== null &&/);
       expect(source).toContain('disabled={!canSave}');
     }
   });
@@ -49,7 +49,7 @@ describe('OAuth editor route shells', () => {
         expect(markup).toContain('role="status"');
         expect(markup).toContain(i18n.t('common.loading'));
         // Back and Save portal into document.body (OAuthEditorActions), so the server render
-        // has neither; Save stays disabled until the baseline loads (canSave needs baselineReady).
+        // has neither; Save stays disabled until the baseline loads (canSave needs the editor baseline).
         expect(markup).not.toContain('<span>Back</span>');
         expect(markup).not.toContain(`${prefix}.`);
       } finally {

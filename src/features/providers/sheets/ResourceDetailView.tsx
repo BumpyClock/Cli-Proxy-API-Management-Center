@@ -32,23 +32,22 @@ export function ResourceDetailView({ resource, usageByProvider }: ResourceDetail
     const definition = getSponsorProviderDefinition(resource.brand);
     const raw = resource.raw as SponsorProviderRaw;
     const openaiKeyCount = raw.openai.reduce(
-      (count, item) => count + (item.config.apiKeyEntries?.length ?? 0),
+      (count, item) => count + (item.apiKeyEntries?.length ?? 0),
       0
     );
     const codexKeyCount = raw.codex.length;
     const geminiKeyCount = raw.gemini.length;
     const firstKey =
-      raw.openai
-        .flatMap((item) => item.config.apiKeyEntries ?? [])
-        .find((entry) => entry.apiKey?.trim())?.apiKey ??
-      raw.codex.find((item) => item.config.apiKey?.trim())?.config.apiKey ??
-      raw.claude.find((item) => item.config.apiKey?.trim())?.config.apiKey ??
-      raw.gemini.find((item) => item.config.apiKey?.trim())?.config.apiKey;
+      raw.openai.flatMap((item) => item.apiKeyEntries ?? []).find((entry) => entry.apiKey?.trim())
+        ?.apiKey ??
+      raw.codex.find((item) => item.apiKey?.trim())?.apiKey ??
+      raw.claude.find((item) => item.apiKey?.trim())?.apiKey ??
+      raw.gemini.find((item) => item.apiKey?.trim())?.apiKey;
     const baseUrl = definition.resolveBaseUrl(
-      raw.openai[0]?.config.baseUrl ??
-        raw.codex[0]?.config.baseUrl ??
-        raw.claude[0]?.config.baseUrl ??
-        raw.gemini[0]?.config.baseUrl
+      raw.openai[0]?.baseUrl ??
+        raw.codex[0]?.baseUrl ??
+        raw.claude[0]?.baseUrl ??
+        raw.gemini[0]?.baseUrl
     );
     const protocolUrls = definition.getProtocolUrls(baseUrl);
     const protocolCounts: Record<string, number> = {

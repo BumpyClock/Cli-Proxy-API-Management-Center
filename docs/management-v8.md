@@ -29,11 +29,17 @@ A successful v8 configuration write saves the v8 YAML layout. Do not point an ol
 
 Configuration field writes send bare JSON values. Provider groups and OAuth maps are whole-list or whole-map resources. Read-modify-write operations must preserve unrelated entries and remain bound to the connection that supplied the read. Missing persisted fields may default only for a structured `not_found` response, not for a missing API route.
 
-Dependent JSON and YAML replacements send the ETag from their own read as `If-Match`. A changed file returns HTTP 412. Missing ETags block writes instead of falling back to unconditional replacement. The backend and reverse proxy must expose ETag to the browser. YAML saves retain the existing two-stage preview and confirmation workflow.
+Dependent JSON and YAML writes send the ETag from their own read as `If-Match`. A changed file returns HTTP 412. Missing ETags block writes instead of falling back to unconditional replacement. The backend and reverse proxy must expose ETag to the browser.
 
-The transport captures connection identity before Axios dispatch and drops stale data, 401 events and version/plugin metadata. Post-mutation cache invalidation supersedes pre-write reads without clearing accepted rows. Optimistic request-log updates also bind rollback, notifications and completion to their original connection. OAuth exclusion deletion never retries a cancelled or conflicting mutation through a legacy whole-map replacement. YAML loads use request ownership so a delayed initial response cannot erase a newer edit.
+The transport captures connection identity before Axios dispatch and drops stale data, 401 events and version/plugin metadata. Post-mutation cache invalidation supersedes pre-write reads without clearing accepted rows. Optimistic request-log updates also bind rollback, notifications and completion to their original connection.
+
+Each alias diagram action applies to a fresh OAuth map and writes it once, even across providers. Full-list editors preserve metadata on retained alias rows and reject saves when the selected provider's list has changed since load. Conflicting or cancelled writes do not retry against a legacy endpoint.
+
+YAML saves retain the two-stage preview and confirmation. A preview belongs to its connection and draft revision. Changing the draft invalidates the preview. An edit that cannot be applied to the YAML document leaves the draft intact. After a successful write, a failed readback is reported as a verification failure, not a failed save.
 
 Provider edits preserve group policies, unrelated keys, explicit inheritance and model metadata. Existing model and credential rows carry explicit identities. Replacing a removed row with a new, identical-looking row does not inherit the removed row's hidden metadata; reordering retained rows keeps each row's own policy. Connection-test model selection is local to the editor, not a persisted v8 field.
+
+Sponsor operations verify the original aggregate before writing and use one conditional `PATCH /config/api-keys` for all changed families. The v8 backend merges the parent map and replaces only the supplied family lists. A rejected write leaves all families unchanged.
 
 Both explicit management URL suffixes are stripped when identifying a server so existing mount-scoped storage keys remain stable. This normalization does not provide v0 transport fallback. Plugin-defined HTTP extensions and resource URLs retain the backend's declared v0 paths.
 

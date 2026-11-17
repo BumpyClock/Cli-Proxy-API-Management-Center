@@ -1,3 +1,4 @@
+import type { ModelAlias } from '@/types';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Collapsible } from '@/components/ui/Collapsible';
@@ -20,7 +21,7 @@ import { MAX_CREDENTIAL_WEIGHT } from '@/utils/credentialWeight';
 import type { ModelInfo } from '@/utils/models';
 import type { ApiKeyFunUsageSummary } from '../../sponsor';
 import { readThinkingLevels } from '../../thinkingLevels';
-import { isSponsorPartialMutationError } from '../../sponsorMutationRecovery';
+import { guardConfigConnection } from '@/services/api/configValue';
 import {
   discoveryBrandForSponsorProtocol,
   getSponsorAggregationConflict,
@@ -38,6 +39,7 @@ import type {
   SponsorProtocol,
   SponsorProviderBrand,
   SponsorProviderRaw,
+  ProviderEditOrigin,
 } from '../../types';
 import { ModelDiscoveryPanel } from './ModelDiscoveryPanel';
 import { ModelEntriesEditor } from './ModelEntriesEditor';
@@ -53,7 +55,7 @@ interface SponsorProviderFormProps {
   mutating: boolean;
   formId: string;
   variant?: 'quickStart';
-  onSubmit: (input: ProviderEntryFormInput) => Promise<void>;
+  onSubmit: (input: ProviderEntryFormInput, origin: ProviderEditOrigin) => Promise<void>;
   onDirtyChange?: (dirty: boolean) => void;
 }
 
@@ -80,7 +82,7 @@ interface SponsorKeyEntryCardProps {
   onRemove: () => void;
 }
 
-const emptyModel = (): ModelEntryInput => ({ name: '', alias: '', sourceIndex: null });
+const emptyModel = (): ModelEntryInput => ({ name: '', alias: '' });
 
 const emptySponsorKeyEntry = (
   definition: SponsorProviderDefinition,
@@ -143,26 +145,12 @@ const isHealthyUsageSummary = (summary: ApiKeyFunUsageSummary): boolean => {
   return summary.isValid && (!normalizedStatus || normalizedStatus === 'active');
 };
 
-const modelsFromConfig = (
-  models:
-    | Array<{
-        name?: string;
-        sourceIndex?: number | null;
-        alias?: string;
-        priority?: number;
-        testModel?: string;
-        image?: boolean;
-        thinking?: Record<string, unknown>;
-      }>
-    | undefined
-): ModelEntryInput[] =>
+const modelsFromConfig = (models: ModelAlias[] | undefined): ModelEntryInput[] =>
   models?.length
     ? models.map((model) => ({
         sourceIndex: model.sourceIndex,
         name: model.name ?? '',
         alias: model.alias ?? '',
-        priority: model.priority,
-        testModel: model.testModel,
         image: model.image === true,
         thinkingJson: model.thinking ? JSON.stringify(model.thinking, null, 2) : '',
         thinkingLevels: readThinkingLevels(model.thinking),
@@ -173,9 +161,9 @@ const sponsorEntryFromProviderKey = (
   definition: SponsorProviderDefinition,
   protocol: Exclude<SponsorProtocol, 'openai'>,
   config:
-    | SponsorProviderRaw['codex'][number]['config']
-    | SponsorProviderRaw['claude'][number]['config']
-    | SponsorProviderRaw['gemini'][number]['config']
+    | SponsorProviderRaw['codex'][number]
+    | SponsorProviderRaw['claude'][number]
+    | SponsorProviderRaw['gemini'][number]
 ): SponsorKeyEntryInput => ({
   ...emptySponsorKeyEntry(definition, protocol),
   existingApiKey: config.apiKey ?? '',
@@ -191,7 +179,7 @@ const sponsorEntryFromProviderKey = (
 
 const sponsorEntryFromOpenAI = (
   definition: SponsorProviderDefinition,
-  config: SponsorProviderRaw['openai'][number]['config']
+  config: SponsorProviderRaw['openai'][number]
 ): SponsorKeyEntryInput => {
   const firstEntry = config.apiKeyEntries?.find((entry) => entry.apiKey?.trim());
   return {
@@ -215,10 +203,10 @@ const sponsorKeyEntriesFromRaw = (
   if (!raw) return [emptySponsorKeyEntry(definition)];
   const entries = definition.protocols.flatMap((protocol): SponsorKeyEntryInput[] => {
     if (protocol === 'openai') {
-      const openai = raw.openai[0]?.config;
+      const openai = raw.openai[0];
       return openai ? [sponsorEntryFromOpenAI(definition, openai)] : [];
     }
-    const config = raw[protocol][0]?.config;
+    const config = raw[protocol][0];
     return config ? [sponsorEntryFromProviderKey(definition, protocol, config)] : [];
   });
   return entries.length ? entries : [emptySponsorKeyEntry(definition)];
@@ -250,7 +238,6 @@ const applyDiscoveredModels = (
     if (!trimmed || seen.has(trimmed)) return;
     seen.add(trimmed);
     next.push({
-      sourceIndex: null,
       name: trimmed,
       alias: (info.alias ?? '').trim(),
     });
@@ -789,6 +776,10 @@ export function SponsorProviderForm({
 }: SponsorProviderFormProps) {
   const { t } = useTranslation();
   const definition = useMemo(() => getSponsorProviderDefinition(brand), [brand]);
+  const [origin] = useState<ProviderEditOrigin>(() => ({
+    resource,
+    assertConnection: guardConfigConnection(),
+  }));
   const [form, setForm] = useState<ProviderEntryFormInput>(() =>
     buildInitialForm(definition, resource, mode)
   );
@@ -870,15 +861,9 @@ export function SponsorProviderForm({
     }
     try {
       setError(null);
-      await onSubmit({ ...form, sponsorKeyEntries: entries });
+      await onSubmit({ ...form, sponsorKeyEntries: entries }, origin);
     } catch (err) {
-      setError(
-        isSponsorPartialMutationError(err)
-          ? t('providersPage.sponsor.partialMutationWarning')
-          : err instanceof Error
-            ? err.message
-            : String(err)
-      );
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 

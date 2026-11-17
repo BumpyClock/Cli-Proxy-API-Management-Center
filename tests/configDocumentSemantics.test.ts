@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { parse as parseYaml, parseDocument } from 'yaml';
-import { buildConfigSaveDraft } from '../src/features/config/hooks/useConfigDocument';
+import { buildConfigSavePreview } from '../src/features/config/hooks/useConfigDocument';
 import { DEFAULT_VISUAL_VALUES } from '../src/types/visualConfig';
 import { runVisualConfig } from './helpers/visualConfig';
 
@@ -106,6 +106,48 @@ observability:
     );
   });
 
+  test('reports unsupported alias edits instead of treating them as no changes', () => {
+    const yaml = 'routing: &defaults {}\nobservability:\n  logs: *defaults\n';
+    const config = runVisualConfig(yaml, [{ debug: true }]);
+    expect(() => config.applyVisualChangesToYaml(yaml)).toThrow(
+      'Cannot edit YAML alias at observability.logs'
+    );
+    expect(config.visualDirtyFields.has('debug')).toBe(true);
+  });
+
+  test('does not silently drop a numeric deletion through an alias', () => {
+    const yaml =
+      'defaults: &defaults { logs-max-total-size-mb: 100 }\nobservability:\n  logs: *defaults\n';
+    const config = runVisualConfig(yaml, [{ logsMaxTotalSizeMb: '' }]);
+    expect(() => config.applyVisualChangesToYaml(yaml)).toThrow(
+      'Cannot edit YAML alias at observability.logs'
+    );
+  });
+
+  test('preserves unrelated anchors, aliases, comments, and future settings', () => {
+    const yaml = 'routing: &defaults {} # keep\nobservability:\n  logs: *defaults\nfuture: keep\n';
+    const config = runVisualConfig(yaml, [{ proxyUrl: 'http://proxy.example' }]);
+    const result = config.applyVisualChangesToYaml(yaml);
+
+    expect(result).toContain('routing: &defaults {} # keep');
+    expect(result).toContain('logs: *defaults');
+    expect(parseYaml(result)).toEqual({
+      ...parseYaml(yaml),
+      requests: { 'proxy-url': 'http://proxy.example' },
+    });
+  });
+
+  test('clearing the final value of an anchored map keeps its alias valid', () => {
+    const yaml =
+      'observability:\n  logs: &defaults { logs-max-total-size-mb: 100 }\nfallback: *defaults\n';
+    const config = runVisualConfig(yaml, [{ logsMaxTotalSizeMb: '' }]);
+    const result = config.applyVisualChangesToYaml(yaml);
+
+    expect(result).toContain('logs: &defaults {}');
+    expect(result).toContain('fallback: *defaults');
+    expect(parseYaml(result)).toEqual({ observability: { logs: {} }, fallback: {} });
+  });
+
   test('preserves raw source drafts and keeps invalid raw Payload validation', () => {
     const source = `requests:
   payload:
@@ -119,9 +161,11 @@ observability:
     expect(config.visualHasPayloadValidationErrors).toBe(true);
     expect(config.applyVisualChangesToYaml(source)).toBe(source);
     expect(
-      buildConfigSaveDraft(source, source, true, 'source', () => {
-        throw new Error('A source draft must not be rebuilt from visual or runtime values');
-      })
+      buildConfigSavePreview(
+        { revision: 0, assertConnection() {} },
+        { origin: 'source', content: source },
+        source
+      ).modified
     ).toBe(source);
   });
 });

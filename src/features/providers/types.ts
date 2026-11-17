@@ -2,12 +2,7 @@
  * AI 提供商 Workbench 视图模型(归一化各 brand 的异构 config)
  */
 
-import type {
-  GeminiKeyConfig,
-  OpenAIProviderConfig,
-  ProviderKeyConfig,
-  ProviderSource,
-} from '@/types';
+import type { GeminiKeyConfig, OpenAIProviderConfig, ProviderKeyConfig } from '@/types';
 import type { ThinkingLevel } from './thinkingLevels';
 
 export type ProviderBrand =
@@ -32,44 +27,6 @@ export type ProviderSortBy = (typeof PROVIDER_SORT_BY_VALUES)[number];
 export const SORT_DIR_VALUES = ['asc', 'desc'] as const;
 export type SortDir = (typeof SORT_DIR_VALUES)[number];
 
-export type ProviderResourceSelector =
-  | { brand: 'gemini'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'interactions'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'codex'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'meta'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'xai'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'claude'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'vertex'; apiKey: string; baseUrl?: string; index: number }
-  | { brand: 'openaiCompatibility'; name: string; index: number }
-  | {
-      brand: 'apikeyFun';
-      openaiIndices: number[];
-      claudeIndices: number[];
-      codexIndices: number[];
-      geminiIndices: number[];
-    }
-  | {
-      brand: 'fennoAI';
-      openaiIndices: number[];
-      claudeIndices: number[];
-      codexIndices: number[];
-      geminiIndices: number[];
-    }
-  | {
-      brand: 'qiniuCloud';
-      openaiIndices: number[];
-      claudeIndices: number[];
-      codexIndices: number[];
-      geminiIndices: number[];
-    }
-  | {
-      brand: 'kimi';
-      openaiIndices: number[];
-      claudeIndices: number[];
-      codexIndices: number[];
-      geminiIndices: number[];
-    };
-
 export interface ProviderResourceFlags {
   cloakEnabled?: boolean;
   claudeCodeCliProfile?: boolean;
@@ -89,7 +46,7 @@ export interface ProviderResource {
   identifier: string;
   /** apiKey 脱敏预览,展示用 */
   apiKeyPreview: string | null;
-  /** 用于 selector 的真实 apiKey;OpenAI 因为多密钥这里返回 null */
+  /** 真实 apiKey;OpenAI 因为多密钥这里返回 null */
   apiKey: string | null;
   authIndex: string | null;
   baseUrl: string | null;
@@ -108,10 +65,6 @@ export interface ProviderResource {
   disabled: boolean;
   /** 额外能力旗标 */
   flags: ProviderResourceFlags;
-  /** 删除/更新使用的 selector */
-  selector: ProviderResourceSelector;
-  /** Persisted v8 identity of this row; absent for aggregated sponsor resources. */
-  source?: ProviderSource;
   /** 原始 raw config,Sheet 表单初始化用 */
   raw: unknown;
 }
@@ -127,10 +80,10 @@ export interface ProviderSnapshot {
 }
 
 export interface SponsorProviderRaw {
-  openai: Array<{ config: OpenAIProviderConfig; index: number }>;
-  claude: Array<{ config: ProviderKeyConfig; index: number }>;
-  codex: Array<{ config: ProviderKeyConfig; index: number }>;
-  gemini: Array<{ config: GeminiKeyConfig; index: number }>;
+  openai: OpenAIProviderConfig[];
+  claude: ProviderKeyConfig[];
+  codex: ProviderKeyConfig[];
+  gemini: GeminiKeyConfig[];
 }
 
 /**
@@ -138,12 +91,9 @@ export interface SponsorProviderRaw {
  * Gemini/Codex/Claude/Vertex/OpenAI 共用基础字段,各自启用 advanced 区。
  */
 export interface ModelEntryInput {
-  /** Persisted model position; null identifies a new row. */
-  sourceIndex?: number | null;
+  sourceIndex?: number;
   name: string;
   alias?: string;
-  priority?: number;
-  testModel?: string;
   image?: boolean;
   /** Original backend value, preserved until the standard-level selector is changed. */
   thinkingJson?: string;
@@ -168,7 +118,6 @@ export interface SponsorKeyEntryInput {
 }
 
 export interface ApiKeyEntryInput {
-  /** Persisted credential position when editing an existing row. */
   sourceIndex?: number;
   apiKey: string;
   existingApiKey?: string;
@@ -212,4 +161,9 @@ export interface ProviderEntryFormInput {
   apiKeyEntries?: ApiKeyEntryInput[];
   /** APIKEY.FUN stores one grouped key per platform protocol. */
   sponsorKeyEntries?: SponsorKeyEntryInput[];
+}
+
+export interface ProviderEditOrigin {
+  resource: ProviderResource | null;
+  assertConnection: () => void;
 }

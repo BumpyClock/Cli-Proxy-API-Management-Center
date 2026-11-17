@@ -12,10 +12,7 @@ const emptyRaw = (): SponsorProviderRaw => ({
 describe('sponsor aggregation safety', () => {
   test('detects multiple configs for one protocol', () => {
     const raw = emptyRaw();
-    raw.codex = [
-      { index: 0, config: { apiKey: 'first' } },
-      { index: 1, config: { apiKey: 'second' } },
-    ];
+    raw.codex = [{ apiKey: 'first' }, { apiKey: 'second' }];
 
     expect(getSponsorAggregationConflict(raw)).toBe('multiple-configs');
   });
@@ -24,12 +21,9 @@ describe('sponsor aggregation safety', () => {
     const raw = emptyRaw();
     raw.openai = [
       {
-        index: 0,
-        config: {
-          name: 'Sponsor',
-          baseUrl: 'https://example.com/v1',
-          apiKeyEntries: [{ apiKey: 'first' }, { apiKey: 'second' }],
-        },
+        name: 'Sponsor',
+        baseUrl: 'https://example.com/v1',
+        apiKeyEntries: [{ apiKey: 'first' }, { apiKey: 'second' }],
       },
     ];
 
@@ -38,15 +32,12 @@ describe('sponsor aggregation safety', () => {
 
   test('allows the supported one-config-per-protocol shape', () => {
     const raw = emptyRaw();
-    raw.codex = [{ index: 0, config: { apiKey: 'codex' } }];
+    raw.codex = [{ apiKey: 'codex' }];
     raw.openai = [
       {
-        index: 0,
-        config: {
-          name: 'Sponsor',
-          baseUrl: 'https://example.com/v1',
-          apiKeyEntries: [{ apiKey: 'openai' }],
-        },
+        name: 'Sponsor',
+        baseUrl: 'https://example.com/v1',
+        apiKeyEntries: [{ apiKey: 'openai' }],
       },
     ];
 

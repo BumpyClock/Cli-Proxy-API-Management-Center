@@ -72,16 +72,12 @@ const matchesFennoAIAnthropicBaseUrl = (value: string | undefined | null): boole
   );
 };
 
-export const isFennoAIClaudeProvider = (
-  config: ProviderKeyConfig | undefined | null
-): boolean => {
+export const isFennoAIClaudeProvider = (config: ProviderKeyConfig | undefined | null): boolean => {
   if (!config) return false;
   return matchesFennoAIAnthropicBaseUrl(config.baseUrl);
 };
 
-export const isFennoAICodexProvider = (
-  config: ProviderKeyConfig | undefined | null
-): boolean => {
+export const isFennoAICodexProvider = (config: ProviderKeyConfig | undefined | null): boolean => {
   if (!config) return false;
   return matchesFennoAICodexBaseUrl(config.baseUrl);
 };
@@ -90,11 +86,7 @@ export const buildFennoAIRaw = (config: Config | null | undefined): SponsorProvi
   // FennoAI does not expose OpenAI in its protocol definition. Keep any
   // name-matching OpenAI compatibility entry in the generic provider group.
   openai: [],
-  claude: (config?.claudeApiKeys ?? [])
-    .map((item, index) => ({ config: item, index }))
-    .filter((item) => isFennoAIClaudeProvider(item.config)),
-  codex: (config?.codexApiKeys ?? [])
-    .map((item, index) => ({ config: item, index }))
-    .filter((item) => isFennoAICodexProvider(item.config)),
+  claude: (config?.claudeApiKeys ?? []).filter(isFennoAIClaudeProvider),
+  codex: (config?.codexApiKeys ?? []).filter(isFennoAICodexProvider),
   gemini: [],
 });

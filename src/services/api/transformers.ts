@@ -181,49 +181,7 @@ const normalizeProviderKeyConfig = (item: unknown): ProviderKeyConfig | null => 
   return config;
 };
 
-const normalizeGeminiKeyConfig = (item: unknown): GeminiKeyConfig | null => {
-  if (item === undefined || item === null) return null;
-  const record = isRecord(item) ? item : null;
-  let apiKey = record?.['api-key'];
-  if (!apiKey && typeof item === 'string') {
-    apiKey = item;
-  }
-  const trimmed = String(apiKey || '').trim();
-  if (!trimmed) return null;
-
-  const config: GeminiKeyConfig = { apiKey: trimmed };
-  const weight = readCredentialWeight(record?.weight);
-  if (weight !== undefined) config.weight = weight;
-  const priority = record?.priority;
-  if (priority !== undefined && priority !== null && String(priority).trim() !== '') {
-    const parsed = Number(priority);
-    if (Number.isFinite(parsed)) {
-      config.priority = parsed;
-    }
-  }
-  const prefix = normalizePrefix(record?.prefix);
-  if (prefix) config.prefix = prefix;
-  const baseUrl = record?.['base-url'];
-  if (baseUrl) config.baseUrl = String(baseUrl);
-  const proxyUrl = record?.['proxy-url'];
-  if (proxyUrl) config.proxyUrl = String(proxyUrl);
-  const disableCooling = normalizeBoolean(record?.['disable-cooling']);
-  if (disableCooling !== undefined) config.disableCooling = disableCooling;
-  const models = normalizeModelAliases(record?.models);
-  if (models.length) config.models = models;
-  const headers = normalizeHeaders(record?.headers);
-  if (headers) config.headers = headers;
-  const excludedModels = normalizeExcludedModels(record?.['excluded-models']);
-  if (excludedModels.length) config.excludedModels = excludedModels;
-  const authIndex = readAuthIndex(record);
-  if (authIndex) config.authIndex = authIndex;
-  return config;
-};
-
-const normalizeOpenAIProvider = (
-  provider: unknown,
-  sourceIndex?: number
-): OpenAIProviderConfig | null => {
+const normalizeOpenAIProvider = (provider: unknown): OpenAIProviderConfig | null => {
   if (!isRecord(provider)) return null;
   const name = provider.name;
   const baseUrl = provider['base-url'];
@@ -259,7 +217,6 @@ const normalizeOpenAIProvider = (
   if (priority !== undefined) result.priority = Number(priority);
   const authIndex = readAuthIndex(provider);
   if (authIndex) result.authIndex = authIndex;
-  if (sourceIndex !== undefined) result.sourceIndex = sourceIndex;
   return result;
 };
 
@@ -274,11 +231,6 @@ const normalizeOauthExcluded = (payload: unknown): Record<string, string[]> | un
   return map;
 };
 
-/**
- * Flatten persisted v8 groups into one row per key for display. A key field overrides
- * its group's value unless it is null, which inherits. Every row keeps the exact persisted
- * group (and the complete family list) as its write identity.
- */
 export const normalizeProviderGroups = (
   groups: unknown,
   openai = false
@@ -288,7 +240,7 @@ export const normalizeProviderGroups = (
     (group, groupIndex) => {
       if (!isRecord(group) || !Array.isArray(group.keys)) return [];
       if (openai) {
-        const config = normalizeOpenAIProvider(group, groupIndex);
+        const config = normalizeOpenAIProvider(group);
         return config ? [{ ...config, source: { groupIndex, group, groups } }] : [];
       }
       return group.keys.flatMap((key, keyIndex) => {
@@ -308,7 +260,6 @@ export const normalizeProviderGroups = (
   );
 };
 
-/** Normalize the persisted v8 /config tree into the flat camelCase domain. */
 export const normalizeConfigResponse = (raw: unknown): Config => {
   const config: Config = { raw: isRecord(raw) ? raw : {} };
   if (!isRecord(raw)) {
@@ -366,7 +317,6 @@ export const normalizeConfigResponse = (raw: unknown): Config => {
 
 export {
   normalizeApiKeyEntry,
-  normalizeGeminiKeyConfig,
   normalizeModelAliases,
   normalizeOpenAIProvider,
   normalizeProviderKeyConfig,

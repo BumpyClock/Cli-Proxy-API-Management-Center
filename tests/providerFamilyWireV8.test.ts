@@ -20,7 +20,6 @@ afterEach(() => {
 
 type Wire = Record<string, unknown>;
 
-/** A backend that serves one family from GET /config and replaces it on PUT. */
 function backend(family: ProviderFamily, groups: Wire[] = [], extra: Wire = {}) {
   let state = structuredClone(groups);
   const writes: Array<{ url: string; data: Wire[] }> = [];
@@ -58,9 +57,6 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
   const cases = [
     {
       family: 'interactions' as const,
-      create: providersApi.createInteractionsKey,
-      update: providersApi.updateInteractionsKey,
-      remove: providersApi.deleteInteractionsKey,
       config: {
         apiKey: 'interactions-new',
         priority: 4,
@@ -99,9 +95,6 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
     },
     {
       family: 'meta' as const,
-      create: providersApi.createMetaConfig,
-      update: providersApi.updateMetaConfig,
-      remove: providersApi.deleteMetaConfig,
       config: {
         apiKey: 'meta-new',
         weight: 4,
@@ -124,9 +117,6 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
     },
     {
       family: 'xai' as const,
-      create: providersApi.createXAIConfig,
-      update: providersApi.updateXAIConfig,
-      remove: providersApi.deleteXAIConfig,
       config: {
         apiKey: 'xai-new',
         priority: 3,
@@ -165,7 +155,7 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
     },
   ];
 
-  for (const { family, create, update, remove, config, key } of cases) {
+  for (const { family, config, key } of cases) {
     test(`${family}: create hoists base-url into a new named group and keeps existing groups`, async () => {
       const existing = {
         name: 'existing',
@@ -173,7 +163,7 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
         keys: [{ 'api-key': 'old', future: 'keep' }],
       };
       const b = backend(family, [existing]);
-      await create(config);
+      await providersApi.writeFamily({ family, type: 'create', config });
       expect(b.writes).toHaveLength(1);
       expect(b.writes[0].data).toEqual([
         {
@@ -195,7 +185,7 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
       const b = backend(family, [group]);
       const row = rows(b.groups())[0];
       expect(row.authIndex).toBe('live-index');
-      await update(row.apiKey, row.baseUrl, { ...row, priority: 9 });
+      await providersApi.writeFamily({ family, type: 'update', config: { ...row, priority: 9 } });
       const { auth_index: _responseOnly, ...persistedKey } = group.keys[0] as Wire;
       void _responseOnly;
       expect(b.groups()).toEqual([
@@ -214,7 +204,11 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
       };
       const b = backend(family, [group]);
       const row = rows(b.groups())[0];
-      await update(row.apiKey, row.baseUrl, { ...row, baseUrl: 'https://new.invalid' });
+      await providersApi.writeFamily({
+        family,
+        type: 'update',
+        config: { ...row, baseUrl: 'https://new.invalid' },
+      });
       expect(b.groups()).toEqual([{ ...group, 'base-url': 'https://new.invalid' }]);
     });
 
@@ -222,7 +216,7 @@ describe('per-family create, update and delete use the v8 group wire shape', () 
       const group = { name: `${family}-1`, 'base-url': config.baseUrl, priority: 6, keys: [key] };
       const b = backend(family, [group]);
       const row = rows(b.groups())[0];
-      await remove(row.apiKey, row.baseUrl, row.source);
+      await providersApi.writeFamily({ family, type: 'delete', source: row.source });
       expect(b.groups()).toEqual([{ ...group, keys: [] }]);
     });
   }
@@ -244,9 +238,13 @@ describe('endpoint edits never repoint sibling credentials', () => {
     const b = backend('codex', [group, { name: 'other', keys: [{ 'api-key': 'x' }] }]);
     const row = rows(b.groups())[1];
     expect(row.apiKey).toBe('second');
-    await providersApi.updateCodexConfig(row.apiKey, row.baseUrl, {
-      ...row,
-      baseUrl: 'https://moved.invalid',
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...row,
+        baseUrl: 'https://moved.invalid',
+      },
     });
     expect(b.groups()).toEqual([
       { ...group, keys: [group.keys[0], group.keys[2]] },
@@ -276,7 +274,11 @@ describe('response-only and legacy fields never reach the backend', () => {
     const [one, two] = rows(groups);
     expect(one.authIndex).toBe('live-1');
     expect(two.authIndex).toBe('live-2');
-    await providersApi.updateCodexConfig(two.apiKey, undefined, { ...two, weight: 3 });
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: { ...two, weight: 3 },
+    });
     expect(b.groups()).toEqual([
       { name: 'a', keys: [{ 'api-key': 'one' }] },
       { name: 'b', keys: [{ 'api-key': 'two', weight: 3 }] },
@@ -287,7 +289,11 @@ describe('response-only and legacy fields never reach the backend', () => {
     const group = { name: 'a', keys: [{ 'api-key': 'one', auth_index: 'before' }] };
     const row = rows([group])[0];
     const b = backend('codex', [{ ...group, keys: [{ 'api-key': 'one', auth_index: 'after' }] }]);
-    await providersApi.updateCodexConfig(row.apiKey, undefined, { ...row, weight: 2 });
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: { ...row, weight: 2 },
+    });
     expect(b.groups()).toEqual([{ name: 'a', keys: [{ 'api-key': 'one', weight: 2 }] }]);
   });
 
@@ -302,11 +308,15 @@ describe('response-only and legacy fields never reach the backend', () => {
     const b = backend('openai-compatibility', [group]);
     const current = openaiRows(b.groups())[0];
     expect(current).not.toHaveProperty('testModel');
-    await providersApi.updateOpenAIProvider(current.name, {
-      ...current,
-      testModel: 'm',
-      models: [{ ...current.models![0], testModel: 'm' }],
-      priority: 2,
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: {
+        ...current,
+        testModel: 'm',
+        models: [{ ...current.models![0], testModel: 'm' }],
+        priority: 2,
+      },
     });
     expect(JSON.stringify(b.writes)).not.toContain('test-model');
     expect(b.groups()[0].priority).toBe(2);
@@ -314,9 +324,13 @@ describe('response-only and legacy fields never reach the backend', () => {
 
   test('model priority is not a backend field and is never written', async () => {
     const b = backend('codex');
-    await providersApi.createCodexConfig({
-      apiKey: 'fixture',
-      models: [{ name: 'm', alias: 'a', priority: 5 }],
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'create',
+      config: {
+        apiKey: 'fixture',
+        models: [{ name: 'm', alias: 'a', priority: 5 }],
+      },
     });
     expect(b.groups()[0].keys).toEqual([
       { 'api-key': 'fixture', models: [{ name: 'm', alias: 'a' }] },
@@ -354,7 +368,11 @@ describe('response-only and legacy fields never reach the backend', () => {
       extra: 1,
     });
     const b = backend('vertex', [group]);
-    await providersApi.updateVertexConfig(row.apiKey, undefined, { ...row, priority: 1 });
+    await providersApi.writeFamily({
+      family: 'vertex',
+      type: 'update',
+      config: { ...row, priority: 1 },
+    });
     expect(b.groups()[0]).toEqual({ ...group, keys: [{ ...group.keys[0], priority: 1 }] });
   });
 });
@@ -369,7 +387,9 @@ describe('refusing unsafe writes', () => {
     apiClient.put = (async () => {
       wrote = true;
     }) as typeof apiClient.put;
-    await expect(providersApi.createCodexConfig({ apiKey: 'fixture' })).rejects.toThrow();
+    await expect(
+      providersApi.writeFamily({ family: 'codex', type: 'create', config: { apiKey: 'fixture' } })
+    ).rejects.toThrow();
     expect(wrote).toBe(false);
   });
 
@@ -378,20 +398,26 @@ describe('refusing unsafe writes', () => {
     const row = rows([group])[0];
     const b = backend('codex', [{ ...group, keys: [{ 'api-key': 'fixture', weight: 9 }] }]);
     await expect(
-      providersApi.updateCodexConfig(row.apiKey, undefined, { ...row, priority: 3 })
+      providersApi.writeFamily({ family: 'codex', type: 'update', config: { ...row, priority: 3 } })
     ).rejects.toThrow();
     expect(b.writes).toHaveLength(0);
   });
 
-  test('without a source the row must be unambiguous by credential and endpoint', async () => {
+  test('deletion requires source identity even when credentials and endpoints match', async () => {
     const groups = [
       { name: 'a', 'base-url': 'https://one.invalid', keys: [{ 'api-key': 'same' }] },
       { name: 'b', 'base-url': 'https://one.invalid', keys: [{ 'api-key': 'same' }] },
     ];
     const b = backend('codex', groups);
-    await expect(providersApi.deleteCodexConfig('same', 'https://one.invalid')).rejects.toThrow();
+    await expect(
+      providersApi.writeFamily({ family: 'codex', type: 'delete', source: undefined })
+    ).rejects.toThrow();
     expect(b.writes).toHaveLength(0);
-    await providersApi.deleteCodexConfig('same', 'https://one.invalid', rows(groups)[1].source);
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'delete',
+      source: rows(groups)[1].source,
+    });
     expect(b.groups()[0].keys).toHaveLength(1);
     expect(b.groups()[1].keys).toEqual([]);
   });
@@ -404,10 +430,14 @@ describe('refusing unsafe writes', () => {
       keys: [{ 'api-key': 'k' }],
     };
     const b = backend('openai-compatibility', [existing]);
-    await providersApi.createOpenAIProvider({
-      name: 'b',
-      baseUrl: 'https://b.invalid',
-      apiKeyEntries: [{ apiKey: 'k2', weight: 3 }],
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'create',
+      config: {
+        name: 'b',
+        baseUrl: 'https://b.invalid',
+        apiKeyEntries: [{ apiKey: 'k2', weight: 3 }],
+      },
     });
     expect(b.groups()).toEqual([
       existing,
@@ -430,7 +460,7 @@ describe('workbench form edits do not materialize defaults', () => {
       formInput({ baseUrl: 'https://example.invalid', weight: 5, websockets: false }),
       row
     ) as ProviderKeyConfig;
-    await providersApi.updateCodexConfig(row.apiKey, row.baseUrl, config);
+    await providersApi.writeFamily({ family: 'codex', type: 'update', config: config });
     expect(b.groups()).toEqual([{ ...group, keys: [{ 'api-key': 'fixture', weight: 5 }] }]);
     expect(JSON.stringify(b.writes)).not.toMatch(/disable-cooling|websockets|test-model|cloak/);
   });
@@ -447,7 +477,7 @@ describe('workbench form edits do not materialize defaults', () => {
       }),
       row
     ) as ProviderKeyConfig;
-    await providersApi.updateClaudeConfig(row.apiKey, undefined, config);
+    await providersApi.writeFamily({ family: 'claude', type: 'update', config: config });
     expect(b.groups()).toEqual([{ name: 'c', keys: [{ 'api-key': 'fixture', weight: 2 }] }]);
   });
 
@@ -461,7 +491,7 @@ describe('workbench form edits do not materialize defaults', () => {
       formInput({ disableCooling: false }),
       row
     ) as ProviderKeyConfig;
-    await providersApi.updateCodexConfig(row.apiKey, undefined, config);
+    await providersApi.writeFamily({ family: 'codex', type: 'update', config: config });
     expect(b.groups()).toEqual([
       { ...group, keys: [{ 'api-key': 'fixture', 'disable-cooling': false }] },
     ]);
@@ -489,7 +519,6 @@ describe('workbench form edits do not materialize defaults', () => {
         name: 'compat',
         baseUrl: 'https://example.invalid',
         disabled: false,
-        // the form lists models in a new order and renames one alias
         models: [
           { name: 'm2', alias: 'two', sourceIndex: 1 },
           { name: 'm1', alias: 'uno', sourceIndex: 0 },
@@ -502,7 +531,11 @@ describe('workbench form edits do not materialize defaults', () => {
       }),
       current
     );
-    await providersApi.updateOpenAIProvider(current.name, config);
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: config,
+    });
     expect(b.groups()).toEqual([
       {
         ...group,
@@ -518,8 +551,8 @@ describe('workbench form edits do not materialize defaults', () => {
 });
 
 describe('form row identity survives provider writes', () => {
-  for (const sourceIndex of [0, null]) {
-    test(`${sourceIndex === null ? 'new' : 'renamed'} model does not inherit another row's metadata`, async () => {
+  for (const sourceIndex of [0, undefined]) {
+    test(`${sourceIndex === undefined ? 'new' : 'renamed'} model does not inherit another row's metadata`, async () => {
       const group = {
         name: 'fixture',
         'base-url': 'https://models.invalid/v1',
@@ -537,9 +570,9 @@ describe('form row identity survives provider writes', () => {
         }),
         original
       );
-      await providersApi.updateMetaConfig(original.apiKey, original.baseUrl, next);
+      await providersApi.writeFamily({ family: 'meta', type: 'update', config: next });
       expect((server.groups()[0].keys as Wire[])[0].models).toEqual([
-        sourceIndex === null
+        sourceIndex === undefined
           ? { name: 'replacement' }
           : { name: 'replacement', 'display-name': 'old display' },
       ]);
@@ -562,21 +595,21 @@ describe('resources carry their persisted identity', () => {
       },
     });
     const codex = buildProviderGroups(config).find((group) => group.id === 'codex')!.resources;
-    expect(
-      codex.map((resource) => [resource.source?.groupIndex, resource.source?.keyIndex])
-    ).toEqual([
+    const codexSources = codex.map((resource) => (resource.raw as ProviderKeyConfig).source);
+    expect(codexSources.map((source) => [source?.groupIndex, source?.keyIndex])).toEqual([
       [0, 0],
       [0, 1],
       [1, 0],
     ]);
-    expect(codex[0].source?.groups).toBe(
+    expect(codexSources[0]?.groups).toBe(
       (config.raw!['api-keys'] as Record<string, unknown[]>).codex
     );
     const openai = buildProviderGroups(config).find(
       (group) => group.id === 'openaiCompatibility'
     )!.resources;
-    expect(openai.map((resource) => resource.source?.groupIndex)).toEqual([0, 1]);
+    const openaiSources = openai.map((resource) => (resource.raw as OpenAIProviderConfig).source);
+    expect(openaiSources.map((source) => source?.groupIndex)).toEqual([0, 1]);
     expect(openai.map((resource) => resource.originalIndex)).toEqual([0, 1]);
-    expect(openai[1].source?.keyIndex).toBeUndefined();
+    expect(openaiSources[1]?.keyIndex).toBeUndefined();
   });
 });

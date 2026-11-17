@@ -16,7 +16,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useAuthStore, useNotificationStore } from '@/stores';
-import { authFilesApi } from '@/services/api';
+import { apiClient, authFilesApi } from '@/services/api';
 import {
   buildOAuthProviderOptions,
   getTypeLabel,
@@ -24,7 +24,7 @@ import {
 } from '@/features/authFiles/constants';
 import { getStringSetSignature, isOAuthEditorDirty } from '@/features/authFiles/oauthEditorState';
 import type { AuthFileItem, OAuthModelAliasEntry } from '@/types';
-import { getErrorMessage } from '@/utils/helpers';
+import { getErrorMessage, isRequestCancelled } from '@/utils/helpers';
 import styles from '@/features/authFiles/components/OAuthEditor.module.scss';
 import bodyStyles from './AuthFilesOAuthExcludedEditPage.module.scss';
 import { iconSize } from '@/design-system';
@@ -51,7 +51,9 @@ export function AuthFilesOAuthExcludedEditPage() {
   const [modelAlias, setModelAlias] = useState<Record<string, OAuthModelAliasEntry[]>>({});
   const [initialLoading, setInitialLoading] = useState(true);
   const [initialLoadError, setInitialLoadError] = useState<string | null>(null);
-  const [baselineReady, setBaselineReady] = useState(false);
+  const [editor, setEditor] = useState<Awaited<
+    ReturnType<typeof authFilesApi.editOauthExcludedModels>
+  > | null>(null);
   const [excludedUnsupported, setExcludedUnsupported] = useState(false);
   const loadRequestRef = useRef(0);
 
@@ -163,13 +165,13 @@ export function AuthFilesOAuthExcludedEditPage() {
     const requestId = ++loadRequestRef.current;
     setInitialLoading(true);
     setInitialLoadError(null);
-    setBaselineReady(false);
+    setEditor(null);
     setExcludedUnsupported(false);
 
     try {
       const [filesResult, excludedResult, aliasResult] = await Promise.allSettled([
         authFilesApi.list(),
-        authFilesApi.getOauthExcludedModels(),
+        authFilesApi.editOauthExcludedModels(),
         authFilesApi.getOauthModelAlias(),
       ]);
 
@@ -184,8 +186,8 @@ export function AuthFilesOAuthExcludedEditPage() {
       }
 
       if (excludedResult.status === 'fulfilled') {
-        setExcluded(excludedResult.value ?? {});
-        setBaselineReady(true);
+        setExcluded(excludedResult.value.values);
+        setEditor(excludedResult.value);
         return;
       }
 
@@ -311,21 +313,19 @@ export function AuthFilesOAuthExcludedEditPage() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (providerMissing) return;
+    if (providerMissing || !editor) return;
 
-    const models = effectiveRules;
+    const revision = apiClient.getConnectionRevision();
     setSaving(true);
     try {
-      if (models.length) {
-        await authFilesApi.saveOauthExcludedModels(resolvedProviderKey, models);
-      } else if (isEditing) {
-        await authFilesApi.deleteOauthExcludedEntry(resolvedProviderKey);
-      }
+      await editor.save(resolvedProviderKey, effectiveRules);
+      if (apiClient.getConnectionRevision() !== revision) return;
       showNotification(t('oauth_excluded.save_success'), 'success');
       allowNextNavigation();
       handleBack();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '';
+      if (apiClient.getConnectionRevision() !== revision || isRequestCancelled(err)) return;
+      const errorMessage = getErrorMessage(err);
       showNotification(`${t('oauth_excluded.save_failed')}: ${errorMessage}`, 'error');
     } finally {
       setSaving(false);
@@ -334,7 +334,7 @@ export function AuthFilesOAuthExcludedEditPage() {
     allowNextNavigation,
     effectiveRules,
     handleBack,
-    isEditing,
+    editor,
     providerMissing,
     resolvedProviderKey,
     showNotification,
@@ -347,7 +347,7 @@ export function AuthFilesOAuthExcludedEditPage() {
     !providerMissing &&
     !disableControls &&
     !saving &&
-    baselineReady &&
+    editor !== null &&
     !excludedUnsupported &&
     initialLoadError === null;
 

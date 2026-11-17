@@ -4,7 +4,13 @@
 
 import { apiClient } from './client';
 import { getConfigValue } from './configValue';
-import { updateOauthProviderMap } from './oauthConfig';
+import {
+  editOauthMap,
+  oauthProviderEntries,
+  oauthProviderKey,
+  replaceOauthProvider,
+  updateOauthMap,
+} from './oauthConfig';
 import type { AuthFileCooldownResetResponse, AuthFilesResponse } from '@/types/authFile';
 import type { OAuthModelAliasEntry } from '@/types';
 import { normalizeOAuthProviderKey } from '@/utils/providerKeys';
@@ -369,7 +375,12 @@ const normalizeOauthExcludedModels = (payload: unknown): Record<string, string[]
 };
 
 export const normalizeOauthModelAlias = (
-  payload: unknown
+  payload: unknown,
+  onEntry?: (
+    provider: string,
+    normalized: OAuthModelAliasEntry,
+    raw: Record<string, unknown>
+  ) => void
 ): Record<string, OAuthModelAliasEntry[]> => {
   if (!payload || typeof payload !== 'object') return {};
 
@@ -384,30 +395,19 @@ export const normalizeOauthModelAlias = (
 
     const normalized = result[key] ?? [];
     const seenAlias = new Set(normalized.map((entry) => entry.alias.toLowerCase()));
-    mappings
-      .map((item) => {
-        if (!item || typeof item !== 'object') return null;
-        const entry = item as Record<string, unknown>;
-        const name = String(entry.name ?? entry.id ?? entry.model ?? '').trim();
-        const alias = String(entry.alias ?? '').trim();
-        if (!name || !alias) return null;
-        const fork = entry.fork === true;
-        const forceMappingValue = entry['force-mapping'] ?? entry.forceMapping;
-        const normalizedEntry: OAuthModelAliasEntry = { name, alias };
-        if (fork) normalizedEntry.fork = true;
-        if (typeof forceMappingValue === 'boolean') {
-          normalizedEntry.forceMapping = forceMappingValue;
-        }
-        return normalizedEntry;
-      })
-      .filter(Boolean)
-      .forEach((entry) => {
-        const aliasEntry = entry as OAuthModelAliasEntry;
-        const aliasKey = aliasEntry.alias.toLowerCase();
-        if (seenAlias.has(aliasKey)) return;
-        seenAlias.add(aliasKey);
-        normalized.push(aliasEntry);
-      });
+    for (const entry of mappings) {
+      if (!isRecord(entry)) continue;
+      const name = String(entry.name ?? entry.id ?? entry.model ?? '').trim();
+      const alias = String(entry.alias ?? '').trim();
+      if (!name || !alias || seenAlias.has(alias.toLowerCase())) continue;
+      seenAlias.add(alias.toLowerCase());
+      const normalizedEntry: OAuthModelAliasEntry = { name, alias };
+      if (entry.fork === true) normalizedEntry.fork = true;
+      const forceMapping = entry['force-mapping'] ?? entry.forceMapping;
+      if (typeof forceMapping === 'boolean') normalizedEntry.forceMapping = forceMapping;
+      normalized.push(normalizedEntry);
+      onEntry?.(key, normalizedEntry, entry);
+    }
 
     if (normalized.length) {
       result[key] = normalized;
@@ -434,6 +434,134 @@ export const serializeOauthModelAliases = (
 
 const OAUTH_MODEL_ALIAS_ENDPOINT = '/config/oauth/model-alias';
 const OAUTH_EXCLUDED_MODELS_ENDPOINT = '/config/oauth/excluded-models';
+
+type OAuthAliasDraft = OAuthModelAliasEntry & { original?: OAuthModelAliasEntry };
+
+function editOauthModelAlias() {
+  const sources = new WeakMap<
+    OAuthModelAliasEntry,
+    { provider: string; raw: Record<string, unknown> }
+  >();
+
+  return editOauthMap<OAuthAliasDraft>(
+    OAUTH_MODEL_ALIAS_ENDPOINT,
+    (map) =>
+      normalizeOauthModelAlias(map, (provider, normalized, raw) => {
+        sources.set(normalized, { provider, raw });
+      }),
+    (entries, provider, lists) => {
+      const rows = lists.flatMap((value) => {
+        if (!Array.isArray(value)) throw new Error('Invalid OAuth alias list');
+        return value as unknown[];
+      });
+      // A full-list save cannot distinguish removing a row from failing to decode it.
+      const visibleCount = normalizeOauthModelAlias({ [provider]: rows })[provider]?.length ?? 0;
+      if (rows.length !== visibleCount) throw new Error('Invalid OAuth alias list');
+
+      return entries.map((entry) => {
+        const { original } = entry;
+        const source = original && sources.get(original);
+        if (!original || source?.provider !== provider)
+          return serializeOauthModelAliases([entry])[0];
+        const next = { ...source.raw };
+        if (entry.name !== original.name) next.name = entry.name;
+        if (entry.alias !== original.alias) next.alias = entry.alias;
+        if (Boolean(entry.fork) !== Boolean(original.fork)) {
+          if (entry.fork) next.fork = true;
+          else delete next.fork;
+        }
+        if (entry.forceMapping !== original.forceMapping) {
+          delete next.forceMapping;
+          if (entry.forceMapping === undefined) delete next['force-mapping'];
+          else next['force-mapping'] = entry.forceMapping;
+        }
+        return next;
+      });
+    }
+  );
+}
+
+const aliasKey = (value: string) => value.trim().toLowerCase();
+
+const getAlias = (entry: unknown) => (isRecord(entry) ? aliasKey(String(entry.alias ?? '')) : '');
+const getAliasModel = (entry: unknown) =>
+  isRecord(entry) ? aliasKey(String(entry.name ?? entry.id ?? entry.model ?? '')) : '';
+
+const deleteOauthProvider = (path: string, provider: string) => {
+  const key = oauthProviderKey(provider);
+  return updateOauthMap(path, (map) => {
+    if (!oauthProviderEntries(map, key).length) return false;
+    replaceOauthProvider(map, key);
+    return true;
+  });
+};
+
+type OauthAliasEdit =
+  | { type: 'add'; provider: string; model: string; alias: string }
+  | { type: 'unlink'; provider: string; model: string; alias: string }
+  | { type: 'fork'; provider: string; model: string; alias: string; fork: boolean }
+  | { type: 'rename'; alias: string; newAlias: string }
+  | { type: 'delete'; alias: string };
+
+const editOauthAliases = (edit: OauthAliasEdit) => {
+  const alias = edit.alias.trim();
+  const target = aliasKey(alias);
+  const provider = 'provider' in edit ? oauthProviderKey(edit.provider) : undefined;
+  const model = 'model' in edit ? edit.model.trim() : undefined;
+  const newAlias = edit.type === 'rename' ? edit.newAlias.trim() : undefined;
+  if (!target || model === '' || newAlias === '') throw new Error('Invalid OAuth alias edit');
+
+  return updateOauthMap(OAUTH_MODEL_ALIAS_ENDPOINT, (map) => {
+    const providers = provider
+      ? [provider]
+      : [...new Set(Object.keys(map).map(normalizeOAuthProviderKey).filter(Boolean))];
+    let changed = false;
+    for (const key of providers) {
+      const entries = oauthProviderEntries(map, key);
+      const lists = entries.map(([, value]) => value).filter(Array.isArray);
+      const rows: unknown[] = lists.flat();
+      const matches = (entry: unknown) =>
+        getAlias(entry) === target &&
+        (model === undefined || getAliasModel(entry) === aliasKey(model));
+
+      if (lists.length !== entries.length && (provider || rows.some(matches))) {
+        throw new Error('Invalid OAuth alias list');
+      }
+      let next: unknown[];
+      if (edit.type === 'add') {
+        if (rows.some(matches)) continue;
+        if (rows.some((entry) => getAlias(entry) === target)) {
+          throw Object.assign(new Error('duplicate_alias'), { apiCode: 'duplicate_alias' });
+        }
+        next = [...rows, { name: model, alias, fork: true }];
+      } else {
+        if (!rows.some(matches)) continue;
+        if (edit.type === 'unlink' || edit.type === 'delete') {
+          next = rows.filter((entry) => !matches(entry));
+        } else if (edit.type === 'rename') {
+          const destination = aliasKey(edit.newAlias);
+          if (destination !== target && rows.some((entry) => getAlias(entry) === destination)) {
+            throw Object.assign(new Error('duplicate_alias'), { apiCode: 'duplicate_alias' });
+          }
+          next = rows.map((entry) =>
+            isRecord(entry) && matches(entry) ? { ...entry, alias: newAlias } : entry
+          );
+        } else {
+          next = rows.map((entry) => {
+            if (!isRecord(entry) || !matches(entry)) return entry;
+            const updated = { ...entry };
+            if (edit.fork) updated.fork = true;
+            else delete updated.fork;
+            return updated;
+          });
+        }
+      }
+      replaceOauthProvider(map, key, next.length ? next : undefined);
+      changed = true;
+    }
+    return changed;
+  });
+};
 
 export const authFilesApi = {
   list: async (lookup?: AuthFileLookup) =>
@@ -467,7 +595,6 @@ export const authFilesApi = {
   },
 
   requestManualRefresh: async (name: string, authIndex?: string): Promise<void> => {
-    // Do not return credential details to callers.
     await apiClient.post<unknown>('/credentials/refresh', {
       name,
       ...(authIndex ? { auth_index: authIndex } : {}),
@@ -525,11 +652,26 @@ export const authFilesApi = {
     return normalizeOauthExcludedModels(data);
   },
 
-  saveOauthExcludedModels: (provider: string, models: string[]) =>
-    updateOauthProviderMap(OAUTH_EXCLUDED_MODELS_ENDPOINT, provider, models),
+  editOauthExcludedModels: () =>
+    editOauthMap(
+      OAUTH_EXCLUDED_MODELS_ENDPOINT,
+      normalizeOauthExcludedModels,
+      (models, _, lists) => {
+        if (
+          lists.some(
+            (value) =>
+              typeof value !== 'string' &&
+              (!Array.isArray(value) || value.some((item) => typeof item !== 'string'))
+          )
+        ) {
+          throw new Error('Invalid OAuth exclusion list');
+        }
+        return models;
+      }
+    ),
 
   deleteOauthExcludedEntry: (provider: string) =>
-    updateOauthProviderMap(OAUTH_EXCLUDED_MODELS_ENDPOINT, provider),
+    deleteOauthProvider(OAUTH_EXCLUDED_MODELS_ENDPOINT, provider),
 
   // OAuth 模型别名
   async getOauthModelAlias(): Promise<Record<string, OAuthModelAliasEntry[]>> {
@@ -537,19 +679,12 @@ export const authFilesApi = {
     return normalizeOauthModelAlias(data);
   },
 
-  saveOauthModelAlias: async (channel: string, aliases: OAuthModelAliasEntry[]) => {
-    const normalizedChannel = normalizeOAuthProviderKey(String(channel ?? ''));
-    const normalizedAliases =
-      normalizeOauthModelAlias({ [normalizedChannel]: aliases })[normalizedChannel] ?? [];
-    await updateOauthProviderMap(
-      OAUTH_MODEL_ALIAS_ENDPOINT,
-      normalizedChannel,
-      serializeOauthModelAliases(normalizedAliases)
-    );
-  },
+  editOauthModelAlias,
+
+  editOauthAliases,
 
   deleteOauthModelAlias: (channel: string) =>
-    updateOauthProviderMap(OAUTH_MODEL_ALIAS_ENDPOINT, channel),
+    deleteOauthProvider(OAUTH_MODEL_ALIAS_ENDPOINT, channel),
 
   // 获取认证凭证支持的模型
   async getModelsForAuthFile(

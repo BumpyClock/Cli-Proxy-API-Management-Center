@@ -7,6 +7,8 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useRevealGroup } from '@/hooks/motion';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useVisualConfig } from '@/hooks/useVisualConfig';
+import { getErrorMessage } from '@/utils/helpers';
+import type { VisualConfigValues } from '@/types/visualConfig';
 import { useAuthStore, useNotificationStore, useThemeStore } from '@/stores';
 import {
   CONFIG_MODE_STORAGE_KEY,
@@ -106,12 +108,19 @@ export function ConfigPage() {
     loadVisualValuesFromYaml,
     applyVisualChangesToYaml,
   });
+  const { markDraftEdited } = doc;
+  const handleVisualChange = useCallback(
+    (patch: Partial<VisualConfigValues>) => {
+      if (markDraftEdited()) setVisualValues(patch);
+    },
+    [markDraftEdited, setVisualValues]
+  );
   const sourceSearch = useSourceSearch();
 
   const disableControls = connectionStatus !== 'connected';
   const hasVisualModeError = !!visualParseError;
   const hasVisualValidationErrors =
-    mode === 'visual' &&
+    (mode === 'visual' || (!doc.sourceDirty && visualDirty)) &&
     (Object.values(visualValidationErrors).some(Boolean) || visualHasPayloadValidationErrors);
 
   const unsavedChangesDialog = useMemo(
@@ -151,9 +160,15 @@ export function ConfigPage() {
 
       if (nextMode === 'source') {
         if (visualDirty) {
-          const nextContent = applyVisualChangesToYaml(doc.content);
-          if (nextContent !== doc.content) {
-            doc.syncContentFromVisual(nextContent);
+          try {
+            doc.syncContentFromVisual(applyVisualChangesToYaml(doc.content));
+          } catch (error: unknown) {
+            showNotification(
+              t('config_management.visual_mode_source_preview_failed', {
+                message: getErrorMessage(error),
+              }),
+              'warning'
+            );
           }
         }
       } else if (shouldReloadVisualDraft(doc.sourceDirty, visualParseError)) {
@@ -253,16 +268,16 @@ export function ConfigPage() {
     doc.loading ||
     doc.saving ||
     !doc.isDirty ||
-    doc.diffModalOpen ||
+    Boolean(doc.preview) ||
     hasVisualModeError ||
     hasVisualValidationErrors;
 
   const sectionProps = {
     values: visualValues,
     validationErrors: visualValidationErrors,
-    disabled: disableControls || doc.loading,
+    disabled: disableControls || doc.loading || Boolean(doc.preview),
     animateIn: animateCards,
-    onChange: setVisualValues,
+    onChange: handleVisualChange,
   };
 
   const renderActiveSection = () => {
@@ -353,7 +368,7 @@ export function ConfigPage() {
           value={doc.content}
           onChange={doc.handleChange}
           theme={resolvedTheme}
-          editable={!disableControls && !doc.loading}
+          editable={!disableControls && !doc.loading && !doc.preview}
         />
       )}
 
@@ -369,9 +384,9 @@ export function ConfigPage() {
       />
 
       <DiffModal
-        open={doc.diffModalOpen}
-        original={doc.serverYaml}
-        modified={doc.mergedYaml}
+        open={Boolean(doc.preview)}
+        original={doc.preview?.original ?? ''}
+        modified={doc.preview?.modified ?? ''}
         onConfirm={doc.handleConfirmSave}
         onCancel={doc.closeDiff}
         loading={doc.saving}

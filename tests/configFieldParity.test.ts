@@ -1,9 +1,3 @@
-// 配置项零遗漏守卫：三方对账
-//   ① 搜索索引（searchIndex.ts，唯一的机器可读字段清单）
-//   ② 值键映射（constants.ts FIELD_VALUE_KEYS ↔ VisualConfigValues 叶值键）
-//   ③ 分区 JSX 里实际渲染的 <FieldAnchor fieldId="…"> 锚点（源码扫描）
-// 任何一方增删字段而漏改其余两方，本套件即红。
-
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
@@ -11,10 +5,13 @@ import {
   COMMON_FIELD_IDS,
   CONFIG_SECTION_IDS,
   CONFIG_TAB_IDS,
-  FIELD_VALUE_KEYS,
   SECTION_VALIDATION_FIELDS,
 } from '@/features/config/constants';
-import { CONFIG_FIELD_SEARCH_INDEX, findConfigFieldById } from '@/features/config/searchIndex';
+import {
+  CONFIG_FIELD_SEARCH_INDEX,
+  configFieldValueKey,
+  findConfigFieldById,
+} from '@/features/config/searchIndex';
 import { getVisualConfigValidationErrors } from '@/hooks/useVisualConfig';
 import { DEFAULT_VISUAL_VALUES } from '@/types/visualConfig';
 
@@ -69,13 +66,8 @@ describe('search index integrity', () => {
 });
 
 describe('value-key coverage (index ↔ VisualConfigValues)', () => {
-  test('FIELD_VALUE_KEYS keys are exactly the index field ids', () => {
-    expect(sorted(Object.keys(FIELD_VALUE_KEYS))).toEqual(sorted(INDEX_FIELD_ID_SET));
-  });
-
-  test('the union of mapped value keys is exactly the VisualConfigValues leaf keys', () => {
-    const mapped = new Set(Object.values(FIELD_VALUE_KEYS).flat());
-    // 双向：漏映射的表单键 / 指向不存在键的映射，都在这里现形
+  test('every VisualConfigValues leaf is mapped exactly once', () => {
+    const mapped = CONFIG_FIELD_SEARCH_INDEX.map(configFieldValueKey);
     expect(sorted(mapped)).toEqual(sorted(LEAF_VALUE_KEYS));
   });
 });

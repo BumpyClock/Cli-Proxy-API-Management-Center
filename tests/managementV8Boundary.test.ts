@@ -7,7 +7,7 @@ import { authFilesApi } from '@/services/api/authFiles';
 import { configApi } from '@/services/api/config';
 import { oauthApi } from '@/services/api/oauth';
 import { pluginsApi } from '@/services/api/plugins';
-import { getConfigValue } from '@/services/api/configValue';
+import { readConfigResource } from '@/services/api/configValue';
 import { probeLegacyBackend } from '@/services/api/legacyBackendProbe';
 import { usageApi } from '@/services/api/usage';
 import { normalizeApiBase } from '@/utils/connection';
@@ -19,7 +19,7 @@ afterEach(() => {
   apiClient.setConfig({ apiBase: '', managementKey: '' });
 });
 
-test('the route migration remains idempotent and guards operational API modules', () => {
+test('the route checker guards operational API modules', () => {
   const result = Bun.spawnSync([process.execPath, 'scripts/migrations/management-v8.mjs'], {
     cwd: resolve(import.meta.dir, '..'),
   });
@@ -45,13 +45,15 @@ describe('v8 transport and access keys', () => {
     }
   );
 
-  test('replaces only client access keys when updating an entry', async () => {
+  test('binds a resource replacement to the client keys path and config ETag', async () => {
     const get = spyOn(apiClient, 'getRaw').mockResolvedValue(
       configResponse({ access: { 'api-keys': ['first', 'second'] } })
     );
     const put = spyOn(apiClient, 'put').mockResolvedValue({});
     mocks.push(get, put);
-    await apiKeysApi.update(1, 'replacement');
+    const keys = await readConfigResource('/config/access/api-keys', []);
+    expect(keys.value).toEqual(['first', 'second']);
+    await keys.replace(['first', 'replacement']);
     expect(get).toHaveBeenCalledWith('/config');
     expect(put).toHaveBeenCalledWith('/config/access/api-keys', ['first', 'replacement'], {
       headers: { 'If-Match': '"fixture"' },
@@ -61,11 +63,11 @@ describe('v8 transport and access keys', () => {
   test('does not turn a missing API route into an empty editable configuration', async () => {
     const get = spyOn(apiClient, 'get').mockRejectedValue({ status: 404 });
     mocks.push(get);
-    await expect(getConfigValue('/config/access/api-keys', [])).rejects.toMatchObject({
+    await expect(apiKeysApi.list()).rejects.toMatchObject({
       status: 404,
     });
     get.mockRejectedValue({ status: 404, apiCode: 'not_found' });
-    expect(await getConfigValue('/config/access/api-keys', [])).toEqual([]);
+    expect(await apiKeysApi.list()).toEqual([]);
   });
 
   test('writes request logging as a bare boolean', async () => {
@@ -87,10 +89,8 @@ describe('whole-map configuration mutations', () => {
       return {};
     });
     mocks.push(get, put);
-    await Promise.all([
-      authFilesApi.saveOauthExcludedModels('claude', ['new']),
-      authFilesApi.saveOauthExcludedModels('codex', ['other']),
-    ]);
+    const editor = await authFilesApi.editOauthExcludedModels();
+    await Promise.all([editor.save('claude', ['new']), editor.save('codex', ['other'])]);
     expect(current).toEqual({ future: ['unchanged'], claude: ['new'], codex: ['other'] });
     expect(put.mock.calls.every(([path]) => path === '/config/oauth/excluded-models')).toBe(true);
     await authFilesApi.deleteOauthExcludedEntry('claude');
@@ -105,7 +105,7 @@ describe('whole-map configuration mutations', () => {
     });
     const put = spyOn(apiClient, 'put').mockResolvedValue({});
     mocks.push(get, put);
-    await expect(authFilesApi.saveOauthExcludedModels('claude', ['new'])).rejects.toThrow();
+    await expect(authFilesApi.deleteOauthExcludedEntry('claude')).rejects.toThrow();
     expect(put).not.toHaveBeenCalled();
   });
 

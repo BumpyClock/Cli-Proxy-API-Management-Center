@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test';
 import { configResponse } from './fixtures/managementV8';
 import { apiClient } from '../src/services/api/client';
 import { providersApi } from '../src/services/api/providers';
+import { normalizeConfigResponse } from '../src/services/api/transformers';
 
 const originalGetRaw = apiClient.getRaw;
 const originalPut = apiClient.put;
@@ -20,20 +21,24 @@ describe('provider model thinking config', () => {
       return undefined;
     }) as typeof apiClient.put;
 
-    await providersApi.createVertexConfig({
-      apiKey: 'vertex-key',
-      models: [
-        {
-          name: 'gemini-3-pro',
-          alias: 'vertex-pro',
-          thinking: {
-            min: 128,
-            max: 32768,
-            zero_allowed: true,
-            dynamic_allowed: true,
+    await providersApi.writeFamily({
+      family: 'vertex',
+      type: 'create',
+      config: {
+        apiKey: 'vertex-key',
+        models: [
+          {
+            name: 'gemini-3-pro',
+            alias: 'vertex-pro',
+            thinking: {
+              min: 128,
+              max: 32768,
+              zero_allowed: true,
+              dynamic_allowed: true,
+            },
           },
-        },
-      ],
+        ],
+      },
     });
 
     expect(putData).toEqual([
@@ -91,10 +96,15 @@ describe('provider model thinking config', () => {
       return undefined;
     }) as typeof apiClient.put;
 
-    await providersApi.updateCodexConfig('codex-key', 'https://example.com', {
-      apiKey: 'codex-key',
-      baseUrl: 'https://example.com',
-      models: [{ name: 'gpt-5-codex', alias: 'codex-latest' }],
+    const current = normalizeConfigResponse((await apiClient.getRaw('/config')).data)
+      .codexApiKeys![0];
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...current,
+        models: [{ ...current.models![0], thinking: undefined }],
+      },
     });
 
     expect(putData).toEqual([

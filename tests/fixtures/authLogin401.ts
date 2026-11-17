@@ -44,11 +44,7 @@ try {
 
   useAuthStore.setState({ ...credentials, isAuthenticated: true, connectionStatus: 'connected' });
   const revision = apiClient.getConnectionRevision();
-  try {
-    await apiClient.get('/config');
-  } catch {
-    /* Expected fixture 401. */
-  }
+  await assert.rejects(apiClient.get('/config'), { status: 401 });
   assert.equal(useAuthStore.getState().isAuthenticated, false);
   assert.equal(useAuthStore.getState().connectionStatus, 'disconnected');
   assert(apiClient.getConnectionRevision() > revision);

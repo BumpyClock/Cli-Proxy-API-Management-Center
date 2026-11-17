@@ -33,17 +33,10 @@ const key = (group: Record<string, unknown>) => (group.keys as Record<string, un
 const openai = (group: Record<string, unknown>) =>
   (normalizeProviderGroups([group], true) as OpenAIProviderConfig[])[0];
 
-const keyApis = [
-  ['gemini', providersApi.updateGeminiKey],
-  ['interactions', providersApi.updateInteractionsKey],
-  ['codex', providersApi.updateCodexConfig],
-  ['meta', providersApi.updateMetaConfig],
-  ['xai', providersApi.updateXAIConfig],
-  ['claude', providersApi.updateClaudeConfig],
-] as const;
+const families = ['gemini', 'interactions', 'codex', 'meta', 'xai', 'claude'] as const;
 
 describe('v8 weight clearing', () => {
-  for (const [family, update] of keyApis) {
+  for (const family of families) {
     test.each([undefined, null, 4])(
       `${family} clearing weight %s restores default routing weight without changing group policy`,
       async (weight) => {
@@ -62,10 +55,14 @@ describe('v8 weight clearing', () => {
         };
         const b = backend(family, group);
         const config = row(b.group());
-        await update(config.apiKey, config.baseUrl, {
-          ...config,
-          weight: undefined,
-          priority: undefined,
+        await providersApi.writeFamily({
+          family,
+          type: 'update',
+          config: {
+            ...config,
+            weight: undefined,
+            priority: undefined,
+          },
         });
         expect(b.group()).toEqual({
           ...group,
@@ -78,7 +75,7 @@ describe('v8 weight clearing', () => {
       const group = { name: 'fixture', weight: 9, keys: [{ 'api-key': 'fixture-key', weight: 4 }] };
       const b = backend(family, group);
       const config = row(b.group());
-      await update(config.apiKey, config.baseUrl, { ...config, weight: 0 });
+      await providersApi.writeFamily({ family, type: 'update', config: { ...config, weight: 0 } });
       expect(b.group()).toEqual({ ...group, keys: [{ 'api-key': 'fixture-key', weight: 0 }] });
     });
   }
@@ -89,26 +86,34 @@ describe('v8 weight clearing', () => {
       keys: [{ 'api-key': 'fixture-key', weight: 4 }],
     });
     const config = row(b.group());
-    await providersApi.updateCodexConfig(config.apiKey, config.baseUrl, {
-      ...config,
-      weight: undefined,
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...config,
+        weight: undefined,
+      },
     });
     expect(key(b.group())).toEqual({ 'api-key': 'fixture-key' });
   });
 });
 
 describe('v8 cooling overrides', () => {
-  for (const [family, update] of keyApis) {
+  for (const family of families) {
     test(`${family} persists explicit false instead of inheriting disabled global cooling`, async () => {
       const b = backend(family, {
         name: 'fixture',
         keys: [{ 'api-key': 'fixture-key', 'disable-cooling': true }],
       });
       const config = row(b.group());
-      await update(config.apiKey, config.baseUrl, { ...config, disableCooling: false });
+      await providersApi.writeFamily({
+        family,
+        type: 'update',
+        config: { ...config, disableCooling: false },
+      });
       expect(key(b.group())['disable-cooling']).toBe(false);
       const current = row(b.group());
-      await update(current.apiKey, current.baseUrl, { ...current, weight: 7 });
+      await providersApi.writeFamily({ family, type: 'update', config: { ...current, weight: 7 } });
       expect(key(b.group())).toEqual({
         'api-key': 'fixture-key',
         'disable-cooling': false,
@@ -125,7 +130,11 @@ describe('v8 cooling overrides', () => {
         };
         const b = backend(family, { name: 'fixture', keys: [rawKey] });
         const config = row(b.group());
-        await update(config.apiKey, config.baseUrl, { ...config, weight: 7 });
+        await providersApi.writeFamily({
+          family,
+          type: 'update',
+          config: { ...config, weight: 7 },
+        });
         expect(key(b.group())).toEqual({ ...rawKey, weight: 7 });
       }
     );
@@ -139,19 +148,31 @@ describe('v8 cooling overrides', () => {
       keys: [{ 'api-key': 'fixture-key' }],
     });
     const config = openai(b.group());
-    await providersApi.updateOpenAIProvider(config.name, { ...config, disableCooling: false });
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: { ...config, disableCooling: false },
+    });
     expect(b.group()['disable-cooling']).toBe(false);
     const current = openai(b.group());
-    await providersApi.updateOpenAIProvider(current.name, { ...current, priority: 3 });
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: { ...current, priority: 3 },
+    });
     expect(b.group()['disable-cooling']).toBe(false);
   });
 
   test('explicit false can override global cooling even without a previous per-key value', async () => {
     const b = backend('codex', { name: 'fixture', keys: [{ 'api-key': 'fixture-key' }] });
     const config = row(b.group());
-    await providersApi.updateCodexConfig(config.apiKey, undefined, {
-      ...config,
-      disableCooling: false,
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...config,
+        disableCooling: false,
+      },
     });
     expect(key(b.group())['disable-cooling']).toBe(false);
   });
@@ -165,9 +186,13 @@ describe('v8 credential row identity', () => {
       const group = { name: 'fixture', 'base-url': 'https://example.invalid', keys: [original] };
       const b = backend('openai-compatibility', group);
       const config = openai(b.group());
-      await providersApi.updateOpenAIProvider(config.name, {
-        ...config,
-        apiKeyEntries: retained ? config.apiKeyEntries : [{ apiKey: 'fixture-key' }],
+      await providersApi.writeFamily({
+        family: 'openai-compatibility',
+        type: 'update',
+        config: {
+          ...config,
+          apiKeyEntries: retained ? config.apiKeyEntries : [{ apiKey: 'fixture-key' }],
+        },
       });
       expect(b.group()).toEqual({
         ...group,
@@ -186,9 +211,13 @@ describe('v8 credential row identity', () => {
       keys: [first, second],
     });
     const config = openai(b.group());
-    await providersApi.updateOpenAIProvider(config.name, {
-      ...config,
-      apiKeyEntries: config.apiKeyEntries.toReversed(),
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: {
+        ...config,
+        apiKeyEntries: config.apiKeyEntries.toReversed(),
+      },
     });
     expect(b.group().keys).toEqual([second, first]);
   });
@@ -202,9 +231,13 @@ describe('v8 credential row identity', () => {
     });
     const config = openai(b.group());
     await expect(
-      providersApi.updateOpenAIProvider(config.name, {
-        ...config,
-        apiKeyEntries: [config.apiKeyEntries[0], config.apiKeyEntries[0]],
+      providersApi.writeFamily({
+        family: 'openai-compatibility',
+        type: 'update',
+        config: {
+          ...config,
+          apiKeyEntries: [config.apiKeyEntries[0], config.apiKeyEntries[0]],
+        },
       })
     ).rejects.toThrow();
     expect(b.writes).toHaveLength(0);
@@ -233,9 +266,13 @@ describe('v8 model row identity', () => {
       };
       const b = backend('codex', group);
       const config = row(b.group());
-      await providersApi.updateCodexConfig(config.apiKey, undefined, {
-        ...config,
-        models: [{ ...config.models![0], name: 'new', alias: 'renamed', thinking: undefined }],
+      await providersApi.writeFamily({
+        family: 'codex',
+        type: 'update',
+        config: {
+          ...config,
+          models: [{ ...config.models![0], name: 'new', alias: 'renamed', thinking: undefined }],
+        },
       });
       const metadata: Record<string, unknown> = { ...originalModel };
       delete metadata.thinking;
@@ -253,15 +290,23 @@ describe('v8 model row identity', () => {
       keys: [{ 'api-key': 'fixture-key', models: [a, bModel] }],
     });
     const config = row(b.group());
-    await providersApi.updateCodexConfig(config.apiKey, undefined, {
-      ...config,
-      models: [{ ...config.models![1], name: 'renamed' }, config.models![0]],
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...config,
+        models: [{ ...config.models![1], name: 'renamed' }, config.models![0]],
+      },
     });
     expect(key(b.group()).models).toEqual([{ ...bModel, name: 'renamed' }, a]);
     const current = row(b.group());
-    await providersApi.updateCodexConfig(current.apiKey, undefined, {
-      ...current,
-      models: [current.models![0]],
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...current,
+        models: [current.models![0]],
+      },
     });
     expect(key(b.group()).models).toEqual([{ ...bModel, name: 'renamed' }]);
   });
@@ -274,12 +319,16 @@ describe('v8 model row identity', () => {
       keys: [{ 'api-key': 'fixture-key' }],
     });
     const config = openai(b.group());
-    await providersApi.updateOpenAIProvider(config.name, {
-      ...config,
-      models: [
-        { name: 'fresh', alias: 'fresh' },
-        { ...config.models![0], name: 'new' },
-      ],
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: {
+        ...config,
+        models: [
+          { name: 'fresh', alias: 'fresh' },
+          { ...config.models![0], name: 'new' },
+        ],
+      },
     });
     expect(b.group().models).toEqual([
       { name: 'fresh', alias: 'fresh' },
@@ -294,18 +343,19 @@ describe('v8 model row identity', () => {
       keys: [{ 'api-key': 'fixture-key', models: [originalModel] }],
     });
     const config = row(b.group());
-    await providersApi.updateCodexConfig(config.apiKey, undefined, {
-      ...config,
-      // A new form row contains only the fields the user enters, not a clone of
-      // the deleted row's now-editable advanced properties.
-      models: [
-        {
-          name: originalModel.name,
-          alias: originalModel.alias,
-          thinking: originalModel.thinking,
-          sourceIndex: null,
-        },
-      ],
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...config,
+        models: [
+          {
+            name: originalModel.name,
+            alias: originalModel.alias,
+            thinking: originalModel.thinking,
+          },
+        ],
+      },
     });
     expect(key(b.group()).models).toEqual([
       {
@@ -324,9 +374,13 @@ describe('v8 model row identity', () => {
       keys: [{ 'api-key': 'fixture-key', models: [a, bModel] }],
     });
     const config = row(b.group());
-    await providersApi.updateCodexConfig(config.apiKey, undefined, {
-      ...config,
-      models: [config.models![1], config.models![0]],
+    await providersApi.writeFamily({
+      family: 'codex',
+      type: 'update',
+      config: {
+        ...config,
+        models: [config.models![1], config.models![0]],
+      },
     });
     expect(key(b.group()).models).toEqual([bModel, a]);
   });
@@ -338,9 +392,13 @@ describe('v8 model row identity', () => {
     });
     const config = row(b.group());
     await expect(
-      providersApi.updateCodexConfig(config.apiKey, undefined, {
-        ...config,
-        models: [config.models![0], { ...config.models![0], name: 'other' }],
+      providersApi.writeFamily({
+        family: 'codex',
+        type: 'update',
+        config: {
+          ...config,
+          models: [config.models![0], { ...config.models![0], name: 'other' }],
+        },
       })
     ).rejects.toThrow();
     expect(b.writes).toHaveLength(0);
@@ -353,9 +411,13 @@ describe('v8 model row identity', () => {
     });
     const config = row(b.group());
     await expect(
-      providersApi.updateCodexConfig(config.apiKey, undefined, {
-        ...config,
-        models: [{ ...config.models![0], sourceIndex, name: 'new' }],
+      providersApi.writeFamily({
+        family: 'codex',
+        type: 'update',
+        config: {
+          ...config,
+          models: [{ ...config.models![0], sourceIndex, name: 'new' }],
+        },
       })
     ).rejects.toThrow();
     expect(b.writes).toHaveLength(0);
@@ -369,16 +431,24 @@ describe('v8 model row identity', () => {
     });
     const config = row(b.group());
     expect(config.models![0].alias).toBe('m');
-    await providersApi.updateVertexConfig(config.apiKey, undefined, {
-      ...config,
-      models: [{ ...config.models![0], thinking: { levels: ['low'] } }],
+    await providersApi.writeFamily({
+      family: 'vertex',
+      type: 'update',
+      config: {
+        ...config,
+        models: [{ ...config.models![0], thinking: { levels: ['low'] } }],
+      },
     });
     const changed = { ...model, thinking: { levels: ['low'] } };
     expect(key(b.group()).models).toEqual([changed]);
     const current = row(b.group());
-    await providersApi.updateVertexConfig(current.apiKey, undefined, {
-      ...current,
-      models: [...current.models!, { name: 'new', alias: 'other' }],
+    await providersApi.writeFamily({
+      family: 'vertex',
+      type: 'update',
+      config: {
+        ...current,
+        models: [...current.models!, { name: 'new', alias: 'other' }],
+      },
     });
     expect(key(b.group()).models).toEqual([changed, { name: 'new', alias: 'other' }]);
     expect(JSON.stringify(b.writes)).not.toContain('sourceIndex');

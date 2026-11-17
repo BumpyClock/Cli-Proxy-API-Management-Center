@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { parse as parseYaml, parseDocument } from 'yaml';
 import {
-  buildConfigSaveDraft,
+  buildConfigSavePreview,
   readCommercialModeFromYaml,
-  selectVisualMergeBase,
   shouldReloadVisualDraft,
 } from '../src/features/config/hooks/useConfigDocument';
+
+const owner = { revision: 1, assertConnection() {} };
 
 function applyProxyEdit(yaml: string): string {
   const document = parseDocument(yaml);
@@ -20,60 +21,44 @@ describe('config document concurrency policy', () => {
     expect(readCommercialModeFromYaml('server: null\n')).toBe(false);
     expect(readCommercialModeFromYaml('commercial-mode: true\n')).toBe(false);
   });
-  test('a visual/source mode round trip keeps merging visual edits onto the latest server YAML', () => {
-    const synchronizedSource =
-      'debug: false\nproxy-url: http://local-proxy.example\nsource-only: draft\n';
-    const latestServer = 'debug: true\nproxy-url: http://old-proxy.example\nsource-only: server\n';
 
+  test('rebasing a visual preview preserves server changes and uses the reviewed draft', () => {
     expect(shouldReloadVisualDraft(false, null)).toBe(false);
+    const first = buildConfigSavePreview(
+      owner,
+      { origin: 'visual', applyVisualChanges: applyProxyEdit },
+      'debug: false\nproxy-url: http://old-proxy.example\n'
+    );
+    const latest = 'debug: true\nproxy-url: http://old-proxy.example\nsource-only: server\n';
+    const rebased = buildConfigSavePreview(first.owner, first.draft, latest);
 
-    const merged = applyProxyEdit(selectVisualMergeBase(latestServer, synchronizedSource, false));
-    expect(parseYaml(merged)).toEqual({
+    expect(parseYaml(rebased.modified)).toEqual({
       debug: true,
       'proxy-url': 'http://local-proxy.example',
       'source-only': 'server',
     });
+    expect(parseYaml(first.modified).debug).toBe(false);
+    expect(rebased.serverContent).toBe(latest);
   });
 
-  test('a real source edit keeps the local draft as the visual merge base', () => {
-    const sourceDraft =
-      'debug: false\nproxy-url: http://old-proxy.example\nsource-only: local-draft\n';
-    const latestServer = 'debug: true\nproxy-url: http://old-proxy.example\nsource-only: server\n';
-
-    expect(shouldReloadVisualDraft(true, null)).toBe(true);
-
-    const merged = applyProxyEdit(selectVisualMergeBase(latestServer, sourceDraft, true));
-    expect(parseYaml(merged)).toEqual({
-      debug: false,
-      'proxy-url': 'http://local-proxy.example',
-      'source-only': 'local-draft',
-    });
-  });
-
-  test('visual edits after a real source edit are applied on top of the source draft', () => {
+  test('rebasing a source-origin visual preview preserves the same local draft and visual edits', () => {
     const source = 'debug: false\nsource-only: local\n';
     const server = 'debug: true\nsource-only: server\n';
-    const result = buildConfigSaveDraft(server, source, true, 'visual', applyProxyEdit);
-    expect(parseYaml(result)).toEqual({
+    const first = buildConfigSavePreview(
+      owner,
+      { origin: 'source', content: source, applyVisualChanges: applyProxyEdit },
+      server
+    );
+    const rebased = buildConfigSavePreview(first.owner, first.draft, 'other: server\n');
+
+    expect(shouldReloadVisualDraft(true, null)).toBe(true);
+    expect(parseYaml(rebased.modified)).toEqual({
       debug: false,
       'source-only': 'local',
       'proxy-url': 'http://local-proxy.example',
     });
-    expect(buildConfigSaveDraft(server, source, true, 'source', applyProxyEdit)).toBe(source);
-  });
-
-  test('viewing generated source retains the visual-origin save strategy', () => {
-    const result = buildConfigSaveDraft(
-      'debug: true\n',
-      'debug: false\n',
-      false,
-      'source',
-      applyProxyEdit
-    );
-    expect(parseYaml(result)).toEqual({
-      debug: true,
-      'proxy-url': 'http://local-proxy.example',
-    });
+    expect(rebased.modified).toBe(first.modified);
+    expect(rebased.original).toBe('other: server\n');
   });
 
   test('retries parsing after a YAML error even without a source edit', () => {

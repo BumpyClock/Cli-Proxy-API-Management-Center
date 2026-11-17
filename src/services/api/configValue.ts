@@ -1,7 +1,6 @@
 import { apiClient } from './client';
 import { isRecord } from '@/utils/helpers';
 
-/** Capture before a read and check before its dependent write. */
 export function guardConfigConnection(): () => void {
   const revision = apiClient.getConnectionRevision();
   return () => {
@@ -33,12 +32,14 @@ export async function readConfigResource(path: string, fallback: unknown) {
     value = Object.prototype.hasOwnProperty.call(value, key) ? value[key] : undefined;
   }
   const etag: unknown = response.headers.etag;
+  const write = async (method: 'put' | 'patch', next: unknown) => {
+    assertConnection();
+    return apiClient[method](path, next, { headers: configWriteHeaders(etag) });
+  };
   return {
     value: value ?? fallback,
-    replace(next: unknown): Promise<unknown> {
-      assertConnection();
-      return apiClient.put(path, next, { headers: configWriteHeaders(etag) });
-    },
+    replace: (next: unknown) => write('put', next),
+    patch: (next: Record<string, unknown>) => write('patch', next),
   };
 }
 

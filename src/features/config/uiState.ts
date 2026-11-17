@@ -6,45 +6,36 @@ import {
   COMMON_FIELD_IDS,
   CONFIG_SECTION_IDS,
   CONFIG_TAB_IDS,
-  FIELD_VALUE_KEYS,
   SECTION_VALIDATION_FIELDS,
   type ConfigEditorMode,
   type ConfigTabId,
 } from './constants';
-import { CONFIG_FIELD_SEARCH_INDEX, type VisualSectionId } from './searchIndex';
+import { CONFIG_FIELD_SEARCH_INDEX, configFieldValueKey } from './searchIndex';
 
 /** 可视化编辑器暴露的配置项总数（头部 meta 行的「N 项配置」）。 */
 export const CONFIG_FIELD_COUNT = CONFIG_FIELD_SEARCH_INDEX.length;
 
-/** 叶值键（= useVisualConfig dirtyFields 的键）→ fieldId 反查表。 */
-const VALUE_KEY_TO_FIELD_ID: ReadonlyMap<string, string> = (() => {
-  const map = new Map<string, string>();
-  for (const [fieldId, valueKeys] of Object.entries(FIELD_VALUE_KEYS)) {
-    for (const valueKey of valueKeys) map.set(valueKey, fieldId);
-  }
-  return map;
-})();
-
-const FIELD_ID_TO_SECTION: ReadonlyMap<string, VisualSectionId> = new Map(
-  CONFIG_FIELD_SEARCH_INDEX.map((entry) => [entry.fieldId, entry.sectionId])
+const FIELDS_BY_VALUE_KEY = new Map(
+  CONFIG_FIELD_SEARCH_INDEX.map((entry) => [configFieldValueKey(entry), entry])
 );
 
 const COMMON_FIELD_ID_SET: ReadonlySet<string> = new Set<string>(COMMON_FIELD_IDS);
 
 /** 常用 tab 渲染的字段对应的叶值键集合（校验错误归属常用 tab 时用）。 */
 const COMMON_VALUE_KEYS: ReadonlySet<string> = new Set(
-  COMMON_FIELD_IDS.flatMap((fieldId) => [...(FIELD_VALUE_KEYS[fieldId] ?? [])])
+  CONFIG_FIELD_SEARCH_INDEX.filter((entry) => COMMON_FIELD_ID_SET.has(entry.fieldId)).map(
+    configFieldValueKey
+  )
 );
 
 /** 脏字段集合 → 点亮脏点的 tabs。常用字段同时点亮 common 与其正典分区（两处都渲染它）。 */
 export function resolveDirtyTabs(dirtyFields: ReadonlySet<string>): ReadonlySet<ConfigTabId> {
   const tabs = new Set<ConfigTabId>();
   for (const valueKey of dirtyFields) {
-    const fieldId = VALUE_KEY_TO_FIELD_ID.get(valueKey);
-    if (!fieldId) continue;
-    const sectionId = FIELD_ID_TO_SECTION.get(fieldId);
-    if (sectionId) tabs.add(sectionId);
-    if (COMMON_FIELD_ID_SET.has(fieldId)) tabs.add('common');
+    const field = FIELDS_BY_VALUE_KEY.get(valueKey);
+    if (!field) continue;
+    tabs.add(field.sectionId);
+    if (COMMON_FIELD_ID_SET.has(field.fieldId)) tabs.add('common');
   }
   return tabs;
 }

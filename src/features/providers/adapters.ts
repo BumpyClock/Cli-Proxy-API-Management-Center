@@ -28,7 +28,6 @@ import {
 import type {
   ProviderBrand,
   ProviderResource,
-  ProviderResourceSelector,
   SponsorProviderBrand,
   SponsorProviderRaw,
 } from './types';
@@ -75,13 +74,6 @@ function providerKeyToResource(
     flags.claudeCodeCliProfile = claudeConfig.fingerprintProfile === 'claude-code-cli';
   }
 
-  const selector: ProviderResourceSelector = {
-    brand,
-    apiKey,
-    baseUrl: config.baseUrl,
-    index,
-  } as ProviderResourceSelector;
-
   return {
     id: buildId(brand, index, truncateForId(apiKey)),
     brand,
@@ -102,8 +94,6 @@ function providerKeyToResource(
     apiKeyEntryCount: 0,
     disabled,
     flags,
-    selector,
-    source: config.source,
     raw: config,
   };
 }
@@ -137,7 +127,7 @@ export function vertexToResource(config: ProviderKeyConfig, index: number): Prov
 }
 
 export function openaiToResource(config: OpenAIProviderConfig, index: number): ProviderResource {
-  const sourceIndex = config.sourceIndex ?? index;
+  const sourceIndex = config.source?.groupIndex ?? index;
   const name = (config.name ?? '').trim();
   const firstEntry = config.apiKeyEntries?.[0];
   const previewApiKey = firstEntry?.apiKey ? maskApiKey(firstEntry.apiKey) : null;
@@ -161,8 +151,6 @@ export function openaiToResource(config: OpenAIProviderConfig, index: number): P
     apiKeyEntryCount: config.apiKeyEntries?.length ?? 0,
     disabled: config.disabled === true,
     flags: {},
-    selector: { brand: 'openaiCompatibility', name, index: sourceIndex },
-    source: config.source,
     raw: config,
   };
 }
@@ -193,34 +181,33 @@ function sponsorRawToResource(
     return null;
   }
   const openaiKeyCount = raw.openai.reduce(
-    (count, item) => count + (item.config.apiKeyEntries?.length ?? 0),
+    (count, item) => count + (item.apiKeyEntries?.length ?? 0),
     0
   );
   const codexKeyCount = raw.codex.length;
   const geminiKeyCount = raw.gemini.length;
   const firstOpenAIEntry = raw.openai
-    .flatMap((item) => item.config.apiKeyEntries ?? [])
+    .flatMap((item) => item.apiKeyEntries ?? [])
     .find((entry) => entry.apiKey?.trim());
-  const firstCodex = raw.codex.find((item) => item.config.apiKey?.trim());
-  const firstClaude = raw.claude.find((item) => item.config.apiKey?.trim());
-  const firstGemini = raw.gemini.find((item) => item.config.apiKey?.trim());
+  const firstCodex = raw.codex.find((item) => item.apiKey?.trim());
+  const firstClaude = raw.claude.find((item) => item.apiKey?.trim());
+  const firstGemini = raw.gemini.find((item) => item.apiKey?.trim());
   const apiKey =
     firstOpenAIEntry?.apiKey ??
-    firstCodex?.config.apiKey ??
-    firstClaude?.config.apiKey ??
-    firstGemini?.config.apiKey ??
+    firstCodex?.apiKey ??
+    firstClaude?.apiKey ??
+    firstGemini?.apiKey ??
     '';
   const openaiDisabled =
-    raw.openai.length > 0 && raw.openai.every((item) => item.config.disabled === true);
+    raw.openai.length > 0 && raw.openai.every((item) => item.disabled === true);
   const codexDisabled =
-    raw.codex.length > 0 &&
-    raw.codex.every((item) => hasDisableAllModelsRule(item.config.excludedModels));
+    raw.codex.length > 0 && raw.codex.every((item) => hasDisableAllModelsRule(item.excludedModels));
   const claudeDisabled =
     raw.claude.length > 0 &&
-    raw.claude.every((item) => hasDisableAllModelsRule(item.config.excludedModels));
+    raw.claude.every((item) => hasDisableAllModelsRule(item.excludedModels));
   const geminiDisabled =
     raw.gemini.length > 0 &&
-    raw.gemini.every((item) => hasDisableAllModelsRule(item.config.excludedModels));
+    raw.gemini.every((item) => hasDisableAllModelsRule(item.excludedModels));
   const enabledCount =
     (raw.openai.length > 0 && !openaiDisabled ? 1 : 0) +
     (raw.codex.length > 0 && !codexDisabled ? 1 : 0) +
@@ -230,29 +217,29 @@ function sponsorRawToResource(
     raw.openai.length > 0 || raw.codex.length > 0 || raw.claude.length > 0 || raw.gemini.length > 0;
   const disabled = allResourcesConfigured && enabledCount === 0;
   const models = [
-    ...raw.openai.flatMap((item) => collectModelNames(item.config.models)),
-    ...raw.codex.flatMap((item) => collectModelNames(item.config.models)),
-    ...raw.claude.flatMap((item) => collectModelNames(item.config.models)),
-    ...raw.gemini.flatMap((item) => collectModelNames(item.config.models)),
+    ...raw.openai.flatMap((item) => collectModelNames(item.models)),
+    ...raw.codex.flatMap((item) => collectModelNames(item.models)),
+    ...raw.claude.flatMap((item) => collectModelNames(item.models)),
+    ...raw.gemini.flatMap((item) => collectModelNames(item.models)),
   ];
   const uniqueModels = Array.from(new Set(models));
   const headerCount =
-    raw.openai.reduce((count, item) => count + countHeaders(item.config.headers), 0) +
-    raw.codex.reduce((count, item) => count + countHeaders(item.config.headers), 0) +
-    raw.claude.reduce((count, item) => count + countHeaders(item.config.headers), 0) +
-    raw.gemini.reduce((count, item) => count + countHeaders(item.config.headers), 0);
+    raw.openai.reduce((count, item) => count + countHeaders(item.headers), 0) +
+    raw.codex.reduce((count, item) => count + countHeaders(item.headers), 0) +
+    raw.claude.reduce((count, item) => count + countHeaders(item.headers), 0) +
+    raw.gemini.reduce((count, item) => count + countHeaders(item.headers), 0);
   const priority = Math.max(
     0,
-    ...raw.openai.map((item) => normalizePriority(item.config.priority)),
-    ...raw.codex.map((item) => normalizePriority(item.config.priority)),
-    ...raw.claude.map((item) => normalizePriority(item.config.priority)),
-    ...raw.gemini.map((item) => normalizePriority(item.config.priority))
+    ...raw.openai.map((item) => normalizePriority(item.priority)),
+    ...raw.codex.map((item) => normalizePriority(item.priority)),
+    ...raw.claude.map((item) => normalizePriority(item.priority)),
+    ...raw.gemini.map((item) => normalizePriority(item.priority))
   );
   const baseUrl = options.resolveBaseUrl(
-    raw.openai[0]?.config.baseUrl ??
-      raw.codex[0]?.config.baseUrl ??
-      raw.claude[0]?.config.baseUrl ??
-      raw.gemini[0]?.config.baseUrl
+    raw.openai[0]?.baseUrl ??
+      raw.codex[0]?.baseUrl ??
+      raw.claude[0]?.baseUrl ??
+      raw.gemini[0]?.baseUrl
   );
   const protocolUrls = options.getProtocolUrls(baseUrl);
 
@@ -270,15 +257,15 @@ function sponsorRawToResource(
       .join(' / '),
     proxyUrl:
       firstOpenAIEntry?.proxyUrl ??
-      raw.codex.find((item) => item.config.proxyUrl)?.config.proxyUrl ??
-      raw.claude.find((item) => item.config.proxyUrl)?.config.proxyUrl ??
-      raw.gemini.find((item) => item.config.proxyUrl)?.config.proxyUrl ??
+      raw.codex.find((item) => item.proxyUrl)?.proxyUrl ??
+      raw.claude.find((item) => item.proxyUrl)?.proxyUrl ??
+      raw.gemini.find((item) => item.proxyUrl)?.proxyUrl ??
       null,
     prefix:
-      raw.openai[0]?.config.prefix ??
-      raw.codex[0]?.config.prefix ??
-      raw.claude[0]?.config.prefix ??
-      raw.gemini[0]?.config.prefix ??
+      raw.openai[0]?.prefix ??
+      raw.codex[0]?.prefix ??
+      raw.claude[0]?.prefix ??
+      raw.gemini[0]?.prefix ??
       null,
     modelCount: uniqueModels.length,
     models: uniqueModels,
@@ -286,15 +273,15 @@ function sponsorRawToResource(
     headerCount,
     excludedModelCount:
       raw.codex.reduce(
-        (count, item) => count + stripDisableAllModelsRule(item.config.excludedModels).length,
+        (count, item) => count + stripDisableAllModelsRule(item.excludedModels).length,
         0
       ) +
       raw.claude.reduce(
-        (count, item) => count + stripDisableAllModelsRule(item.config.excludedModels).length,
+        (count, item) => count + stripDisableAllModelsRule(item.excludedModels).length,
         0
       ) +
       raw.gemini.reduce(
-        (count, item) => count + stripDisableAllModelsRule(item.config.excludedModels).length,
+        (count, item) => count + stripDisableAllModelsRule(item.excludedModels).length,
         0
       ),
     apiKeyEntryCount: openaiKeyCount + codexKeyCount + raw.claude.length + geminiKeyCount,
@@ -302,13 +289,6 @@ function sponsorRawToResource(
     flags: {
       protocols: [...options.protocolLabels],
     },
-    selector: {
-      brand,
-      openaiIndices: raw.openai.map((item) => item.index),
-      claudeIndices: raw.claude.map((item) => item.index),
-      codexIndices: raw.codex.map((item) => item.index),
-      geminiIndices: raw.gemini.map((item) => item.index),
-    } as ProviderResourceSelector,
     raw,
   };
 }

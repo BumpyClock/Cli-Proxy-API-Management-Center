@@ -1,6 +1,3 @@
-// Synthetic Management API fixtures for local browser audits. Mirrors the council capture
-// harness so audits and captures see the same state. Never reaches a real backend: every
-// non-origin request is aborted and every /v8/management call is fulfilled locally.
 import { stringify } from 'yaml';
 
 const MODELS = ['claude-sonnet-4-5', 'gpt-5.2-codex', 'gemini-2.5-pro'];
