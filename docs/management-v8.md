@@ -26,6 +26,7 @@ A successful v8 configuration write saves the v8 YAML layout. Do not point an ol
 | Plugin quota                                | `/plugins/<plugin-id>/quota`                                            |
 | Plugin configuration                        | `/config/plugins/configs/<plugin-id>`                                   |
 | Plugin store                                | `/plugins/store`                                                        |
+| Server model catalog refresh                | `POST /models/refresh`                                                 |
 
 Configuration field writes send bare JSON values. Provider groups and OAuth maps are whole-list or whole-map resources. Read-modify-write operations must preserve unrelated entries and remain bound to the connection that supplied the read. Missing persisted fields may default only for a structured `not_found` response, not for a missing API route.
 
@@ -40,6 +41,10 @@ YAML saves retain the two-stage preview and confirmation. A preview belongs to i
 Provider edits preserve group policies, unrelated keys, explicit inheritance and model metadata. Existing model and credential rows carry explicit identities. Replacing a removed row with a new, identical-looking row does not inherit the removed row's hidden metadata; reordering retained rows keeps each row's own policy. Connection-test model selection is local to the editor, not a persisted v8 field.
 
 Sponsor operations verify the original aggregate before writing and use one conditional `PATCH /config/api-keys` for all changed families. The v8 backend merges the parent map and replaces only the supplied family lists. A rejected write leaves all families unchanged.
+
+Plugin Management and Plugin Store coordinate mutations on the current connection. While an install, update, configuration change, enable or disable operation, or removal is in progress, the other plugin actions are unavailable. The lock remains active while the operation checks its runtime result, even when navigating between the two screens.
+
+On System, **Refresh models** refreshes the server catalog before reloading `/v1/models`. Entering the page only reads the model list. A failed catalog refresh leaves the displayed list intact. A failed list reload after a successful refresh reports the two outcomes separately.
 
 Both explicit management URL suffixes are stripped when identifying a server so existing mount-scoped storage keys remain stable. This normalization does not provide v0 transport fallback. Plugin-defined HTTP extensions and resource URLs retain the backend's declared v0 paths.
 

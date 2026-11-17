@@ -1845,6 +1845,8 @@
     "models_loading": "正在載入可用模型...",
     "models_empty": "未從 /models 取得到模型資料",
     "models_error": "取得模型清單失敗",
+    "models_catalog_refresh_failed": "重新整理伺服器模型目錄失敗",
+    "models_catalog_readback_failed": "模型目錄已重新整理，但無法載入模型清單",
     "version_check_button": "檢查更新",
     "version_update_available": "有新版本可用：{{version}}",
     "version_is_latest": "目前已是最新版本",

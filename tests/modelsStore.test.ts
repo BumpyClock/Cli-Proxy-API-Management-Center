@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, spyOn } from 'bun:test';
 import { modelsApi } from '../src/services/api/models';
+import { apiClient } from '../src/services/api/client';
 import { useModelsStore } from '../src/stores/useModelsStore';
 import type { ModelInfo } from '../src/utils/models';
 
@@ -17,6 +18,17 @@ const originalFetch = modelsApi.fetchModels;
 afterEach(() => {
   modelsApi.fetchModels = originalFetch;
   useModelsStore.getState().clearCache();
+});
+
+it('the server catalog refresh uses the v8 management client', async () => {
+  const post = spyOn(apiClient, 'post').mockResolvedValue({ changed_providers: ['codex'] });
+  try {
+    await modelsApi.refreshCatalog();
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith('/models/refresh');
+  } finally {
+    post.mockRestore();
+  }
 });
 
 describe('models cache request isolation', () => {

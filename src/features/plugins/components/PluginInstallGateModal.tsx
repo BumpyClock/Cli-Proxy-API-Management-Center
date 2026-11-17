@@ -21,6 +21,7 @@ interface PluginInstallGateModalProps {
   entry: PluginStoreEntry | null;
   isUpdate: boolean;
   installing: boolean;
+  blocked: boolean;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
 }
@@ -39,6 +40,7 @@ export function PluginInstallGateModal({
   entry,
   isUpdate,
   installing,
+  blocked,
   onClose,
   onConfirm,
 }: PluginInstallGateModalProps) {
@@ -177,7 +179,7 @@ export function PluginInstallGateModal({
         variant="danger"
         fullWidth
         onClick={handleFinalConfirm}
-        disabled={!tokenMatches || installing}
+        disabled={!tokenMatches || installing || blocked}
         loading={installing}
       >
         {t('plugin_store.gate_step3_action')}

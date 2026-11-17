@@ -22,9 +22,10 @@ import {
   useModelsStore,
   useThemeStore,
 } from '@/stores';
-import { apiClient, configApi, versionApi } from '@/services/api';
+import { apiClient, configApi, modelsApi, versionApi } from '@/services/api';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
 import { formatDateTimeValue, isoTitle } from '@/utils/format';
+import { getErrorMessage, isRequestCancelled } from '@/utils/helpers';
 import { classifyModels } from '@/utils/models';
 import { clearAllAuthStorage } from '@/services/storage/secureStorage';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
@@ -166,6 +167,8 @@ export function SystemPage() {
     type: 'success' | 'warning' | 'error' | 'muted';
     message: string;
   }>();
+  const modelsRequestId = useRef(0);
+  const modelRefreshBusy = modelsLoading || modelStatus?.type === 'muted';
   const [requestLogModalOpen, setRequestLogModalOpen] = useState(false);
   const [requestLogDraft, setRequestLogDraft] = useState(false);
   const [requestLogTouched, setRequestLogTouched] = useState(false);
@@ -227,6 +230,10 @@ export function SystemPage() {
   const resolveApiKeysForModels = useApiKeysForModels();
 
   const fetchModels = async ({ forceRefresh = false }: { forceRefresh?: boolean } = {}) => {
+    const requestId = ++modelsRequestId.current;
+    const revision = apiClient.getConnectionRevision();
+    const isCurrent = () =>
+      modelsRequestId.current === requestId && apiClient.getConnectionRevision() === revision;
     if (auth.connectionStatus !== 'connected') {
       setModelStatus({
         type: 'warning',
@@ -241,10 +248,18 @@ export function SystemPage() {
     }
 
     setModelStatus({ type: 'muted', message: t('system_info.models_loading') });
+    let catalogRefreshed = false;
     try {
+      if (forceRefresh) {
+        await modelsApi.refreshCatalog();
+        if (!isCurrent()) return;
+        catalogRefreshed = true;
+      }
       const apiKeys = await resolveApiKeysForModels({ force: forceRefresh });
+      if (!isCurrent()) return;
       const primaryKey = apiKeys[0];
       const list = await fetchModelsFromStore(auth.apiBase, primaryKey, forceRefresh);
+      if (!isCurrent()) return;
       const hasModels = list.length > 0;
       setModelStatus({
         type: hasModels ? 'success' : 'warning',
@@ -253,9 +268,16 @@ export function SystemPage() {
           : t('system_info.models_empty'),
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
+      if (!isCurrent() || isRequestCancelled(err)) return;
+      const message = getErrorMessage(err);
       const suffix = message ? `: ${message}` : '';
-      const text = `${t('system_info.models_error')}${suffix}`;
+      const text = `${t(
+        !forceRefresh
+          ? 'system_info.models_error'
+          : catalogRefreshed
+            ? 'system_info.models_catalog_readback_failed'
+            : 'system_info.models_catalog_refresh_failed'
+      )}${suffix}`;
       setModelStatus({ type: 'error', message: text });
     }
   };
@@ -390,7 +412,10 @@ export function SystemPage() {
   }, []);
 
   useEffect(() => {
-    fetchModels();
+    void fetchModels();
+    return () => {
+      modelsRequestId.current += 1;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.connectionStatus, auth.apiBase]);
 
@@ -539,7 +564,8 @@ export function SystemPage() {
             <RefreshButton
               onClick={() => void fetchModels({ forceRefresh: true })}
               label={t('system_info.models_refresh')}
-              refreshing={modelsLoading}
+              refreshing={modelRefreshBusy}
+              disabled={auth.connectionStatus !== 'connected'}
             />
           }
         >
@@ -556,7 +582,7 @@ export function SystemPage() {
             </p>
           )}
           {modelStatusNotice && (
-            <div className={`status-badge ${modelStatusNotice.type}`}>
+            <div className={`status-badge ${modelStatusNotice.type}`} role="status">
               {modelStatusNotice.message}
             </div>
           )}

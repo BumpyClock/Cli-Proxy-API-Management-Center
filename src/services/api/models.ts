@@ -6,6 +6,7 @@ import axios from 'axios';
 import { normalizeModelList } from '@/utils/models';
 import { normalizeApiBase } from '@/utils/connection';
 import { apiCallApi, getApiCallErrorMessage } from './apiCall';
+import { apiClient } from './client';
 import { isRecord } from '@/utils/helpers';
 
 const DEFAULT_CLAUDE_BASE_URL = 'https://api.anthropic.com';
@@ -83,6 +84,10 @@ const resolveBearerTokenFromAuthorization = (headers: Record<string, string>): s
 };
 
 export const modelsApi = {
+  async refreshCatalog(): Promise<void> {
+    await apiClient.post('/models/refresh');
+  },
+
   /**
    * Fetch available models from /v1/models endpoint (for system info page)
    */
