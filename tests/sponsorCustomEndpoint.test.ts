@@ -50,15 +50,14 @@ describe('sponsor custom endpoint isolation', () => {
 
   test('keeps same-name custom entries outside sponsor delete targets', () => {
     expect(
-      buildApiKeyFunRaw(
-        mixedOpenAIConfig(APIKEY_FUN_PROVIDER_NAME, APIKEY_FUN_OPENAI_BASE_URL)
-      ).openai.map((item) => item.index)
-    ).toEqual([0]);
+      buildApiKeyFunRaw(mixedOpenAIConfig(APIKEY_FUN_PROVIDER_NAME, APIKEY_FUN_OPENAI_BASE_URL))
+        .openai.length
+    ).toBe(1);
     expect(
       buildQiniuCloudRaw(
         mixedOpenAIConfig(QINIU_CLOUD_PROVIDER_NAME, QINIU_CLOUD_BASE_URL_OPTIONS[0].openaiBaseUrl)
-      ).openai.map((item) => item.index)
-    ).toEqual([0]);
+      ).openai.length
+    ).toBe(1);
   });
 
   test('keeps backend indexes when normalization filters an unnamed item', () => {
@@ -85,8 +84,8 @@ describe('sponsor custom endpoint isolation', () => {
       },
     });
 
-    expect(config.openaiCompatibility?.map((item) => item.sourceIndex)).toEqual([1, 2, 3]);
-    expect(buildApiKeyFunRaw(config).openai.map((item) => item.index)).toEqual([1, 3]);
+    expect(config.openaiCompatibility?.map((item) => item.source?.groupIndex)).toEqual([1, 2, 3]);
+    expect(buildApiKeyFunRaw(config).openai.map((item) => item.source?.groupIndex)).toEqual([1, 3]);
     expect(openaiToResource(config.openaiCompatibility![1], 1).originalIndex).toBe(2);
   });
 

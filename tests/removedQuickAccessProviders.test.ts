@@ -34,7 +34,7 @@ describe('removed quick-access providers', () => {
         name,
         baseUrl: `${baseUrl}/v1`,
         apiKeyEntries: [{ apiKey: 'test-retired-key' }],
-        sourceIndex: 7,
+        source: { groupIndex: 7, group: {} },
         disabled: true,
       };
       const config: Config = {
@@ -51,11 +51,7 @@ describe('removed quick-access providers', () => {
         expect(resource.brand).toBe(brand);
         expect(resource.disabled).toBe(true);
         expect(resource.raw).toBe(brand === 'openaiCompatibility' ? openai : key);
-        expect(resource.selector).toEqual(
-          brand === 'openaiCompatibility'
-            ? { brand, name, index: 7 }
-            : { brand, apiKey: key.apiKey, baseUrl, index: 0 }
-        );
+        expect(resource.originalIndex).toBe(brand === 'openaiCompatibility' ? 7 : 0);
         if (brand === 'claude') expect(resource.flags.claudeCodeCliProfile).toBe(true);
       }
       expect(groups.flatMap((group) => group.resources)).toHaveLength(4);

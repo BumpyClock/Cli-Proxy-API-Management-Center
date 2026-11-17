@@ -1,18 +1,13 @@
-/**
- * Upstream provider groups (v8 `api-keys.<family>`).
- *
- * A group owns one endpoint and shared policy; each key may override it, and a null key
- * field inherits. The Management API only replaces whole family lists, so every write is a
- * read-modify-write against GET /config: the edited row is located by its persisted
- * snapshot (never by endpoint or credential), only fields the form actually changed are
- * applied to the raw record, and every other group, key and unknown field passes through.
- */
-
 import { readConfigResource } from './configValue';
 import { isRecord } from '@/utils/helpers';
-import { normalizeApiKeyEntry, normalizeProviderGroups } from './transformers';
+import {
+  normalizeApiKeyEntry,
+  normalizeConfigResponse,
+  normalizeProviderGroups,
+} from './transformers';
 import { serializeModelThinking } from './providerModels';
 import type {
+  Config,
   GeminiKeyConfig,
   OpenAIProviderConfig,
   ProviderKeyConfig,
@@ -37,10 +32,6 @@ type EmptyOverride = '' | 0 | 1 | false | [] | Record<string, never>;
 
 const serializeHeaders = (headers?: Record<string, string>) =>
   headers && Object.keys(headers).length ? headers : undefined;
-
-/* -------------------------------------------------------------------------- */
-/* serialization (config -> wire)                                              */
-/* -------------------------------------------------------------------------- */
 
 // v8 models carry no `priority` or `test-model`; the backend rejects unknown fields.
 const serializeModelAliases = (models?: ModelAlias[], includeOpenAIFields = false) =>
@@ -80,7 +71,6 @@ const serializeApiKeyEntry = (entry: ApiKeyEntry) => {
   return payload;
 };
 
-/** Fields every direct-key family shares. `disable-cooling` is tri-state: false is meaningful. */
 const serializeCommonKey = (
   config: KeyConfig,
   serializeModels: (models?: ModelAlias[]) => unknown[] | undefined
@@ -152,16 +142,12 @@ const serializeOpenAIProvider = (provider: OpenAIProviderConfig) => {
   return payload;
 };
 
-const keySerializer = (family: ProviderFamily): ((config: KeyConfig) => Wire) =>
+const keySerializer = (family: KeyFamily): ((config: KeyConfig) => Wire) =>
   family === 'vertex'
-    ? (serializeVertexKey as (config: KeyConfig) => Wire)
+    ? serializeVertexKey
     : family === 'gemini' || family === 'interactions'
-      ? (serializeGeminiKey as (config: KeyConfig) => Wire)
-      : (serializeProviderKey as (config: KeyConfig) => Wire);
-
-/* -------------------------------------------------------------------------- */
-/* snapshot comparison                                                         */
-/* -------------------------------------------------------------------------- */
+      ? serializeGeminiKey
+      : serializeProviderKey;
 
 const conflict = () =>
   new Error('Provider configuration changed or is ambiguous; refresh and try again.');
@@ -190,7 +176,6 @@ const withoutResponseFields = (record: Wire): Wire => {
   return next;
 };
 
-/** Persisted form of a group: response-only fields removed at group and key level only. */
 const persisted = (group: Wire): Wire => ({
   ...withoutResponseFields(group),
   ...(Array.isArray(group.keys)
@@ -207,27 +192,17 @@ const withoutKeys = (group: Wire): Wire => {
 const persistedGroups = (groups: unknown[]): unknown[] =>
   groups.map((group) => (isRecord(group) ? persisted(group) : group));
 
-/* -------------------------------------------------------------------------- */
-/* transport                                                                   */
-/* -------------------------------------------------------------------------- */
-
-/** Validate a family list read from /config. A malformed list is never rewritten. */
-export const readProviderGroups = (raw: unknown, family: ProviderFamily): Wire[] => {
-  if (!isRecord(raw) || !isRecord(raw['api-keys'])) return [];
-  const groups = raw['api-keys'][family];
-  if (groups === undefined || groups === null) return [];
-  if (!Array.isArray(groups) || !groups.every((g) => isRecord(g) && Array.isArray(g.keys))) {
+const readProviderGroups = (value: unknown): Wire[] => {
+  if (value == null) return [];
+  if (
+    !Array.isArray(value) ||
+    !value.every(
+      (group) => isRecord(group) && Array.isArray(group.keys) && group.keys.every(isRecord)
+    )
+  ) {
     throw conflict();
   }
-  return groups as Wire[];
-};
-
-const getGroups = async (family: ProviderFamily) => {
-  const resource = await readConfigResource(`/config/api-keys/${family}`, []);
-  return {
-    groups: readProviderGroups({ 'api-keys': { [family]: resource.value } }, family),
-    replace: (groups: Wire[]) => resource.replace(cleanGroups(family, groups)),
-  };
+  return value;
 };
 
 // `test-model` was a legacy UI-only field; v8 validation rejects unknown fields.
@@ -258,16 +233,7 @@ const cleanGroups = (family: ProviderFamily, groups: Wire[]) =>
     };
   });
 
-/* -------------------------------------------------------------------------- */
-/* locating the edited row                                                     */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Find the group a row was read from. An unchanged list resolves by position; otherwise the
- * group must still be uniquely identifiable by its persisted content. Anything else is a
- * concurrent change or a duplicate, and refuses the write.
- */
-export const locateProviderGroup = (groups: Wire[], source: ProviderSource): number => {
+const locateProviderGroup = (groups: Wire[], source: ProviderSource): number => {
   const current = persistedGroups(groups);
   if (
     source.groups &&
@@ -289,7 +255,6 @@ export const locateProviderGroup = (groups: Wire[], source: ProviderSource): num
   return matches[0];
 };
 
-/** Position of the edited key inside the located group. */
 const locateKey = (group: Wire, source: ProviderSource): number => {
   const originalKeys = persisted(source.group).keys;
   if (source.keyIndex === undefined || !Array.isArray(originalKeys)) throw conflict();
@@ -301,28 +266,26 @@ const locateKey = (group: Wire, source: ProviderSource): number => {
   return matches[0];
 };
 
-const findKeySource = (groups: Wire[], apiKey: string, baseUrl?: string): ProviderSource => {
-  const matches = (normalizeProviderGroups(groups) as KeyConfig[]).filter(
-    (config) => config.apiKey === apiKey && (config.baseUrl ?? '') === (baseUrl ?? '')
-  );
-  if (matches.length !== 1 || !matches[0].source) throw conflict();
-  return matches[0].source;
+export const assertProviderSources = (
+  current: Array<{ source?: ProviderSource }>,
+  expected: Array<{ source?: ProviderSource }>
+) => {
+  const identity = ({ source }: { source?: ProviderSource }) => {
+    if (!source) throw conflict();
+    const group = persisted(source.group);
+    if (source.keyIndex === undefined) return group;
+    return { ...withoutKeys(group), keys: [(group.keys as unknown[])[source.keyIndex]] };
+  };
+  const unmatched = current.map(identity);
+  if (unmatched.length !== expected.length) throw conflict();
+  for (const entry of expected) {
+    const original = identity(entry);
+    const index = unmatched.findIndex((candidate) => equal(candidate, original));
+    if (index < 0) throw conflict();
+    unmatched.splice(index, 1);
+  }
 };
 
-const findOpenAISource = (groups: Wire[], source: ProviderSource | undefined, name?: string) => {
-  if (source) return locateProviderGroup(groups, source);
-  const matches = (normalizeProviderGroups(groups, true) as OpenAIProviderConfig[]).filter(
-    (config) => name !== undefined && config.name === name.trim()
-  );
-  if (matches.length !== 1 || !matches[0].source) throw conflict();
-  return locateProviderGroup(groups, matches[0].source);
-};
-
-/* -------------------------------------------------------------------------- */
-/* applying form changes to raw records                                        */
-/* -------------------------------------------------------------------------- */
-
-/** Override inherited policy with the editor's neutral value instead of re-inheriting it. */
 const emptyOverride = (field: string): EmptyOverride => {
   if (['models', 'excluded-models'].includes(field)) return [];
   if (['headers', 'cloak'].includes(field)) return {};
@@ -332,22 +295,10 @@ const emptyOverride = (field: string): EmptyOverride => {
   return '';
 };
 
-/**
- * Apply only the fields that differ between the serialized original (`before`) and the
- * serialized form (`after`) onto the raw record. Untouched fields, unknown fields and
- * explicit nulls therefore survive; a field cleared in the form removes the local
- * override, or writes an empty override when a parent group would otherwise be inherited.
- */
-export const applyProviderChanges = (
-  raw: Wire,
-  before: Wire,
-  after: Wire,
-  inherited?: Wire
-): Wire => {
+const applyProviderChanges = (raw: Wire, before: Wire, after: Wire, inherited?: Wire): Wire => {
   const next = { ...raw };
   for (const field of new Set([...Object.keys(before), ...Object.keys(after)])) {
     if (equal(before[field], after[field])) continue;
-    // The form shows an omitted flag as off. Do not materialize that default.
     if (
       ['websockets', 'disabled'].includes(field) &&
       before[field] === undefined &&
@@ -371,11 +322,6 @@ export const applyProviderChanges = (
   return next;
 };
 
-/**
- * Edit models by row identity so renames, reordering and deletion keep each model's
- * unknown/advanced fields. `sourceIndex` is the row's persisted position (never sent);
- * null marks a new row. Rows without an identity are matched only when unambiguous.
- */
 const preserveModelMetadata = (
   next: Wire,
   raw: unknown,
@@ -392,40 +338,20 @@ const preserveModelMetadata = (
   );
   if (equal(before, after) && sameRows) return;
   const used = new Set<number>();
-  const reserved = new Set(desired?.flatMap((model) => model.sourceIndex ?? []) ?? []);
   next.models = (desired ?? []).flatMap((model) => {
     const serialized = serialize([model]);
     if (!Array.isArray(serialized) || !isRecord(serialized[0])) return [];
     const value = serialized[0];
-    if (model.sourceIndex === null) return [value];
-    let old: ModelAlias | undefined;
-    if (model.sourceIndex !== undefined) {
-      old = original?.find((entry) => entry.sourceIndex === model.sourceIndex);
-      if (!old || used.has(model.sourceIndex)) throw conflict();
-    } else {
-      const candidates = (original ?? []).filter(
-        (entry) =>
-          typeof entry.sourceIndex === 'number' &&
-          !used.has(entry.sourceIndex) &&
-          !reserved.has(entry.sourceIndex) &&
-          entry.name === model.name
-      );
-      const exact = candidates.filter((entry) => entry.alias === model.alias);
-      old = exact.length === 1 ? exact[0] : candidates.length === 1 ? candidates[0] : undefined;
-    }
-    const index = old?.sourceIndex;
-    if (!old || typeof index !== 'number') return [value];
-    if (!isRecord(raw[index])) throw conflict();
+    const index = model.sourceIndex;
+    if (index === undefined) return [value];
+    const old = original?.find((entry) => entry.sourceIndex === index);
+    if (!old || used.has(index) || !isRecord(raw[index])) throw conflict();
     used.add(index);
     const previous = serialize([old]);
     if (!Array.isArray(previous) || !isRecord(previous[0])) throw conflict();
     return [applyProviderChanges(raw[index], previous[0], value)];
   });
 };
-
-/* -------------------------------------------------------------------------- */
-/* mutations                                                                   */
-/* -------------------------------------------------------------------------- */
 
 const uniqueGroupName = (family: ProviderFamily, groups: Wire[]) => {
   const names = new Set(groups.map((group) => group.name));
@@ -434,29 +360,23 @@ const uniqueGroupName = (family: ProviderFamily, groups: Wire[]) => {
   return `${family}-${number}`;
 };
 
-const createKey = async (family: ProviderFamily, config: KeyConfig) => {
-  const { groups, replace } = await getGroups(family);
+const createKey = (family: KeyFamily, groups: Wire[], config: KeyConfig) => {
   const payload = keySerializer(family)(config);
   const baseUrl = payload['base-url'];
   delete payload['base-url'];
-  await replace([
-    ...groups,
-    {
-      name: uniqueGroupName(family, groups),
-      ...(baseUrl ? { 'base-url': baseUrl } : {}),
-      keys: [payload],
-    },
-  ]);
+  groups.push({
+    name: uniqueGroupName(family, groups),
+    ...(baseUrl ? { 'base-url': baseUrl } : {}),
+    keys: [payload],
+  });
 };
 
-const updateKey = async (
-  family: ProviderFamily,
-  apiKey: string,
-  baseUrl: string | undefined,
+const updateKey = (
+  family: KeyFamily,
+  groups: Wire[],
+  source: ProviderSource,
   config: KeyConfig
 ) => {
-  const { groups, replace } = await getGroups(family);
-  const source = config.source ?? findKeySource(groups, apiKey, baseUrl);
   const index = locateProviderGroup(groups, source);
   const group = groups[index];
   const keyIndex = locateKey(group, source);
@@ -498,37 +418,29 @@ const updateKey = async (
     else next['base-url'] = nextBaseUrl;
     groups[index] = next;
   } else {
-    // The endpoint belongs to the group. Moving this key must not repoint its siblings,
-    // so it leaves for a new group that keeps the group's shared policy.
     const moved: Wire = { ...groupFields, name: uniqueGroupName(family, groups), keys: [nextKey] };
     if (nextBaseUrl === undefined) delete moved['base-url'];
     else moved['base-url'] = nextBaseUrl;
     groups[index] = { ...groupFields, keys: keys.filter((_, i) => i !== keyIndex) };
     groups.splice(index + 1, 0, moved);
   }
-  await replace(groups);
 };
 
-const deleteKey = async (
-  family: ProviderFamily,
-  apiKey: string,
-  baseUrl?: string,
-  expected?: ProviderSource
-) => {
-  const { groups, replace } = await getGroups(family);
-  const source = expected ?? findKeySource(groups, apiKey, baseUrl);
+const deleteKey = (groups: Wire[], source: ProviderSource) => {
   const index = locateProviderGroup(groups, source);
   const keyIndex = locateKey(groups[index], source);
   groups[index] = {
     ...groups[index],
     keys: (groups[index].keys as unknown[]).filter((_, i) => i !== keyIndex),
   };
-  await replace(groups);
 };
 
-const updateOpenAIGroup = async (config: OpenAIProviderConfig, name?: string) => {
-  const { groups, replace } = await getGroups('openai-compatibility');
-  const index = findOpenAISource(groups, config.source, name);
+const updateOpenAIGroup = (
+  groups: Wire[],
+  source: ProviderSource,
+  config: OpenAIProviderConfig
+) => {
+  const index = locateProviderGroup(groups, source);
   const original = (normalizeProviderGroups([groups[index]], true) as OpenAIProviderConfig[])[0];
   if (!original) throw conflict();
 
@@ -550,8 +462,6 @@ const updateOpenAIGroup = async (config: OpenAIProviderConfig, name?: string) =>
   const rawKeys = groups[index].keys as Wire[];
   const used = new Set<number>();
   next.keys = config.apiKeyEntries.map((entry) => {
-    // An existing entry keeps its persisted position; its absence means a new credential.
-    // API keys alone are not identities: one key can appear with different proxies.
     const keyIndex = entry.sourceIndex;
     if (keyIndex === undefined) return serializeApiKeyEntry(entry);
     if (!Number.isInteger(keyIndex) || used.has(keyIndex) || !isRecord(rawKeys[keyIndex])) {
@@ -567,70 +477,75 @@ const updateOpenAIGroup = async (config: OpenAIProviderConfig, name?: string) =>
     );
   });
   groups[index] = next;
-  await replace(groups);
+};
+
+type KeyFamily = Exclude<ProviderFamily, 'openai-compatibility'>;
+type ProviderConfigByFamily = Record<KeyFamily, KeyConfig> & {
+  'openai-compatibility': OpenAIProviderConfig;
+};
+export type ProviderChange = {
+  [Family in ProviderFamily]:
+    | { family: Family; type: 'create'; config: ProviderConfigByFamily[Family] }
+    | { family: Family; type: 'update'; config: ProviderConfigByFamily[Family] }
+    | { family: Family; type: 'delete'; source: ProviderSource | undefined };
+}[ProviderFamily];
+
+function applyChange(groups: Wire[], change: ProviderChange) {
+  if (change.type === 'create') {
+    if (change.family === 'openai-compatibility')
+      groups.push(serializeOpenAIProvider(change.config));
+    else createKey(change.family, groups, change.config);
+    return;
+  }
+  const source = change.type === 'delete' ? change.source : change.config.source;
+  if (!source) throw conflict();
+  if (change.type === 'update') {
+    if (change.family === 'openai-compatibility') updateOpenAIGroup(groups, source, change.config);
+    else updateKey(change.family, groups, source, change.config);
+  } else if (change.family === 'openai-compatibility') {
+    groups.splice(locateProviderGroup(groups, source), 1);
+  } else {
+    deleteKey(groups, source);
+  }
+}
+
+const writeFamily = async (change: ProviderChange) => {
+  const { family } = change;
+  const resource = await readConfigResource(`/config/api-keys/${family}`, []);
+  const groups = [...readProviderGroups(resource.value)];
+  applyChange(groups, change);
+  await resource.replace(cleanGroups(family, groups));
 };
 
 export const providersApi = {
-  createGeminiKey: (config: GeminiKeyConfig) => createKey('gemini', config),
-  updateGeminiKey: (apiKey: string, baseUrl: string | undefined, config: GeminiKeyConfig) =>
-    updateKey('gemini', apiKey, baseUrl, config),
-  deleteGeminiKey: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('gemini', apiKey, baseUrl, source),
+  writeFamily,
 
-  createInteractionsKey: (config: GeminiKeyConfig) => createKey('interactions', config),
-  updateInteractionsKey: (apiKey: string, baseUrl: string | undefined, config: GeminiKeyConfig) =>
-    updateKey('interactions', apiKey, baseUrl, config),
-  deleteInteractionsKey: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('interactions', apiKey, baseUrl, source),
+  async writeAggregate(
+    families: ReadonlyArray<ProviderFamily>,
+    assertConnection: () => void,
+    prepare: (current: Config) => ProviderChange[]
+  ) {
+    assertConnection();
+    const resource = await readConfigResource('/config/api-keys', {});
+    assertConnection();
+    const raw = resource.value;
+    if (!isRecord(raw)) throw conflict();
+    const originals = new Map(families.map((family) => [family, readProviderGroups(raw[family])]));
+    const changes = prepare(normalizeConfigResponse({ 'api-keys': raw }));
+    const replacements = new Map<ProviderFamily, Wire[]>();
 
-  createCodexConfig: (config: ProviderKeyConfig) => createKey('codex', config),
-  updateCodexConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    updateKey('codex', apiKey, baseUrl, config),
-  deleteCodexConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('codex', apiKey, baseUrl, source),
+    for (const change of changes) {
+      const { family } = change;
+      const original = originals.get(family);
+      if (!original) throw conflict();
+      const groups = replacements.get(family) ?? [...original];
+      applyChange(groups, change);
+      replacements.set(family, groups);
+    }
 
-  createMetaConfig: (config: ProviderKeyConfig) => createKey('meta', config),
-  updateMetaConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    updateKey('meta', apiKey, baseUrl, config),
-  deleteMetaConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('meta', apiKey, baseUrl, source),
-
-  createXAIConfig: (config: ProviderKeyConfig) => createKey('xai', config),
-  updateXAIConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    updateKey('xai', apiKey, baseUrl, config),
-  deleteXAIConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('xai', apiKey, baseUrl, source),
-
-  createClaudeConfig: (config: ProviderKeyConfig) => createKey('claude', config),
-  updateClaudeConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    updateKey('claude', apiKey, baseUrl, config),
-  deleteClaudeConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('claude', apiKey, baseUrl, source),
-
-  createVertexConfig: (config: ProviderKeyConfig) => createKey('vertex', config),
-  updateVertexConfig: (apiKey: string, baseUrl: string | undefined, config: ProviderKeyConfig) =>
-    updateKey('vertex', apiKey, baseUrl, config),
-  deleteVertexConfig: (apiKey: string, baseUrl?: string, source?: ProviderSource) =>
-    deleteKey('vertex', apiKey, baseUrl, source),
-
-  async createOpenAIProvider(config: OpenAIProviderConfig) {
-    const { groups, replace } = await getGroups('openai-compatibility');
-    await replace([...groups, serializeOpenAIProvider(config)]);
-  },
-
-  updateOpenAIProvider: (name: string, config: OpenAIProviderConfig) =>
-    updateOpenAIGroup(config, name),
-
-  async updateOpenAIProviderDisabled(disabled: boolean, source?: ProviderSource) {
-    const { groups, replace } = await getGroups('openai-compatibility');
-    const index = findOpenAISource(groups, source);
-    groups[index] = { ...groups[index], disabled };
-    await replace(groups);
-  },
-
-  async deleteOpenAIProvider(source?: ProviderSource) {
-    const { groups, replace } = await getGroups('openai-compatibility');
-    const index = findOpenAISource(groups, source);
-    await replace(groups.filter((_, i) => i !== index));
+    const patch = [...replacements]
+      .filter(([family, groups]) => !equal(groups, originals.get(family)))
+      .map(([family, groups]) => [family, cleanGroups(family, groups)] as const);
+    if (patch.length) await resource.patch(Object.fromEntries(patch));
   },
 };

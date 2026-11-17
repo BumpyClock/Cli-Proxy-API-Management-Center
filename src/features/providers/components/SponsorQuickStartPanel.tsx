@@ -9,9 +9,8 @@ import {
   APIKEY_FUN_DASHBOARD_URL,
   APIKEY_FUN_DISPLAY_NAME,
 } from '../sponsor';
-import { isSponsorPartialMutationError } from '../sponsorMutationRecovery';
 import { getProviderCreateLabel } from '../createLabel';
-import type { ProviderEntryFormInput, ProviderResource } from '../types';
+import type { ProviderEditOrigin, ProviderEntryFormInput, ProviderResource } from '../types';
 import type { UseProviderWorkbenchResult } from '../useProviderWorkbench';
 import { SponsorProviderForm } from '../sheets/forms/SponsorProviderForm';
 import formStyles from '../sheets/forms/sharedForm.module.scss';
@@ -114,25 +113,21 @@ export function SponsorQuickStartPanel({
     },
   });
 
-  const handleSubmit = async (input: ProviderEntryFormInput) => {
+  const handleSubmit = async (input: ProviderEntryFormInput, origin: ProviderEditOrigin) => {
     if (mutationDisabled) return;
     setSubmitting(true);
     try {
-      if (resource) {
-        await workbench.updateProvider(resource, input);
+      if (origin.resource) {
+        await workbench.updateProvider(origin.resource, input, origin);
         showNotification(t('providersPage.toast.updated'), 'success');
       } else {
-        await workbench.createProvider('apikeyFun', input);
+        await workbench.createProvider('apikeyFun', input, origin);
         showNotification(t('providersPage.toast.created'), 'success');
         setShowCreateForm(false);
       }
       setIsDirty(false);
       setFormVersion((current) => current + 1);
     } catch (err) {
-      if (isSponsorPartialMutationError(err)) {
-        showNotification(t('providersPage.sponsor.partialMutationWarning'), 'warning');
-        throw err;
-      }
       const msg = err instanceof Error ? err.message : String(err);
       showNotification(
         `${t(resource ? 'notification.update_failed' : 'notification.add_failed')}: ${msg}`,

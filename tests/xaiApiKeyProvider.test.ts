@@ -51,12 +51,8 @@ describe('xAI API key provider', () => {
     expect(resource.baseUrl).toBe('https://api.x.ai/v1');
     expect(resource.models).toEqual(['grok-4.5']);
     expect(resource.flags.websockets).toBe(true);
-    expect(resource.selector).toEqual({
-      brand: 'xai',
-      apiKey: 'xai-secret',
-      baseUrl: 'https://api.x.ai/v1',
-      index: 0,
-    });
+    expect(resource.raw).toBe(config.xaiApiKeys![0]);
+    expect(config.xaiApiKeys![0].source).toMatchObject({ groupIndex: 0, keyIndex: 0 });
     expect(PROVIDER_DESCRIPTORS.xai.baseUrlRequired).toBe(true);
     expect(PROVIDER_DESCRIPTORS.xai.supportsWebsockets).toBe(true);
   });

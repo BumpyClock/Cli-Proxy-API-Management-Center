@@ -21,6 +21,14 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
   );
   const windows = quota.windows ?? [];
   const extraUsage = quota.extraUsage ?? null;
+  const userDisabledExtraUsage =
+    extraUsage?.userDisabled === true || extraUsage?.disabledReason === 'user_disabled';
+  const extraUsageStatus =
+    userDisabledExtraUsage || extraUsage?.isEnabled === false
+      ? 'claude_quota.extra_usage_disabled'
+      : extraUsage?.isEnabled === true
+        ? 'claude_quota.extra_usage_enabled'
+        : 'claude_quota.plan_unknown';
   const planType = quota.planType ?? null;
   const language = i18n.resolvedLanguage;
   const formatMoney = (value: number | null, currency = 'USD', divisor = 1): string => {
@@ -47,15 +55,7 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
         <div className={classes.quotaRow}>
           <div className={classes.codexPlan}>
             <span className={classes.codexPlanLabel}>{t('claude_quota.extra_usage_label')}</span>
-            <span className={classes.codexPlanValue}>
-              {t(
-                extraUsage.isEnabled === null
-                  ? 'claude_quota.plan_unknown'
-                  : extraUsage.isEnabled
-                    ? 'claude_quota.extra_usage_enabled'
-                    : 'claude_quota.extra_usage_disabled'
-              )}
-            </span>
+            <span className={classes.codexPlanValue}>{t(extraUsageStatus)}</span>
           </div>
           <div className={classes.quotaAmount}>
             {t('claude_quota.usage_spent_limit', {
@@ -69,17 +69,12 @@ export function ClaudeQuotaBody({ quota, classes }: QuotaBodyProps<ClaudeQuotaSt
               {t('claude_quota.usage_utilization', { percent: extraUsage.utilization })}
             </span>
           )}
-          {extraUsage.userDisabled && (
-            <span className={classes.quotaReset}>
-              {t('claude_quota.extra_usage_user_disabled')}
-            </span>
-          )}
           {extraUsage.spendLimitReached && (
             <span className={classes.quotaReset}>
               {t('claude_quota.extra_usage_spend_limit_reached')}
             </span>
           )}
-          {extraUsage.disabledReason && (
+          {extraUsage.disabledReason && extraUsage.disabledReason !== 'user_disabled' && (
             <span className={classes.quotaReset}>
               {t('claude_quota.extra_usage_disabled_reason', { reason: extraUsage.disabledReason })}
             </span>

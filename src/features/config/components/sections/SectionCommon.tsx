@@ -16,7 +16,6 @@ import { iconSize } from '@/design-system';
 
 const Icon = CONFIG_TAB_ICONS.common;
 
-/** Common fields share their controls with the canonical sections. */
 export function SectionCommon({
   values,
   validationErrors,

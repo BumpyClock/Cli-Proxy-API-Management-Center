@@ -52,12 +52,8 @@ describe('Meta Muse API key provider', () => {
     expect(resource.brand).toBe('meta');
     expect(resource.baseUrl).toBe('https://api.meta.ai/v1');
     expect(resource.models).toEqual(['muse-spark-1.3']);
-    expect(resource.selector).toEqual({
-      brand: 'meta',
-      apiKey: 'meta-secret',
-      baseUrl: 'https://api.meta.ai/v1',
-      index: 0,
-    });
+    expect(resource.raw).toBe(config.metaApiKeys![0]);
+    expect(config.metaApiKeys![0].source).toMatchObject({ groupIndex: 0, keyIndex: 0 });
     expect(
       buildProviderGroups(config).find((group) => group.id === 'meta')?.resources
     ).toHaveLength(1);

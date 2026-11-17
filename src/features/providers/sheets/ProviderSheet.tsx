@@ -6,7 +6,12 @@ import type { ProviderRecentUsageMap } from '@/components/providers/utils';
 import { useNotificationStore } from '@/stores';
 import { PROVIDER_DESCRIPTORS } from '../descriptors';
 import { isMultiProtocolSponsorBrand } from '../sponsorDefinitions';
-import type { ProviderBrand, ProviderEntryFormInput, ProviderResource } from '../types';
+import type {
+  ProviderBrand,
+  ProviderEditOrigin,
+  ProviderEntryFormInput,
+  ProviderResource,
+} from '../types';
 import type { UseProviderWorkbenchResult } from '../useProviderWorkbench';
 import { BaseProviderForm } from './forms/BaseProviderForm';
 import { ResourceDetailView } from './ResourceDetailView';
@@ -109,11 +114,11 @@ export function ProviderSheet({
         : `${t('providersPage.detail.title')} · ${t(`providersPage.providerNames.${state.brand}`)}`;
 
   const handleCreate = useCallback(
-    async (input: ProviderEntryFormInput) => {
+    async (input: ProviderEntryFormInput, origin?: ProviderEditOrigin) => {
       if (mutationDisabled) return;
       setSubmitting(true);
       try {
-        await workbench.createProvider(state.brand, input);
+        await workbench.createProvider(state.brand, input, origin);
         onCreated();
       } finally {
         setSubmitting(false);
@@ -123,11 +128,12 @@ export function ProviderSheet({
   );
 
   const handleUpdate = useCallback(
-    async (input: ProviderEntryFormInput) => {
-      if (!state.resource || mutationDisabled || !isDirty) return;
+    async (input: ProviderEntryFormInput, origin?: ProviderEditOrigin) => {
+      const resource = origin ? origin.resource : state.resource;
+      if (!resource || mutationDisabled || !isDirty) return;
       setSubmitting(true);
       try {
-        await workbench.updateProvider(state.resource, input);
+        await workbench.updateProvider(resource, input, origin);
         onUpdated();
       } finally {
         setSubmitting(false);

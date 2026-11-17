@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { providersApi } from '@/services/api';
+import { assertProviderSources, providersApi, type ProviderChange } from '@/services/api/providers';
+import { guardConfigConnection } from '@/services/api/configValue';
 import { getErrorMessage } from '@/utils/helpers';
 import { useAuthStore, useConfigStore } from '@/stores';
 import {
@@ -40,6 +41,7 @@ import type {
   SponsorKeyEntryInput,
   SponsorProviderBrand,
   SponsorProviderRaw,
+  ProviderEditOrigin,
 } from './types';
 import {
   buildApiKeyFunRaw,
@@ -61,8 +63,13 @@ import {
   isKimiCodexProvider,
   isKimiOpenAIProvider,
 } from './kimi';
-import { getSponsorProviderDefinition, type SponsorProtocolUrls } from './sponsorDefinitions';
-import { runSponsorMutationWithRecovery } from './sponsorMutationRecovery';
+import {
+  getSponsorAggregationConflict,
+  getSponsorProviderDefinition,
+  isMultiProtocolSponsorBrand,
+  sponsorProtocolUrl,
+  type SponsorProtocolUrls,
+} from './sponsorDefinitions';
 
 export interface UseProviderWorkbenchResult {
   connected: boolean;
@@ -73,9 +80,17 @@ export interface UseProviderWorkbenchResult {
   snapshot: ProviderSnapshot | null;
   refetch: () => Promise<void>;
 
-  createProvider: (brand: ProviderBrand, input: ProviderEntryFormInput) => Promise<void>;
-  updateProvider: (resource: ProviderResource, input: ProviderEntryFormInput) => Promise<void>;
-  deleteProvider: (resource: ProviderResource) => Promise<void>;
+  createProvider: (
+    brand: ProviderBrand,
+    input: ProviderEntryFormInput,
+    origin?: ProviderEditOrigin
+  ) => Promise<void>;
+  updateProvider: (
+    resource: ProviderResource,
+    input: ProviderEntryFormInput,
+    origin?: ProviderEditOrigin
+  ) => Promise<void>;
+  deleteProvider: (resource: ProviderResource, assertConnection?: () => void) => Promise<void>;
   toggleDisabled: (resource: ProviderResource, disabled: boolean) => Promise<void>;
   mutating: boolean;
   refreshSnapshot: () => void;
@@ -135,11 +150,6 @@ export const buildExcludedModels = (
   return filtered.length ? filtered : undefined;
 };
 
-/**
- * A checkbox cannot say "unset". Turning an option off writes an explicit `false` only when
- * the stored row already had a value (it may be overriding an inherited `true`); otherwise
- * the field stays unset so an unrelated edit does not materialize a default.
- */
 export const resolveFlag = (checked: boolean | undefined, existing: boolean | undefined) =>
   checked === true ? true : existing === undefined ? undefined : false;
 
@@ -153,8 +163,6 @@ const buildModelAliases = (
       sourceIndex: m.sourceIndex,
       name: m.name,
       alias: m.alias?.trim() || undefined,
-      priority: m.priority,
-      testModel: m.testModel,
       thinking: m.thinkingLevelsTouched
         ? buildThinkingFromLevels(m.thinkingLevels)
         : parseThinkingJson(m.thinkingJson),
@@ -200,7 +208,6 @@ export const buildProviderKeyConfig = (
       sensitiveWords: parseTextList(input.cloak.sensitiveWordsText),
       cacheUserId: input.cloak.cacheUserId === true,
     };
-    // An untouched, empty cloak form must not create a `cloak` block on a key without one.
     if (
       existingCloak ||
       cloak.mode ||
@@ -247,7 +254,6 @@ export const buildOpenAIConfig = (
     headers: Object.keys(headers).length ? headers : undefined,
     models: models.length ? models : undefined,
     priority: input.priority,
-    testModel: input.testModel?.trim() || undefined,
   };
 };
 
@@ -267,7 +273,7 @@ const buildSponsorOpenAIConfig = (
   const apiKeyEntries = apiKey
     ? [
         {
-          ...(firstExistingEntry ?? {}),
+          ...(entry.existingApiKey ? firstExistingEntry : undefined),
           apiKey,
           proxyUrl: entry.proxyUrl.trim() || undefined,
           weight: entry.weight,
@@ -290,7 +296,7 @@ const buildSponsorOpenAIConfig = (
 
 const buildSponsorProviderKeyConfig = (
   entry: SponsorKeyEntryInput,
-  protocol: 'claude' | 'codex',
+  protocol: 'claude' | 'codex' | 'gemini',
   getProtocolUrls: (value: string | undefined | null) => SponsorProtocolUrls,
   existing?: ProviderKeyConfig
 ): ProviderKeyConfig => {
@@ -304,7 +310,7 @@ const buildSponsorProviderKeyConfig = (
   return {
     ...(existing ?? {}),
     apiKey,
-    baseUrl: protocol === 'claude' ? urls.anthropic : urls.codex,
+    baseUrl: sponsorProtocolUrl(urls, protocol),
     proxyUrl: entry.proxyUrl.trim() || undefined,
     prefix: entry.prefix.trim() || undefined,
     priority: entry.priority,
@@ -315,67 +321,116 @@ const buildSponsorProviderKeyConfig = (
   };
 };
 
-const buildSponsorGeminiConfig = (
-  entry: SponsorKeyEntryInput,
-  getProtocolUrls: (value: string | undefined | null) => SponsorProtocolUrls,
-  existing?: GeminiKeyConfig
-): GeminiKeyConfig => {
-  const urls = getProtocolUrls(entry.baseUrl);
-  const models = buildModelAliases(entry.models, false);
-  const apiKey = sponsorEntryApiKey(entry);
-  const excluded = entry.disabled
-    ? withDisableAllModelsRule(stripDisableAllModelsRule(existing?.excludedModels))
-    : withoutDisableAllModelsRule(existing?.excludedModels);
-
-  return {
-    ...(existing ?? {}),
-    apiKey,
-    baseUrl: urls.gemini,
-    proxyUrl: entry.proxyUrl.trim() || undefined,
-    prefix: entry.prefix.trim() || undefined,
-    priority: entry.priority,
-    weight: entry.weight,
-    disableCooling: resolveFlag(entry.disableCooling, existing?.disableCooling),
-    excludedModels: excluded,
-    models: models.length ? models : undefined,
-  };
+const sponsorAggregates = {
+  apikeyFun: buildApiKeyFunRaw,
+  fennoAI: buildFennoAIRaw,
+  qiniuCloud: buildQiniuCloudRaw,
+  kimi: buildKimiRaw,
 };
 
-const normalizeSponsorKeyEntries = (
-  entries: SponsorKeyEntryInput[] | undefined
-): SponsorKeyEntryInput[] => (entries ?? []).filter((entry) => sponsorEntryApiKey(entry));
+const sponsorFamily = {
+  openai: 'openai-compatibility',
+  gemini: 'gemini',
+  codex: 'codex',
+  claude: 'claude',
+} as const;
 
-const toggleSponsorConfig = async (raw: SponsorProviderRaw, disabled: boolean) => {
-  for (const item of raw.gemini) {
-    const excludedModels = disabled
-      ? withDisableAllModelsRule(item.config.excludedModels)
-      : withoutDisableAllModelsRule(item.config.excludedModels);
-    await providersApi.updateGeminiKey(item.config.apiKey, item.config.baseUrl, {
-      ...item.config,
-      excludedModels,
-    });
-  }
-  for (const item of raw.codex) {
-    const excludedModels = disabled
-      ? withDisableAllModelsRule(item.config.excludedModels)
-      : withoutDisableAllModelsRule(item.config.excludedModels);
-    await providersApi.updateCodexConfig(item.config.apiKey, item.config.baseUrl, {
-      ...item.config,
-      excludedModels,
-    });
-  }
-  for (const item of raw.claude) {
-    const excludedModels = disabled
-      ? withDisableAllModelsRule(item.config.excludedModels)
-      : withoutDisableAllModelsRule(item.config.excludedModels);
-    await providersApi.updateClaudeConfig(item.config.apiKey, item.config.baseUrl, {
-      ...item.config,
-      excludedModels,
-    });
-  }
-  for (const item of raw.openai) {
-    await providersApi.updateOpenAIProviderDisabled(disabled, item.config.source);
-  }
+const withDisabled = (config: ProviderKeyConfig, disabled: boolean): ProviderKeyConfig => ({
+  ...config,
+  excludedModels: disabled
+    ? withDisableAllModelsRule(config.excludedModels)
+    : withoutDisableAllModelsRule(config.excludedModels),
+});
+
+type SponsorChange =
+  | { type: 'save'; input: ProviderEntryFormInput }
+  | { type: 'delete' }
+  | { type: 'toggle'; disabled: boolean };
+
+export const writeSponsor = (
+  brand: SponsorProviderBrand,
+  expected: SponsorProviderRaw | null,
+  assertConnection: () => void,
+  change: SponsorChange
+) => {
+  const definition = getSponsorProviderDefinition(brand);
+  return providersApi.writeAggregate(
+    definition.protocols.map((protocol) => sponsorFamily[protocol]),
+    assertConnection,
+    (config) => {
+      const current = sponsorAggregates[brand](config);
+      for (const protocol of definition.protocols) {
+        assertProviderSources(current[protocol], expected?.[protocol] ?? []);
+      }
+      if (change.type === 'save' && getSponsorAggregationConflict(current)) {
+        throw new Error('Provider configuration is ambiguous; refresh and try again.');
+      }
+      const entries =
+        change.type === 'save'
+          ? (change.input.sponsorKeyEntries ?? []).filter(sponsorEntryApiKey)
+          : [];
+      const requestedProtocols = new Set(entries.map((entry) => entry.protocol));
+      if (
+        requestedProtocols.size !== entries.length ||
+        entries.some((entry) => !definition.protocols.includes(entry.protocol))
+      ) {
+        throw new Error('Invalid sponsor provider protocols.');
+      }
+      return definition.protocols.flatMap((protocol): ProviderChange[] => {
+        const family = sponsorFamily[protocol];
+        const entry = entries.find((item) => item.protocol === protocol);
+        if (protocol === 'openai') {
+          const rows = current.openai;
+          if (entry) {
+            const original = rows[0];
+            return [
+              {
+                type: original ? 'update' : 'create',
+                family: 'openai-compatibility',
+                config: buildSponsorOpenAIConfig(
+                  entry,
+                  definition.providerName,
+                  definition.getProtocolUrls,
+                  original
+                ),
+              },
+            ];
+          }
+          return rows.map((row) =>
+            change.type === 'toggle'
+              ? {
+                  type: 'update',
+                  family: 'openai-compatibility',
+                  config: { ...row, disabled: change.disabled },
+                }
+              : { type: 'delete', family, source: row.source }
+          );
+        }
+
+        const rows = current[protocol];
+        if (entry) {
+          const original = rows[0];
+          return [
+            {
+              type: original ? 'update' : 'create',
+              family: protocol,
+              config: buildSponsorProviderKeyConfig(
+                entry,
+                protocol,
+                definition.getProtocolUrls,
+                original
+              ),
+            },
+          ];
+        }
+        return rows.map((row) =>
+          change.type === 'toggle'
+            ? { type: 'update', family: protocol, config: withDisabled(row, change.disabled) }
+            : { type: 'delete', family, source: row.source }
+        );
+      });
+    }
+  );
 };
 
 export const buildProviderGroups = (config: Config): ProviderGroup[] =>
@@ -540,303 +595,13 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
 
   /* ------------------- mutations ------------------- */
 
-  const persistSponsorConfig = useCallback(
-    async (brand: SponsorProviderBrand, input: ProviderEntryFormInput) => {
-      const definition = getSponsorProviderDefinition(brand);
-      const raw =
-        brand === 'apikeyFun'
-          ? buildApiKeyFunRaw(config)
-          : brand === 'fennoAI'
-            ? buildFennoAIRaw(config)
-            : brand === 'qiniuCloud'
-              ? buildQiniuCloudRaw(config)
-              : buildKimiRaw(config);
-      const entries = normalizeSponsorKeyEntries(input.sponsorKeyEntries);
-      const openaiEntry = entries.find((entry) => entry.protocol === 'openai');
-      const claudeEntry = entries.find((entry) => entry.protocol === 'claude');
-      const codexEntry = entries.find((entry) => entry.protocol === 'codex');
-      const geminiEntry = entries.find((entry) => entry.protocol === 'gemini');
-
-      if (definition.protocols.includes('gemini')) {
-        const current = raw.gemini[0];
-        if (geminiEntry) {
-          const next = buildSponsorGeminiConfig(
-            geminiEntry,
-            definition.getProtocolUrls,
-            current?.config
-          );
-          if (current) {
-            await providersApi.updateGeminiKey(current.config.apiKey, current.config.baseUrl, next);
-          } else {
-            await providersApi.createGeminiKey(next);
-          }
-        } else {
-          for (const item of raw.gemini) {
-            await providersApi.deleteGeminiKey(
-              item.config.apiKey,
-              item.config.baseUrl,
-              item.config.source
-            );
-          }
-        }
-      }
-
-      const currentCodex = raw.codex[0];
-      if (codexEntry) {
-        const next = buildSponsorProviderKeyConfig(
-          codexEntry,
-          'codex',
-          definition.getProtocolUrls,
-          currentCodex?.config
-        );
-        if (currentCodex) {
-          await providersApi.updateCodexConfig(
-            currentCodex.config.apiKey,
-            currentCodex.config.baseUrl,
-            next
-          );
-        } else {
-          await providersApi.createCodexConfig(next);
-        }
-      } else {
-        for (const item of raw.codex) {
-          await providersApi.deleteCodexConfig(
-            item.config.apiKey,
-            item.config.baseUrl,
-            item.config.source
-          );
-        }
-      }
-
-      const currentClaude = raw.claude[0];
-      if (claudeEntry) {
-        const next = buildSponsorProviderKeyConfig(
-          claudeEntry,
-          'claude',
-          definition.getProtocolUrls,
-          currentClaude?.config
-        );
-        if (currentClaude) {
-          await providersApi.updateClaudeConfig(
-            currentClaude.config.apiKey,
-            currentClaude.config.baseUrl,
-            next
-          );
-        } else {
-          await providersApi.createClaudeConfig(next);
-        }
-      } else {
-        for (const item of raw.claude) {
-          await providersApi.deleteClaudeConfig(
-            item.config.apiKey,
-            item.config.baseUrl,
-            item.config.source
-          );
-        }
-      }
-
-      const currentOpenAI = raw.openai[0];
-      if (openaiEntry) {
-        const next = buildSponsorOpenAIConfig(
-          openaiEntry,
-          definition.providerName,
-          definition.getProtocolUrls,
-          currentOpenAI?.config
-        );
-        if (currentOpenAI) {
-          await providersApi.updateOpenAIProvider(currentOpenAI.config.name, next);
-        } else {
-          await providersApi.createOpenAIProvider(next);
-        }
-      } else if (currentOpenAI) {
-        await providersApi.deleteOpenAIProvider(currentOpenAI.config.source);
-      }
-    },
-    [config]
-  );
-
-  const createProvider = useCallback(
-    async (brand: ProviderBrand, input: ProviderEntryFormInput) => {
+  const runMutation = useCallback(
+    async (write: () => Promise<void>) => {
+      const assertConnection = guardConfigConnection();
       setMutating(true);
       try {
-        if (brand === 'gemini') {
-          await providersApi.createGeminiKey(
-            buildProviderKeyConfig('gemini', input) as GeminiKeyConfig
-          );
-        } else if (brand === 'interactions') {
-          await providersApi.createInteractionsKey(
-            buildProviderKeyConfig('interactions', input) as GeminiKeyConfig
-          );
-        } else if (brand === 'codex') {
-          await providersApi.createCodexConfig(
-            buildProviderKeyConfig('codex', input) as ProviderKeyConfig
-          );
-        } else if (brand === 'meta') {
-          await providersApi.createMetaConfig(
-            buildProviderKeyConfig('meta', input) as ProviderKeyConfig
-          );
-        } else if (brand === 'xai') {
-          await providersApi.createXAIConfig(
-            buildProviderKeyConfig('xai', input) as ProviderKeyConfig
-          );
-        } else if (brand === 'claude') {
-          await providersApi.createClaudeConfig(
-            buildProviderKeyConfig('claude', input) as ProviderKeyConfig
-          );
-        } else if (brand === 'vertex') {
-          await providersApi.createVertexConfig(
-            buildProviderKeyConfig('vertex', input) as ProviderKeyConfig
-          );
-        } else if (brand === 'openaiCompatibility') {
-          await providersApi.createOpenAIProvider(buildOpenAIConfig(input));
-        } else if (
-          brand === 'apikeyFun' ||
-          brand === 'fennoAI' ||
-          brand === 'qiniuCloud' ||
-          brand === 'kimi'
-        ) {
-          await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
-        }
-        await refreshAfterMutation(refetch);
-      } finally {
-        setMutating(false);
-      }
-    },
-    [persistSponsorConfig, refetch]
-  );
-
-  const updateProvider = useCallback(
-    async (resource: ProviderResource, input: ProviderEntryFormInput) => {
-      setMutating(true);
-      try {
-        const brand = resource.brand;
-        const selector = resource.selector;
-        if (brand === 'gemini' && selector.brand === 'gemini') {
-          const existing = resource.raw as GeminiKeyConfig;
-          await providersApi.updateGeminiKey(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('gemini', input, existing) as GeminiKeyConfig
-          );
-        } else if (brand === 'interactions' && selector.brand === 'interactions') {
-          const existing = resource.raw as GeminiKeyConfig;
-          await providersApi.updateInteractionsKey(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('interactions', input, existing) as GeminiKeyConfig
-          );
-        } else if (brand === 'codex' && selector.brand === 'codex') {
-          const existing = resource.raw as ProviderKeyConfig;
-          await providersApi.updateCodexConfig(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('codex', input, existing) as ProviderKeyConfig
-          );
-        } else if (brand === 'meta' && selector.brand === 'meta') {
-          const existing = resource.raw as ProviderKeyConfig;
-          await providersApi.updateMetaConfig(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('meta', input, existing) as ProviderKeyConfig
-          );
-        } else if (brand === 'xai' && selector.brand === 'xai') {
-          const existing = resource.raw as ProviderKeyConfig;
-          await providersApi.updateXAIConfig(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('xai', input, existing) as ProviderKeyConfig
-          );
-        } else if (brand === 'claude' && selector.brand === 'claude') {
-          const existing = resource.raw as ProviderKeyConfig;
-          await providersApi.updateClaudeConfig(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('claude', input, existing) as ProviderKeyConfig
-          );
-        } else if (brand === 'vertex' && selector.brand === 'vertex') {
-          const existing = resource.raw as ProviderKeyConfig;
-          await providersApi.updateVertexConfig(
-            selector.apiKey,
-            selector.baseUrl,
-            buildProviderKeyConfig('vertex', input, existing) as ProviderKeyConfig
-          );
-        } else if (brand === 'openaiCompatibility' && selector.brand === 'openaiCompatibility') {
-          await providersApi.updateOpenAIProvider(
-            selector.name,
-            buildOpenAIConfig(input, resource.raw as OpenAIProviderConfig)
-          );
-        } else if (
-          brand === 'apikeyFun' ||
-          brand === 'fennoAI' ||
-          brand === 'qiniuCloud' ||
-          brand === 'kimi'
-        ) {
-          await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
-        }
-        await refreshAfterMutation(refetch);
-      } finally {
-        setMutating(false);
-      }
-    },
-    [persistSponsorConfig, refetch]
-  );
-
-  const deleteProvider = useCallback(
-    async (resource: ProviderResource) => {
-      setMutating(true);
-      try {
-        const sel = resource.selector;
-        const source = resource.source;
-        if (sel.brand === 'gemini') {
-          await providersApi.deleteGeminiKey(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'interactions') {
-          await providersApi.deleteInteractionsKey(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'codex') {
-          await providersApi.deleteCodexConfig(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'meta') {
-          await providersApi.deleteMetaConfig(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'xai') {
-          await providersApi.deleteXAIConfig(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'claude') {
-          await providersApi.deleteClaudeConfig(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'vertex') {
-          await providersApi.deleteVertexConfig(sel.apiKey, sel.baseUrl, source);
-        } else if (sel.brand === 'openaiCompatibility') {
-          await providersApi.deleteOpenAIProvider(source);
-        } else if (
-          sel.brand === 'apikeyFun' ||
-          sel.brand === 'fennoAI' ||
-          sel.brand === 'qiniuCloud' ||
-          sel.brand === 'kimi'
-        ) {
-          await runSponsorMutationWithRecovery(async () => {
-            const raw = resource.raw as SponsorProviderRaw;
-            for (const item of raw.gemini) {
-              await providersApi.deleteGeminiKey(
-                item.config.apiKey,
-                item.config.baseUrl,
-                item.config.source
-              );
-            }
-            for (const item of raw.codex) {
-              await providersApi.deleteCodexConfig(
-                item.config.apiKey,
-                item.config.baseUrl,
-                item.config.source
-              );
-            }
-            for (const item of raw.claude) {
-              await providersApi.deleteClaudeConfig(
-                item.config.apiKey,
-                item.config.baseUrl,
-                item.config.source
-              );
-            }
-            for (const item of raw.openai) {
-              await providersApi.deleteOpenAIProvider(item.config.source);
-            }
-          }, refetch);
-        }
+        await write();
+        assertConnection();
         await refreshAfterMutation(refetch);
       } finally {
         setMutating(false);
@@ -845,72 +610,102 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
     [refetch]
   );
 
-  const toggleDisabled = useCallback(
-    async (resource: ProviderResource, disabled: boolean) => {
-      setMutating(true);
-      try {
-        const brand = resource.brand;
-        const selector = resource.selector;
-        if (brand === 'gemini' && selector.brand === 'gemini') {
-          const current = resource.raw as GeminiKeyConfig;
-          const excluded = disabled
-            ? withDisableAllModelsRule(current.excludedModels)
-            : withoutDisableAllModelsRule(current.excludedModels);
-          await providersApi.updateGeminiKey(selector.apiKey, selector.baseUrl, {
-            ...current,
-            excludedModels: excluded,
+  const createProvider: UseProviderWorkbenchResult['createProvider'] = useCallback(
+    (brand, input, origin) =>
+      runMutation(() => {
+        const type = 'create';
+        if (isMultiProtocolSponsorBrand(brand)) {
+          return writeSponsor(brand, null, origin?.assertConnection ?? guardConfigConnection(), {
+            type: 'save',
+            input,
           });
-        } else if (brand === 'interactions' && selector.brand === 'interactions') {
-          const current = resource.raw as GeminiKeyConfig;
-          const excluded = disabled
-            ? withDisableAllModelsRule(current.excludedModels)
-            : withoutDisableAllModelsRule(current.excludedModels);
-          await providersApi.updateInteractionsKey(selector.apiKey, selector.baseUrl, {
-            ...current,
-            excludedModels: excluded,
-          });
-        } else if (
-          (brand === 'codex' && selector.brand === 'codex') ||
-          (brand === 'meta' && selector.brand === 'meta') ||
-          (brand === 'xai' && selector.brand === 'xai') ||
-          (brand === 'claude' && selector.brand === 'claude') ||
-          (brand === 'vertex' && selector.brand === 'vertex')
-        ) {
-          const current = resource.raw as ProviderKeyConfig;
-          const excluded = disabled
-            ? withDisableAllModelsRule(current.excludedModels)
-            : withoutDisableAllModelsRule(current.excludedModels);
-          const next = { ...current, excludedModels: excluded };
-          if (selector.brand === 'codex') {
-            await providersApi.updateCodexConfig(selector.apiKey, selector.baseUrl, next);
-          } else if (selector.brand === 'meta') {
-            await providersApi.updateMetaConfig(selector.apiKey, selector.baseUrl, next);
-          } else if (selector.brand === 'xai') {
-            await providersApi.updateXAIConfig(selector.apiKey, selector.baseUrl, next);
-          } else if (selector.brand === 'claude') {
-            await providersApi.updateClaudeConfig(selector.apiKey, selector.baseUrl, next);
-          } else if (selector.brand === 'vertex') {
-            await providersApi.updateVertexConfig(selector.apiKey, selector.baseUrl, next);
-          }
-        } else if (brand === 'openaiCompatibility' && selector.brand === 'openaiCompatibility') {
-          await providersApi.updateOpenAIProviderDisabled(disabled, resource.source);
-        } else if (
-          brand === 'apikeyFun' ||
-          brand === 'fennoAI' ||
-          brand === 'qiniuCloud' ||
-          brand === 'kimi'
-        ) {
-          await runSponsorMutationWithRecovery(
-            () => toggleSponsorConfig(resource.raw as SponsorProviderRaw, disabled),
-            refetch
+        }
+        return providersApi.writeFamily(
+          brand === 'openaiCompatibility'
+            ? { type, family: 'openai-compatibility', config: buildOpenAIConfig(input) }
+            : { type, family: brand, config: buildProviderKeyConfig(brand, input) }
+        );
+      }),
+    [runMutation]
+  );
+
+  const updateProvider: UseProviderWorkbenchResult['updateProvider'] = useCallback(
+    (resource, input, origin) =>
+      runMutation(() => {
+        const type = 'update';
+        const { brand, raw } = resource;
+        if (isMultiProtocolSponsorBrand(brand)) {
+          return writeSponsor(
+            brand,
+            raw as SponsorProviderRaw,
+            origin?.assertConnection ?? guardConfigConnection(),
+            {
+              type: 'save',
+              input,
+            }
           );
         }
-        await refreshAfterMutation(refetch);
-      } finally {
-        setMutating(false);
-      }
-    },
-    [refetch]
+        return providersApi.writeFamily(
+          brand === 'openaiCompatibility'
+            ? {
+                type,
+                family: 'openai-compatibility',
+                config: buildOpenAIConfig(input, raw as OpenAIProviderConfig),
+              }
+            : {
+                type,
+                family: brand,
+                config: buildProviderKeyConfig(brand, input, raw as ProviderKeyConfig),
+              }
+        );
+      }),
+    [runMutation]
+  );
+
+  const deleteProvider: UseProviderWorkbenchResult['deleteProvider'] = useCallback(
+    (resource, assertConnection = guardConfigConnection()) =>
+      runMutation(() => {
+        assertConnection();
+        const { brand, raw } = resource;
+        if (isMultiProtocolSponsorBrand(brand)) {
+          return writeSponsor(brand, raw as SponsorProviderRaw, assertConnection, {
+            type: 'delete',
+          });
+        }
+        return providersApi.writeFamily({
+          type: 'delete',
+          family: brand === 'openaiCompatibility' ? 'openai-compatibility' : brand,
+          source: (raw as ProviderKeyConfig | OpenAIProviderConfig).source,
+        });
+      }),
+    [runMutation]
+  );
+
+  const toggleDisabled: UseProviderWorkbenchResult['toggleDisabled'] = useCallback(
+    (resource, disabled) =>
+      runMutation(() => {
+        const { brand, raw } = resource;
+        if (isMultiProtocolSponsorBrand(brand)) {
+          return writeSponsor(brand, raw as SponsorProviderRaw, guardConfigConnection(), {
+            type: 'toggle',
+            disabled,
+          });
+        }
+        return providersApi.writeFamily(
+          brand === 'openaiCompatibility'
+            ? {
+                type: 'update',
+                family: 'openai-compatibility',
+                config: { ...(raw as OpenAIProviderConfig), disabled },
+              }
+            : {
+                type: 'update',
+                family: brand,
+                config: withDisabled(raw as ProviderKeyConfig, disabled),
+              }
+        );
+      }),
+    [runMutation]
   );
 
   return {

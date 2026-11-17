@@ -58,7 +58,7 @@ export function AutocompleteInput({
   ariaDescribedBy,
   rightElement,
 }: AutocompleteInputProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [popup, setPopup] = useState<'closed' | 'browse' | 'filter'>('closed');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
@@ -74,15 +74,23 @@ export function AutocompleteInput({
       : { value: opt.value, label: opt.label || opt.value }
   );
 
-  const filteredOptions = normalizedOptions.filter((opt) => {
-    const v = value.toLowerCase();
-    return (
-      opt.value.toLowerCase().includes(v) || (opt.label && opt.label.toLowerCase().includes(v))
-    );
-  });
+  const query = value.trim().toLowerCase();
+  const filteredOptions =
+    popup === 'filter' && query
+      ? normalizedOptions.filter(
+          (opt) =>
+            opt.value.toLowerCase().includes(query) || opt.label.toLowerCase().includes(query)
+        )
+      : normalizedOptions;
 
+  const isOpen = popup !== 'closed';
   const activeIndex = highlightedIndex < filteredOptions.length ? highlightedIndex : -1;
   const showDropdown = isOpen && filteredOptions.length > 0 && !disabled;
+
+  const openDropdown = () => {
+    setHighlightedIndex(normalizedOptions.findIndex((opt) => opt.value === value));
+    setPopup('browse');
+  };
 
   useLayoutEffect(() => {
     if (!showDropdown || !inputWrapRef.current) return;
@@ -122,7 +130,7 @@ export function AutocompleteInput({
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
-      setIsOpen(false);
+      setPopup('closed');
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -130,14 +138,14 @@ export function AutocompleteInput({
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
-    setIsOpen(true);
+    setPopup('filter');
     setHighlightedIndex(-1);
   };
 
   const handleSelect = (selectedValue: string) => {
     onChange(selectedValue);
     setHighlightedIndex(-1);
-    setIsOpen(false);
+    setPopup('closed');
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -146,7 +154,7 @@ export function AutocompleteInput({
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (!isOpen) {
-        setIsOpen(true);
+        openDropdown();
         return;
       }
       setHighlightedIndex(Math.min(activeIndex + 1, filteredOptions.length - 1));
@@ -159,14 +167,14 @@ export function AutocompleteInput({
         handleSelect(filteredOptions[activeIndex].value);
       } else if (isOpen) {
         e.preventDefault();
-        setIsOpen(false);
+        setPopup('closed');
       }
     } else if (e.key === 'Escape' && showDropdown) {
       e.preventDefault();
       e.stopPropagation();
-      setIsOpen(false);
+      setPopup('closed');
     } else if (e.key === 'Tab') {
-      setIsOpen(false);
+      setPopup('closed');
     }
   };
 
@@ -179,13 +187,14 @@ export function AutocompleteInput({
           className={`input ${className}`.trim()}
           value={value}
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onFocus={openDropdown}
+          onClick={() => !isOpen && openDropdown()}
           onBlur={(event) => {
             if (
               !containerRef.current?.contains(event.relatedTarget) &&
               !dropdownRef.current?.contains(event.relatedTarget)
             )
-              setIsOpen(false);
+              setPopup('closed');
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
@@ -214,7 +223,11 @@ export function AutocompleteInput({
             height: '100%',
           }}
           onMouseDown={(event) => event.preventDefault()}
-          onClick={() => !disabled && setIsOpen(!isOpen)}
+          onClick={() => {
+            if (disabled) return;
+            if (isOpen) setPopup('closed');
+            else openDropdown();
+          }}
         >
           {rightElement}
           <IconChevronDown

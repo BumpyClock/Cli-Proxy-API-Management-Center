@@ -3,7 +3,6 @@ import { configResponse } from './fixtures/managementV8';
 import { apiClient } from '../src/services/api/client';
 import { providersApi } from '../src/services/api/providers';
 import {
-  normalizeGeminiKeyConfig,
   normalizeConfigResponse,
   normalizeOpenAIProvider,
   normalizeProviderKeyConfig,
@@ -19,7 +18,11 @@ afterEach(() => {
 
 describe('provider credential weight normalization', () => {
   test('reads weight for direct API key credentials', () => {
-    expect(normalizeGeminiKeyConfig({ 'api-key': 'gemini-key', weight: 5 })?.weight).toBe(5);
+    expect(
+      normalizeConfigResponse({
+        'api-keys': { gemini: [{ keys: [{ 'api-key': 'gemini-key', weight: 5 }] }] },
+      }).geminiApiKeys?.[0].weight
+    ).toBe(5);
     expect(normalizeProviderKeyConfig({ 'api-key': 'provider-key', weight: 0 })?.weight).toBe(0);
   });
 
@@ -53,10 +56,15 @@ describe('provider credential weight normalization', () => {
       return undefined;
     }) as typeof apiClient.put;
 
-    await providersApi.updateVertexConfig('vertex-key', 'https://vertex.example', {
-      apiKey: 'vertex-key',
-      baseUrl: 'https://vertex.example',
-      weight: undefined,
+    const current = normalizeConfigResponse((await apiClient.getRaw('/config')).data)
+      .vertexApiKeys![0];
+    await providersApi.writeFamily({
+      family: 'vertex',
+      type: 'update',
+      config: {
+        ...current,
+        weight: undefined,
+      },
     });
 
     expect(written).toEqual([
@@ -92,12 +100,16 @@ describe('provider credential weight normalization', () => {
 
     const current = normalizeConfigResponse((await apiClient.getRaw('/config')).data)
       .openaiCompatibility![0];
-    await providersApi.updateOpenAIProvider('example', {
-      ...current,
-      apiKeyEntries: [
-        { ...current.apiKeyEntries[0], weight: undefined },
-        { ...current.apiKeyEntries[1], weight: 4 },
-      ],
+    await providersApi.writeFamily({
+      family: 'openai-compatibility',
+      type: 'update',
+      config: {
+        ...current,
+        apiKeyEntries: [
+          { ...current.apiKeyEntries[0], weight: undefined },
+          { ...current.apiKeyEntries[1], weight: 4 },
+        ],
+      },
     });
 
     expect(written).toEqual([

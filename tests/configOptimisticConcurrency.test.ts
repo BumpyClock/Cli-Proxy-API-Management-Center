@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { apiClient } from '@/services/api/client';
-import { apiKeysApi } from '@/services/api/apiKeys';
+import { readConfigResource } from '@/services/api/configValue';
 import { authFilesApi } from '@/services/api/authFiles';
 import { pluginsApi } from '@/services/api/plugins';
 import { providersApi } from '@/services/api/providers';
@@ -26,7 +26,13 @@ function fixture() {
         },
       ],
     },
-    oauth: { 'excluded-models': { claude: ['old'], codex: ['untouched'] } },
+    oauth: {
+      'excluded-models': { claude: ['old'], codex: ['untouched'] },
+      'model-alias': {
+        Claude: [{ name: 'claude-old', alias: 'shared', fork: true, 'future-field': 3 }],
+        codex: [{ name: 'codex-old', alias: 'Shared', 'force-mapping': true }],
+      },
+    },
     plugins: { configs: { fixture: { enabled: true, edited: 'old', untouched: 'old' } } },
   };
   let version = 1;
@@ -104,10 +110,19 @@ function fixture() {
 }
 
 describe('v8 config optimistic concurrency', () => {
+  const replaceClientKeys = async () => {
+    const keys = await readConfigResource('/config/access/api-keys', []);
+    return keys.replace(['first', 'replacement']);
+  };
   const cases = [
     {
       name: 'provider families',
-      write: () => providersApi.createMetaConfig({ apiKey: 'new', baseUrl: 'https://new.invalid' }),
+      write: () =>
+        providersApi.writeFamily({
+          family: 'meta',
+          type: 'create',
+          config: { apiKey: 'new', baseUrl: 'https://new.invalid' },
+        }),
       change: (f: ReturnType<typeof fixture>) =>
         f.config['api-keys'].meta.push({
           name: 'concurrent',
@@ -117,14 +132,14 @@ describe('v8 config optimistic concurrency', () => {
     },
     {
       name: 'OAuth maps',
-      write: () => authFilesApi.saveOauthExcludedModels('claude', ['new']),
+      write: () => authFilesApi.deleteOauthExcludedEntry('claude'),
       change: (f: ReturnType<typeof fixture>) => {
         f.config.oauth['excluded-models'].codex = ['concurrent'];
       },
     },
     {
       name: 'client keys',
-      write: () => apiKeysApi.update(1, 'replacement'),
+      write: replaceClientKeys,
       change: (f: ReturnType<typeof fixture>) => f.config.access['api-keys'].push('concurrent'),
     },
     {
@@ -147,10 +162,134 @@ describe('v8 config optimistic concurrency', () => {
     });
   }
 
+  test('simultaneous additions to one OAuth provider preserve both links and existing wire data', async () => {
+    const f = fixture();
+    await Promise.all([
+      authFilesApi.editOauthAliases({
+        type: 'add',
+        provider: 'CLAUDE',
+        model: 'claude-one',
+        alias: 'first',
+      }),
+      authFilesApi.editOauthAliases({
+        type: 'add',
+        provider: 'claude',
+        model: 'claude-two',
+        alias: 'second',
+      }),
+    ]);
+    expect(f.writes()).toBe(2);
+    expect(f.config.oauth['model-alias']).toEqual({
+      claude: [
+        { name: 'claude-old', alias: 'shared', fork: true, 'future-field': 3 },
+        { name: 'claude-one', alias: 'first', fork: true },
+        { name: 'claude-two', alias: 'second', fork: true },
+      ],
+      codex: [{ name: 'codex-old', alias: 'Shared', 'force-mapping': true }],
+    });
+  });
+
+  test.each(['rename', 'delete'] as const)(
+    'a multi-provider alias %s is atomic and stops on a stale ETag',
+    async (type) => {
+      const f = fixture();
+      const original = structuredClone(f.config.oauth['model-alias']);
+      const edit =
+        type === 'rename'
+          ? { type, alias: 'shared', newAlias: 'renamed' }
+          : { type, alias: 'shared' };
+      f.race(() => f.config.access['api-keys'].push('concurrent'));
+      await expect(authFilesApi.editOauthAliases(edit)).rejects.toMatchObject({
+        status: 412,
+        apiCode: 'precondition_failed',
+      });
+      expect(f.writes()).toBe(0);
+      expect(f.config.oauth['model-alias']).toEqual(original);
+
+      await authFilesApi.editOauthAliases(edit);
+      expect(f.writes()).toBe(1);
+      expect(f.config.oauth['model-alias']).toEqual(
+        type === 'rename'
+          ? {
+              claude: [{ ...original.Claude[0], alias: 'renamed' }],
+              codex: [{ ...original.codex[0], alias: 'renamed' }],
+            }
+          : {}
+      );
+    }
+  );
+
+  test('OAuth editor saves cannot overwrite same-provider changes made since opening', async () => {
+    const f = fixture();
+    const exclusionEditor = await authFilesApi.editOauthExcludedModels();
+    const aliasEditor = await authFilesApi.editOauthModelAlias();
+    f.config.oauth['excluded-models'].claude.push('concurrent');
+    await authFilesApi.editOauthAliases({
+      type: 'add',
+      provider: 'claude',
+      model: 'concurrent',
+      alias: 'concurrent',
+    });
+    await expect(exclusionEditor.save('claude', ['replacement'])).rejects.toMatchObject({
+      status: 412,
+      apiCode: 'precondition_failed',
+    });
+    await expect(aliasEditor.save('claude', [])).rejects.toMatchObject({
+      status: 412,
+      apiCode: 'precondition_failed',
+    });
+    expect(f.writes()).toBe(1);
+    expect(f.config.oauth['excluded-models'].claude).toEqual(['old', 'concurrent']);
+    expect((await authFilesApi.getOauthModelAlias()).claude.map((entry) => entry.name)).toEqual([
+      'claude-old',
+      'concurrent',
+    ]);
+  });
+
+  test('the alias editor preserves opaque fields only on retained row identities', async () => {
+    const f = fixture();
+    const editor = await authFilesApi.editOauthModelAlias();
+    const original = editor.values.claude[0];
+    await editor.save('claude', [{ ...original, alias: 'renamed', original }]);
+    expect(f.config.oauth['model-alias']).toEqual({
+      claude: [{ name: 'claude-old', alias: 'renamed', fork: true, 'future-field': 3 }],
+      codex: [{ name: 'codex-old', alias: 'Shared', 'force-mapping': true }],
+    });
+
+    const nextEditor = await authFilesApi.editOauthModelAlias();
+    const replacement = { ...nextEditor.values.claude[0] };
+    await nextEditor.save('claude', [replacement]);
+    expect(f.config.oauth['model-alias']).toEqual({
+      claude: [{ name: 'claude-old', alias: 'renamed', fork: true }],
+      codex: [{ name: 'codex-old', alias: 'Shared', 'force-mapping': true }],
+    });
+  });
+
+  test('global edits preserve opaque providers and a full-list editor rejects unreadable rows', async () => {
+    const f = fixture();
+    const map: Record<string, unknown> = f.config.oauth['model-alias'];
+    map.future = { opaque: 1 };
+    map.incomplete = [{ name: 'not-shown', raw: true }];
+    await authFilesApi.editOauthAliases({ type: 'rename', alias: 'shared', newAlias: 'renamed' });
+    const editor = await authFilesApi.editOauthModelAlias();
+    for (const provider of ['future', 'incomplete']) {
+      await expect(editor.save(provider, [{ name: 'edited', alias: 'edited' }])).rejects.toThrow(
+        'Invalid OAuth alias list'
+      );
+    }
+    expect(f.writes()).toBe(1);
+    expect(f.config.oauth['model-alias']).toMatchObject({
+      future: { opaque: 1 },
+      incomplete: [{ name: 'not-shown', raw: true }],
+    });
+  });
+
   test('a missing ETag never degrades a dependent write to an unconditional replacement', async () => {
     const f = fixture();
     f.hideETag();
-    await expect(apiKeysApi.update(1, 'replacement')).rejects.toThrow();
+    await expect(replaceClientKeys()).rejects.toMatchObject({
+      apiCode: 'config_etag_unavailable',
+    });
     expect(f.writes()).toBe(0);
     expect(f.config.access['api-keys']).toEqual(['first', 'second']);
   });

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useReducer } from 'react';
-import { isMap, isScalar, isSeq, parse as parseYaml, parseDocument } from 'yaml';
+import { isAlias, isMap, isScalar, isSeq, parse as parseYaml, parseDocument } from 'yaml';
 import type { Document, Node, Pair, YAMLMap, YAMLSeq } from 'yaml';
 import type {
   DisableImageGenerationMode,
@@ -57,7 +57,30 @@ function parseApiKeysText(raw: unknown): string {
 type YamlDocument = Document;
 type YamlPath = string[];
 
+function editYamlMap(yaml: string, edit: (doc: YamlDocument) => void): string {
+  const doc: YamlDocument = parseDocument(yaml);
+  if (doc.errors[0]) throw doc.errors[0];
+  if (doc.contents === null || isNullScalar(doc.contents)) {
+    doc.contents = preserveNodeComments(doc.contents, doc.createNode({}));
+  }
+  if (!isMap(doc.contents)) throw new Error('Expected a YAML configuration map');
+  edit(doc);
+  return doc.toString({ indent: 2, lineWidth: 120, minContentWidth: 0 });
+}
+
+function assertEditableNode(node: unknown, path: string): void {
+  if (isAlias(node)) {
+    throw new Error(
+      `Cannot edit YAML alias at ${path}. Edit its anchor or expand the alias in source mode.`
+    );
+  }
+}
+
 function docHas(doc: YamlDocument, path: YamlPath): boolean {
+  for (let depth = 1; depth <= path.length; depth += 1) {
+    const prefix = path.slice(0, depth);
+    assertEditableNode(doc.getIn(prefix, true), prefix.join('.'));
+  }
   return doc.hasIn(path);
 }
 
@@ -74,18 +97,20 @@ function ensureParentMaps(doc: YamlDocument, leafPath: YamlPath): void {
     const path = leafPath.slice(0, depth);
     const existing = doc.getIn(path, true);
     if (isMap(existing)) continue;
-    if (existing !== undefined && !isNullScalar(existing)) return;
+    assertEditableNode(existing, path.join('.'));
+    if (existing !== undefined && !isNullScalar(existing)) {
+      throw new Error(`Expected a YAML map at ${path.join('.')}`);
+    }
     const next = doc.createNode({});
     doc.setIn(path, isNullScalar(existing) ? preserveNodeComments(existing as Node, next) : next);
   }
 }
 
-/** Remove the empty maps a deletion leaves behind, from the leaf's parent up to the root. */
 function pruneEmptyParents(doc: YamlDocument, leafPath: YamlPath): void {
   for (let depth = leafPath.length - 1; depth > 0; depth -= 1) {
     const path = leafPath.slice(0, depth);
     const value = doc.getIn(path, true);
-    if (!isMap(value) || value.items.length > 0) return;
+    if (!isMap(value) || value.items.length > 0 || value.anchor) return;
     doc.deleteIn(path);
   }
 }
@@ -98,6 +123,7 @@ function deleteInDoc(doc: YamlDocument, path: YamlPath): void {
 
 function setValueInDoc(doc: YamlDocument, path: YamlPath, value: unknown): void {
   ensureParentMaps(doc, path);
+  assertEditableNode(doc.getIn(path, true), path.join('.'));
   doc.setIn(path, value);
 }
 
@@ -756,12 +782,14 @@ function setMapValue(doc: YamlDocument, map: YAMLMap, key: string, value: unknow
 
 function deleteMapValue(map: YAMLMap, key: string): void {
   const pair = mapPair(map, key);
+  assertEditableNode(pair?.value, key);
   if (pair) map.items.splice(map.items.indexOf(pair), 1);
 }
 
 function ensureMapValue(doc: YamlDocument, map: YAMLMap, key: string): YAMLMap {
   const pair = mapPair(map, key);
   if (pair && isMap(pair.value)) return pair.value;
+  assertEditableNode(pair?.value, key);
   const next = doc.createNode({});
   if (!isMap(next)) throw new Error('Expected YAML map');
   if (pair) {
@@ -778,6 +806,7 @@ function ensureMapValue(doc: YamlDocument, map: YAMLMap, key: string): YAMLMap {
 function ensureSeqValue(doc: YamlDocument, map: YAMLMap, key: string): YAMLSeq {
   const pair = mapPair(map, key);
   if (pair && isSeq(pair.value)) return pair.value;
+  assertEditableNode(pair?.value, key);
   const next = doc.createNode([]);
   if (!isSeq(next)) throw new Error('Expected YAML sequence');
   if (pair) {
@@ -1435,12 +1464,8 @@ export function useVisualConfig() {
 
   const applyVisualChangesToYaml = useCallback(
     (currentYaml: string): string => {
-      try {
-        const doc: YamlDocument = parseDocument(currentYaml);
-        if (doc.errors.length > 0) return currentYaml;
-        if (!isMap(doc.contents)) {
-          doc.contents = doc.createNode({});
-        }
+      if (dirtyFields.size === 0) return currentYaml;
+      return editYamlMap(currentYaml, (doc) => {
         const values = visualValues;
         const dirty = (field: string) => dirtyFields.has(field);
 
@@ -1750,11 +1775,7 @@ export function useVisualConfig() {
           }
           pruneEmptyParents(doc, [...PAYLOAD_PATH, 'default']);
         }
-
-        return doc.toString({ indent: 2, lineWidth: 120, minContentWidth: 0 });
-      } catch {
-        return currentYaml;
-      }
+      });
     },
     [baselineValues, dirtyFields, visualValues]
   );

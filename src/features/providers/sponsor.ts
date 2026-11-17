@@ -178,15 +178,9 @@ export const isApiKeyFunCodexProvider = (config: ProviderKeyConfig | undefined |
 };
 
 export const buildApiKeyFunRaw = (config: Config | null | undefined): SponsorProviderRaw => ({
-  openai: (config?.openaiCompatibility ?? [])
-    .map((item, index) => ({ config: item, index: item.sourceIndex ?? index }))
-    .filter((item) => isApiKeyFunOpenAIProvider(item.config)),
-  claude: (config?.claudeApiKeys ?? [])
-    .map((item, index) => ({ config: item, index }))
-    .filter((item) => isApiKeyFunClaudeProvider(item.config)),
-  codex: (config?.codexApiKeys ?? [])
-    .map((item, index) => ({ config: item, index }))
-    .filter((item) => isApiKeyFunCodexProvider(item.config)),
+  openai: (config?.openaiCompatibility ?? []).filter(isApiKeyFunOpenAIProvider),
+  claude: (config?.claudeApiKeys ?? []).filter(isApiKeyFunClaudeProvider),
+  codex: (config?.codexApiKeys ?? []).filter(isApiKeyFunCodexProvider),
   gemini: [],
 });
 

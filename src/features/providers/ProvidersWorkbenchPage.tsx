@@ -23,7 +23,7 @@ import { getProviderCreateLabel } from './createLabel';
 import { ProviderSheet, type ProviderSheetHandle } from './sheets/ProviderSheet';
 import { APIKEY_FUN_DISPLAY_NAME } from './sponsor';
 import { isMultiProtocolSponsorBrand } from './sponsorDefinitions';
-import { isSponsorPartialMutationError } from './sponsorMutationRecovery';
+import { guardConfigConnection } from '@/services/api/configValue';
 import { useProviderWorkbench } from './useProviderWorkbench';
 import { PROVIDER_BRAND_ORDER } from './descriptors';
 import {
@@ -336,6 +336,7 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
 
   const handleDelete = useCallback(
     (resource: ProviderResource) => {
+      const assertConnection = guardConfigConnection();
       const name = resource.name ?? resource.apiKeyPreview ?? resource.identifier ?? '';
       showConfirmation({
         title: t('providersPage.delete.title'),
@@ -344,13 +345,9 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
         confirmText: t('providersPage.actions.delete'),
         onConfirm: async () => {
           try {
-            await workbench.deleteProvider(resource);
+            await workbench.deleteProvider(resource, assertConnection);
             showNotification(t('providersPage.toast.deleted'), 'success');
           } catch (err) {
-            if (isSponsorPartialMutationError(err)) {
-              showNotification(t('providersPage.sponsor.partialMutationWarning'), 'warning');
-              return;
-            }
             const msg = err instanceof Error ? err.message : String(err);
             showNotification(`${t('notification.delete_failed')}: ${msg}`, 'error');
           }
@@ -369,10 +366,6 @@ export function ProvidersWorkbenchPage({ fixedBrand }: ProvidersWorkbenchPagePro
           'success'
         );
       } catch (err) {
-        if (isSponsorPartialMutationError(err)) {
-          showNotification(t('providersPage.sponsor.partialMutationWarning'), 'warning');
-          return;
-        }
         const msg = err instanceof Error ? err.message : String(err);
         showNotification(`${t('providersPage.toast.toggleFailed')}: ${msg}`, 'error');
       }

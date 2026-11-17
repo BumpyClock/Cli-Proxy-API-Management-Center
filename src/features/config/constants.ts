@@ -15,7 +15,6 @@ import type { VisualSectionId } from './searchIndex';
 /** 编辑模式：可视化表单 or YAML 源码。 */
 export type ConfigEditorMode = 'visual' | 'source';
 
-/** 顶部 tabs：'common'（常用，原简单模式的继任者）+ 6 个正典分区。 */
 export type ConfigTabId = 'common' | VisualSectionId;
 
 export const CONFIG_SECTION_IDS = [
@@ -29,7 +28,6 @@ export const CONFIG_SECTION_IDS = [
 
 export const CONFIG_TAB_IDS: readonly ConfigTabId[] = ['common', ...CONFIG_SECTION_IDS];
 
-/** 分区序号（01–06）。常用 tab 是别名视图，不占序号。 */
 export const SECTION_INDEX_LABELS: Record<VisualSectionId, string> = {
   connectivity: '01',
   network: '02',
@@ -49,7 +47,6 @@ export const CONFIG_TAB_ICONS: Record<ConfigTabId, ComponentType<IconProps>> = {
   payload: IconCode,
 };
 
-/** 常用 tab 的 6 个字段（原简单模式），渲染源与正典分区共享（fields/sharedFields.tsx）。 */
 export const COMMON_FIELD_IDS = [
   'host',
   'port',
@@ -76,79 +73,6 @@ export const SECTION_VALIDATION_FIELDS: Record<VisualSectionId, readonly VisualC
     advanced: [],
     payload: [],
   };
-
-/**
- * fieldId → useVisualConfig dirtyFields 的键（= VisualConfigValues 叶值键，streaming 用点号叶）。
- * 与搜索索引 59 条一一对应；三方对账由 tests/configFieldParity.test.ts 守护 ——
- * 增删字段时漏改任何一边（索引 / 本表 / 分区 JSX）都会红。
- */
-export const FIELD_VALUE_KEYS: Record<string, readonly string[]> = {
-  // ── connectivity ──────────────────────────────────────────────────────────
-  host: ['host'],
-  port: ['port'],
-  authDir: ['authDir'],
-  apiKeys: ['apiKeysText'],
-  tlsEnable: ['tlsEnable'],
-  tlsCert: ['tlsCert'],
-  tlsKey: ['tlsKey'],
-  rmAllowRemote: ['rmAllowRemote'],
-  rmDisableControlPanel: ['rmDisableControlPanel'],
-  rmDisableAutoUpdatePanel: ['rmDisableAutoUpdatePanel'],
-  rmSecretKey: ['rmSecretKey'],
-  rmPanelRepo: ['rmPanelRepo'],
-  // ── network ───────────────────────────────────────────────────────────────
-  proxyUrl: ['proxyUrl'],
-  requestRetry: ['requestRetry'],
-  maxRetryCredentials: ['maxRetryCredentials'],
-  maxRetryInterval: ['maxRetryInterval'],
-  authAutoRefreshWorkers: ['authAutoRefreshWorkers'],
-  routingStrategy: ['routingStrategy'],
-  disableImageGeneration: ['disableImageGeneration'],
-  gptImage2BaseModel: ['gptImage2BaseModel'],
-  routingSessionAffinityTTL: ['routingSessionAffinityTTL'],
-  forceModelPrefix: ['forceModelPrefix'],
-  passthroughHeaders: ['passthroughHeaders'],
-  disableCooling: ['disableCooling'],
-  routingSessionAffinity: ['routingSessionAffinity'],
-  wsAuth: ['wsAuth'],
-  // ── logging ───────────────────────────────────────────────────────────────
-  debug: ['debug'],
-  commercialMode: ['commercialMode'],
-  loggingToFile: ['loggingToFile'],
-  logsMaxTotalSizeMb: ['logsMaxTotalSizeMb'],
-  errorLogsMaxFiles: ['errorLogsMaxFiles'],
-  redisUsageQueueRetentionSeconds: ['redisUsageQueueRetentionSeconds'],
-  usageStatisticsEnabled: ['usageStatisticsEnabled'],
-  // ── streaming ─────────────────────────────────────────────────────────────
-  streamingKeepaliveSeconds: ['streaming.keepaliveSeconds'],
-  streamingBootstrapRetries: ['streaming.bootstrapRetries'],
-  streamingNonstreamKeepalive: ['streaming.nonstreamKeepaliveInterval'],
-  // ── advanced ──────────────────────────────────────────────────────────────
-  pluginsEnabled: ['pluginsEnabled'],
-  pluginStoreSources: ['pluginStoreSources'],
-  pluginStoreAuth: ['pluginStoreAuth'],
-  antigravitySensitiveWords: ['antigravitySensitiveWords'],
-  devinSensitiveWords: ['devinSensitiveWords'],
-  antigravitySignatureCacheEnabled: ['antigravitySignatureCacheEnabled'],
-  antigravitySignatureBypassStrict: ['antigravitySignatureBypassStrict'],
-  quotaAntigravityCredits: ['quotaAntigravityCredits'],
-  claudeHeaderUserAgent: ['claudeHeaderUserAgent'],
-  claudeHeaderPackageVersion: ['claudeHeaderPackageVersion'],
-  claudeHeaderRuntimeVersion: ['claudeHeaderRuntimeVersion'],
-  claudeHeaderOs: ['claudeHeaderOs'],
-  claudeHeaderArch: ['claudeHeaderArch'],
-  claudeHeaderTimeout: ['claudeHeaderTimeout'],
-  claudeHeaderStabilizeDeviceProfile: ['claudeHeaderStabilizeDeviceProfile'],
-  codexHeaderUserAgent: ['codexHeaderUserAgent'],
-  codexHeaderBetaFeatures: ['codexHeaderBetaFeatures'],
-  codexIdentityConfuse: ['codexIdentityConfuse'],
-  // ── payload ───────────────────────────────────────────────────────────────
-  payloadDefaultRules: ['payloadDefaultRules'],
-  payloadDefaultRawRules: ['payloadDefaultRawRules'],
-  payloadOverrideRules: ['payloadOverrideRules'],
-  payloadOverrideRawRules: ['payloadOverrideRawRules'],
-  payloadFilterRules: ['payloadFilterRules'],
-};
 
 /** tab / tabpanel 的 DOM id：单点定义，ConfigTabs 与页面侧面板用同一函数生成 aria 关联。 */
 export const configTabDomId = (id: ConfigTabId) => `config-tab-${id}`;

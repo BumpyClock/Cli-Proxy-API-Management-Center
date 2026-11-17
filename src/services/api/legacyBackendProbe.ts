@@ -8,7 +8,6 @@ export class LegacyBackendError extends Error {
   }
 }
 
-/** Diagnostic only. Legacy responses are never used as application data or a login fallback. */
 export async function probeLegacyBackend(apiBase: string, managementKey: string): Promise<boolean> {
   const base = normalizeApiBase(apiBase);
   if (!base || !managementKey) return false;

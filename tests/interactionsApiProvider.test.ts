@@ -68,12 +68,8 @@ describe('Interactions API key provider', () => {
     const resource = interactionsToResource(config.interactionsApiKeys![0], 0);
     expect(resource.brand).toBe('interactions');
     expect(resource.models).toEqual(['gemini-3.1-flash-lite']);
-    expect(resource.selector).toEqual({
-      brand: 'interactions',
-      apiKey: 'interactions-secret',
-      baseUrl: 'https://generativelanguage.googleapis.com',
-      index: 0,
-    });
+    expect(resource.raw).toBe(config.interactionsApiKeys![0]);
+    expect(config.interactionsApiKeys![0].source).toMatchObject({ groupIndex: 0, keyIndex: 0 });
     expect(PROVIDER_DESCRIPTORS.interactions.baseUrlRequired).toBe(false);
     expect(PROVIDER_DESCRIPTORS.interactions.supportsTestModel).toBe(true);
     expect(PROVIDER_BRAND_ORDER.indexOf('interactions')).toBe(

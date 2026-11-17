@@ -46,9 +46,13 @@ describe('Claude fingerprint profile', () => {
     apiClient.put = (async (url: string, data?: unknown) => {
       calls.push({ url, data });
     }) as typeof apiClient.put;
-    await providersApi.createClaudeConfig({
-      ...callerOwnedConfig,
-      fingerprintProfile: 'claude-code-cli',
+    await providersApi.writeFamily({
+      family: 'claude',
+      type: 'create',
+      config: {
+        ...callerOwnedConfig,
+        fingerprintProfile: 'claude-code-cli',
+      },
     });
     expect(calls).toEqual([
       {
@@ -90,11 +94,13 @@ describe('Claude fingerprint profile', () => {
     apiClient.put = (async (url: string, data?: unknown) => {
       calls.push({ url, data });
     }) as typeof apiClient.put;
-    await providersApi.updateClaudeConfig(
-      callerOwnedConfig.apiKey,
-      callerOwnedConfig.baseUrl,
-      callerOwnedConfig
-    );
+    const current = normalizeConfigResponse((await apiClient.getRaw('/config')).data)
+      .claudeApiKeys![0];
+    await providersApi.writeFamily({
+      family: 'claude',
+      type: 'update',
+      config: { ...current, fingerprintProfile: undefined },
+    });
     expect(calls).toEqual([
       {
         url: '/config/api-keys/claude',

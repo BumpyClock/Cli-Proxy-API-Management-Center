@@ -1,6 +1,3 @@
-// Reload before preview and confirmation. Server changes require a new preview.
-// Conditional writes protect the remaining read/write gap.
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { parse as parseYaml, parseDocument } from 'yaml';
@@ -19,17 +16,7 @@ export function readCommercialModeFromYaml(yamlContent: string): boolean {
   }
 }
 
-function normalizeYamlForVisualDiff(yamlContent: string): string {
-  try {
-    const doc = parseDocument(yamlContent);
-    return doc.toString({ indent: 2, lineWidth: 120, minContentWidth: 0 });
-  } catch {
-    return yamlContent;
-  }
-}
-
 export type UseConfigDocumentArgs = {
-  /** 当前编辑模式（旧实现中的 activeTab）。 */
   mode: ConfigEditorMode;
   visualDirty: boolean;
   visualParseError: string | null;
@@ -37,24 +24,34 @@ export type UseConfigDocumentArgs = {
   applyVisualChangesToYaml: (yaml: string) => string;
 };
 
-/** 可视化保存仅在用户真正编辑过源码时以本地草稿为合并基底。 */
-export function selectVisualMergeBase(
-  latestServerYaml: string,
-  sourceDraftYaml: string,
-  sourceDirty: boolean
-): string {
-  return sourceDirty ? sourceDraftYaml : latestServerYaml;
-}
+type ApplyVisualChanges = UseConfigDocumentArgs['applyVisualChangesToYaml'];
 
-export function buildConfigSaveDraft(
-  latestServerYaml: string,
-  sourceDraftYaml: string,
-  sourceDirty: boolean,
-  mode: ConfigEditorMode,
-  applyVisualChanges: (yaml: string) => string
-): string {
-  if (sourceDirty && mode === 'source') return sourceDraftYaml;
-  return applyVisualChanges(selectVisualMergeBase(latestServerYaml, sourceDraftYaml, sourceDirty));
+type ConfigSaveDraft =
+  | Readonly<{ origin: 'source'; content: string; applyVisualChanges?: ApplyVisualChanges }>
+  | Readonly<{ origin: 'visual'; applyVisualChanges: ApplyVisualChanges }>;
+
+type SaveOwner = Readonly<{ revision: number; assertConnection: () => void }>;
+
+type ConfigSavePreview = Readonly<{
+  owner: SaveOwner;
+  draft: ConfigSaveDraft;
+  serverContent: string;
+  original: string;
+  modified: string;
+}>;
+
+export function buildConfigSavePreview(
+  owner: SaveOwner,
+  draft: ConfigSaveDraft,
+  serverContent: string
+): ConfigSavePreview {
+  const base = draft.origin === 'source' ? draft.content : serverContent;
+  const modified = draft.applyVisualChanges ? draft.applyVisualChanges(base) : base;
+  const original =
+    draft.origin === 'visual' && serverContent !== modified
+      ? parseDocument(serverContent).toString({ indent: 2, lineWidth: 120, minContentWidth: 0 })
+      : serverContent;
+  return { owner, draft, serverContent, original, modified };
 }
 
 /**
@@ -79,245 +76,182 @@ export function useConfigDocument({
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  // 仅表示用户在源码编辑器中改过草稿；可视化字段同步到 content 不得修改它。
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [sourceDirty, setSourceDirty] = useState(false);
-  const [diffModalOpen, setDiffModalOpen] = useState(false);
-  const [serverYaml, setServerYaml] = useState('');
-  const [mergedYaml, setMergedYaml] = useState('');
-  const [previewServerYaml, setPreviewServerYaml] = useState('');
-  const [previewMode, setPreviewMode] = useState<ConfigEditorMode>('visual');
+  const [preview, setPreview] = useState<ConfigSavePreview | null>(null);
 
   const isDirty = sourceDirty || visualDirty;
   const loadRequestId = useRef(0);
+  const draftRevision = useRef(0);
+  const savedContent = useRef('');
+  const savePhase = useRef<'reading' | 'writing' | null>(null);
+
+  const acceptContent = useCallback(
+    (value: string) => {
+      draftRevision.current += 1;
+      savedContent.current = value;
+      setContent(value);
+      setSourceDirty(false);
+      setPreview(null);
+      loadVisualValuesFromYaml(value);
+    },
+    [loadVisualValuesFromYaml]
+  );
 
   const loadConfig = useCallback(async () => {
+    if (savePhase.current) return;
     const requestId = ++loadRequestId.current;
+    const revision = draftRevision.current;
     const assertConnection = guardConfigConnection();
     setLoading(true);
-    setError('');
+    setPreview(null);
+    setLoadError(null);
     try {
       const { content: data } = await configFileApi.fetchConfigYaml();
       assertConnection();
-      if (requestId !== loadRequestId.current) return;
-      setContent(data);
-      setSourceDirty(false);
-      setDiffModalOpen(false);
-      setServerYaml(data);
-      setMergedYaml(data);
-      setPreviewServerYaml(data);
-      loadVisualValuesFromYaml(data);
+      if (requestId !== loadRequestId.current || revision !== draftRevision.current) return;
+      acceptContent(data);
     } catch (err: unknown) {
       if (requestId !== loadRequestId.current || isRequestCancelled(err)) return;
-      const message = getErrorMessage(err, t('notification.refresh_failed'));
-      setError(message);
+      setLoadError(getErrorMessage(err));
     } finally {
       if (requestId === loadRequestId.current) setLoading(false);
     }
-  }, [loadVisualValuesFromYaml, t]);
+  }, [acceptContent]);
 
   useEffect(() => {
     void loadConfig();
     return () => {
       loadRequestId.current += 1;
+      draftRevision.current += 1;
     };
   }, [loadConfig]);
 
-  const handleConfirmSave = useCallback(async () => {
-    const assertConnection = guardConfigConnection();
+  const showPreview = (next: ConfigSavePreview) => {
+    savedContent.current = next.serverContent;
+    if (next.original === next.modified) {
+      acceptContent(next.serverContent);
+      showNotification(t('config_management.diff.no_changes'), 'info');
+    } else {
+      setPreview(next);
+    }
+  };
+
+  const runSave = async (operation: () => Promise<void>) => {
+    if (savePhase.current) return;
+    savePhase.current = 'reading';
     setSaving(true);
     try {
-      const snapshot = await configFileApi.fetchConfigYaml();
-      assertConnection();
-      const latestServerYaml = snapshot.content;
-      if (latestServerYaml !== previewServerYaml) {
-        const nextMergedYaml =
-          previewMode === 'visual' && !sourceDirty
-            ? applyVisualChangesToYaml(latestServerYaml)
-            : mergedYaml;
-        const nextServerYaml =
-          previewMode === 'visual'
-            ? normalizeYamlForVisualDiff(latestServerYaml)
-            : latestServerYaml;
-
-        setPreviewServerYaml(latestServerYaml);
-        setServerYaml(nextServerYaml);
-        setMergedYaml(nextMergedYaml);
-
-        if (nextServerYaml === nextMergedYaml) {
-          setSourceDirty(false);
-          setDiffModalOpen(false);
-          setContent(latestServerYaml);
-          loadVisualValuesFromYaml(latestServerYaml);
-          showNotification(t('config_management.diff.no_changes'), 'info');
-        }
-        return;
-      }
-
-      const previousCommercialMode = readCommercialModeFromYaml(latestServerYaml);
-      const nextCommercialMode = readCommercialModeFromYaml(mergedYaml);
-      const commercialModeChanged = previousCommercialMode !== nextCommercialMode;
-
-      await snapshot.replace(mergedYaml);
-      assertConnection();
-      const { content: latestContent } = await configFileApi.fetchConfigYaml();
-      assertConnection();
-      setSourceDirty(false);
-      setDiffModalOpen(false);
-      setContent(latestContent);
-      setServerYaml(latestContent);
-      setMergedYaml(latestContent);
-      setPreviewServerYaml(latestContent);
-      loadVisualValuesFromYaml(latestContent);
-
-      // Keep the global config store in sync so sidebar / other pages reflect YAML changes immediately.
-      try {
-        useConfigStore.getState().invalidateCache();
-        await useConfigStore.getState().fetchConfig(true);
-        assertConnection();
-      } catch (refreshError: unknown) {
-        if (isRequestCancelled(refreshError)) return;
-        const message =
-          refreshError instanceof Error
-            ? refreshError.message
-            : typeof refreshError === 'string'
-              ? refreshError
-              : '';
-        showNotification(
-          `${t('notification.refresh_failed')}${message ? `: ${message}` : ''}`,
-          'error'
-        );
-      }
-
-      showNotification(t('config_management.save_success'), 'success');
-      if (commercialModeChanged) {
-        showNotification(t('notification.commercial_mode_restart_required'), 'warning');
-      }
+      await operation();
     } catch (err: unknown) {
-      if (isRequestCancelled(err)) return;
-      const message = getErrorMessage(err);
-      showNotification(`${t('notification.save_failed')}: ${message}`, 'error');
+      if (isRequestCancelled(err)) {
+        setPreview(null);
+      } else {
+        showNotification(`${t('notification.save_failed')}: ${getErrorMessage(err)}`, 'error');
+      }
     } finally {
+      savePhase.current = null;
       setSaving(false);
     }
-  }, [
-    applyVisualChangesToYaml,
-    sourceDirty,
-    loadVisualValuesFromYaml,
-    mergedYaml,
-    previewMode,
-    previewServerYaml,
-    showNotification,
-    t,
-  ]);
+  };
 
-  const handleSave = useCallback(async () => {
-    const assertConnection = guardConfigConnection();
+  const handleSave = () => {
     if (mode === 'visual' && visualParseError) {
       showNotification(t('config_management.visual_mode_save_blocked'), 'error');
       return;
     }
 
-    setSaving(true);
-    try {
+    const owner = { revision: draftRevision.current, assertConnection: guardConfigConnection() };
+    const draft: ConfigSaveDraft = sourceDirty
+      ? {
+          origin: 'source',
+          content,
+          applyVisualChanges: mode === 'visual' ? applyVisualChangesToYaml : undefined,
+        }
+      : { origin: 'visual', applyVisualChanges: applyVisualChangesToYaml };
+
+    return runSave(async () => {
       const snapshot = await configFileApi.fetchConfigYaml();
-      assertConnection();
-      const latestServerYaml = snapshot.content;
+      owner.assertConnection();
+      if (owner.revision !== draftRevision.current) return;
+      showPreview(buildConfigSavePreview(owner, draft, snapshot.content));
+    });
+  };
 
-      const visualBaseYaml = selectVisualMergeBase(latestServerYaml, content, sourceDirty);
-      if (mode === 'visual' || !sourceDirty) {
-        const latestDocument = parseDocument(latestServerYaml);
-        if (latestDocument.errors.length > 0) {
-          showNotification(
-            t('config_management.visual_mode_latest_yaml_invalid', {
-              message:
-                latestDocument.errors[0]?.message ??
-                t('config_management.visual_mode_save_blocked'),
-            }),
-            'error'
-          );
-          return;
-        }
-
-        if (visualBaseYaml !== latestServerYaml) {
-          const visualBaseDocument = parseDocument(visualBaseYaml);
-          if (visualBaseDocument.errors.length > 0) {
-            showNotification(
-              t('config_management.visual_mode_latest_yaml_invalid', {
-                message:
-                  visualBaseDocument.errors[0]?.message ??
-                  t('config_management.visual_mode_save_blocked'),
-              }),
-              'error'
-            );
-            return;
-          }
-        }
-      }
-
-      // The edit origin, not the currently visible mode, decides the merge policy. A real source
-      // edit preserves the complete draft; a visual edit still merges onto the latest server YAML
-      // after switching to source merely to inspect the generated document.
-      const nextMergedYaml = buildConfigSaveDraft(
-        latestServerYaml,
-        content,
-        sourceDirty,
-        mode,
-        applyVisualChangesToYaml
-      );
-
-      // In visual-origin saves, applyVisualChangesToYaml re-serializes YAML via parseDocument → toString,
-      // which may reformat comments/whitespace. Normalize the server YAML through the same pipeline
-      // so the diff only shows actual value changes, not cosmetic reformatting.
-      let diffOriginal = latestServerYaml;
-      if (!sourceDirty) {
-        diffOriginal = normalizeYamlForVisualDiff(latestServerYaml);
-      }
-
-      if (diffOriginal === nextMergedYaml) {
-        setSourceDirty(false);
-        setContent(latestServerYaml);
-        setServerYaml(latestServerYaml);
-        setMergedYaml(nextMergedYaml);
-        setPreviewServerYaml(latestServerYaml);
-        loadVisualValuesFromYaml(latestServerYaml);
-        showNotification(t('config_management.diff.no_changes'), 'info');
+  const handleConfirmSave = () => {
+    if (!preview || preview.owner.revision !== draftRevision.current) return;
+    return runSave(async () => {
+      const { owner, draft, serverContent, modified } = preview;
+      owner.assertConnection();
+      const snapshot = await configFileApi.fetchConfigYaml();
+      owner.assertConnection();
+      if (owner.revision !== draftRevision.current) return;
+      if (snapshot.content !== serverContent) {
+        setPreview(null);
+        showPreview(buildConfigSavePreview(owner, draft, snapshot.content));
         return;
       }
 
-      setServerYaml(diffOriginal);
-      setMergedYaml(nextMergedYaml);
-      setPreviewServerYaml(latestServerYaml);
-      setPreviewMode(sourceDirty ? 'source' : 'visual');
-      setDiffModalOpen(true);
-    } catch (err: unknown) {
-      if (isRequestCancelled(err)) return;
-      const message = getErrorMessage(err);
-      showNotification(`${t('notification.save_failed')}: ${message}`, 'error');
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    applyVisualChangesToYaml,
-    content,
-    sourceDirty,
-    loadVisualValuesFromYaml,
-    mode,
-    showNotification,
-    t,
-    visualParseError,
-  ]);
+      savePhase.current = 'writing';
+      await snapshot.replace(modified);
+      owner.assertConnection();
+      const configStore = useConfigStore.getState();
+      configStore.invalidateCache();
+      if (owner.revision === draftRevision.current) acceptContent(modified);
+      const committedRevision = draftRevision.current;
+      savePhase.current = 'reading';
+      showNotification(t('config_management.save_success'), 'success');
+      if (readCommercialModeFromYaml(serverContent) !== readCommercialModeFromYaml(modified)) {
+        showNotification(t('notification.commercial_mode_restart_required'), 'warning');
+      }
 
-  /** 可视化→源码时只物化当前字段值，不把同步动作冒充为用户源码编辑。 */
+      await Promise.all([
+        (async () => {
+          try {
+            const result = await configFileApi.fetchConfigYaml();
+            owner.assertConnection();
+            savedContent.current = result.content;
+            if (committedRevision === draftRevision.current) acceptContent(result.content);
+          } catch (err: unknown) {
+            if (isRequestCancelled(err)) return;
+            showNotification(
+              t('config_management.save_verification_failed', { message: getErrorMessage(err) }),
+              'warning'
+            );
+          }
+        })(),
+        configStore.fetchConfig(true).catch((err: unknown) => {
+          if (!isRequestCancelled(err)) {
+            showNotification(
+              `${t('notification.refresh_failed')}: ${getErrorMessage(err)}`,
+              'error'
+            );
+          }
+        }),
+      ]);
+    });
+  };
+
+  // Generated source is only a view of the existing changes until the user edits it.
   const syncContentFromVisual = useCallback((value: string) => {
     setContent(value);
   }, []);
 
-  /** 源码编辑器 onChange：写入内容并记录真正的源码草稿。 */
-  const handleChange = useCallback((value: string) => {
-    setContent(value);
-    setSourceDirty(true);
+  const markDraftEdited = useCallback(() => {
+    if (savePhase.current === 'writing') return false;
+    draftRevision.current += 1;
+    setPreview(null);
+    return true;
   }, []);
+
+  const handleChange = useCallback(
+    (value: string) => {
+      if (!markDraftEdited()) return;
+      setContent(value);
+      setSourceDirty(true);
+    },
+    [markDraftEdited]
+  );
 
   const handleReload = useCallback(() => {
     if (!isDirty) {
@@ -337,7 +271,6 @@ export function useConfigDocument({
     });
   }, [isDirty, loadConfig, showConfirmation, t]);
 
-  /** 无需联网，直接恢复最近一次成功读取的原始服务端 YAML。 */
   const handleDiscard = useCallback(() => {
     if (!isDirty) return;
 
@@ -347,31 +280,22 @@ export function useConfigDocument({
       confirmText: t('config_management.actions.discard'),
       cancelText: t('common.cancel'),
       variant: 'danger',
-      onConfirm: () => {
-        setContent(previewServerYaml);
-        setSourceDirty(false);
-        setDiffModalOpen(false);
-        setServerYaml(previewServerYaml);
-        setMergedYaml(previewServerYaml);
-        loadVisualValuesFromYaml(previewServerYaml);
-      },
+      onConfirm: () => acceptContent(savedContent.current),
     });
-  }, [isDirty, loadVisualValuesFromYaml, previewServerYaml, showConfirmation, t]);
+  }, [acceptContent, isDirty, showConfirmation, t]);
 
-  const closeDiff = useCallback(() => setDiffModalOpen(false), []);
+  const closeDiff = useCallback(() => setPreview(null), []);
 
   return {
     content,
     syncContentFromVisual,
+    markDraftEdited,
     loading,
     saving,
-    error,
+    error: loadError === null ? '' : loadError || t('notification.refresh_failed'),
     sourceDirty,
     isDirty,
-    diffModalOpen,
-    serverYaml,
-    mergedYaml,
-    loadConfig,
+    preview,
     handleSave,
     handleConfirmSave,
     handleChange,

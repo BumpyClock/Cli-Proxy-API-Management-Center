@@ -21,6 +21,6 @@ describe('FennoAI provider aggregation', () => {
 
     expect(getSponsorProviderDefinition('fennoAI').protocols).toEqual(['codex', 'claude']);
     expect(raw.openai).toEqual([]);
-    expect(raw.codex.map((item) => item.index)).toEqual([0]);
+    expect(raw.codex.map((item) => item.apiKey)).toEqual(['codex-key']);
   });
 });

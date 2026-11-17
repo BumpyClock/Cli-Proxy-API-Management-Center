@@ -31,7 +31,7 @@ describe('OAuth editor save gating', () => {
       expect(source).toMatch(/const canSave =\s*!providerMissing &&/);
       expect(source).toContain('const showProviderRequirement = editorReady && providerMissing;');
       expect(source).toMatch(
-        /const handleSave = useCallback\(async \(\) => \{\s*if \(providerMissing\) return;/
+        /const handleSave = useCallback\(async \(\) => \{\s*if \(providerMissing \|\| !editor\) return;/
       );
       // The requirement renders under the Provider field and again beside Save, which it describes.
       expect(source).toContain(

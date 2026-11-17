@@ -2,8 +2,6 @@ import { describe, expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import { runVisualConfig } from './helpers/visualConfig';
 
-// Backend contract: WebsocketAuth defaults to true and Antigravity credits to false.
-// config.example.yaml values are not missing-key defaults.
 describe('visual config boolean defaults', () => {
   test('retains config editing when native structuredClone is unavailable', () => {
     const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone');

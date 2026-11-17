@@ -1,12 +1,9 @@
 // Search index for the visual config editor's global "jump to field" search.
 //
-// IMPORTANT: this index is maintained by hand and is NOT what drives field
-// rendering — it only powers search. When you add, remove, or move a field in
-// components/sections/*.tsx (or fields/sharedFields.tsx), update the matching
-// entry here, wrap the field's JSX in <FieldAnchor fieldId="..."> with the same
-// `fieldId`, and map it in constants.ts FIELD_VALUE_KEYS.
-// tests/configFieldParity.test.ts enforces the three-way parity — a missing or
-// extra entry anywhere fails CI.
+import type { VisualConfigValues } from '@/types/visualConfig';
+
+type ConfigValueKey =
+  keyof VisualConfigValues | `streaming.${keyof VisualConfigValues['streaming']}`;
 
 export type VisualSectionId =
   'connectivity' | 'network' | 'logging' | 'streaming' | 'advanced' | 'payload';
@@ -14,6 +11,7 @@ export type VisualSectionId =
 export interface ConfigFieldSearchEntry {
   /** Stable anchor id; matches FieldAnchor's `fieldId` and the rendered DOM id. */
   fieldId: string;
+  valueKey?: ConfigValueKey;
   sectionId: VisualSectionId;
   /** i18n key resolved with t() at search time so matching follows the active language. */
   labelKey: string;
@@ -32,6 +30,9 @@ export interface ConfigFieldSearchEntry {
 export const configFieldDomId = (fieldId: string) => `cfg-field-${fieldId}`;
 
 type Translate = (key: string) => string;
+
+export const configFieldValueKey = (entry: ConfigFieldSearchEntry) =>
+  entry.valueKey ?? entry.fieldId;
 
 // Compact helper: every label/hint key lives under config_management.visual.
 const L = (key: string) => `config_management.visual.${key}`;
@@ -59,6 +60,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
   },
   {
     fieldId: 'apiKeys',
+    valueKey: 'apiKeysText',
     sectionId: 'connectivity',
     labelKey: L('api_keys.label'),
     yamlKeys: ['access', 'api-keys'],
@@ -266,6 +268,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
   // ── streaming ─────────────────────────────────────────────────────────────
   {
     fieldId: 'streamingKeepaliveSeconds',
+    valueKey: 'streaming.keepaliveSeconds',
     sectionId: 'streaming',
     labelKey: L('sections.streaming.keepalive_seconds'),
     hintKey: L('sections.streaming.keepalive_hint'),
@@ -273,6 +276,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
   },
   {
     fieldId: 'streamingBootstrapRetries',
+    valueKey: 'streaming.bootstrapRetries',
     sectionId: 'streaming',
     labelKey: L('sections.streaming.bootstrap_retries'),
     hintKey: L('sections.streaming.bootstrap_hint'),
@@ -280,6 +284,7 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
   },
   {
     fieldId: 'streamingNonstreamKeepalive',
+    valueKey: 'streaming.nonstreamKeepaliveInterval',
     sectionId: 'streaming',
     labelKey: L('sections.streaming.nonstream_keepalive'),
     hintKey: L('sections.streaming.nonstream_keepalive_hint'),

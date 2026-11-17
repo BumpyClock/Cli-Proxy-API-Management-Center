@@ -53,7 +53,7 @@ interface BaseProviderFormProps {
 }
 
 const emptyHeader = () => ({ key: '', value: '' });
-const emptyModel = (): ModelEntryInput => ({ name: '', alias: '', sourceIndex: null });
+const emptyModel = (): ModelEntryInput => ({ name: '', alias: '' });
 const emptyApiKeyEntry = (): ApiKeyEntryInput => ({
   apiKey: '',
   proxyUrl: '',
@@ -127,8 +127,6 @@ function buildInitialForm(
             sourceIndex: m.sourceIndex,
             name: m.name,
             alias: m.alias ?? '',
-            priority: m.priority,
-            testModel: m.testModel,
             image: m.image === true,
             thinkingJson: formatJsonObject(m.thinking),
             thinkingLevels: readThinkingLevels(m.thinking),
@@ -138,7 +136,6 @@ function buildInitialForm(
         ? Object.entries(cfg.headers).map(([k, v]) => ({ key: k, value: String(v) }))
         : [emptyHeader()],
       excludedModelsText: '',
-      testModel: cfg.testModel ?? '',
       apiKeyEntries: cfg.apiKeyEntries?.length
         ? cfg.apiKeyEntries.map((entry) => ({
             sourceIndex: entry.sourceIndex,
@@ -174,8 +171,6 @@ function buildInitialForm(
           sourceIndex: m.sourceIndex,
           name: m.name,
           alias: m.alias ?? '',
-          priority: m.priority,
-          testModel: m.testModel,
           thinkingJson: formatJsonObject(m.thinking),
           thinkingLevels: readThinkingLevels(m.thinking),
         }))
@@ -362,7 +357,6 @@ export function BaseProviderForm({
         if (!trimmed || seen.has(trimmed)) return;
         seen.add(trimmed);
         next.push({
-          sourceIndex: null,
           name: trimmed,
           alias: (info.alias ?? '').trim(),
         });
