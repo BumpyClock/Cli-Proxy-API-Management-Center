@@ -21,9 +21,9 @@ import {
   IconSettings,
 } from '@/components/ui/icons';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
-import { pluginStoreApi } from '@/services/api';
+import { apiClient, pluginStoreApi } from '@/services/api';
 import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
-import { getErrorMessage, isRecord } from '@/utils/helpers';
+import { getErrorMessage, isRecord, isRequestCancelled } from '@/utils/helpers';
 import type { PluginStoreEntry, PluginStoreResponse } from '@/types';
 import {
   buildRepositoryURL,
@@ -48,6 +48,7 @@ import {
   type PluginReleaseVersion,
 } from './pluginReleaseVersions';
 import { waitForPluginStoreState } from './pluginPolling';
+import { beginPluginMutation, usePluginMutationBusy } from './pluginMutation';
 import styles from './PluginStorePage.module.scss';
 import { iconSize } from '@/design-system';
 
@@ -117,6 +118,7 @@ interface PluginInstallOptionsModalProps {
   isUpdate: boolean;
   version: string;
   installing: boolean;
+  blocked: boolean;
   onVersionChange: (version: string) => void;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
@@ -127,6 +129,7 @@ function PluginInstallOptionsModal({
   isUpdate,
   version,
   installing,
+  blocked,
   onVersionChange,
   onClose,
   onConfirm,
@@ -268,6 +271,7 @@ function PluginInstallOptionsModal({
     Boolean(entry.installedVersion) &&
     pluginVersionMatches(entry.installedVersion, requestedVersion);
   const confirmDisabled =
+    blocked ||
     (supportsVersionSelection && versionMode === 'release' && !requestedVersion) ||
     (supportsVersionSelection && versionMode === 'manual' && !isValidManualReleaseTag(version)) ||
     currentVersionSelected;
@@ -475,7 +479,7 @@ export function PluginStorePage() {
   const navigate = useNavigate();
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const apiBase = useAuthStore((state) => state.apiBase);
-  const clearConfigCache = useConfigStore((state) => state.clearCache);
+  const invalidateConfigCache = useConfigStore((state) => state.invalidateCache);
   const showNotification = useNotificationStore((state) => state.showNotification);
 
   const [data, setData] = useState<PluginStoreResponse | null>(null);
@@ -498,8 +502,11 @@ export function PluginStorePage() {
   const [installOptionsEntry, setInstallOptionsEntry] = useState<PluginStoreEntry | null>(null);
   const [installOptionsIsUpdate, setInstallOptionsIsUpdate] = useState(false);
   const [installVersion, setInstallVersion] = useState('');
+  const installRevision = useRef(0);
 
   const connected = connectionStatus === 'connected';
+  const mutationBusy = usePluginMutationBusy();
+  const installBlocked = !connected || mutationBusy;
 
   const loadStore = useCallback(async () => {
     if (!connected) {
@@ -666,6 +673,8 @@ export function PluginStorePage() {
 
   const runInstall = useCallback(
     async (entry: PluginStoreEntry, isUpdate: boolean, requestedVersion = '') => {
+      const mutation = beginPluginMutation(installRevision.current);
+      if (!mutation) return false;
       const entryKey = getStoreEntryKey(entry);
       const failedKey = isUpdate ? 'plugin_store.update_failed' : 'plugin_store.install_failed';
       const version = requestedVersion.trim();
@@ -675,7 +684,8 @@ export function PluginStorePage() {
           sourceId: entry.sourceId || undefined,
           version: version || undefined,
         });
-        clearConfigCache();
+        mutation.assertConnection();
+        invalidateConfigCache();
         const sourceId = result.sourceId || entry.sourceId;
         const installedState = await waitForPluginStoreState(
           entry.id,
@@ -685,6 +695,7 @@ export function PluginStorePage() {
             plugin.configured &&
             (!version || pluginVersionMatches(plugin.installedVersion, version))
         );
+        mutation.assertConnection();
         setData(installedState.response);
         if (
           installedState.timedOut ||
@@ -692,7 +703,7 @@ export function PluginStorePage() {
           !installedState.plugin.configured
         ) {
           showNotification(t('plugin_store.status_pending'), 'warning');
-          return;
+          return true;
         }
 
         if (result.restartRequired) {
@@ -704,7 +715,7 @@ export function PluginStorePage() {
             'success'
           );
           showNotification(t('plugin_store.restart_required_notice'), 'warning');
-          return;
+          return true;
         }
 
         if (!installedState.response.pluginsEnabled) {
@@ -713,7 +724,7 @@ export function PluginStorePage() {
             'success'
           );
           showNotification(t('plugin_store.global_disabled_hint'), 'warning');
-          return;
+          return true;
         }
 
         if (installedState.plugin.enabled) {
@@ -722,6 +733,7 @@ export function PluginStorePage() {
             sourceId,
             (plugin) => plugin.registered && plugin.effectiveEnabled
           );
+          mutation.assertConnection();
           setData(registeredState.response);
           if (
             registeredState.timedOut ||
@@ -729,7 +741,7 @@ export function PluginStorePage() {
             !registeredState.plugin.effectiveEnabled
           ) {
             showNotification(t('plugin_store.registration_pending'), 'warning');
-            return;
+            return true;
           }
           notifyPluginResourcesChanged();
         }
@@ -738,17 +750,22 @@ export function PluginStorePage() {
           isUpdate ? t('plugin_store.update_success') : t('plugin_store.install_success'),
           'success'
         );
+        return true;
       } catch (err: unknown) {
+        if (isRequestCancelled(err)) return false;
         showNotification(`${t(failedKey)}: ${getErrorMessage(err, t(failedKey))}`, 'error');
         throw err;
       } finally {
         setInstallingKey('');
+        mutation.release();
       }
     },
-    [clearConfigCache, showNotification, t]
+    [invalidateConfigCache, showNotification, t]
   );
 
   const handleInstall = (entry: PluginStoreEntry) => {
+    if (installBlocked) return;
+    installRevision.current = apiClient.getConnectionRevision();
     const isUpdate = entry.installed && entry.updateAvailable;
     setInstallOptionsEntry(entry);
     setInstallOptionsIsUpdate(isUpdate);
@@ -762,7 +779,7 @@ export function PluginStorePage() {
   }, [installingKey]);
 
   const handleInstallOptionsConfirm = useCallback(async () => {
-    if (!installOptionsEntry) return;
+    if (installBlocked || !installOptionsEntry) return;
     const requestedVersion = installVersion.trim();
 
     // Third-party plugins must clear the multi-step confirmation gauntlet first.
@@ -777,20 +794,25 @@ export function PluginStorePage() {
     }
 
     try {
-      await runInstall(installOptionsEntry, installOptionsIsUpdate, requestedVersion);
+      if (!(await runInstall(installOptionsEntry, installOptionsIsUpdate, requestedVersion)))
+        return;
       setInstallOptionsEntry(null);
       setInstallVersion('');
     } catch {
       // runInstall already surfaced a notification; keep the modal available for correction.
     }
-  }, [installOptionsEntry, installOptionsIsUpdate, installVersion, runInstall]);
+  }, [installBlocked, installOptionsEntry, installOptionsIsUpdate, installVersion, runInstall]);
 
   const handleGateConfirm = useCallback(async () => {
-    if (!gateEntry) return;
-    await runInstall(gateEntry, gateIsUpdate, gateRequestedVersion);
+    if (
+      installBlocked ||
+      !gateEntry ||
+      !(await runInstall(gateEntry, gateIsUpdate, gateRequestedVersion))
+    )
+      return;
     setGateOpen(false);
     setGateRequestedVersion('');
-  }, [gateEntry, gateIsUpdate, gateRequestedVersion, runInstall]);
+  }, [gateEntry, gateIsUpdate, gateRequestedVersion, installBlocked, runInstall]);
 
   const handleGateClose = useCallback(() => {
     setGateOpen(false);
@@ -818,7 +840,6 @@ export function PluginStorePage() {
     const sourceText = sourceName ? t('plugin_store.source_name', { source: sourceName }) : '';
     const metaItems = [versionText, sourceText, entry.author, entry.license].filter(Boolean);
     const isInstalling = installingKey === entryKey;
-    const hasPendingInstall = Boolean(installingKey);
     const missingAuth = entry.authRequired && !entry.authConfigured;
     const isDescriptionExpanded = expandedDescriptionKeySet.has(entryKey);
     const isDescriptionOverflowing = overflowingDescriptionKeySet.has(entryKey);
@@ -837,7 +858,7 @@ export function PluginStorePage() {
         ? t('plugin_store.auth_configured')
         : t('plugin_store.auth_required')
       : '';
-    const actionDisabled = !connected || missingAuth || (hasPendingInstall && !isInstalling);
+    const actionDisabled = installBlocked || missingAuth;
     const actionTitle = missingAuth ? t('plugin_store.auth_required_hint') : undefined;
 
     return (
@@ -1190,6 +1211,7 @@ export function PluginStorePage() {
         entry={gateEntry}
         isUpdate={gateIsUpdate}
         installing={gateEntry ? installingKey === getStoreEntryKey(gateEntry) : false}
+        blocked={installBlocked}
         onClose={handleGateClose}
         onConfirm={handleGateConfirm}
       />
@@ -1200,6 +1222,7 @@ export function PluginStorePage() {
         installing={
           installOptionsEntry ? installingKey === getStoreEntryKey(installOptionsEntry) : false
         }
+        blocked={installBlocked}
         onVersionChange={setInstallVersion}
         onClose={handleInstallOptionsClose}
         onConfirm={handleInstallOptionsConfirm}

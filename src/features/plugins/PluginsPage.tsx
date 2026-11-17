@@ -18,9 +18,9 @@ import {
   IconTrash2,
 } from '@/components/ui/icons';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
-import { pluginsApi } from '@/services/api';
+import { apiClient, pluginsApi } from '@/services/api';
 import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
-import { getErrorMessage, isRecord } from '@/utils/helpers';
+import { getErrorMessage, isRecord, isRequestCancelled } from '@/utils/helpers';
 import type { PluginConfigField, PluginListEntry, PluginListResponse } from '@/types';
 import {
   buildPluginConfigDraft,
@@ -34,6 +34,7 @@ import {
   resolvePluginAssetURL,
 } from './pluginResources';
 import { waitForPluginState } from './pluginPolling';
+import { beginPluginMutation, usePluginMutationBusy } from './pluginMutation';
 import { PluginsDisabledNotice } from './components/PluginNotices';
 import styles from './PluginsPage.module.scss';
 import { iconSize } from '@/design-system';
@@ -63,7 +64,7 @@ export function PluginsPage() {
   const navigate = useNavigate();
   const connectionStatus = useAuthStore((state) => state.connectionStatus);
   const apiBase = useAuthStore((state) => state.apiBase);
-  const clearConfigCache = useConfigStore((state) => state.clearCache);
+  const invalidateConfigCache = useConfigStore((state) => state.invalidateCache);
   const showNotification = useNotificationStore((state) => state.showNotification);
   const showConfirmation = useNotificationStore((state) => state.showConfirmation);
 
@@ -77,6 +78,8 @@ export function PluginsPage() {
   const [deletingID, setDeletingID] = useState('');
   const [openingConfigID, setOpeningConfigID] = useState('');
   const configRequestSeq = useRef(0);
+  const mutationBusy = usePluginMutationBusy();
+  const actionBusy = mutationBusy || Boolean(openingConfigID);
 
   const connected = connectionStatus === 'connected';
 
@@ -163,7 +166,7 @@ export function PluginsPage() {
   );
 
   const openConfigSheet = async (plugin: PluginListEntry) => {
-    if (openingConfigID || mutatingID || deletingID) return;
+    if (!connected || actionBusy) return;
 
     const requestSeq = configRequestSeq.current + 1;
     configRequestSeq.current = requestSeq;
@@ -208,12 +211,16 @@ export function PluginsPage() {
   };
 
   const handleTogglePlugin = async (plugin: PluginListEntry, enabled: boolean) => {
-    if (deletingID) return;
+    if (!connected || actionBusy) return;
+    const mutation = beginPluginMutation();
+    if (!mutation) return;
     setMutatingID(plugin.id);
     try {
       await pluginsApi.updateEnabled(plugin.id, enabled);
-      clearConfigCache();
+      mutation.assertConnection();
+      invalidateConfigCache();
       const status = await waitForPluginRuntimeState(plugin.id, enabled);
+      mutation.assertConnection();
       if (status === 'ready') {
         notifyPluginResourcesChanged();
         showNotification(t('plugin_management.toggle_success'), 'success');
@@ -228,6 +235,7 @@ export function PluginsPage() {
         );
       }
     } catch (err: unknown) {
+      if (isRequestCancelled(err)) return;
       showNotification(
         `${t('plugin_management.toggle_failed')}: ${getErrorMessage(
           err,
@@ -237,12 +245,14 @@ export function PluginsPage() {
       );
     } finally {
       setMutatingID('');
+      mutation.release();
     }
   };
 
   const handleDeletePlugin = (plugin: PluginListEntry) => {
-    if (!connected || mutatingID || openingConfigID || deletingID) return;
+    if (!connected || actionBusy) return;
 
+    const revision = apiClient.getConnectionRevision();
     const name = getPluginTitle(plugin);
     showConfirmation({
       title: t('plugin_management.delete_confirm_title'),
@@ -250,22 +260,27 @@ export function PluginsPage() {
       variant: 'danger',
       confirmText: t('plugin_management.delete_plugin'),
       onConfirm: async () => {
+        const mutation = beginPluginMutation(revision);
+        if (!mutation) return;
         setDeletingID(plugin.id);
         setMutatingID(plugin.id);
         try {
           const result = await pluginsApi.deletePlugin(plugin.id);
-          clearConfigCache();
+          mutation.assertConnection();
+          invalidateConfigCache();
           if (editingPlugin?.id === plugin.id) {
             setEditingPlugin(null);
             setDraft(null);
           }
           await loadPlugins();
+          mutation.assertConnection();
           notifyPluginResourcesChanged();
           showNotification(t('plugin_management.delete_success'), 'success');
           if (result.restartRequired) {
             showNotification(t('plugin_management.delete_restart_required'), 'warning');
           }
         } catch (err: unknown) {
+          if (isRequestCancelled(err)) return;
           const restartRequired = hasRestartRequiredError(err);
           const fallback = restartRequired
             ? t('plugin_management.delete_restart_required')
@@ -277,13 +292,14 @@ export function PluginsPage() {
         } finally {
           setDeletingID('');
           setMutatingID('');
+          mutation.release();
         }
       },
     });
   };
 
   const handleSaveConfig = async () => {
-    if (!editingPlugin || !draft || openingConfigID || mutatingID || deletingID) return;
+    if (!connected || !editingPlugin || !draft || actionBusy) return;
     const { patch, errors } = buildPluginConfigPatch(draft, editingPlugin.configFields, t);
 
     if (Object.keys(errors).length > 0) {
@@ -299,15 +315,19 @@ export function PluginsPage() {
       return;
     }
 
+    const mutation = beginPluginMutation();
+    if (!mutation) return;
     setMutatingID(editingPlugin.id);
     try {
       await pluginsApi.patchConfig(editingPlugin.id, patch);
-      clearConfigCache();
+      mutation.assertConnection();
+      invalidateConfigCache();
       const enabledChanged =
         typeof patch.enabled === 'boolean' && patch.enabled !== editingPlugin.enabled;
       const status = enabledChanged
         ? await waitForPluginRuntimeState(editingPlugin.id, patch.enabled === true)
         : await loadPlugins().then((): PluginRuntimeWaitStatus => 'ready');
+      mutation.assertConnection();
       if (status === 'ready') {
         notifyPluginResourcesChanged();
       }
@@ -326,6 +346,7 @@ export function PluginsPage() {
         );
       }
     } catch (err: unknown) {
+      if (isRequestCancelled(err)) return;
       showNotification(
         `${t('plugin_management.save_failed')}: ${getErrorMessage(
           err,
@@ -335,6 +356,7 @@ export function PluginsPage() {
       );
     } finally {
       setMutatingID('');
+      mutation.release();
     }
   };
 
@@ -463,7 +485,7 @@ export function PluginsPage() {
               onClick={() => void loadPlugins()}
               label={t('plugin_management.refresh_plugins')}
               refreshing={loading}
-              disabled={!connected || Boolean(mutatingID || deletingID)}
+              disabled={!connected || mutationBusy}
             />
             <Button variant="secondary" onClick={() => navigate('/plugin-store')}>
               <IconSidebarStore size={iconSize['16']} />
@@ -588,7 +610,6 @@ export function PluginsPage() {
             const github = plugin.metadata?.githubRepository.trim();
             const openingConfig = openingConfigID === plugin.id;
             const deletingPlugin = deletingID === plugin.id;
-            const actionBusy = Boolean(mutatingID || openingConfigID || deletingID);
             const version = plugin.metadata?.version;
             const author = plugin.metadata?.author;
 
@@ -723,7 +744,7 @@ export function PluginsPage() {
             <Button variant="secondary" onClick={closeConfigSheet} disabled={savingConfig}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={handleSaveConfig} loading={savingConfig}>
+            <Button onClick={handleSaveConfig} loading={savingConfig} disabled={actionBusy}>
               {t('common.save')}
             </Button>
           </div>

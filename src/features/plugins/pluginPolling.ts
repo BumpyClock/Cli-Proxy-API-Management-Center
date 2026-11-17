@@ -1,4 +1,5 @@
 import { pluginsApi, pluginStoreApi } from '@/services/api';
+import { guardConfigConnection } from '@/services/api/configValue';
 import type {
   PluginListEntry,
   PluginListResponse,
@@ -32,6 +33,7 @@ export async function waitForPluginState(
   timeoutMs = PLUGIN_STATE_TIMEOUT_MS,
   intervalMs = PLUGIN_STATE_INTERVAL_MS
 ): Promise<PluginStateWaitResult> {
+  const assertConnection = guardConfigConnection();
   const deadline = Date.now() + timeoutMs;
   let latest = await pluginsApi.list();
 
@@ -44,6 +46,7 @@ export async function waitForPluginState(
       return { response: latest, plugin, timedOut: true };
     }
     await wait(Math.min(intervalMs, Math.max(0, deadline - Date.now())));
+    assertConnection();
     latest = await pluginsApi.list();
   }
 }
@@ -55,6 +58,7 @@ export async function waitForPluginStoreState(
   timeoutMs = PLUGIN_STATE_TIMEOUT_MS,
   intervalMs = PLUGIN_STATE_INTERVAL_MS
 ): Promise<PluginStoreStateWaitResult> {
+  const assertConnection = guardConfigConnection();
   const deadline = Date.now() + timeoutMs;
   let latest = await pluginStoreApi.list();
 
@@ -69,6 +73,7 @@ export async function waitForPluginStoreState(
       return { response: latest, plugin, timedOut: true };
     }
     await wait(Math.min(intervalMs, Math.max(0, deadline - Date.now())));
+    assertConnection();
     latest = await pluginStoreApi.list();
   }
 }
