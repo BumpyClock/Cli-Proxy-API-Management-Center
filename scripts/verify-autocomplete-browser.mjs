@@ -121,22 +121,25 @@ try {
   await menu.waitFor({ state: 'detached' });
   await input.press('ArrowDown');
   await menu.waitFor({ state: 'visible' });
+  assert.deepEqual(await menu.getByRole('option').allTextContents(), ['Alpha', 'Beta', 'Gamma']);
   assert.equal(
     await input.evaluate((element) => {
       const active = element.getAttribute('aria-activedescendant');
-      return !active || !!document.getElementById(active);
+      return document.getElementById(active)?.textContent;
     }),
-    true,
-    'Reopening must not reference an option from the unfiltered list'
+    'Beta',
+    'Reopening must highlight the current selection in the full list'
   );
+  await input.fill(' ga ');
+  assert.deepEqual(await menu.getByRole('option').allTextContents(), ['Gamma']);
   await input.press('ArrowDown');
   assert.equal(
     await input.evaluate(
       (element) =>
         document.getElementById(element.getAttribute('aria-activedescendant'))?.textContent
     ),
-    'Beta',
-    'Keyboard navigation must reach the only remaining option'
+    'Gamma',
+    'Keyboard navigation must reach the only option matching typed text'
   );
   await input.press('Escape');
   await menu.waitFor({ state: 'detached' });
@@ -183,6 +186,12 @@ try {
       await settle();
       assert.equal(await dialog.isVisible(), true, 'First Escape must only close the menu');
     } else {
+      if (scenario.includes('no-match')) {
+        await menu.waitFor({ state: 'visible' });
+        assert.equal(await menu.getByRole('option').count(), 3);
+        await input.fill('Still no matching model');
+      }
+      await menu.waitFor({ state: 'detached' });
       assert.equal(await menu.count(), 0);
     }
     await input.press('Escape');

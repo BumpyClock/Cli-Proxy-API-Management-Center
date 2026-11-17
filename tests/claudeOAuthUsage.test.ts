@@ -296,10 +296,24 @@ describe('Claude read-only amount rendering', () => {
     });
     expect(markup).toContain('Disabled');
     expect(markup).toContain('Spent $0.00 / Limit $0.00');
-    expect(markup).toContain('Disabled by user');
+    expect(markup).not.toContain('Disabled by user');
     expect(markup).toContain('Spending limit reached');
     expect(markup).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
     expect(markup).not.toContain('<script>');
+  });
+
+  test.each([
+    { userDisabled: true, disabledReason: null },
+    { userDisabled: null, disabledReason: 'user_disabled' },
+  ])('uses one disabled status when the user turns off extra usage (%o)', (offSignal) => {
+    const markup = render({
+      ...quota,
+      extraUsage: { ...snapshot.extraUsage!, isEnabled: true, ...offSignal },
+    });
+    expect(markup).toContain('>Disabled<');
+    expect(markup).not.toContain('>Enabled<');
+    expect(markup).not.toContain('Disabled by user');
+    expect(markup).not.toContain('user_disabled');
   });
 
   test('renders unknown currency amounts as unknown rather than zero', () => {

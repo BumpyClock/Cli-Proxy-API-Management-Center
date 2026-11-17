@@ -24,6 +24,7 @@ import {
   normalizeStringValue,
   parseAntigravityPayload,
   buildAntigravityQuotaGroups,
+  compareAntigravityQuotaBuckets,
   createStatusError,
   getStatusFromError,
   isAntigravityFile,
@@ -141,6 +142,8 @@ const fetchAntigravityQuota = async (
   let lastStatus: number | undefined;
   let priorityStatus: number | undefined;
   let hadSuccess = false;
+  const collectedGroups = new Map<string, AntigravityQuotaGroup>();
+  let serverTimeOffsetMs: number | null = null;
 
   for (const url of ANTIGRAVITY_QUOTA_URLS) {
     try {
@@ -176,11 +179,24 @@ const fetchAntigravityQuota = async (
         continue;
       }
 
-      return {
-        groups,
-        subscription: await subscriptionPromise,
-        serverTimeOffsetMs: resolveResponseServerTimeOffsetMs(result.header),
-      };
+      if (collectedGroups.size === 0) {
+        serverTimeOffsetMs = resolveResponseServerTimeOffsetMs(result.header);
+      }
+      for (const group of groups) {
+        const existing = collectedGroups.get(group.id);
+        if (!existing) {
+          collectedGroups.set(group.id, group);
+          continue;
+        }
+        const bucketIds = new Set(existing.buckets.map((bucket) => bucket.id));
+        existing.buckets.push(...group.buckets.filter((bucket) => !bucketIds.has(bucket.id)));
+        existing.buckets.sort(compareAntigravityQuotaBuckets);
+      }
+
+      const hasGemini = Array.from(collectedGroups.values()).some((group) =>
+        group.buckets.some((bucket) => bucket.id.toLowerCase().startsWith('gemini-'))
+      );
+      if (hasGemini) break;
     } catch (err: unknown) {
       lastError = err instanceof Error ? err.message : t('common.unknown_error');
       const status = getStatusFromError(err);
@@ -194,7 +210,11 @@ const fetchAntigravityQuota = async (
   }
 
   if (hadSuccess) {
-    return { groups: [], subscription: await subscriptionPromise, serverTimeOffsetMs: null };
+    return {
+      groups: Array.from(collectedGroups.values()),
+      subscription: await subscriptionPromise,
+      serverTimeOffsetMs,
+    };
   }
 
   throw createStatusError(lastError || t('common.unknown_error'), priorityStatus ?? lastStatus);

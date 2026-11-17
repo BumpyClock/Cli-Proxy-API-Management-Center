@@ -13,6 +13,12 @@ This is a React 19 + TypeScript + Vite management frontend for CLI Proxy API, no
 - `src/assets/`: bundled assets, including provider icons in `icons/`.
 - `src/i18n/locales/`: `en.json`, `zh-CN.json`, `zh-TW.json`, and `ru.json`; fallback language is `zh-CN`. Update all four files when adding or changing translation keys, including accessible labels.
 
+## Upstream Sync
+
+- Last complete upstream merge: [`4530da27` (v1.24.2)](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/commit/4530da271ba2e89810d4dccebc57f3091afa590a). This matches `.cpamc-fork-upstream.env`.
+- Latest selective backport: [`3d893ec8` (v1.28.0)](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/commit/3d893ec88938c3ceef200a15be6af8cf972564b3) for autocomplete browsing. This batch also includes [`7a662031`](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/commit/7a662031df9810f7b4168583529dfdd34a8779a8) for partial Antigravity quota and [`d651f70b`](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/commit/d651f70be410500d2f61b32601ead6dc12db4fb8) for Claude extra-usage status.
+- Last upstream tip compared: [`706c7c6f` (v1.28.1)](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/commit/706c7c6f3308c1b0cceb880eec092be911bf8a80). Do not treat intermediate commits as merged. Backport compatible changes without replacing this fork's workspaces or design system. Update this record when syncing again.
+
 ## Build, Test, and Development Commands
 
 Use Bun; `package.json` pins `bun@1.3.14`, and CI uses Node.js 24. Keep dependency changes consistent with `bun.lock`; do not introduce another package manager's lockfile.

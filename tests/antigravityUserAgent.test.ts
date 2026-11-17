@@ -30,7 +30,14 @@ describe('Antigravity Hub request identity', () => {
       const body =
         request.url === ANTIGRAVITY_CODE_ASSIST_URL
           ? { currentTier: { id: 'free-tier' } }
-          : { groups: [{ displayName: 'Models', buckets: [{ remainingFraction: 0.5 }] }] };
+          : {
+              groups: [
+                {
+                  displayName: 'Gemini Models',
+                  buckets: [{ bucketId: 'gemini-weekly', remainingFraction: 0.5 }],
+                },
+              ],
+            };
       return { statusCode: 200, header: {}, body, bodyText: JSON.stringify(body) };
     };
 
