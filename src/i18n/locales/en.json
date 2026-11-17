@@ -1837,6 +1837,8 @@
     "models_loading": "Loading available models...",
     "models_empty": "No models returned by /models",
     "models_error": "Failed to load model list",
+    "models_catalog_refresh_failed": "Failed to refresh the server model catalog",
+    "models_catalog_readback_failed": "Catalog refreshed, but the model list could not be loaded",
     "version_check_button": "Check for updates",
     "version_update_available": "An update is available: {{version}}",
     "version_is_latest": "You are on the latest version",

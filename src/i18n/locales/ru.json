@@ -1864,6 +1864,8 @@
     "models_loading": "Загрузка доступных моделей...",
     "models_empty": "Сервис /models не вернул модели",
     "models_error": "Не удалось загрузить список моделей",
+    "models_catalog_refresh_failed": "Не удалось обновить каталог моделей на сервере",
+    "models_catalog_readback_failed": "Каталог обновлён, но не удалось загрузить список моделей",
     "version_check_button": "Проверить обновления",
     "version_update_available": "Доступно обновление: {{version}}",
     "version_is_latest": "Установлена последняя версия",
