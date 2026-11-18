@@ -3,6 +3,7 @@ import { apiClient } from '@/services/api/client';
 import { pluginsApi } from '@/services/api/plugins';
 import { oauthApi } from '@/services/api/oauth';
 import { buildPluginOAuthProviderCards } from '@/pages/pluginOAuthEntries';
+import { loadOAuthProviderCards } from '@/pages/oauthProviderCards';
 import { createOAuthAttempts } from '@/pages/oauthAttempts';
 
 const spies: Array<{ mockRestore(): void }> = [];
@@ -38,6 +39,37 @@ const multiPlugin = () =>
       { identifier: 'portal-b', name: 'Portal B', logo: 'https://portal.example/b.svg' },
     ],
   });
+
+test('waits for plugin precedence before publishing a colliding Plus provider', async () => {
+  const plugins = Promise.withResolvers<{ plugins: unknown[] }>();
+  const get = spyOn(apiClient, 'get').mockImplementation((path) =>
+    path === '/plugins' ? plugins.promise : Promise.resolve({ providers: ['github-copilot'] })
+  );
+  spies.push(get);
+  let published = false;
+  const cards = loadOAuthProviderCards(apiBase, new AbortController().signal).then((data) => {
+    published = true;
+    return data.cards;
+  });
+  await Promise.resolve();
+  expect(published).toBe(false);
+  plugins.resolve({ plugins: [rawPlugin({ oauth_provider: 'github-copilot' })] });
+  expect((await cards).filter(({ id }) => id === 'github-copilot')).toEqual([
+    expect.objectContaining({ kind: 'plugin', callback: 'standard' }),
+  ]);
+});
+
+test('does not offer a potentially shadowed Plus card if plugin discovery fails', async () => {
+  const get = spyOn(apiClient, 'get').mockImplementation((path) =>
+    path === '/plugins'
+      ? Promise.reject({ status: 503 })
+      : Promise.resolve({ providers: ['github-copilot'] })
+  );
+  spies.push(get);
+  const result = await loadOAuthProviderCards(apiBase, new AbortController().signal);
+  expect(result.failed).toBe(true);
+  expect(result.cards.some(({ id }) => id === 'github-copilot')).toBe(false);
+});
 
 describe('plugin OAuth entry normalization', () => {
   test('keeps current single-provider and legacy plugin-id login working', async () => {

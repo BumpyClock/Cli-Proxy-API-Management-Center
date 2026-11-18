@@ -8,6 +8,8 @@ import { providersApi } from '../src/services/api/providers.ts';
 import { authFilesApi } from '../src/services/api/authFiles.ts';
 import { pluginsApi } from '../src/services/api/plugins.ts';
 import { usageApi } from '../src/services/api/usage.ts';
+import { copilotApi } from '../src/services/api/copilot.ts';
+import { oauthApi } from '../src/services/api/oauth.ts';
 import { apiCallApi } from '../src/services/api/apiCall.ts';
 import { apiKeyUsageApi } from '../src/services/api/apiKeyUsage.ts';
 
@@ -131,10 +133,57 @@ try {
   await pluginsApi.list();
   passed('native plugin configuration replacement and cleared-field removal');
 
-  assert.deepEqual(await usageApi.getUsage(), { supported: false });
+  const usageBefore = await usageApi.getUsage();
+  assert.equal(usageBefore.usage.total_requests, 0);
   assert.equal(await usageApi.getStatisticsEnabled(), true);
+  const backup = await usageApi.exportUsage();
+  assert.equal(JSON.parse(await backup.text()).version, 1);
+  const uploadBackup = (json) =>
+    usageApi.importUsage(new Blob([json], { type: 'application/json' }));
+  const { added } = await uploadBackup(
+    '{"version":1,"usage":{"total_requests":3,"success_count":3,"total_tokens":9007199254740993}}'
+  );
+  assert.equal(added, 3);
+  await assert.rejects(() => uploadBackup('{"usage":{}}'), { status: 400 });
+  const exported = await (await usageApi.exportUsage()).text();
+  assert.match(exported, /"total_tokens":9007199254740993/);
+  await usageApi.importUsage(backup);
   await apiKeyUsageApi.getUsage();
-  passed('unsupported usage snapshots and supported API-key activity without queue reads');
+  passed('native usage snapshot, backup restore and API-key activity without queue reads');
+
+  assert.deepEqual(await oauthApi.listPlusProviders(), [
+    'cursor',
+    'github-copilot',
+    'gitlab',
+    'iflow',
+    'kilo',
+    'kiro',
+    'qoder',
+  ]);
+  const iflow = await apiClient.get('/oauth/auth-url', { params: { provider: 'iflow' } });
+  try {
+    assert(iflow.url && iflow.state);
+    assert.equal((await oauthApi.getAuthStatus(iflow.state)).status, 'wait');
+  } finally {
+    assert.equal((await oauthApi.cancelSession(iflow.state)).cancelled, true);
+  }
+  const callback = await oauthApi.startAuth('iflow');
+  const localCallback = new URL('http://127.0.0.1:11451');
+  localCallback.searchParams.set('state', callback.state);
+  localCallback.searchParams.set('error', 'fixture-denied');
+  const forward = await fetch(localCallback, { redirect: 'manual' });
+  const destination = new URL(forward.headers.get('location'));
+  assert.equal(destination.pathname, '/v8/management/oauth/callback');
+  assert.equal((await fetch(destination)).status, 200);
+  let status;
+  for (let i = 0; i < 12; i += 1) {
+    status = await oauthApi.getAuthStatus(callback.state);
+    if (status.status !== 'wait') break;
+    await Bun.sleep(100);
+  }
+  assert.equal(status.status, 'error');
+  await assert.rejects(() => copilotApi.getQuota('unregistered-index'), { status: 404 });
+  passed('native Plus login discovery, cancellation and callback, and exact Copilot selection');
 
   let requests = 0;
   probe = Bun.serve({

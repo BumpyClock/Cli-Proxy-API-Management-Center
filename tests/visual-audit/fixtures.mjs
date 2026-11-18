@@ -110,7 +110,7 @@ export function buildFixtures(now = Date.now()) {
     '/config': config,
     '/credentials': () => ({ files, observed_at: new Date().toISOString() }),
     '/config/observability/usage/usage-statistics-enabled': true,
-    '/usage': {
+    '/observability/usage/snapshot': {
       statistics_enabled: true,
       usage: {
         total_requests: 480,

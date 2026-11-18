@@ -139,20 +139,49 @@ try {
   const outDir = resolve(process.env.CPAMC_SCREENSHOTS ?? 'docs/screenshots/management-v8');
   await mkdir(outDir, { recursive: true });
   await page.getByRole('link', { name: 'Usage Statistics', exact: true }).first().click();
-  await page.getByRole('heading', { name: 'Usage statistics unavailable', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Export backup', exact: true }).waitFor();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export backup', exact: true }).click();
+  assert.match((await downloadPromise).suggestedFilename(), /^usage-export-.*\.json$/);
+  const baselineBackup = await (await request('/observability/usage/export')).json();
+  const usage = { total_requests: 4, success_count: 4, total_tokens: 21 };
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Import backup', exact: true }).click();
+  await (
+    await chooserPromise
+  ).setFiles({
+    name: 'usage-fixture.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({ version: 1, usage })),
+  });
+  const importDialog = page.getByRole('dialog', { name: 'Import backup' });
+  await importDialog.getByText(/replaces all current usage statistics/).waitFor();
+  assert.equal(
+    (await (await request('/observability/usage/snapshot')).json()).usage.total_requests,
+    baselineBackup.usage.total_requests
+  );
+  await importDialog.getByRole('button', { name: 'Import backup', exact: true }).click();
+  await page.getByText('Restored 4 requests from the backup.').waitFor();
+  await request('/observability/usage/import', {
+    method: 'POST',
+    body: JSON.stringify(baselineBackup),
+  });
   await page.screenshot({ path: resolve(outDir, 'usage-desktop.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await settlePhoneNavigation();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   await page.screenshot({ path: resolve(outDir, 'usage-mobile.png'), fullPage: true });
-  passed('unsupported native usage is explicit on desktop and mobile, without queue reads');
+  passed('native usage, backup export and confirmed restore work without queue reads');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole('link', { name: 'OAuth Login', exact: true }).first().click();
   await page.getByRole('button', { name: 'Log in with Devin', exact: true }).waitFor();
-  assert.equal(
-    await page.getByRole('button', { name: 'Log in with Qoder', exact: true }).count(),
-    0
-  );
+  await page.getByRole('button', { name: 'Log in with Qoder', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Log in with GitHub Copilot', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Log in with iFlow', exact: true }).click();
+  const iflowRow = page.getByRole('article', { name: 'iFlow OAuth' });
+  await iflowRow.getByRole('button', { name: 'Open Link', exact: true }).waitFor();
+  await iflowRow.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await iflowRow.getByRole('button', { name: 'Cancel', exact: true }).waitFor({ state: 'hidden' });
   assert.equal(
     await page.getByRole('button', { name: 'Log in with Kimi China', exact: true }).count(),
     1
@@ -161,7 +190,7 @@ try {
     await page.getByRole('button', { name: 'Log in with Kimi International', exact: true }).count(),
     1
   );
-  passed('native OAuth choices retain regional logins without fabricating Qoder support');
+  passed('native OAuth choices retain regional logins and support Plus login and cancellation');
 
   const before = initial['api-keys']?.meta ?? [];
   let configEdited = false;

@@ -966,6 +966,19 @@
     "model_count_other": "{{count}} 条别名"
   },
   "auth_login": {
+    "plus_oauth_hint": "授权 {{name}} 以保存凭据。",
+    "plus_oauth_start_error": "无法启动 {{name}} 登录：",
+    "oauth_login_method": "{{name}} 登录方式",
+    "oauth_cancelled": "登录已取消。",
+    "oauth_cancel_error": "无法取消登录：",
+    "kiro_callback_hint": "在浏览器中授权后，复制完整的 kiro:// 回调地址，然后粘贴到这里。",
+    "oauth_provider_discovery_failed": "无法加载额外的提供商登录方式。",
+    "plus_import_gitlab": "导入 GitLab 令牌",
+    "plus_import_iflow": "导入 iFlow Cookie",
+    "plus_secret_gitlab": "个人访问令牌",
+    "plus_secret_iflow": "Cookie",
+    "plus_import_success": "凭据已保存",
+    "plus_import_error": "无法导入凭据",
     "devin_oauth_cancel": "取消 Devin 登录",
     "devin_oauth_cancelled": "已取消 Devin 登录。",
     "devin_oauth_cancel_error": "取消 Devin 登录失败：",
@@ -2200,6 +2213,12 @@
     }
   },
   "usage_stats": {
+    "export_backup": "导出备份",
+    "import_backup": "导入备份",
+    "export_failed": "无法导出用量数据",
+    "import_failed": "无法导入用量备份",
+    "import_done": "已从备份恢复 {{added}} 条请求。",
+    "import_confirm": "这会用所选备份替换当前全部用量数据。如需保留当前数据，请先导出。",
     "title": "使用统计",
     "subtitle": "来自代理运行时的请求和 Token 使用情况。",
     "refresh": "刷新使用统计",

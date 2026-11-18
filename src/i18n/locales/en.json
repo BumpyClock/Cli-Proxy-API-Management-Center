@@ -982,6 +982,19 @@
     "model_count_other": "{{count}} aliases"
   },
   "auth_login": {
+    "plus_oauth_hint": "Authorize {{name}} to save a credential.",
+    "plus_oauth_start_error": "Failed to start {{name}} login:",
+    "oauth_login_method": "Login method for {{name}}",
+    "oauth_cancelled": "Login cancelled.",
+    "oauth_cancel_error": "Could not cancel the login:",
+    "kiro_callback_hint": "Copy the full kiro:// callback URI after authorizing in your browser, then paste it here.",
+    "oauth_provider_discovery_failed": "Could not load the additional provider login methods.",
+    "plus_import_gitlab": "Import GitLab token",
+    "plus_import_iflow": "Import iFlow cookie",
+    "plus_secret_gitlab": "Personal access token",
+    "plus_secret_iflow": "Cookie",
+    "plus_import_success": "Credential saved",
+    "plus_import_error": "Could not import the credential",
     "devin_oauth_cancel": "Cancel Devin Login",
     "devin_oauth_cancelled": "Devin login cancelled.",
     "devin_oauth_cancel_error": "Failed to cancel Devin login:",
@@ -2220,6 +2233,12 @@
     }
   },
   "usage_stats": {
+    "export_backup": "Export backup",
+    "import_backup": "Import backup",
+    "export_failed": "Could not export usage",
+    "import_failed": "Could not import the usage backup",
+    "import_done": "Restored {{added}} requests from the backup.",
+    "import_confirm": "This replaces all current usage statistics with the selected backup. Export the current statistics first if you want to keep them.",
     "title": "Usage Statistics",
     "subtitle": "Request and token usage from the proxy runtime.",
     "refresh": "Refresh usage",

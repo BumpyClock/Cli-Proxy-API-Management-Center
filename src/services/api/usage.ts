@@ -10,15 +10,27 @@ const readStatisticsFlag = (payload: unknown): boolean | null =>
 export const usageApi = {
   async getUsage(): Promise<UsageResponse> {
     try {
-      return await apiClient.get<UsageResponse>('/usage', { timeout: USAGE_TIMEOUT_MS });
+      return await apiClient.get<UsageResponse>('/observability/usage/snapshot', {
+        timeout: USAGE_TIMEOUT_MS,
+      });
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-        // Original v8 has no Plus snapshot endpoint. Never consume the destructive usage queue.
         return { supported: false };
       }
       throw error;
     }
   },
+  exportUsage: async () => {
+    const data = await apiClient.get<ArrayBuffer>('/observability/usage/export', {
+      responseType: 'arraybuffer',
+      timeout: USAGE_TIMEOUT_MS,
+    });
+    return new Blob([data], { type: 'application/json' });
+  },
+  importUsage: (backup: Blob) =>
+    apiClient.post<{ added: number }>('/observability/usage/import', backup, {
+      timeout: USAGE_TIMEOUT_MS,
+    }),
   /**
    * Whether the server records per-request usage statistics. Null when the backend
    * does not expose the flag (older or upstream servers answer 404).

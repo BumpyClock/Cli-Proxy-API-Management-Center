@@ -83,9 +83,8 @@ export function normalizeCopilotQuota(payload: unknown): CopilotQuotaData {
 export const copilotApi = {
   async getQuota(authIndex: unknown): Promise<CopilotQuotaData> {
     const index = normalizeAuthIndex(authIndex);
-    // The backend defaults to another credential when the index is absent.
     if (index === null) throw new CopilotQuotaError('missing_auth_index');
-    const payload = await apiClient.get<unknown>('/copilot-quota', {
+    const payload = await apiClient.get<unknown>('/credentials/quota/copilot', {
       params: { auth_index: index },
     });
     return normalizeCopilotQuota(payload);
