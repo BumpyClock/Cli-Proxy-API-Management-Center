@@ -98,7 +98,7 @@ PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs \
 node scripts/verify-management-v8-browser.mjs
 ```
 
-Set `CHROME_EXECUTABLE` if needed. The browser uses an isolated context and real backend responses. It tests wrong-key feedback, login, usage and backup export on desktop/mobile, Plus OAuth discovery and cancellation, model-form metadata preservation, replacement-row identity, a delayed initial YAML response and conditional visual saves. It delays one real YAML response to exercise request ownership; it does not fabricate API data or inject application stores. Screenshots are saved under `docs/screenshots/management-v8/` or `CPAMC_SCREENSHOTS` if set.
+Set `CHROME_EXECUTABLE` if needed. The browser uses an isolated context and a real backend. It tests wrong-key feedback, login, usage backups on desktop/mobile, Plus OAuth callback recovery, model-form metadata preservation, replacement-row identity, and conditional visual saves. It simulates one OAuth polling failure and delays one real YAML response to exercise request ownership. Screenshots are saved under `docs/screenshots/management-v8/` or `CPAMC_SCREENSHOTS` if set.
 
 The delayed-load regression was mutation-checked by removing its ownership guard and observing the expected lost-edit failure, then restoring the guard. Autocomplete retains its separate Playwright check, `PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs bun scripts/verify-autocomplete-browser.mjs`.
 

@@ -177,10 +177,32 @@ try {
   await page.getByRole('button', { name: 'Log in with Devin', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Log in with Qoder', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Log in with GitHub Copilot', exact: true }).waitFor();
+  await page.route(
+    '**/v8/management/oauth/status?*',
+    (route) =>
+      route.fulfill({
+        status: 503,
+        headers: { 'Access-Control-Allow-Origin': origin },
+        json: { error: 'Fixture status interrupted' },
+      }),
+    { times: 1 }
+  );
+  const startResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname.endsWith('/oauth/auth-url')
+  );
   await page.getByRole('button', { name: 'Log in with iFlow', exact: true }).click();
+  const iflow = await (await startResponse).json();
   const iflowRow = page.getByRole('article', { name: 'iFlow OAuth' });
-  await iflowRow.getByRole('button', { name: 'Open Link', exact: true }).waitFor();
-  await iflowRow.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await iflowRow.getByText(/Fixture status interrupted/).waitFor();
+  const callback = new URL('http://127.0.0.1:11451');
+  callback.searchParams.set('state', iflow.state);
+  callback.searchParams.set('error', 'fixture-denied');
+  await iflowRow.getByRole('textbox', { name: 'Callback URL', exact: true }).fill(callback.href);
+  const callbackResult = page.waitForResponse((response) =>
+    new URL(response.url()).pathname.endsWith('/oauth/callback')
+  );
+  await iflowRow.getByRole('button', { name: 'Submit Callback URL', exact: true }).click();
+  assert.equal((await callbackResult).status(), 200);
   await iflowRow.getByRole('button', { name: 'Cancel', exact: true }).waitFor({ state: 'hidden' });
   assert.equal(
     await page.getByRole('button', { name: 'Log in with Kimi China', exact: true }).count(),
@@ -190,7 +212,10 @@ try {
     await page.getByRole('button', { name: 'Log in with Kimi International', exact: true }).count(),
     1
   );
-  passed('native OAuth choices retain regional logins and support Plus login and cancellation');
+  passed(
+    'native OAuth choices retain regional logins and Plus callback recovery after a status error'
+  );
+  await dismissNotices();
 
   const before = initial['api-keys']?.meta ?? [];
   let configEdited = false;
@@ -285,6 +310,10 @@ try {
   const diff = page.getByRole('dialog');
   await diff.waitFor();
   configEdited = true;
+  const savedNotice = page
+    .getByRole('status')
+    .filter({ hasText: 'Configuration saved successfully' })
+    .waitFor();
   await diff.getByRole('button', { name: 'Confirm Save', exact: true }).click();
   await diff.waitFor({ state: 'detached' });
   assert.equal(
@@ -297,7 +326,7 @@ try {
     .waitFor({ state: 'detached' });
   assert.equal(await debug.isChecked(), true);
   assert.deepEqual(yamlWrites, [true]);
-  await page.getByRole('status').filter({ hasText: 'Configuration saved successfully' }).waitFor();
+  await savedNotice;
   assert.equal(await page.getByRole('alert').count(), 0);
   await dismissNotices();
   await page.screenshot({ path: resolve(outDir, 'config-desktop.png'), fullPage: true });

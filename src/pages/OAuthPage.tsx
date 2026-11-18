@@ -46,6 +46,14 @@ interface ProviderState {
   callbackError?: string;
 }
 
+function callbackUnavailable(state: ProviderState | undefined): boolean {
+  return (
+    !state?.state ||
+    Boolean(state.cancelling) ||
+    (state.callbackMode === 'devin' && state.status !== 'waiting')
+  );
+}
+
 interface VertexImportResult {
   projectId?: string;
   email?: string;
@@ -433,12 +441,7 @@ export function OAuthPage() {
     const provider = card.id;
     const attempt = attempts.current.get(provider);
     if (!attempt?.isCurrent()) return;
-    if (
-      card.cancellable &&
-      (states[provider]?.cancelling || states[provider]?.status !== 'waiting')
-    ) {
-      return;
-    }
+    if (callbackUnavailable(states[provider])) return;
     const callbackInput = (states[provider]?.callbackUrl || '').trim();
     if (!callbackInput) {
       showNotification(
@@ -598,7 +601,7 @@ export function OAuthPage() {
     const method = methods?.find((entry) => entry.value === state.method) ?? methods?.[0];
     const callbackMode = state.callbackMode;
     const canSubmitCallback = Boolean(callbackMode && state.url);
-    const callbackDisabled = cancellable && (state.cancelling || state.status !== 'waiting');
+    const callbackDisabled = callbackUnavailable(state);
     const loginButtonLabel =
       state.status === 'success'
         ? t('auth_login.login_another_account')

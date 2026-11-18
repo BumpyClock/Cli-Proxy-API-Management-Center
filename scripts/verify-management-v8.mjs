@@ -148,6 +148,7 @@ try {
   const exported = await (await usageApi.exportUsage()).text();
   assert.match(exported, /"total_tokens":9007199254740993/);
   await usageApi.importUsage(backup);
+  assert.equal((await usageApi.getUsage()).usage.total_requests, usageBefore.usage.total_requests);
   await apiKeyUsageApi.getUsage();
   passed('native usage snapshot, backup restore and API-key activity without queue reads');
 
