@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDateTimeValue, isoTitle } from '@/utils/format';
@@ -20,6 +20,7 @@ import {
 } from './usage-page-request-guard';
 import styles from './UsagePage.module.scss';
 import { chart } from '@/design-system';
+import { UsageBackupActions } from './UsageBackupActions';
 
 const STALE_AFTER_MS = 5 * 60_000;
 
@@ -31,6 +32,7 @@ interface UsagePageContentProps {
   lastUpdated: number | null;
   now: number;
   onRefresh: () => void;
+  backupActions?: ReactNode;
 }
 
 function dailyPoints(usage: UsageSnapshot | undefined): TimeSeriesPoint[] {
@@ -81,6 +83,7 @@ export function UsagePageContent({
   lastUpdated,
   now,
   onRefresh,
+  backupActions,
 }: UsagePageContentProps) {
   const { t, i18n } = useTranslation();
   const usage = payload?.usage;
@@ -156,11 +159,14 @@ export function UsagePageContent({
           </div>
         }
         actions={
-          <RefreshButton
-            onClick={onRefresh}
-            label={t(error || ageStale ? 'redesign.usage.retry' : 'usage_stats.refresh')}
-            refreshing={loading}
-          />
+          <>
+            {backupActions}
+            <RefreshButton
+              onClick={onRefresh}
+              label={t(error || ageStale ? 'redesign.usage.retry' : 'usage_stats.refresh')}
+              refreshing={loading}
+            />
+          </>
         }
       />
 
@@ -483,7 +489,7 @@ export function UsagePage() {
           setPayload(result.payload.value);
           setLastUpdated(null);
         } else if (result.enabled.status === 'fulfilled' && result.enabled.value !== true) {
-          setPayload(null);
+          setPayload(result.payload.status === 'fulfilled' ? result.payload.value : null);
           setLastUpdated(null);
         } else if (result.enabled.status === 'fulfilled' && result.payload.status === 'fulfilled') {
           const updated = Date.now();
@@ -531,6 +537,7 @@ export function UsagePage() {
       lastUpdated={lastUpdated}
       now={now}
       onRefresh={() => void loadUsage().catch(() => undefined)}
+      backupActions={payload?.usage && <UsageBackupActions onRestored={loadUsage} />}
     />
   );
 }

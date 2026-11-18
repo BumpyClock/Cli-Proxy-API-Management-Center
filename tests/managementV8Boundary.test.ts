@@ -161,7 +161,7 @@ describe('v8 OAuth and absent optional capabilities', () => {
     const get = spyOn(apiClient, 'get').mockRejectedValue({ status: 404 });
     mocks.push(get);
     expect(await usageApi.getUsage()).toEqual({ supported: false });
-    expect(get.mock.calls.map(([path]) => path)).toEqual(['/usage']);
+    expect(get.mock.calls.map(([path]) => path)).toEqual(['/observability/usage/snapshot']);
     get.mockResolvedValue(true);
     expect(await usageApi.getStatisticsEnabled()).toBe(true);
     expect(get.mock.calls.at(-1)?.[0]).toBe('/config/observability/usage/usage-statistics-enabled');

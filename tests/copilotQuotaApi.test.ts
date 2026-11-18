@@ -14,7 +14,7 @@ describe('Copilot quota Management API', () => {
       const get = spyOn(apiClient, 'get').mockResolvedValue(copilotQuotaResponse);
       try {
         const data = await copilotApi.getQuota(index);
-        expect(get).toHaveBeenCalledWith('/copilot-quota', {
+        expect(get).toHaveBeenCalledWith('/credentials/quota/copilot', {
           params: { auth_index: String(index).trim() },
         });
         expect(data.plan).toBe('individual');
@@ -54,11 +54,11 @@ describe('Copilot quota Management API', () => {
     const get = spyOn(apiClient, 'get').mockResolvedValue(copilotQuotaResponse);
     try {
       await COPILOT_CONFIG.fetchQuota({ name: 'copilot.json', authIndex: 'chosen' }, t);
-      expect(get).toHaveBeenLastCalledWith('/copilot-quota', {
+      expect(get).toHaveBeenLastCalledWith('/credentials/quota/copilot', {
         params: { auth_index: 'chosen' },
       });
       await COPILOT_CONFIG.fetchQuota({ name: 'legacy.json', auth_index: 'legacy-index' }, t);
-      expect(get).toHaveBeenLastCalledWith('/copilot-quota', {
+      expect(get).toHaveBeenLastCalledWith('/credentials/quota/copilot', {
         params: { auth_index: 'legacy-index' },
       });
     } finally {

@@ -1,3 +1,4 @@
+import { PROVIDERS } from '@/pages/oauthProviderCards';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import {
@@ -64,13 +65,11 @@ describe('Muse (Meta) provider and device OAuth', () => {
 
   test('registers device-code UI but not a manual OAuth callback', () => {
     const source = readFileSync('src/pages/OAuthPage.tsx', 'utf8');
-    expect(source).toContain("id: 'meta'");
+    const meta = PROVIDERS.find(({ id }) => id === 'meta');
+    expect(meta).toBeDefined();
+    expect(meta?.callback).toBeUndefined();
     expect(source).toContain('userCode: res.user_code');
     expect(source).toContain("t('auth_login.device_code_copy')");
-    const callbackProviders = source.match(
-      /const CALLBACK_SUPPORTED = new Set<string>\(([^;]+)\);/
-    );
-    expect(callbackProviders?.[1]).not.toContain("'meta'");
     for (const locale of ['en', 'zh-CN', 'zh-TW', 'ru']) {
       const translations = JSON.parse(readFileSync(`src/i18n/locales/${locale}.json`, 'utf8'));
       for (const suffix of [

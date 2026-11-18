@@ -966,6 +966,19 @@
     "model_count_other": "{{count}} 條別名"
   },
   "auth_login": {
+    "plus_oauth_hint": "授權 {{name}} 以儲存憑證。",
+    "plus_oauth_start_error": "無法啟動 {{name}} 登入：",
+    "oauth_login_method": "{{name}} 登入方式",
+    "oauth_cancelled": "登入已取消。",
+    "oauth_cancel_error": "無法取消登入：",
+    "kiro_callback_hint": "在瀏覽器中授權後，複製完整的 kiro:// 回呼網址，再貼到這裡。",
+    "oauth_provider_discovery_failed": "無法載入額外的供應商登入方式。",
+    "plus_import_gitlab": "匯入 GitLab 權杖",
+    "plus_import_iflow": "匯入 iFlow Cookie",
+    "plus_secret_gitlab": "個人存取權杖",
+    "plus_secret_iflow": "Cookie",
+    "plus_import_success": "憑證已儲存",
+    "plus_import_error": "無法匯入憑證",
     "devin_oauth_cancel": "取消 Devin 登入",
     "devin_oauth_cancelled": "已取消 Devin 登入。",
     "devin_oauth_cancel_error": "取消 Devin 登入失敗：",
@@ -2226,6 +2239,12 @@
     }
   },
   "usage_stats": {
+    "export_backup": "匯出備份",
+    "import_backup": "匯入備份",
+    "export_failed": "無法匯出用量資料",
+    "import_failed": "無法匯入用量備份",
+    "import_done": "已從備份還原 {{added}} 筆請求。",
+    "import_confirm": "這會用選取的備份取代目前所有用量資料。如需保留現有資料，請先匯出。",
     "title": "使用統計",
     "subtitle": "來自代理執行階段的請求與 Token 使用情況。",
     "refresh": "重新整理使用統計",

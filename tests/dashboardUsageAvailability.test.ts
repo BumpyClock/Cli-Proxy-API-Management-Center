@@ -15,7 +15,7 @@ afterEach(() => mocks.splice(0).forEach((mock) => mock.mockRestore()));
 for (const enabled of [false, true]) {
   test(`an absent snapshot wins over the ${enabled} collection setting on the dashboard`, async () => {
     const get = spyOn(apiClient, 'get').mockImplementation(async (path) => {
-      if (path === '/usage') throw Object.assign(new Error('not found'), { status: 404 });
+      if (path === '/observability/usage/snapshot') throw Object.assign(new Error('not found'), { status: 404 });
       return enabled;
     });
     mocks.push(get);
@@ -49,7 +49,7 @@ for (const enabled of [false, true]) {
   test(`a supported snapshot preserves the ${enabled} collection state`, async () => {
     const snapshot = { total_requests: 3 };
     const get = spyOn(apiClient, 'get').mockImplementation(async (path) =>
-      path === '/usage' ? { usage: snapshot } : enabled
+      path === '/observability/usage/snapshot' ? { usage: snapshot } : enabled
     );
     mocks.push(get);
     const usage = await loadDashboardUsage();

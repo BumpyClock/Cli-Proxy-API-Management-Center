@@ -1016,6 +1016,19 @@
     "model_count_other": "{{count}} псевдонима"
   },
   "auth_login": {
+    "plus_oauth_hint": "Авторизуйтесь в {{name}}, чтобы сохранить учётные данные.",
+    "plus_oauth_start_error": "Не удалось начать вход в {{name}}:",
+    "oauth_login_method": "Способ входа для {{name}}",
+    "oauth_cancelled": "Вход отменён.",
+    "oauth_cancel_error": "Не удалось отменить вход:",
+    "kiro_callback_hint": "После авторизации в браузере скопируйте полный адрес kiro:// и вставьте его сюда.",
+    "oauth_provider_discovery_failed": "Не удалось загрузить дополнительные способы входа.",
+    "plus_import_gitlab": "Импорт токена GitLab",
+    "plus_import_iflow": "Импорт cookie iFlow",
+    "plus_secret_gitlab": "Персональный токен доступа",
+    "plus_secret_iflow": "Cookie",
+    "plus_import_success": "Учётные данные сохранены",
+    "plus_import_error": "Не удалось импортировать учётные данные",
     "devin_oauth_cancel": "Отменить вход в Devin",
     "devin_oauth_cancelled": "Вход в Devin отменён.",
     "devin_oauth_cancel_error": "Не удалось отменить вход в Devin:",
@@ -2251,6 +2264,12 @@
     }
   },
   "usage_stats": {
+    "export_backup": "Экспорт копии",
+    "import_backup": "Импорт копии",
+    "export_failed": "Не удалось экспортировать статистику",
+    "import_failed": "Не удалось импортировать копию статистики",
+    "import_done": "Из копии восстановлено запросов: {{added}}.",
+    "import_confirm": "Эта копия заменит всю текущую статистику. Сначала экспортируйте текущие данные, если хотите их сохранить.",
     "title": "Статистика использования",
     "subtitle": "Запросы и токены из runtime прокси.",
     "refresh": "Обновить статистику",

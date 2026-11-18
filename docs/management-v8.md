@@ -50,7 +50,9 @@ Both explicit management URL suffixes are stripped when identifying a server so 
 
 ## Fork features without an original v8 equivalent
 
-Original v8 has no Plus usage snapshot, Copilot quota endpoint, or built-in Qoder OAuth provider. The frontend must label absent capabilities as unsupported and must not invent usage, balances, or provider support. Existing fork code can remain available for a backend that actually advertises the corresponding capability.
+On Plus, Usage reads `/observability/usage/snapshot` and imports or exports legacy JSON backups through `/observability/usage/{import,export}`. Import replaces the current statistics. Quota reads GitHub Copilot limits from `/credentials/quota/copilot` for the selected credential. These request paths are all relative to `/v8/management`.
+
+OAuth Login discovers the extra built-in login methods through `/oauth/providers` and uses the same v8 start, status, callback, cancel, and import endpoints as the rest of the dashboard. Upstream backends may not have these Plus endpoints. The dashboard does not fall back to v0 or report missing quota or usage as zero.
 
 The v8 usage queue is a destructive consumer. Dashboard and Usage pages must never poll it as a replacement for usage snapshots. The dashboard checks snapshot support even when collection is off, so an absent capability never asks the operator to enable an unusable panel.
 
@@ -66,7 +68,7 @@ Run `bun run verify` and `bun scripts/migrations/management-v8.mjs`. The route c
 
 ### Disposable native backend
 
-Run the backend and API smoke in the same disposable Linux sandbox. Use the pinned original backend checkout, never the user's Plus service or configuration.
+Run the backend and API smoke in the same disposable sandbox. Use a CLIProxyAPIPlus checkout that exposes the Plus v8 endpoints described above. Do not use a live service or its configuration.
 
 1. Build the backend with `go build -o /home/user/cpamc-v8-server ./cmd/server` from its checkout.
 2. From the frontend checkout, create `/tmp/cpamc-v8-smoke/auth` and copy `tests/fixtures/managementV8Smoke.yaml` to `/tmp/cpamc-v8-smoke/config.yaml`.
@@ -80,7 +82,7 @@ CPAMC_V8_SMOKE_FIXTURE=1 \
 bun scripts/verify-management-v8.mjs
 ```
 
-The key above is public synthetic fixture data. The script refuses non-loopback targets, non-fixture client keys, other credential directories and existing provider credentials. It exercises client keys, provider groups, OAuth maps, plugin configuration and disabled synthetic credential upload, fields, cooldown, download and deletion. A loopback-only probe first fails through a deliberately unreachable global proxy, then succeeds with `direct`. Usage absence is checked without reading the destructive queue.
+The key above is public synthetic fixture data. The script refuses non-loopback targets, non-fixture client keys, other credential directories and existing provider credentials. It exercises client keys, provider groups, OAuth, plugin configuration, disabled credential editing and usage backup round trips. It never reads the destructive usage queue. A loopback-only probe first fails through a deliberately unreachable global proxy, then succeeds with `direct`.
 
 The script can also be bundled with `bun build scripts/verify-management-v8.mjs --target=bun --outfile <bundle-path>` and copied into the backend sandbox. Temporary fixture files must be recreated after a sandbox restart if they were removed.
 
@@ -96,7 +98,7 @@ PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs \
 node scripts/verify-management-v8-browser.mjs
 ```
 
-Set `CHROME_EXECUTABLE` if needed. The browser uses an isolated context and real native backend responses. It tests wrong-key feedback, login, unsupported usage on desktop/mobile, OAuth choices, actual model-form metadata preservation, replacement-row identity, a delayed initial YAML response and conditional visual saves. It delays one real YAML response to exercise request ownership; it does not fabricate API data or inject application stores. Screenshots are saved under `docs/screenshots/management-v8/`.
+Set `CHROME_EXECUTABLE` if needed. The browser uses an isolated context and a real backend. It tests wrong-key feedback, login, usage backups on desktop/mobile, Plus OAuth callback recovery, model-form metadata preservation, replacement-row identity, and conditional visual saves. It simulates one OAuth polling failure and delays one real YAML response to exercise request ownership. Screenshots are saved under `docs/screenshots/management-v8/` or `CPAMC_SCREENSHOTS` if set.
 
 The delayed-load regression was mutation-checked by removing its ownership guard and observing the expected lost-edit failure, then restoring the guard. Autocomplete retains its separate Playwright check, `PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs bun scripts/verify-autocomplete-browser.mjs`.
 

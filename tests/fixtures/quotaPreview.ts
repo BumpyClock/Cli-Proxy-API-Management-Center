@@ -153,7 +153,7 @@ Bun.serve({
       return json({ data: [{ id: 'mock-model', object: 'model', owned_by: 'mock' }] });
     if (path === '/config/observability/usage/usage-statistics-enabled')
       return usageEnabled === null ? json({ error: 'not_found' }, 404) : json(usageEnabled);
-    if (path === '/usage')
+    if (path === '/observability/usage/snapshot')
       return usageFails ? json({ error: 'Mock snapshot unavailable' }, 503) : json(sampleUsage);
     if (path === '/credentials')
       return json({
@@ -168,7 +168,7 @@ Bun.serve({
           ...(file.type === 'qoder' ? { usage: { used: qoderUsed, total: 100 } } : {}),
         })),
       });
-    if (path === '/copilot-quota') {
+    if (path === '/credentials/quota/copilot') {
       if (delayMs) await Bun.sleep(delayMs);
       if (failedAccounts.includes('copilot-1')) return json({ error: 'Mock quota failure' }, 503);
       if (url.searchParams.get('auth_index') !== 'copilot-1')
